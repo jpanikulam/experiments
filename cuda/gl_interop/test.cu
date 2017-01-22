@@ -23,23 +23,26 @@ __global__ void d_render(uint *d_output, uint imageW, uint imageH, float scale,
   }
 
   // These int-float cast operations aren't cheap
-  float u = ((x / (float)imageW) * 2.0f - 1.0f);  // + view_center.x;
-  float v = ((y / (float)imageH) * 2.0f - 1.0f);  // + view_center.y;
+  const float unscaled_u = ((x / (float)imageW) * 2.0f) - 1.0f;
+  const float unscaled_v = ((y / (float)imageH) * 2.0f) - 1.0f;
+
+  const float u = scale * (unscaled_u + view_center.x);
+  const float v = scale * (unscaled_v + view_center.y);
 
   float4 sum = make_float4(0.0f);
-  float distance = hypot(u, v);
+  const float distance = hypot(u, v);
   sum.x = distance;
   sum.y = distance / sqrt(distance) * v;
   sum.z = distance * distance;
   sum.w = 1.0;
 
+  // This could be optimized
   d_output[y * imageW + x] = rgbaFloatToInt(sum);
 }
 
 extern "C" void render_kernel(dim3 gridSize, dim3 blockSize, uint *d_output,
                               uint imageW, uint imageH, float scale,
                               float2 view_center) {
-  printf("%9.2f, %9.2f: %9.2f \n", view_center.x, view_center.y, scale);
   d_render<<<gridSize, blockSize>>>(d_output, imageW, imageH, scale,
                                     view_center);
 }

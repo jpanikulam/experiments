@@ -7,6 +7,9 @@
 #include <vector_functions.h>
 #include <vector_types.h>
 
+#include <cstdio>
+#include <cstdlib>
+
 #include <helper_cuda.h>
 #include <helper_math.h>
 
@@ -14,19 +17,15 @@
 #include <helper_gl.h>
 
 extern "C" void render_kernel(dim3 gridSize, dim3 blockSize, uint *d_output,
-                              uint imageW, uint imageH, float scale,
-                              float2 view_center);
+                              uint imageW, uint imageH, float moat,
+                              float2 hello);
 
 int iDivUp(int a, int b) { return (a % b != 0) ? (a / b + 1) : (a / b); }
 
 struct State {
   float2 view_center = make_float2(0.0, 0.0);
-  float2 last_mouse_pos = make_float2(0.0, 0.0);
-  float scale = 1.0;
-
-  //
-  // OpenGL/CUDA
-  //
+  float2 prev_view_center = make_float2(0.0, 0.0);
+  float2 prev_mouse_pos = make_float2(0.0, 0.0);
 
   // OpenGL pixel buffer object
   GLuint pbo = 0;
@@ -36,16 +35,15 @@ struct State {
 
   // CUDA Graphics Resource (to transfer PBO)
   struct cudaGraphicsResource *cuda_pbo_resource;
-  dim3 blockSize = dim3(16, 16);
-  dim3 gridSize = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
-
-  //
-  // Image parameters
-  //
 
   // Image render dimensions
-  uint width = 250;
-  uint height = 250;
+  uint width = 512;
+  uint height = 512;
+
+  float scale = 1.0;
+
+  dim3 blockSize = dim3(16, 16);
+  dim3 gridSize = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
 
 } gstate;
 
@@ -123,7 +121,7 @@ void render() {
   float milliseconds = 0;
   cudaEventElapsedTime(&milliseconds, start, stop);
 
-  std::cout << "Rendering took " << milliseconds << " ms" << std::endl;
+  // std::cout << "Rendering took " << milliseconds << " ms" << std::endl;
   checkCudaErrors(
       cudaGraphicsUnmapResources(1, &(gstate.cuda_pbo_resource), 0));
 }
@@ -185,6 +183,41 @@ void display() {
 
 void idle() { glutPostRedisplay(); }
 
+void motion(int x, int y) {
+  float2 mouse_pos = make_float2(x, y);
+
+  float2 delta_pos =
+      (mouse_pos - gstate.prev_mouse_pos) / (gstate.height / 2.0);
+
+  gstate.view_center =
+      make_float2(-delta_pos.x, delta_pos.y) + gstate.prev_view_center;
+
+  glutPostRedisplay();
+}
+
+void mouse(int button, int state, int x, int y) {
+  int mods;
+
+  float2 mouse_pos = make_float2(x, y);
+  if (state == GLUT_DOWN) {
+    gstate.prev_mouse_pos = mouse_pos;
+  } else if (state == GLUT_UP) {
+    gstate.prev_view_center = gstate.view_center;
+  }
+
+  if ((button == 3) || (button == 4))  // It's a wheel event
+  {
+    if (state == GLUT_UP) return;
+
+    gstate.scale *= (button == 3) ? 0.9 : 1.1;
+
+    // printf("Scroll %s At %d %d\n", (button == 3) ? "Up" : "Down", x, y);
+  }
+
+  std::cout << gstate.view_center.x << " , " << gstate.view_center.y
+            << std::endl;
+}
+
 void keyboard(unsigned char key, int x, int y) {
   switch (key) {
     case 27:
@@ -206,30 +239,6 @@ void keyboard(unsigned char key, int x, int y) {
   glutPostRedisplay();
 }
 
-void mouse(int button, int state, int x, int y) {
-  int mods;
-
-  if (state == GLUT_DOWN) {
-    std::cout << gstate.view_center.x << ", " << gstate.view_center.y
-              << std::endl;
-    gstate.last_mouse_pos = make_float2(x, y);
-    // gstate.view_center = make_float2(x, y) + gstate.view_center;
-
-    // Pressed
-  } else if (state == GLUT_UP) {
-    // Released
-  }
-
-  mods = glutGetModifiers();
-
-  if (mods & GLUT_ACTIVE_SHIFT) {
-    // shift held
-  } else if (mods & GLUT_ACTIVE_CTRL) {
-    // ctrl held
-  }
-  glutPostRedisplay();
-}
-
 int main(int argc, char **argv) {
 #if defined(__linux__)
   setenv("DISPLAY", ":0", 0);
@@ -244,7 +253,8 @@ int main(int argc, char **argv) {
   //
   // Initialize glut
   //
-  // glutMouseFunc(mouse);
+  glutMouseFunc(mouse);
+  glutMotionFunc(motion);
   glutDisplayFunc(display);
   glutKeyboardFunc(keyboard);
   glutIdleFunc(idle);
