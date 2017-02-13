@@ -23,7 +23,8 @@ __global__ void d_render(uint *           d_output,
                          Eigen::Vector2f *means,
                          Eigen::Matrix2f *information_matrices,
                          int              N,
-                         float            normalization) {
+                         float            normalization,
+                         float            tstep) {
   uint x = blockIdx.x * blockDim.x + threadIdx.x;
   uint y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -46,12 +47,12 @@ __global__ void d_render(uint *           d_output,
     const float           probability = __expf(-0.5f * mahalanobis);
     value += probability;
   }
-  float4 color = make_float4(value * normalization);
-  color.w      = 1.0f;
+  const float normalized_value = value * normalization;
+  float4      color =
+      make_float4(tstep * normalized_value, normalized_value * 0.5f, tstep * normalized_value * normalized_value, 1.0f);
 
   // This could be optimized
   d_output[y * imageW + x] = rgbaFloatToInt(color);
-  // d_output[y * imageW + x] = rgbaFloatToInt(sum);
 }
 
 void render_kernel(dim3             gridSize,
@@ -64,8 +65,10 @@ void render_kernel(dim3             gridSize,
                    Eigen::Vector2f *means,
                    Eigen::Matrix2f *information_matrices,
                    int              N,
-                   float            normalization) {
-  d_render<<<gridSize, blockSize>>>(d_output, imageW, imageH, scale, view_center, means, information_matrices, N, normalization);
+                   float            normalization,
+                   float            tstep) {
+  d_render<<<gridSize, blockSize>>>(
+      d_output, imageW, imageH, scale, view_center, means, information_matrices, N, normalization, tstep);
 }
 
 #endif // #ifndef _DIST_KERNEL_CU_

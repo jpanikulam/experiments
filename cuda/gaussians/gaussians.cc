@@ -42,7 +42,8 @@ void render_kernel(dim3             gridSize,
                    Eigen::Vector2f *means,
                    Eigen::Matrix2f *information_matrices,
                    int              N,
-                   float            normalization);
+                   float            normalization,
+                   float            tstep);
 
 int iDivUp(int a, int b) {
   return (a % b != 0) ? (a / b + 1) : (a / b);
@@ -70,6 +71,14 @@ struct State {
 
   dim3 blockSize = dim3(16, 16);
   dim3 gridSize  = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
+
+  //
+  // Rendering paramters
+  //
+  float       time_step    = 0.0;
+  float       direction    = 1.0;
+  const float time_spacing = 0.005;
+  const float min_time     = 0.5;
 
   //
   // Distribution paramters
@@ -162,10 +171,18 @@ void render() {
 
   cudaEventRecord(start);
 
+  if (gstate.time_step >= 1.0) {
+    gstate.direction = -1.0;
+  } else if (gstate.time_step <= gstate.min_time) {
+    gstate.direction = 1.0;
+  }
+  gstate.time_step += gstate.time_spacing * gstate.direction;
+  std::cout << gstate.time_step << std::endl;
+
   // Render the acutal image
   render_kernel(gstate.gridSize, gstate.blockSize, d_output, gstate.width, gstate.height, gstate.scale,
                 gstate.view_center, gstate.d_means, gstate.d_covariances, gstate.information_matrices.size(),
-                gstate.normalization);
+                gstate.normalization, gstate.time_step);
 
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
@@ -173,7 +190,6 @@ void render() {
   float milliseconds = 0;
   cudaEventElapsedTime(&milliseconds, start, stop);
 
-  // std::cout << "Rendering took " << milliseconds << " ms" << std::endl;
   checkCudaErrors(cudaGraphicsUnmapResources(1, &(gstate.cuda_pbo_resource), 0));
 }
 
@@ -321,16 +337,20 @@ int main(int argc, char **argv) {
   //
   initPixelBuffer();
 
-  for (int k = 0; k < 5; ++k) {
-    const Eigen::Vector2f mean = Eigen::Vector2f::Random() * 3.0;
-    const Eigen::Matrix2f cov  = Eigen::Rotation2Df(Eigen::Vector2f::Random()(0)) *
-                                (Eigen::Vector2f::Random().array() + 1.25f).matrix().asDiagonal();
+  const int count = 25;
+  for (int k = 0; k < count; ++k) {
+    const Eigen::Vector2f mean = Eigen::Vector2f::Random() * 5.0;
+
+    const Eigen::Vector2f    diag = (Eigen::Vector2f::Random().array() + 1.25f).matrix();
+    const float              rand = Eigen::Vector2f::Random()(0);
+    const Eigen::Rotation2Df rot  = Eigen::Rotation2Df(rand);
+    const Eigen::Matrix2f    cov  = rot * diag.asDiagonal() * rot.inverse();
     gstate.means.emplace_back(mean);
     gstate.information_matrices.emplace_back(cov);
   }
   send_parameters(gstate.means, gstate.information_matrices);
   const float eta      = compute_eta(gstate.means, gstate.information_matrices);
-  gstate.normalization = 1.0f / eta;
+  gstate.normalization = static_cast<float>(count) / eta;
 
   glutMainLoop();
 }
