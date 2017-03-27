@@ -4,6 +4,10 @@ namespace raytrace {
 
 using Vec2 = Eigen::Vector2d;
 
+double cross2d(const Vec2 &a, const Vec2 &b) {
+  return (a(0) * b(1)) - (a(1) * b(0));
+}
+
 bool ray_line_intersection(const Ray &ray, const Line &line, Out<Vec2> intersection) {
   Eigen::Matrix2d A;
   A.col(0) = ray.direction;

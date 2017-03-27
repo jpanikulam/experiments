@@ -45,9 +45,11 @@ endfunction(add_test)
 
 add_library(geometry geometry.cc)
 add_library(optimization optimization.cc)
+# add_library(numdiff optimization.cc)
 
 add_test(geometry_test geometry_test.cc geometry)
 add_test(optimization_test optimization_test.cc optimization)
+add_test(numdiff_test numdiff_test.cc "")
 
 
 # Specify binary name and source file to build it from
