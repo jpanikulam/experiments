@@ -271,14 +271,13 @@ void mouse(int button, int state, int x, int y) {
     gstate.prev_view_center = gstate.view_center;
   }
 
-  if ((button == 3) || (button == 4)) // It's a wheel event
+  // It's a wheel event
+  if ((button == 3) || (button == 4))
   {
     if (state == GLUT_UP)
       return;
 
     gstate.scale *= (button == 3) ? 0.9 : 1.1;
-
-    // printf("Scroll %s At %d %d\n", (button == 3) ? "Up" : "Down", x, y);
   }
 
   std::cout << gstate.view_center.x << " , " << gstate.view_center.y << " :: " << gstate.scale << std::endl;
