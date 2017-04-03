@@ -12,6 +12,7 @@ namespace rt = raytrace;
 //
 TEST(CostGradient, numerical) {
   constexpr double EPS = 1e-3;
+
   //
   // Setup
   //
@@ -50,6 +51,7 @@ TEST(CostGradient, numerical) {
 //
 TEST(Optimization, GaussNewton) {
   constexpr double EPS = 1e-3;
+
   //
   // Setup
   //

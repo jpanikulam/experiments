@@ -5,9 +5,6 @@
 
 #include <gtest/gtest.h>
 
-// todo
-#include <type_traits>
-
 namespace rt = raytrace;
 
 using Vec2 = Eigen::Vector2d;

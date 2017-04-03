@@ -76,19 +76,19 @@
 	"buffers":
 	[
 		{
-			"file": "geometry.cc",
+			"file": "geometry_test.cc",
 			"settings":
 			{
-				"buffer_size": 1353,
+				"buffer_size": 5122,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "optimization.cc",
+			"file": "numdiff_test.cc",
 			"settings":
 			{
-				"buffer_size": 24,
+				"buffer_size": 704,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
@@ -97,7 +97,17 @@
 			"file": "optimization.hh",
 			"settings":
 			{
-				"buffer_size": 2686,
+				"buffer_size": 3748,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "types.hh",
+			"settings":
+			{
+				"buffer_size": 374,
+				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
 		},
@@ -105,28 +115,8 @@
 			"file": "optimization_test.cc",
 			"settings":
 			{
-				"buffer_size": 1996,
+				"buffer_size": 1997,
 				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "// This file is part of Sophus.\n//\n// Copyright 2012-2013 Hauke Strasdat\n//\n// Permission is hereby granted, free of charge, to any person obtaining a copy\n// of this software and associated documentation files (the \"Software\"), to\n// deal in the Software without restriction, including without limitation the\n// rights  to use, copy, modify, merge, publish, distribute, sublicense, and/or\n// sell copies of the Software, and to permit persons to whom the Software is\n// furnished to do so, subject to the following conditions:\n//\n// The above copyright notice and this permission notice shall be included in\n// all copies or substantial portions of the Software.\n//\n// THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\n// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS\n// IN THE SOFTWARE.\n\n#ifndef SOPHUS_SO2_HPP\n#define SOPHUS_SO2_HPP\n\n#include <complex>\n\n// Include only the selective set of Eigen headers that we need.\n// This helps when using Sophus with unusual compilers, like nvcc.\n#include <Eigen/LU>\n\n#include \"common.hpp\"\n\nnamespace Sophus {\ntemplate <typename _Scalar, int _Options = 0>\nclass SO2;\ntypedef SO2<double> SO2d; /**< double precision SO2 */\ntypedef SO2<float> SO2f;  /**< single precision SO2 */\n}  // namespace Sophus\n\nnamespace Eigen {\nnamespace internal {\n\ntemplate <typename _Scalar, int _Options>\nstruct traits<Sophus::SO2<_Scalar, _Options>> {\n  typedef _Scalar Scalar;\n  typedef Matrix<Scalar, 2, 1> ComplexType;\n};\n\ntemplate <typename _Scalar, int _Options>\nstruct traits<Map<Sophus::SO2<_Scalar>, _Options>>\n    : traits<Sophus::SO2<_Scalar, _Options>> {\n  typedef _Scalar Scalar;\n  typedef Map<Matrix<Scalar, 2, 1>, _Options> ComplexType;\n};\n\ntemplate <typename _Scalar, int _Options>\nstruct traits<Map<const Sophus::SO2<_Scalar>, _Options>>\n    : traits<const Sophus::SO2<_Scalar, _Options>> {\n  typedef _Scalar Scalar;\n  typedef Map<const Matrix<Scalar, 2, 1>, _Options> ComplexType;\n};\n}  // namespace internal\n}  // namespace Eigen\n\nnamespace Sophus {\n\n// SO2 base type - implements SO2 class but is storage agnostic.\n//\n// SO(2) is the group of rotations in 2d. As a matrix group, it is the set of\n// matrices which are orthogonal such that ``R * R' = I`` (with ``R'`` being the\n// transpose of ``R``) and have a positive determinant. In particular, the\n// determinant is 1. Let ``theta`` be the rotation angle, the rotation matrix\n// can be written in close form:\n//\n//  | cos(theta) -sin(theta) |\n//  | sin(theta)  cos(theta) |\n//\n// As a matter of fact, the first column of those matrices is isomorph to the\n// set of unit complex numbers U(1). Thus, internally, SO2 is represented as\n// complex number with length 1.\n//\n// SO(2) is a compact and commutative group. First it is compact since the set\n// of rotation matrices is a closed and bounded set. Second it is commutative\n// since ``R(alpha) * R(beta) = R(beta) * R(alpha``,  simply because ``alpha +\n// beta = beta + alpha`` with ``alpha`` and ``beta`` being rotation angles\n// (about the same axis).\n//\n// Class invairant: The 2-norm of ``unit_complex`` must be close to 1.\n// Technically speaking, it must hold that:\n//\n//   ``|unit_complex().squaredNorm() - 1| <= Constants<Scalar>::epsilon()``.\ntemplate <typename Derived>\nclass SO2Base {\n public:\n  using Scalar = typename Eigen::internal::traits<Derived>::Scalar;\n  using ComplexReference =\n      typename Eigen::internal::traits<Derived>::ComplexType&;\n  using ConstComplexReference =\n      const typename Eigen::internal::traits<Derived>::ComplexType&;\n\n  // Degrees of freedom of manifold, number of dimensions in tangent space (one\n  // since we only have in-plane rotations).\n  static const int DoF = 1;\n  // Number of internal parameters used (complex numbers are a tuples).\n  static const int num_parameters = 2;\n  // Group transformations are 2x2 matrices.\n  static const int N = 2;\n  using Transformation = Eigen::Matrix<Scalar, N, N>;\n  using Point = Eigen::Matrix<Scalar, 2, 1>;\n  using Tangent = Scalar;\n  using Adjoint = Scalar;\n\n  // Adjoint transformation\n  //\n  // This function return the adjoint transformation ``Ad`` of the group\n  // element ``A`` such that for all ``x`` it holds that\n  // ``hat(Ad_A * x) = A * hat(x) A^{-1}``. See hat-operator below.\n  //\n  // It simply ``1``, since ``SO(2)`` is a commutative group.\n  //\n  SOPHUS_FUNC Adjoint Adj() const { return 1; }\n\n  // Returns copy of instance casted to NewScalarType.\n  //\n  template <typename NewScalarType>\n  SOPHUS_FUNC SO2<NewScalarType> cast() const {\n    return SO2<NewScalarType>(\n        unit_complex().template cast<NewScalarType>());\n  }\n\n  // This provides unsafe read/write access to internal data. SO(2) is\n  // represented by a unit complex number (two parameters). When using direct\n  // write access, the user needs to take care of that the complex number stays\n  // normalized.\n  //\n  SOPHUS_FUNC Scalar* data() { return unit_complex_nonconst().data(); }\n\n  // Const version of data() above.\n  //\n  SOPHUS_FUNC const Scalar* data() const { return unit_complex().data(); }\n\n  // Returns ``*this`` times the ith generator of internal U(1) representation.\n  //\n  SOPHUS_FUNC SO2<Scalar> inverse() const {\n    return SO2<Scalar>(unit_complex().x(), -unit_complex().y());\n  }\n\n  // Logarithmic map\n  //\n  // Returns tangent space representation (= rotation angle) of the instance.\n  //\n  SOPHUS_FUNC Scalar log() const { return SO2<Scalar>::log(*this); }\n\n  // It re-normalizes ``unit_complex`` to unit length.\n  //\n  // Note: Because of the class invariant, there is typically no need to call\n  // this function directly.\n  //\n  SOPHUS_FUNC void normalize() {\n    Scalar length = std::sqrt(unit_complex().x() * unit_complex().x() +\n                              unit_complex().y() * unit_complex().y());\n    SOPHUS_ENSURE(length >= Constants<Scalar>::epsilon(),\n                  \"Complex number should not be close to zero!\");\n    unit_complex_nonconst().x() /= length;\n    unit_complex_nonconst().y() /= length;\n  }\n\n  // Returns 2x2 matrix representation of the instance.\n  //\n  // For SO(2), the matrix representation is an orthogonal matrix ``R`` with\n  // ``det(R)=1``, thus the so-called \"rotation matrix\".\n  //\n  SOPHUS_FUNC Transformation matrix() const {\n    const Scalar& real = unit_complex().x();\n    const Scalar& imag = unit_complex().y();\n    Transformation R;\n    // clang-format off\n    R <<\n        real, -imag,\n        imag,  real;\n    // clang-format on\n    return R;\n  }\n\n  // Assignment operator\n  //\n  template <typename OtherDerived>\n  SOPHUS_FUNC SO2Base<Derived>& operator=(\n      const SO2Base<OtherDerived>& other) {\n    unit_complex_nonconst() = other.unit_complex();\n    return *this;\n  }\n\n  // Group multiplication, which is rotation concatenation.\n  //\n  SOPHUS_FUNC SO2<Scalar> operator*(const SO2<Scalar>& other) const {\n    SO2<Scalar> result(*this);\n    result *= other;\n    return result;\n  }\n\n  // Group action on 3-points.\n  //\n  // This function rotates a 3 dimensional point ``p`` by the SO3 element\n  //  ``bar_R_foo`` (= rotation matrix): ``p_bar = bar_R_foo * p_foo``.\n  //\n  SOPHUS_FUNC Point operator*(const Point& p) const {\n    const Scalar& real = unit_complex().x();\n    const Scalar& imag = unit_complex().y();\n    return Point(real * p[0] - imag * p[1], imag * p[0] + real * p[1]);\n  }\n\n  // In-place group multiplication.\n  //\n  SOPHUS_FUNC SO2Base<Derived> operator*=(const SO2<Scalar>& other) {\n    Scalar lhs_real = unit_complex().x();\n    Scalar lhs_imag = unit_complex().y();\n    const Scalar& rhs_real = other.unit_complex().x();\n    const Scalar& rhs_imag = other.unit_complex().y();\n    // complex multiplication\n    unit_complex_nonconst().x() = lhs_real * rhs_real - lhs_imag * rhs_imag;\n    unit_complex_nonconst().y() = lhs_real * rhs_imag + lhs_imag * rhs_real;\n\n    Scalar squared_norm = unit_complex_nonconst().squaredNorm();\n    // We can assume that the squared-norm is close to 1 since we deal with a\n    // unit complex number. Due to numerical precision issues, there might\n    // be a small drift after pose concatenation. Hence, we need to renormalizes\n    // the complex number here.\n    // Since squared-norm is close to 1, we do not need to calculate the costly\n    // square-root, but can use an approximation around 1 (see\n    // http://stackoverflow.com/a/12934750 for details).\n    if (squared_norm != Scalar(1.0)) {\n      unit_complex_nonconst() *= Scalar(2.0) / (Scalar(1.0) + squared_norm);\n    }\n    return *this;\n  }\n\n  // Takes in complex number / tuple and normalizes it.\n  //\n  // Precondition: The complex number must not be close to zero.\n  //\n  SOPHUS_FUNC void setComplex(const Point& complex) {\n    unit_complex_nonconst() = complex;\n    normalize();\n  }\n\n  // Accessor of unit quaternion.\n  //\n  SOPHUS_FUNC\n  ConstComplexReference unit_complex() const {\n    return static_cast<const Derived*>(this)->unit_complex();\n  }\n\n  ////////////////////////////////////////////////////////////////////////////\n  // public static functions\n  ////////////////////////////////////////////////////////////////////////////\n\n  // Group exponential\n  //\n  // This functions takes in an element of tangent space (= rotation angle\n  // ``theta``) and returns the corresponding element of the group SO(2).\n  //\n  // To be more specific, this function computes ``expmat(hat(omega))``\n  // with ``expmat(.)`` being the matrix exponential and ``hat(.)`` being the\n  // hat()-operator of SO(2).\n  //\n  SOPHUS_FUNC static SO2<Scalar> exp(const Tangent& theta) {\n    return SO2<Scalar>(std::cos(theta), std::sin(theta));\n  }\n\n  // Returns the infinitesimal generators of SO3.\n  //\n  // The infinitesimal generators of SO(2) is:\n  //\n  //   |  0  1 |\n  //   | -1  0 |\n  //\n  SOPHUS_FUNC static Transformation generator() { return hat(1); }\n\n  // hat-operator\n  //\n  // It takes in the scalar representation ``theta`` (= rotation angle) and\n  // returns the corresponding matrix representation of Lie algebra element.\n  //\n  // Formally, the ``hat()`` operator of SO(2) is defined as\n  //\n  //   ``hat(.): R^2 -> R^{2x2},  hat(theta) = theta * G``\n  //\n  // with ``G`` being the infinitesimal generator of SO(2).\n  //\n  // The corresponding inverse is the ``vee``-operator, see below.\n  //\n  SOPHUS_FUNC static Transformation hat(const Tangent& theta) {\n    Transformation Omega;\n    Omega << static_cast<Scalar>(0), -theta, theta, static_cast<Scalar>(0);\n    return Omega;\n  }\n\n  // Lie bracket\n  //\n  // It returns the Lie bracket of SO(2). Since SO(2) is a commutative group,\n  // the Lie bracket is simple ``0``.\n  //\n  SOPHUS_FUNC static Tangent lieBracket(const Tangent&, const Tangent&) {\n    return static_cast<Scalar>(0);\n  }\n\n  // Logarithmic map\n  //\n  // Computes the logarithm, the inverse of the group exponential which maps\n  // element of the group (rotation matrices) to elements of the tangent space\n  // (rotation angles).\n  //\n  // To be specific, this function computes ``vee(logmat(.))`` with\n  // ``logmat(.)`` being the matrix logarithm and ``vee(.)`` the vee-operator\n  // of SO(2).\n  //\n  SOPHUS_FUNC static Tangent log(const SO2<Scalar>& other) {\n    using std::atan2;\n    return atan2(other.unit_complex_.y(), other.unit_complex().x());\n  }\n\n  // vee-operator\n  //\n  // It takes the 2x2-matrix representation ``Omega`` and maps it to the\n  // corresponding scalar representation of Lie algebra.\n  //\n  // This is the inverse of the hat-operator, see above.\n  //\n  SOPHUS_FUNC static Tangent vee(const Transformation& Omega) {\n    return static_cast<Scalar>(0.5) * (Omega(1, 0) - Omega(0, 1));\n  }\n\n private:\n  // Mutator of unit_complex is private to ensure class invariant. That is\n  // the complex number must stay close to unit length.\n  //\n  SOPHUS_FUNC\n  ComplexReference unit_complex_nonconst() {\n    return static_cast<Derived*>(this)->unit_complex_nonconst();\n  }\n};\n\n// SO2 default type - Constructors and default storage for SO2 Type\ntemplate <typename _Scalar, int _Options>\nclass SO2 : public SO2Base<SO2<_Scalar, _Options>> {\n  typedef SO2Base<SO2<_Scalar, _Options>> Base;\n\n public:\n  using Scalar =\n      typename Eigen::internal::traits<SO2<_Scalar, _Options>>::Scalar;\n  using ComplexReference = typename Eigen::internal::traits<\n      SO2<_Scalar, _Options>>::ComplexType&;\n  using ConstComplexReference = const typename Eigen::internal::traits<\n      SO2<_Scalar, _Options>>::ComplexType&;\n\n  using Transformation = typename Base::Transformation;\n  using Point = typename Base::Point;\n  using Tangent = typename Base::Tangent;\n  using Adjoint = typename Base::Adjoint;\n\n  // ``Base`` is friend so unit_complex_nonconst can be accessed from ``Base``.\n  friend class SO2Base<SO2<_Scalar, _Options>>;\n\n  EIGEN_MAKE_ALIGNED_OPERATOR_NEW\n\n  // Default constructor initialize unit complex number to identity rotation.\n  //\n  SOPHUS_FUNC SO2()\n      : unit_complex_(static_cast<Scalar>(1), static_cast<Scalar>(0)) {}\n\n  // Copy constructor\n  //\n  template <typename OtherDerived>\n  SOPHUS_FUNC SO2(const SO2Base<OtherDerived>& other)\n      : unit_complex_(other.unit_complex()) {}\n\n  // Constructor from rotation matrix\n  //\n  // Precondition: rotation matrix need to be orthogonal with determinant of 1.\n  //\n  SOPHUS_FUNC explicit SO2(const Transformation& R)\n      : unit_complex_(static_cast<Scalar>(0.5) * (R(0, 0) + R(1, 1)),\n                      static_cast<Scalar>(0.5) * (R(1, 0) - R(0, 1))) {\n    SOPHUS_ENSURE(std::abs(R.determinant() - static_cast<Scalar>(1)) <=\n                      Constants<Scalar>::epsilon(),\n                  \"det(R) should be (close to) 1.\");\n  }\n\n  // Constructor from pair of real and imaginary number.\n  //\n  // Precondition: The pair must not be close to zero.\n  //\n  SOPHUS_FUNC SO2(const Scalar& real, const Scalar& imag)\n      : unit_complex_(real, imag) {\n    Base::normalize();\n  }\n\n  // Constructor from 2-vector.\n  //\n  // Precondition: The vector must not be close to zero.\n  //\n  SOPHUS_FUNC explicit SO2(const Eigen::Matrix<Scalar, 2, 1>& complex)\n      : unit_complex_(complex) {\n    Base::normalize();\n  }\n\n  // Constructor from std::complex\n  //\n  // Precondition: ``complex`` number must not be zero\n  //\n  SOPHUS_FUNC explicit SO2(const std::complex<Scalar>& complex)\n      : unit_complex_(complex.real(), complex.imag()) {\n    Base::normalize();\n  }\n\n  // Constructor from an rotation angle.\n  //\n  SOPHUS_FUNC explicit SO2(Scalar theta) {\n    unit_complex_nonconst() = SO2<Scalar>::exp(theta).unit_complex();\n  }\n\n  // Accessor of unit complex number\n  //\n  SOPHUS_FUNC ConstComplexReference unit_complex() const {\n    return unit_complex_;\n  }\n\n protected:\n  // Mutator of complex number is protected to ensure class invariant.\n  //\n  SOPHUS_FUNC ComplexReference unit_complex_nonconst() { return unit_complex_; }\n\n  static bool isNearZero(const Scalar& real, const Scalar& imag) {\n    return (real * real + imag * imag < Constants<Scalar>::epsilon());\n  }\n\n  Eigen::Matrix<Scalar, 2, 1> unit_complex_;\n};\n\n\ntemplate <typename Scalar, int Options = 0>\nusing SO2Group [[deprecated]] = SO2<Scalar, Options>;\n\n}  // namespace Sophus\n\nnamespace Eigen {\n\n// Specialization of Eigen::Map for ``SO2Base``\n//\n// Allows us to wrap SO2 objects around POD array (e.g. external c style\n// complex number / tuple).\ntemplate <typename _Scalar, int _Options>\nclass Map<Sophus::SO2<_Scalar>, _Options>\n    : public Sophus::SO2Base<Map<Sophus::SO2<_Scalar>, _Options>> {\n  typedef Sophus::SO2Base<Map<Sophus::SO2<_Scalar>, _Options>> Base;\n\n public:\n  using Scalar = typename Eigen::internal::traits<Map>::Scalar;\n  using ComplexReference = typename Eigen::internal::traits<Map>::ComplexType&;\n  using ConstComplexReference =\n      const typename Eigen::internal::traits<Map>::ComplexType&;\n\n  using Transformation = typename Base::Transformation;\n  using Point = typename Base::Point;\n  using Tangent = typename Base::Tangent;\n  using Adjoint = typename Base::Adjoint;\n\n  // ``Base`` is friend so unit_complex_nonconst can be accessed from ``Base``.\n  friend class Sophus::SO2Base<Map<Sophus::SO2<_Scalar>, _Options>>;\n\n  EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Map)\n  using Base::operator*=;\n  using Base::operator*;\n\n  SOPHUS_FUNC\n  Map(Scalar* coeffs) : unit_complex_(coeffs) {}\n\n  // Accessor of unit complex number.\n  //\n  SOPHUS_FUNC\n  ConstComplexReference unit_complex() const { return unit_complex_; }\n\n protected:\n  // Mutator of unit_complex is protected to ensure class invariant.\n  //\n  SOPHUS_FUNC\n  ComplexReference unit_complex_nonconst() { return unit_complex_; }\n\n  Map<Matrix<Scalar, 2, 1>, _Options> unit_complex_;\n};\n\n// Specialization of Eigen::Map for ``const SO2Base``\n//\n// Allows us to wrap SO2 objects around POD array (e.g. external c style\n// complex number / tuple).\ntemplate <typename _Scalar, int _Options>\nclass Map<const Sophus::SO2<_Scalar>, _Options>\n    : public Sophus::SO2Base<\n          Map<const Sophus::SO2<_Scalar>, _Options>> {\n  typedef Sophus::SO2Base<Map<const Sophus::SO2<_Scalar>, _Options>>\n      Base;\n\n public:\n  typedef typename internal::traits<Map>::Scalar Scalar;\n  typedef const typename internal::traits<Map>::ComplexType&\n      ConstComplexReference;\n\n  typedef typename Base::Transformation Transformation;\n  typedef typename Base::Point Point;\n  typedef typename Base::Tangent Tangent;\n  typedef typename Base::Adjoint Adjoint;\n\n  EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Map)\n  using Base::operator*=;\n  using Base::operator*;\n\n  SOPHUS_FUNC Map(const Scalar* coeffs) : unit_complex_(coeffs) {}\n\n  // Accessor of unit complex number.\n  //\n  SOPHUS_FUNC ConstComplexReference unit_complex() const {\n    return unit_complex_;\n  }\n\n protected:\n  // Mutator of unit_complex is protected to ensure class invariant.\n  //\n  const Map<const Matrix<Scalar, 2, 1>, _Options> unit_complex_;\n};\n\n}\n\n#endif  // SOPHUS_SO2_HPP\n",
-			"file": "/home/jacob/repos/experiments/Sophus/sophus/so2.hpp",
-			"file_size": 18137,
-			"file_write_time": 131341067136881682,
-			"settings":
-			{
-				"buffer_size": 18137,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "geometry_test.cc",
-			"settings":
-			{
-				"buffer_size": 3405,
 				"line_ending": "Unix"
 			}
 		},
@@ -134,32 +124,15 @@
 			"file": "CMakeLists.txt",
 			"settings":
 			{
-				"buffer_size": 1665,
-				"encoding": "UTF-8",
+				"buffer_size": 1746,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/home/jacob/repos/experiments/third_party/Sophus/sophus/se2.hpp",
+			"file": "/home/jacob/repos/PAT_git.md",
 			"settings":
 			{
-				"buffer_size": 21848,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "/home/jacob/repos/experiments/third_party/Sophus/sophus/so2.hpp",
-			"settings":
-			{
-				"buffer_size": 18137,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "view.cc",
-			"settings":
-			{
-				"buffer_size": 0,
+				"buffer_size": 40,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
@@ -258,16 +231,27 @@
 	],
 	"file_history":
 	[
-		"/home/jacob/repos/experiments/Sophus/sophus/se3.hpp",
-		"/home/jacob/repos/experiments/raytracing/geometry_test.cc",
 		"/home/jacob/repos/experiments/raytracing/geometry.hh",
+		"/home/jacob/repos/experiments/raytracing/geometry.cc",
+		"/home/jacob/repos/experiments/raytracing/numdiff.hh",
+		"/home/jacob/repos/experiments/raytracing/view.cc",
+		"/home/jacob/repos/experiments/third_party/Sophus/sophus/so2.hpp",
+		"/home/jacob/repos/experiments/third_party/Sophus/sophus/se2.hpp",
+		"/home/jacob/repos/experiments/raytracing/CMakeLists.txt",
+		"/home/jacob/repos/experiments/raytracing/optimization_test.cc",
+		"/home/jacob/repos/experiments/raytracing/geometry_test.cc",
+		"/home/jacob/repos/experiments/raytracing/numdiff_test.cc",
+		"/home/jacob/repos/experiments/raytracing/optimization.cc",
+		"/home/jacob/repos/experiments/raytracing/optimization.hh",
+		"/home/jacob/repos/experiments/raytracing/numdiff.cc",
+		"/home/jacob/repos/experiments/Sophus/sophus/so2.hpp",
+		"/home/jacob/repos/experiments/Sophus/sophus/se3.hpp",
 		"/home/jacob/.config/sublime-text-3/Packages/User/clang_format_custom.sublime-settings",
 		"/home/jacob/.config/sublime-text-3/Packages/User/just_make.sublime-build",
 		"/home/jacob/repos/experiments/slam/plan.md",
 		"/home/jacob/repos/experiments/raytracing/rt.sublime-project",
 		"/home/jacob/.config/sublime-text-3/Packages/User/clang_format.sublime-settings",
 		"/home/jacob/repos/experiments/raytracing/out.hh",
-		"/home/jacob/repos/experiments/raytracing/CMakeLists.txt",
 		"/home/jacob/repos/experiments/stacko/delhi_loafer.py",
 		"/home/jacob/repos/experiments/cuda/gl_interop/CMakeLists.txt",
 		"/home/jacob/repos/experiments/slam/CMakeLists.txt",
@@ -384,6 +368,93 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"line",
+			"  constexpr double EPS = 1e-3;\n  //",
+			"along",
+			"NEAR",
+			"const {",
+			"DirectedLineSegment",
+			"EPS",
+			"WOULD",
+			"intersected2",
+			"intersection2",
+			".norm()",
+			"analytical_gra",
+			"jout",
+			"numerical_dcost",
+			"jout",
+			"<< ",
+			"fcn",
+			"eta",
+			"dist_to_plane",
+			"numdiff_test",
+			"optimization",
+			"exp(",
+			"15",
+			"Vec2",
+			"theta",
+			"Scalar .*const",
+			"translation()",
+			") const",
+			"rotation()",
+			"angle",
+			"theta()",
+			"translation()",
+			"translation",
+			"breka",
+			"new_cost",
+			"last_cost",
+			"theta",
+			"cout",
+			"Gradient",
+			"err_fcn",
+			"eta",
+			"cost",
+			"placeholders",
+			"cost",
+			"squaredNorm",
+			"double",
+			"cost",
+			"cost(",
+			"inverse",
+			"transpose",
+			"fcn",
+			"gradient",
+			"Vec",
+			"gauss_newton",
+			"analytical_dcost",
+			"Vec3",
+			"cout",
+			"eta(0)",
+			"(0)",
+			"error",
+			"derror_sq",
+			"2>",
+			"2",
+			"3",
+			"EigMat",
+			"rows",
+			"Vec",
+			"EigMat",
+			"Eigen::Matrix3d",
+			"derror_deta",
+			"jac",
+			"T",
+			"])",
+			"x",
+			"T",
+			"Vec2",
+			"preJ",
+			"dv_dtheta",
+			"Rprime",
+			"Vec3",
+			"R_by_theta",
+			"v_prime",
+			"t_by_theta",
+			"float",
+			".y()",
+			".x",
+			"x",
 			"R_theta",
 			"by_theta",
 			"J",
@@ -424,94 +495,7 @@
 			"xs",
 			"error",
 			"Vec1",
-			"Tangent",
-			"float",
-			"Matrix2d",
-			"geometry",
-			"geometry_test",
-			"pthread",
-			"test_libs",
-			"test_name",
-			" ${",
-			"test_libs",
-			"test_name",
-			"everything",
-			"include_directories",
-			"INCLUDE_DIRECTORIES",
-			"working_dir",
-			"python",
-			"void",
-			"USE_EIGEN",
-			"void",
-			"std::decay",
-			"return",
-			"SparseContainer",
-			"void",
-			"decay_t",
-			"class",
-			"typebame",
-			"void",
-			"m_colwise_minus_v",
-			"v_colwise_minus_m",
-			"mmv",
-			"m_colwise_minus_v",
-			"Vec3",
-			"  ",
-			"bool",
-			"struct",
-			"  Ray",
-			"intersection2",
-			"ray_line_segment_intersection",
-			"  Vec2 ",
-			"Vec2 ",
-			"Vec2",
-			"line",
-			"start",
-			"true",
-			"line",
-			"val_1",
-			"intersection",
-			"intersected",
-			"line",
-			"segment",
-			"line",
-			"LineSegment",
-			"Eigen",
-			"raytrace",
-			"rt",
-			"origin",
-			"0.0",
-			"rt::Vec2",
-			"rt::",
-			", )",
-			"_, ",
-			"_), V",
-			"_),",
-			"),",
-			"geometry_test",
-			"cc",
-			"SUCCESS",
-			"soln_dot",
-			"class",
-			"Vec2",
-			"a",
-			"0",
-			"origin",
-			"Vec3",
-			" =",
-			"test",
-			"cc",
-			"CPU",
-			"pleft",
-			"hello",
-			"Q1",
-			"row_subnames",
-			"subnames",
-			"3",
-			"A",
-			"sparse",
-			"with",
-			"row_subnames"
+			"Tangent"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -530,24 +514,24 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 5,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "geometry.cc",
+					"file": "geometry_test.cc",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1353,
+						"buffer_size": 5122,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								23,
-								23
+								0,
+								0
 							]
 						],
 						"settings":
@@ -560,24 +544,84 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 8,
+					"stack_index": 3,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "optimization.cc",
+					"file": "numdiff_test.cc",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 24,
+						"buffer_size": 704,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								24,
-								24
+								48,
+								48
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 612.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "optimization.hh",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3748,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								314,
+								314
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1530.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "types.hh",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 374,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								374,
+								374
 							]
 						],
 						"settings":
@@ -588,54 +632,24 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 7,
+					"stack_index": 5,
 					"type": "text"
 				},
 				{
-					"buffer": 2,
-					"file": "optimization.hh",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2686,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								659,
-								659
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 40.0,
-						"translation.y": 340.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
+					"buffer": 4,
 					"file": "optimization_test.cc",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1996,
+						"buffer_size": 1997,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1697,
-								1697
+								797,
+								797
 							]
 						],
 						"settings":
@@ -652,88 +666,20 @@
 					"type": "text"
 				},
 				{
-					"buffer": 4,
-					"file": "/home/jacob/repos/experiments/Sophus/sophus/so2.hpp",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 18137,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								10734,
-								10734
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 4488.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
 					"buffer": 5,
-					"file": "geometry_test.cc",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3405,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								63,
-								63
-							],
-							[
-								96,
-								96
-							],
-							[
-								3304,
-								3304
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
 					"file": "CMakeLists.txt",
-					"semi_transient": false,
+					"semi_transient": true,
 					"settings":
 					{
-						"buffer_size": 1665,
+						"buffer_size": 1746,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1294,
-								1294
+								1138,
+								1138
 							]
 						],
 						"settings":
@@ -741,98 +687,38 @@
 							"syntax": "Packages/CMake/CMake.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 153.0,
+						"translation.y": 459.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 0,
 					"type": "text"
 				},
 				{
-					"buffer": 7,
-					"file": "/home/jacob/repos/experiments/third_party/Sophus/sophus/se2.hpp",
+					"buffer": 6,
+					"file": "/home/jacob/repos/PAT_git.md",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 21848,
+						"buffer_size": 40,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								8499,
-								8499
+								40,
+								40
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/C++/C++.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 3980.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "/home/jacob/repos/experiments/third_party/Sophus/sophus/so2.hpp",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 18137,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								14626,
-								14626
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 6649.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 9,
-					"file": "view.cc",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 0,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.sublime-syntax"
+							"syntax": "Packages/Markdown/Markdown.sublime-syntax"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 9,
+					"stack_index": 6,
 					"type": "text"
 				}
 			]
@@ -875,7 +761,7 @@
 	},
 	"output.exec":
 	{
-		"height": 257.0
+		"height": 259.0
 	},
 	"output.find_results":
 	{
@@ -894,6 +780,38 @@
 		"last_filter": "",
 		"selected_items":
 		[
+			[
+				"numdt",
+				"raytracing/numdiff_test.cc"
+			],
+			[
+				"opitmtest",
+				"raytracing/optimization_test.cc"
+			],
+			[
+				"geomt",
+				"raytracing/geometry_test.cc"
+			],
+			[
+				"num",
+				"raytracing/numdiff.hh"
+			],
+			[
+				"geometryt",
+				"raytracing/geometry_test.cc"
+			],
+			[
+				"se2.",
+				"third_party/Sophus/sophus/se2.hpp"
+			],
+			[
+				"so2.h",
+				"third_party/Sophus/sophus/so2.hpp"
+			],
+			[
+				"geometr",
+				"raytracing/geometry.hh"
+			],
 			[
 				"so2",
 				"third_party/Sophus/sophus/so2.hpp"

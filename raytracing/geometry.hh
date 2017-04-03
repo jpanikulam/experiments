@@ -80,7 +80,41 @@ struct DirectedLineSegment {
   }
 };
 
+// Compute the intersection of a line and a ray
+//
+// Parameters
+// ----------
+// @param ray The ray
+// @param line The line to be intersected
+//
+// Outputs
+// -------
+// @param[out] intersection The point at which the ray and line intersect
+//                          Note: If the ray is not pointed at the line, populated with the point
+//                                that would have been the intersection if the ray were reversed
+//
+// @returns False if the ray does not intersect the line
+//
 bool ray_line_intersection(const Ray &ray, const Line &line, Out<Vec2> intersection);
 
+// Compute the intersection of a line segment and a ray
+//
+// Parameters
+// ----------
+// @param ray The ray
+// @param segment The line segment to be intersected
+//
+// Outputs
+// -------
+// @param[out] intersection The point at which the ray and line segment intersect
+//                          Note: If the ray is not pointed at the segment, populated with the point
+//                                that would have been the intersection if the ray were reversed
+//
+//                          Furthermore: If the ray *misses* the line segment, returns the
+//                                       point where the infinitely extended line segment
+//                                       would have intersected the ray-equivalent line
+//
+// @returns False if the ray does not intersect the line segment
+//
 bool ray_line_segment_intersection(const Ray &ray, const LineSegment &segment, Out<Vec2> intersection);
 }

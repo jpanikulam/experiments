@@ -13,7 +13,13 @@ include_directories(${EIGEN3_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}/unsupported)
 #
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
-include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
+include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS})
+
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
+include_directories(${GLFW_INCLUDE_DIRS})
+find_package(GLEW REQUIRED)
+
 
 #########################
 # GTest
@@ -31,7 +37,9 @@ include_directories("${BASEPATH}/third_party/Sophus")
 include_directories("${BASEPATH}")
 # include_directories("${BASEPATH}/common/inc")
 
-set (CMAKE_CXX_FLAGS "--std=c++11 -g -fno-omit-frame-pointer -Wall ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_COMPILER "g++-5")
+
+set (CMAKE_CXX_FLAGS "--std=c++14 -g -fno-omit-frame-pointer -Wall ${CMAKE_CXX_FLAGS}")
 # list(APPEND CUDA_NVCC_FLAGS "-std=c++11;-O1;-DVERBOSE;-gencode;arch=compute_61,code=sm_61")
 # list(APPEND CUDA_NVCC_FLAGS "-std=c++11;-fno-omit-framepointer;-DVERBOSE;-gencode;arch=compute_61,code=sm_61")
 # SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
@@ -45,12 +53,14 @@ endfunction(add_test)
 
 add_library(geometry geometry.cc)
 add_library(optimization optimization.cc)
-# add_library(numdiff optimization.cc)
+add_library(numdiff numdiff.cc)
 
 add_test(geometry_test geometry_test.cc geometry)
 add_test(optimization_test optimization_test.cc optimization)
 add_test(numdiff_test numdiff_test.cc "")
 
+add_executable(view view.cc)
+target_link_libraries(view geometry optimization ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})
 
 # Specify binary name and source file to build it from
 # cuda_add_executable(
