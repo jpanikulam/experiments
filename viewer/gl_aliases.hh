@@ -6,6 +6,7 @@
 
 #include <Eigen/Dense>
 #include <sophus/se2.hpp>
+#include <sophus/se3.hpp>
 
 namespace gl_viewer {
 
@@ -14,6 +15,9 @@ namespace {
 
 using so2 = Sophus::SO2<double>;
 using se2 = Sophus::SE2<double>;
+
+using so3 = Sophus::SO3<double>;
+using se3 = Sophus::SE3<double>;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -112,5 +116,25 @@ void glTranslate(const Eigen::Vector2d &vec) {
 void glTransform(const se2 &T) {
   glRotate(T.so2());
   glTranslate(T.translation());
+}
+
+//
+// Rotate/Translate (3D)
+//
+void glRotate(const so3 &T) {
+  const Eigen::Vector3d log = T.log();
+  const double          norm = log.norm();
+  const Eigen::Vector3d axis = log / norm;
+
+  glRotated(norm, axis.x(), axis.y(), axis.z());
+}
+
+void glTranslate(const Eigen::Vector3d &vec) {
+  glTranslated(vec.x(), vec.y(), vec.z());
+}
+
+void glTransform(const se3 &T) {
+  // glLoadMatrixd(T.matrix().transpose().data());
+  glMultMatrixd(T.matrix().transpose().data());
 }
 }

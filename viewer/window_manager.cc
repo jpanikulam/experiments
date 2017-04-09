@@ -12,6 +12,14 @@
 
 namespace gl_viewer {
 
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void cursor_position_callback(GLFWwindow *window, double xpos, double ypos);
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
+void window_size_callback(GLFWwindow *window, int width, int height);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+
+void error_callback(int error, const char *description);
+
 struct GlobalState {
   GLFWwindow *active_window;
   std::map<GLFWwindow *, std::shared_ptr<SimpleWindow>> windows;
@@ -39,22 +47,6 @@ GlobalState *maybe_create_global_state() {
   return global_state;
 }
 
-/*
-std::shared_ptr<SimpleWindow> WindowManager::create_window(const GlSize &size) {
-  maybe_create_global_state();
-
-  std::ostringstream win_name;
-  win_name << "Window : ";
-  win_name << global_state->windows.size();
-  auto simple_window = std::make_shared<SimpleWindow>();
-  simple_window->set_text(win_name.str());
-
-  register_window(size, simple_window, win_name.str());
-
-  return simple_window;
-}
-*/
-
 void WindowManager::register_window(const GlSize &                      size,
                                     const std::shared_ptr<SimpleWindow> simple_window,
                                     const std::string &                 window_name) {
@@ -69,6 +61,11 @@ void WindowManager::register_window(const GlSize &                      size,
   }
 
   glfwSetKeyCallback(window, key_callback);
+  glfwSetCursorPosCallback(window, cursor_position_callback);
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
+  glfwSetWindowSizeCallback(window, window_size_callback);
+  glfwSetScrollCallback(window, scroll_callback);
+
   global_state->windows[window] = simple_window;
 }
 
@@ -114,5 +111,30 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
   }
 
   global_state->windows.at(window)->key_pressed(key, scancode, action, mods);
+}
+
+void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
+  global_state->windows.at(window)->mouse_moved(xpos, ypos);
+}
+
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+  if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+  }
+
+  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+  }
+
+  if (action == GLFW_RELEASE) {
+  }
+
+  global_state->windows.at(window)->mouse_button(button, action, mods);
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+  global_state->windows.at(window)->on_scroll(yoffset);
+}
+
+void window_size_callback(GLFWwindow *window, int width, int height) {
+  global_state->windows.at(window)->resize(GlSize(width, height));
 }
 }

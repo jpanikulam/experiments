@@ -5,29 +5,65 @@
 #include <map>
 #include <string>
 
-// todo
-#include <iostream>
-
 namespace gl_viewer {
 
 void SimpleWindow::key_pressed(int key, int scancode, int action, int mods) {
   if (action == GLFW_PRESS) {
-    pressed_keys_[key] = true;
+    held_keys_[key] = true;
   } else if (action == GLFW_RELEASE) {
-    pressed_keys_[key] = false;
+    held_keys_[key] = false;
   }
 
   on_key(key, scancode, action, mods);
 }
 
-void on_key(int key, int scancode, int action, int mods) {
+void SimpleWindow::mouse_button(int button, int action, int mods) {
+  if (action == GLFW_PRESS) {
+    held_mouse_buttons_[button] = true;
+  } else if (action == GLFW_RELEASE) {
+    held_mouse_buttons_[button] = false;
+  }
+
+  on_mouse_button(button, action, mods);
+}
+
+void SimpleWindow::mouse_moved(double x, double y) {
+  mouse_pos_.point(0) = x;
+  mouse_pos_.point(1) = y;
+  on_mouse_move(mouse_pos_);
+}
+
+bool SimpleWindow::left_mouse_held() const {
+  const auto search = held_mouse_buttons_.find(GLFW_MOUSE_BUTTON_LEFT);
+  if (search != held_mouse_buttons_.end()) {
+    return search->second;
+  } else {
+    return false;
+  }
+}
+
+bool SimpleWindow::right_mouse_held() const {
+  const auto search = held_mouse_buttons_.find(GLFW_MOUSE_BUTTON_RIGHT);
+  if (search != held_mouse_buttons_.end()) {
+    return search->second;
+  } else {
+    return false;
+  }
 }
 
 void SimpleWindow::set_text(const std::string text) {
   text_ = text;
 }
 
-const std::map<int, bool> &SimpleWindow::pressed_keys() {
-  return pressed_keys_;
+const std::map<int, bool> &SimpleWindow::held_keys() const {
+  return held_keys_;
+}
+
+const std::map<int, bool> &SimpleWindow::held_mouse_buttons() const {
+  return held_mouse_buttons_;
+}
+
+const WindowPoint &SimpleWindow::mouse_pos() const {
+  return mouse_pos_;
 }
 }
