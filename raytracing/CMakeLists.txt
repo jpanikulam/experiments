@@ -32,18 +32,10 @@ include_directories(${GTEST_INCLUDE_DIRS})
 #########################
 # Life is what you cmake of it
 #
-set(BASEPATH "${CMAKE_CURRENT_SOURCE_DIR}/..")
-include_directories("${BASEPATH}/third_party/Sophus")
-include_directories("${BASEPATH}")
-# include_directories("${BASEPATH}/common/inc")
 
 set(CMAKE_CXX_COMPILER "g++-5")
 
 set (CMAKE_CXX_FLAGS "--std=c++14 -g -fno-omit-frame-pointer -Wall ${CMAKE_CXX_FLAGS}")
-# list(APPEND CUDA_NVCC_FLAGS "-std=c++11;-O1;-DVERBOSE;-gencode;arch=compute_61,code=sm_61")
-# list(APPEND CUDA_NVCC_FLAGS "-std=c++11;-fno-omit-framepointer;-DVERBOSE;-gencode;arch=compute_61,code=sm_61")
-# SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
-
 
 function(add_test test_name test_file test_libs)
     add_executable(${test_name} ${test_file})
@@ -59,14 +51,5 @@ add_test(geometry_test geometry_test.cc geometry)
 add_test(optimization_test optimization_test.cc optimization)
 add_test(numdiff_test numdiff_test.cc "")
 
-add_executable(view view.cc)
-target_link_libraries(view geometry optimization ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})
-
-# Specify binary name and source file to build it from
-# cuda_add_executable(
-#     sim
-#     view.cc
-#     sim.cu
-# )
-
-# target_link_libraries(sim ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+# add_executable(view view.cc)
+# target_link_libraries(view geometry optimization ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})

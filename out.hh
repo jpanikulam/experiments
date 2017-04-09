@@ -1,9 +1,11 @@
+#pragma once
+
 //
 // Retains no ownership over the object
 //
 template <class T>
 struct Out {
-  explicit Out(T &obj) : _obj(obj) {
+  explicit Out(T& obj) : _obj(obj) {
   }
   T& operator*() {
     return _obj;
