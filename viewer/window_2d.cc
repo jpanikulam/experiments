@@ -44,7 +44,6 @@ void Window2D::View2D::simulate() {
 
   camera_height += dcamera_height * dt;
   zoom *= std::exp(0.2 * dzoom * dt);
-  // std::cout << zoom << std::endl;
 
   //
   // Apply damping
@@ -53,7 +52,7 @@ void Window2D::View2D::simulate() {
   constexpr double translation_damping = 0.95;
   constexpr double rotation_damping    = 0.98;
   constexpr double scroll_damping      = 0.90;
-  constexpr double zoom_damping        = 0.8;
+  constexpr double zoom_damping        = 0.85;
 
   velocity.head<2>() *= translation_damping;
   velocity(2) *= rotation_damping;
@@ -74,7 +73,7 @@ void Window2D::on_mouse_button(int button, int action, int mods) {
 }
 
 void Window2D::on_mouse_move(const WindowPoint& position) {
-  if (left_mouse_held()) {
+  if (right_mouse_held()) {
     const geometry::Ray   mouse_ray = projection_.unproject(position);
     const geometry::Plane plane({Vec3::Zero(), Vec3::UnitZ()});
 
@@ -219,7 +218,9 @@ void Window2D::render() {
   // Compute ground plane intersection
   //
 
-  projection_ = Projection::get_from_current();
+  projection_     = Projection::get_from_current();
+  const ViewportPoint proj = projection_.project(Vec3(0.0, 0.0, 0.0));
+  std::cout << proj.point.transpose() << std::endl;
 
   //
   // Draw all renderables

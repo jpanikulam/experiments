@@ -30,5 +30,7 @@ class WindowManager {
   // Are there any active windows?
   //
   bool any_windows();
+
+  void spin();
 };
 }

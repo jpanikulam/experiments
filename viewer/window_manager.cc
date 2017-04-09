@@ -5,8 +5,7 @@
 #include <map>
 #include <sstream>
 #include <string>
-
-#include <stdlib.h>
+#include <thread>
 
 #define GLSL(src) #src
 
@@ -95,6 +94,14 @@ void WindowManager::render() {
 bool WindowManager::any_windows() {
   maybe_create_global_state();
   return !global_state->windows.empty();
+}
+
+void WindowManager::spin() {
+  while (any_windows()) {
+    render();
+    std::this_thread::sleep_for(std::chrono::milliseconds(15));
+  }
+  glfwTerminate();
 }
 
 void error_callback(int error, const char *description) {

@@ -72,12 +72,14 @@ geometry::Ray Projection::unproject(const ViewportPoint& view_point) const {
   return geometry::Ray({p_near, (p_far - p_near).normalized()});
 }
 
-Eigen::Vector3d Projection::project(const Vec3& world_point) const {
+ViewportPoint Projection::project(const Vec3& world_point) const {
   const Vec4 world_point_h = (Vec4() << world_point, 1.0).finished();
 
-  const Vec4 view_point_h = projection_mat_ * world_point_h;
-  std::cout << view_point_h.transpose() << std::endl;
-  return Vec3::Zero();
+  // todo: don't repeat this multiply
+  const Vec4 view_point_h = projection_mat_ * (modelview_mat_ * world_point_h);
+
+  const ViewportPoint point(view_point_h.head<2>() / view_point_h(3));
+  return point;
 }
 
 }  // namespace gl_viewer

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 find_package(CUDA QUIET REQUIRED)
 
-
 #########################
 # Eigen
 #
@@ -20,7 +19,6 @@ pkg_search_module(GLFW REQUIRED glfw3)
 include_directories(${GLFW_INCLUDE_DIRS})
 find_package(GLEW REQUIRED)
 
-
 #########################
 # GTest
 #
@@ -35,13 +33,12 @@ include_directories(${GTEST_INCLUDE_DIRS})
 
 set(CMAKE_CXX_COMPILER "g++-5")
 
-set (CMAKE_CXX_FLAGS "--std=c++14 -g -fno-omit-frame-pointer -Wall ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=c++14 -g -fno-omit-frame-pointer -Wall ${CMAKE_CXX_FLAGS}")
 
 function(add_test test_name test_file test_libs)
     add_executable(${test_name} ${test_file})
     target_link_libraries(${test_name} ${test_libs} ${GTEST_LIBRARIES} pthread)
 endfunction(add_test)
-
 
 add_library(geometry geometry.cc)
 add_library(optimization optimization.cc)
@@ -52,4 +49,4 @@ add_test(optimization_test optimization_test.cc optimization)
 add_test(numdiff_test numdiff_test.cc "")
 
 # add_executable(view view.cc)
-# target_link_libraries(view geometry optimization ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})
+# target_link_libraries(view geometry optimization  ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})

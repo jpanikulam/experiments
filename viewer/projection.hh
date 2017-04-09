@@ -36,12 +36,21 @@ class Projection {
     }
   }
 
+  // Get a view point from a window point
+  //
   ViewportPoint to_viewport(const WindowPoint& window_point) const;
 
+  // Get a ray for a window point
+  //
   geometry::Ray unproject(const WindowPoint& window_point) const;
+
+  // Get a ray for a view point
+  //
   geometry::Ray unproject(const ViewportPoint& view_point) const;
 
-  Eigen::Vector3d project(const Vec3& world_point) const;
+  // Get a view point for a 3d point
+  //
+  ViewportPoint project(const Vec3& world_point) const;
 
   const Mat4& projection_mat() {
     return projection_mat_;
