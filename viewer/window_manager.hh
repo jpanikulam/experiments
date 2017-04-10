@@ -32,5 +32,7 @@ class WindowManager {
   bool any_windows();
 
   void spin();
+
+  void draw(const int ms = 16);
 };
 }

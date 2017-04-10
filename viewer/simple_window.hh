@@ -34,7 +34,8 @@ class SimpleWindow {
 
   virtual void render() = 0;
 
-  void set_text(const std::string text);
+  void set_title(const std::string title);
+  const std::string &title();
 
   const std::map<int, bool> &held_keys() const;
   const std::map<int, bool> &held_mouse_buttons() const;
@@ -45,7 +46,7 @@ class SimpleWindow {
   bool right_mouse_held() const;
 
  private:
-  std::string text_;
+  std::string title_;
   std::map<int, bool> held_keys_;
   std::map<int, bool> held_mouse_buttons_;
 

@@ -51,8 +51,12 @@ bool SimpleWindow::right_mouse_held() const {
   }
 }
 
-void SimpleWindow::set_text(const std::string text) {
-  text_ = text;
+void SimpleWindow::set_title(const std::string title) {
+  title_ = title;
+}
+
+const std::string &SimpleWindow::title() {
+  return title_;
 }
 
 const std::map<int, bool> &SimpleWindow::held_keys() const {

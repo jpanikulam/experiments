@@ -67,21 +67,30 @@ void Window2D::on_key(int key, int scancode, int action, int mods) {
   }
 }
 
+bool point_on_plane(const Projection& proj, const WindowPoint& point, Out<Vec3> intersection) {
+  const geometry::Ray   ray = proj.unproject(point);
+  const geometry::Plane plane({Vec3::Zero(), Vec3::UnitZ()});
+  return plane.intersect(ray, intersection);
+}
+
 void Window2D::on_mouse_button(int button, int action, int mods) {
   if (left_mouse_held()) {
   }
 }
 
 void Window2D::on_mouse_move(const WindowPoint& position) {
+  if (left_mouse_held()) {
+    // projection_.unproject
+  }
+
   if (right_mouse_held()) {
-    const geometry::Ray   mouse_ray = projection_.unproject(position);
-    const geometry::Plane plane({Vec3::Zero(), Vec3::UnitZ()});
+    // const geometry::Ray mouse_ray = projection_.unproject(position);
+    // const geometry::Plane plane({Vec3::Zero(), Vec3::UnitZ()});
 
     Vec3 intersection;
-    if (plane.intersect(mouse_ray, out(intersection))) {
+    if (point_on_plane(projection_, position, out(intersection))) {
       const double t_now = glfwGetTime();
       const Vec4   color((std::sin(t_now / 5.0) + 1.0) * 0.5, (std::sin(t_now / 1.0) + 1.0) * 0.5, 0.2, 0.9);
-
       add_circle({Vec2(intersection.x(), intersection.y()), 0.3, color});
     }
   }
@@ -165,9 +174,10 @@ void Window2D::draw_renderables(const Renderables& renderables) const {
   //
 
   for (const auto& circle : renderables.circles) {
-    const double circumference            = circle.radius * 2.0 * M_PI;
-    const int    num_segments             = 30 * static_cast<int>(circumference);
-    const double segment_angular_fraction = 2.0 * M_PI / num_segments;
+    constexpr double SEGMENTS_PER_RADIAN      = 90.0;
+    const double     circumference            = circle.radius * 2.0 * M_PI;
+    const int        num_segments             = static_cast<int>(SEGMENTS_PER_RADIAN * circumference);
+    const double     segment_angular_fraction = 2.0 * M_PI / num_segments;
 
     glColor(circle.color);
     glBegin(GL_LINE_LOOP);
@@ -218,9 +228,13 @@ void Window2D::render() {
   // Compute ground plane intersection
   //
 
-  projection_     = Projection::get_from_current();
+  projection_              = Projection::get_from_current();
   const ViewportPoint proj = projection_.project(Vec3(0.0, 0.0, 0.0));
-  std::cout << proj.point.transpose() << std::endl;
+
+  // const double t_now = glfwGetTime();
+  // const Vec4   color((std::sin(t_now / 5.0) + 1.0) * 0.5, (std::sin(t_now / 1.0) + 1.0) * 0.5, 0.2, 0.9);
+  // renderables_.circles.clear();
+  // add_circle({Vec2::Zero(), 10.0, color});
 
   //
   // Draw all renderables
@@ -229,7 +243,9 @@ void Window2D::render() {
   apply_keys_to_view();
   view_.apply();
 
-  // glScaled(view_.zoom, view_.zoom, view_.zoom);
   draw_renderables(renderables_);
+
+  glFlush();
+  glFinish();
 }
 }

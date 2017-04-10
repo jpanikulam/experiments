@@ -14,13 +14,18 @@ namespace gl_viewer {
 void run() {
   WindowManager win_man;
   auto          win2d_1 = std::make_shared<Window2D>();
-  win_man.register_window(GlSize(640, 640), win2d_1, "Two Dimensional Debugging");
+  auto          win2d_2 = std::make_shared<Window2D>();
+  win_man.register_window(GlSize(640, 640), win2d_1, "Window A");
+  win_man.register_window(GlSize(640, 640), win2d_2, "Window B");
 
   const Vec2 v(0.0, 1.0);
   win2d_1->add_line({Vec2(-0.5, -0.5), Vec2(0.5, 0.5)});
   win2d_1->add_line({Vec2(-0.5, 0.5), Vec2(0.5, -0.5)});
 
   win2d_1->add_ray({Vec2(0.0, 0.0), Vec2(-0.5, 0.5), Vec4(0.0, 1.0, 0.4, 1.0)});
+
+  win2d_2->add_line({Vec2(-0.5, -0.5), Vec2(0.5, 0.5), Vec4(0.8, 0.0, 0.4, 1.0)});
+  win2d_2->add_line({Vec2(-0.5, 0.5), Vec2(0.5, -0.5), Vec4(0.8, 0.0, 0.4, 1.0)});
 
   win_man.spin();
   std::cout << "Done" << std::endl;

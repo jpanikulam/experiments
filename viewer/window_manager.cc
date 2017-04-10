@@ -52,6 +52,7 @@ void WindowManager::register_window(const GlSize &                      size,
   maybe_create_global_state();
 
   GLFWwindow *window = glfwCreateWindow(size.height, size.width, window_name.c_str(), nullptr, nullptr);
+  simple_window->set_title(window_name);
 
   if (!window) {
     glfwTerminate();
@@ -78,6 +79,8 @@ void WindowManager::render() {
 
     glfwMakeContextCurrent(glfw_win);
 
+    std::cout << glfwGetTime() << std::endl;
+    std::cout << "Title: " << window->title() << std::endl;
     if (!glfwWindowShouldClose(glfw_win)) {
       window->render();
       glfwSwapBuffers(glfw_win);
@@ -96,10 +99,17 @@ bool WindowManager::any_windows() {
   return !global_state->windows.empty();
 }
 
+void WindowManager::draw(const int ms) {
+  if (any_windows()) {
+    render();
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+  }
+}
+
 void WindowManager::spin() {
   while (any_windows()) {
     render();
-    std::this_thread::sleep_for(std::chrono::milliseconds(15));
+    std::this_thread::sleep_for(std::chrono::milliseconds(16));
   }
   glfwTerminate();
 }

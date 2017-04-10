@@ -32,7 +32,7 @@ class Projection {
 
     // SORRY YO
     if (lu_.rank() != 4) {
-      throw std::runtime_error("Hello");
+      throw std::runtime_error("Can't invert projection-model-view matrix, failing");
     }
   }
 

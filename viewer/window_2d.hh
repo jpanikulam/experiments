@@ -69,12 +69,22 @@ class Window2D final : public SimpleWindow {
     renderables_.circles.push_back(circle);
   }
 
+  void clear() {
+    renderables_.clear();
+  }
+
  private:
   struct Renderables {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     std::vector<Line>   lines;
     std::vector<Ray>    rays;
     std::vector<Circle> circles;
+
+    void clear() {
+      lines.clear();
+      rays.clear();
+      circles.clear();
+    }
   };
 
   struct View2D {
