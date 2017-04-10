@@ -48,5 +48,5 @@ add_test(geometry_test geometry_test.cc geometry)
 add_test(optimization_test optimization_test.cc optimization)
 add_test(numdiff_test numdiff_test.cc "")
 
-# add_executable(view view.cc)
-# target_link_libraries(view geometry optimization  ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})
+add_executable(view view.cc)
+target_link_libraries(view geometry optimization window_2d window_manager ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})
