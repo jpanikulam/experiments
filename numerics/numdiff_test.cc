@@ -5,14 +5,12 @@
 using Vec1 = Eigen::Matrix<double, 1, 1>;
 using Vec2 = Eigen::Vector2d;
 using Vec3 = Eigen::Vector3d;
-namespace raytrace {
-
+namespace numerics {
+namespace {
 double gfunc(const Vec2 &z) {
   return z(0) * z(0) + 5 * z(1);
 }
 }
-
-namespace rt = raytrace;
 
 TEST(NumericalGradient, gfunc) {
   constexpr double EPS = 1e-6;
@@ -28,7 +26,7 @@ TEST(NumericalGradient, gfunc) {
   // Action
   //
 
-  const Vec2 J = rt::numerical_gradient<2>(x, rt::gfunc);
+  const Vec2 J = numerical_gradient<2>(x, gfunc);
 
   //
   // Verification
@@ -36,6 +34,7 @@ TEST(NumericalGradient, gfunc) {
 
   // max error
   EXPECT_LT((J - expected).lpNorm<Eigen::Infinity>(), EPS);
+}
 }
 
 int main(int argc, char **argv) {

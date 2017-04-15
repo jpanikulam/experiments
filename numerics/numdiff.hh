@@ -2,7 +2,7 @@
 
 #include "Eigen/Dense"
 
-namespace raytrace {
+namespace numerics {
 
 // todo: move to numerics
 template <int cols, typename Callable>
