@@ -1,3 +1,7 @@
+// jcc is licensed under the commonwealth of the borg act
+// All members of the collective may share in its bounty
+//
+
 #include "window_2d.hh"
 
 #include <GL/glew.h>
@@ -228,13 +232,8 @@ void Window2D::render() {
   // Compute ground plane intersection
   //
 
-  projection_              = Projection::get_from_current();
-  const ViewportPoint proj = projection_.project(Vec3(0.0, 0.0, 0.0));
-
-  // const double t_now = glfwGetTime();
-  // const Vec4   color((std::sin(t_now / 5.0) + 1.0) * 0.5, (std::sin(t_now / 1.0) + 1.0) * 0.5, 0.2, 0.9);
-  // renderables_.circles.clear();
-  // add_circle({Vec2::Zero(), 10.0, color});
+  // Update projection
+  projection_ = Projection::get_from_current();
 
   //
   // Draw all renderables

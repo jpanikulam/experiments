@@ -19,11 +19,16 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 void error_callback(int error, const char *description);
 
+//
+// Manage a global registry of the created windows
+//
+
 struct GlobalState {
   GLFWwindow *active_window;
   std::map<GLFWwindow *, std::shared_ptr<SimpleWindow>> windows;
 };
 
+// Global state singleton
 GlobalState *global_state;
 
 GlobalState *maybe_create_global_state() {
@@ -79,8 +84,6 @@ void WindowManager::render() {
 
     glfwMakeContextCurrent(glfw_win);
 
-    std::cout << glfwGetTime() << std::endl;
-    std::cout << "Title: " << window->title() << std::endl;
     if (!glfwWindowShouldClose(glfw_win)) {
       window->render();
       glfwSwapBuffers(glfw_win);
