@@ -90,6 +90,7 @@ void run() {
   config.separation_rad = 0.01;
 
   for (int k = 0; k < 50; ++k) {
+    std::cout << "--" << std::endl;
     for (double p = 0.0; p < 2.0 * M_PI; p += 0.1) {
       const Vec2 origin(0.0, 0.0);
       const Vec2 direction(std::sin(p), std::cos(p));
@@ -100,6 +101,7 @@ void run() {
       if (map.ray_intersect(ray, config, out(intersection))) {
         win2d_1->add_ray({ray.origin, ray.direction, Vec4(0.0, 1.0, 0.4, 1.0)});
         win2d_1->add_circle({intersection, 0.1});
+        std::cout << intersection.transpose() << std::endl;
       }
       win_man.draw();
     }

@@ -1,12 +1,13 @@
-#include "optimization.hh"
-#include "numdiff.hh"
+#include "raytracing/optimization.hh"
+#include "numerics/numdiff.hh"
 
-#include <gtest/gtest.h>
+#include "testing/gtest.hh"
 
 using Vec1   = Eigen::Matrix<double, 1, 1>;
 using Vec2   = Eigen::Vector2d;
 using Vec3   = Eigen::Vector3d;
 namespace rt = raytrace;
+namespace nm = numerics;
 
 // Numerical gradient of cost
 //
@@ -42,7 +43,7 @@ TEST(CostGradient, numerical) {
   // Verification
   //
 
-  const Vec3 numerical_dcost = rt::numerical_gradient(eta, fcn);
+  const Vec3 numerical_dcost = nm::numerical_gradient(eta, fcn);
   EXPECT_LT((numerical_dcost - analytical_dcost).norm(), EPS);
 }
 
@@ -87,9 +88,4 @@ TEST(Optimization, GaussNewton) {
   const double r_theta = se2::exp(result).so2().log();
   EXPECT_NEAR(r_theta, theta, EPS);
   EXPECT_LT((r_trans - trans).norm(), EPS);
-}
-
-int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

@@ -1,11 +1,10 @@
-// Tested af
+#include "raytracing/geometry.hh"
+#include "numerics/numdiff.hh"
 
-#include "geometry.hh"
-#include "numdiff.hh"
-
-#include <gtest/gtest.h>
+#include "testing/gtest.hh"
 
 namespace rt = raytrace;
+namespace nm = numerics;
 
 using Vec2 = Eigen::Vector2d;
 
@@ -176,7 +175,7 @@ TEST(Primitives, plane_distance) {
   EXPECT_NEAR(dist_behind, -dist, EPS);
 
   const auto fcn             = std::bind(&rt::DirectedLineSegment::to_plane_distance, &segment, std::placeholders::_1);
-  const Vec2 numerical_dcost = rt::numerical_gradient(test, fcn);
+  const Vec2 numerical_dcost = nm::numerical_gradient(test, fcn);
   EXPECT_LT((analytical_grad - numerical_dcost).norm(), EPS);
 }
 
@@ -213,11 +212,6 @@ TEST(Primitives, projected_plane_distance) {
   EXPECT_NEAR(dist_behind, -dist, EPS);
 
   const auto fcn = std::bind(&rt::DirectedLineSegment::along_plane_distance, &segment, std::placeholders::_1);
-  const Vec2 numerical_dcost = rt::numerical_gradient(test, fcn);
+  const Vec2 numerical_dcost = nm::numerical_gradient(test, fcn);
   EXPECT_LT((analytical_grad - numerical_dcost).norm(), EPS);
-}
-
-int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

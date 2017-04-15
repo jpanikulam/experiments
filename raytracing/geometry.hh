@@ -1,8 +1,8 @@
 #pragma once
 
-#include "out.hh"
-
 #include <Eigen/Dense>
+
+#include "out.hh"
 
 namespace raytrace {
 
@@ -53,6 +53,10 @@ struct DirectedLineSegment {
   DirectedLineSegment(const Vec2 &normal_, const Vec2 &center_, const double width_)
       : normal(normal_.normalized()), center(center_), width(width_) {
   }
+  DirectedLineSegment(const Vec2 &normal_, const Vec2 &center_)
+      : normal(normal_.normalized()), center(center_), width(-1.0) {
+  }
+
   const Vec2   normal;
   const Vec2   center;
   const double width;
