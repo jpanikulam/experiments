@@ -14,3 +14,4 @@ set(CMAKE_CXX_COMPILER "g++-5")
 set (CMAKE_CXX_FLAGS "--std=c++14 -g -fno-omit-frame-pointer -Wall ${CMAKE_CXX_FLAGS}")
 
 add_library(spatial_geometry geometry.cc plane.cc)
+add_test(perp_test perp_test.cc "")
