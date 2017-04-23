@@ -3,6 +3,9 @@
 
 #include <Eigen/Dense>
 
+// TODO
+#include "viewer/window_2d.hh"
+
 namespace raytrace {
 using Vec2 = Eigen::Vector2d;
 
@@ -10,12 +13,12 @@ TEST(LineModel, fit_model) {
   std::vector<Observation> observations;
   const Vec2               origin = Vec2::Zero();
   observations.push_back({origin, Vec2(2.0, 1.0)});
-  observations.push_back({origin, Vec2(-2.0, 1.0)});
+  observations.push_back({origin, Vec2(2.0, -1.0)});
 
   const std::vector<int> indices = {0, 1};
 
   std::vector<DirectedLineSegment> hypotheses;
-  const bool valid = fit_model(observations, indices, out(hypotheses));
+  const bool                       valid = fit_model(observations, indices, out(hypotheses));
   EXPECT_TRUE(valid);
 
   std::cout << hypotheses[0].normal.transpose() << std::endl;
@@ -46,9 +49,22 @@ TEST(LineModel, test_detects) {
 
   const Vec2 origin = Vec2::Zero();
 
+  auto win2d_1 = gl_viewer::get_window2d("Ransac View");
+
+
   std::vector<Observation> observations(points.size());
   for (size_t k = 0; k < points.size(); ++k) {
     observations[k] = {origin, points[k]};
+    win2d_1->add_circle({points[k], 0.1});
   }
+
+  RansacConfiguration config;
+  config.inliers_for_valid = 6;
+  config.max_fit_ct        = 200;
+
+  std::vector<DirectedLineSegment> models;
+  discover_models(observations, config, out(models));
+
+  std::cout << models.size() << std::endl;
 }
 }

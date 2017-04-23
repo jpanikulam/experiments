@@ -19,8 +19,8 @@ struct Ray {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Ray(const Vec2 &origin_, const Vec2 &direction_) : origin(origin_), direction(direction_.normalized()) {
   }
-  const Vec2 origin;
-  const Vec2 direction;
+  Vec2 origin;
+  Vec2 direction;
 };
 
 // A proper geometric line, that points endlessly in both `direction` and `-direction`
@@ -30,8 +30,8 @@ struct Line {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Line(const Vec2 &point_, const Vec2 &direction_) : point(point_), direction(direction_.normalized()) {
   }
-  const Vec2 point;
-  const Vec2 direction;
+  Vec2 point;
+  Vec2 direction;
 };
 
 // A 2D line segment (parameterized by `start` and `end`)
@@ -41,25 +41,25 @@ struct LineSegment {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   LineSegment(const Vec2 &start_, const Vec2 &end_) : start(start_), end(end_) {
   }
-  const Vec2 start;
-  const Vec2 end;
+  Vec2 start;
+  Vec2 end;
 };
 
-// A 2D plane section (parameterized by `normal` and `width`)
+// A 2D plane section (parameterized by `normal` and `radius`)
 // Equivalent to a line segment, but with a "sidedness", determined by `normal`
 //
 struct DirectedLineSegment {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  DirectedLineSegment(const Vec2 &normal_, const Vec2 &center_, const double width_)
-      : normal(normal_.normalized()), center(center_), width(width_) {
+  DirectedLineSegment(const Vec2 &normal_, const Vec2 &center_, const double radius_)
+      : normal(normal_.normalized()), center(center_), radius(radius_) {
   }
   DirectedLineSegment(const Vec2 &normal_, const Vec2 &center_)
-      : normal(normal_.normalized()), center(center_), width(-1.0) {
+      : normal(normal_.normalized()), center(center_), radius(-1.0) {
   }
 
-  const Vec2   normal;
-  const Vec2   center;
-  const double width;
+  Vec2   normal;
+  Vec2   center;
+  double radius;
 
   // Signed
   // `point`s in the halfspace indicated by `normal` will have positive distance

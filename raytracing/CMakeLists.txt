@@ -34,6 +34,7 @@ add_library(optimization optimization.cc)
 add_test(optimization_test optimization_test.cc optimization)
 
 add_library(ransac ransac.cc)
+target_link_libraries(ransac window_2d)
 add_test(ransac_test ransac_test.cc ransac)
 
 add_executable(view view.cc)
