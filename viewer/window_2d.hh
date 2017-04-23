@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 #include <sophus/se2.hpp>
 
+#include <memory>
 #include <vector>
 
 namespace gl_viewer {
@@ -127,4 +128,6 @@ class Window2D final : public SimpleWindow {
 
   GlSize gl_size_ = GlSize(640, 640);
 };
+
+std::shared_ptr<Window2D> get_window2d(const std::string& title = "main");
 }

@@ -9,6 +9,7 @@
 
 #include "gl_aliases.hh"
 #include "spatial_geometry/plane.hh"
+#include "viewer/window_manager.hh"
 
 #include <iostream>
 
@@ -37,6 +38,7 @@ void Window2D::View2D::simulate() {
 
   const double t_now = glfwGetTime();
   const double dt    = t_now - last_update_time;
+  last_update_time   = t_now;
 
   //
   // Apply the current transform and derivatives
@@ -66,9 +68,6 @@ void Window2D::View2D::simulate() {
 }
 
 void Window2D::on_key(int key, int scancode, int action, int mods) {
-  if (action == GLFW_RELEASE) {
-    Projection::get_from_current();
-  }
 }
 
 bool point_on_plane(const Projection& proj, const WindowPoint& point, Out<Vec3> intersection) {
@@ -84,13 +83,9 @@ void Window2D::on_mouse_button(int button, int action, int mods) {
 
 void Window2D::on_mouse_move(const WindowPoint& position) {
   if (left_mouse_held()) {
-    // projection_.unproject
   }
 
   if (right_mouse_held()) {
-    // const geometry::Ray mouse_ray = projection_.unproject(position);
-    // const geometry::Plane plane({Vec3::Zero(), Vec3::UnitZ()});
-
     Vec3 intersection;
     if (point_on_plane(projection_, position, out(intersection))) {
       const double t_now = glfwGetTime();
@@ -101,7 +96,7 @@ void Window2D::on_mouse_move(const WindowPoint& position) {
 }
 
 void Window2D::on_scroll(const double amount) {
-  const double scroll_acceleration = 0.01;
+  const double scroll_acceleration = 0.8;
   view_.dzoom += amount * scroll_acceleration;
 }
 
@@ -113,7 +108,7 @@ void Window2D::resize(const GlSize& gl_size) {
 void Window2D::apply_keys_to_view() {
   const auto keys = held_keys();
 
-  const double acceleration = 0.001 / view_.zoom;
+  const double acceleration = 0.1 / view_.zoom;
 
   Vec3 delta_vel = Vec3::Zero();
   for (const auto& key_element : keys) {
@@ -178,13 +173,14 @@ void Window2D::draw_renderables(const Renderables& renderables) const {
   //
 
   for (const auto& circle : renderables.circles) {
-    constexpr double SEGMENTS_PER_RADIAN      = 90.0;
+    constexpr double SEGMENTS_PER_RADIAN      = 20.0;
     const double     circumference            = circle.radius * 2.0 * M_PI;
     const int        num_segments             = static_cast<int>(SEGMENTS_PER_RADIAN * circumference);
     const double     segment_angular_fraction = 2.0 * M_PI / num_segments;
 
     glColor(circle.color);
-    glBegin(GL_LINE_LOOP);
+    // glBegin(GL_LINE_LOOP);
+    glBegin(GL_LINES);
     for (double angular_fraction = 0.0; angular_fraction < (2.0 * M_PI); angular_fraction += segment_angular_fraction) {
       const double x = (circle.radius * std::cos(angular_fraction)) + circle.center.x();
       const double y = (circle.radius * std::sin(angular_fraction)) + circle.center.y();
@@ -246,5 +242,23 @@ void Window2D::render() {
 
   glFlush();
   glFinish();
+}
+
+struct Window2DGlobalState {
+  std::map<std::string, std::shared_ptr<Window2D>> windows;
+};
+
+Window2DGlobalState window_2d_state;
+
+std::shared_ptr<Window2D> get_window2d(const std::string& title) {
+  const auto it = window_2d_state.windows.find(title);
+  if (it != window_2d_state.windows.end()) {
+    return it->second;
+  } else {
+    auto window                    = std::make_shared<Window2D>();
+    window_2d_state.windows[title] = window;
+    WindowManager::register_window(GlSize(640, 640), window, title);
+    return window;
+  }
 }
 }

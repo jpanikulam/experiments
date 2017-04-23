@@ -103,9 +103,11 @@ bool WindowManager::any_windows() {
 }
 
 void WindowManager::draw(const int ms) {
-  if (any_windows()) {
+  int ms_slept = 0;
+  while (any_windows() && (ms_slept < ms)) {
     render();
-    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    ms_slept += 16;
   }
 }
 
