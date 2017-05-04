@@ -16,6 +16,7 @@ function(add_test test_name test_file test_libs)
     target_link_libraries(${test_name} ${test_libs} ${GTEST_LIBRARIES} pthread)
 endfunction(add_test)
 
+add_subdirectory(clustering)
 add_subdirectory(numerics)
 add_subdirectory(raytracing)
 add_subdirectory(spatial_geometry)
