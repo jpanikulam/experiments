@@ -68,6 +68,18 @@ void Window2D::View2D::simulate() {
 }
 
 void Window2D::on_key(int key, int scancode, int action, int mods) {
+  if (action == GLFW_PRESS) {
+    if (key == static_cast<int>('N')) {
+      should_continue_ = true;
+    }
+  }
+}
+
+void Window2D::spin_until_step() {
+  while (!should_continue_ && WindowManager::any_windows()) {
+    WindowManager::draw();
+  }
+  should_continue_ = false;
 }
 
 bool point_on_plane(const Projection& proj, const WindowPoint& point, Out<Vec3> intersection) {
@@ -141,6 +153,17 @@ void Window2D::apply_keys_to_view() {
   view_.velocity += delta_vel;
 }
 
+void draw_points(const Points& points) {
+  glColor(points.color);
+  glBegin(GL_POINTS);
+  {
+    for (const auto& pt : points.points) {
+      glVertex(pt);
+    }
+  }
+  glEnd();
+}
+
 void Window2D::draw_renderables(const Renderables& renderables) const {
   //
   // Draw lines
@@ -188,6 +211,14 @@ void Window2D::draw_renderables(const Renderables& renderables) const {
       glVertex2d(x, y);
     }
     glEnd();
+  }
+
+  //
+  // Draw points
+  //
+
+  for (const auto& pts : renderables.points) {
+    draw_points(pts);
   }
 }
 

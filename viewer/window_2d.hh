@@ -4,6 +4,8 @@
 #include "projection.hh"
 #include "simple_window.hh"
 
+#include "viewer/primitives/primitive_types.hh"
+
 #include <Eigen/Dense>
 #include <sophus/se2.hpp>
 
@@ -18,27 +20,6 @@ using Vec4    = Eigen::Vector4d;
 using Vec2Map = Eigen::Map<const Eigen::Vector2d>;
 using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
 }
-
-struct Line {
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Vec2 start;
-  Vec2 end;
-  Vec4 color = Vec4::Ones();
-};
-
-struct Ray {
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Vec2 origin;
-  Vec2 direction;
-  Vec4 color = Vec4::Ones();
-};
-
-struct Circle {
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Vec2   center;
-  double radius;
-  Vec4   color = Vec4::Ones();
-};
 
 class Window2D final : public SimpleWindow {
   using so2 = Sophus::SO2<double>;
@@ -58,6 +39,8 @@ class Window2D final : public SimpleWindow {
 
   void render() override;
 
+  void spin_until_step();
+
   void add_line(const Line& line) {
     renderables_.lines.push_back(line);
   }
@@ -70,24 +53,15 @@ class Window2D final : public SimpleWindow {
     renderables_.circles.push_back(circle);
   }
 
+  void add_points(const Points& points) {
+    renderables_.points.push_back(points);
+  }
+
   void clear() {
     renderables_.clear();
   }
 
  private:
-  struct Renderables {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    std::vector<Line>   lines;
-    std::vector<Ray>    rays;
-    std::vector<Circle> circles;
-
-    void clear() {
-      lines.clear();
-      rays.clear();
-      circles.clear();
-    }
-  };
-
   struct View2D {
     // Default identity
     se2 camera_pose;
@@ -123,6 +97,7 @@ class Window2D final : public SimpleWindow {
 
   View2D     view_;
   Projection projection_;
+  bool       should_continue_ = false;
 
   Renderables renderables_;
 
