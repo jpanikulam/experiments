@@ -28,3 +28,4 @@ set(CMAKE_CXX_FLAGS "--std=c++14 -g -fno-omit-frame-pointer -Wall ${CMAKE_CXX_FL
 
 add_executable(meanshift_view meanshift_view.cc)
 target_link_libraries(meanshift_view window_2d window_manager ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})
+# set_target_properties(meanshift_view PROPERTIES ${CMAKE_CXX_FLAGS} "-O2")

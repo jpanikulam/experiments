@@ -39,7 +39,7 @@ void shift_means(Vout<std::vector<Vec2>> points, const double radius) {
 }
 
 void run() {
-  auto viewer = gl_viewer::get_window2d("Ransac View");
+  auto viewer = gl_viewer::get_window2d("Meanshift View");
 
   constexpr int     NUM_PTS = 500;
   std::vector<Vec2> points(NUM_PTS);
