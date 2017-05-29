@@ -51,9 +51,9 @@ GlobalState *maybe_create_global_state() {
   return global_state;
 }
 
-void WindowManager::register_window(const GlSize &                      size,
+void WindowManager::register_window(const GlSize &size,
                                     const std::shared_ptr<SimpleWindow> simple_window,
-                                    const std::string &                 window_name) {
+                                    const std::string &window_name) {
   maybe_create_global_state();
 
   GLFWwindow *window = glfwCreateWindow(size.height, size.width, window_name.c_str(), nullptr, nullptr);
@@ -80,7 +80,7 @@ void WindowManager::register_window(const GlSize &                      size,
 void WindowManager::render() {
   for (auto it = global_state->windows.begin(); it != global_state->windows.end(); it++) {
     auto &glfw_win = it->first;
-    auto &window   = it->second;
+    auto &window = it->second;
 
     glfwMakeContextCurrent(glfw_win);
 
@@ -105,9 +105,10 @@ bool WindowManager::any_windows() {
 void WindowManager::draw(const int ms) {
   int ms_slept = 0;
   while (any_windows() && (ms_slept < ms)) {
+    constexpr int SLEEP_MS = 2;
     render();
-    std::this_thread::sleep_for(std::chrono::milliseconds(16));
-    ms_slept += 16;
+    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MS));
+    ms_slept += SLEEP_MS;
   }
 }
 
