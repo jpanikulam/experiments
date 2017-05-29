@@ -9,8 +9,6 @@ include_directories(${EIGEN3_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}/unsupported)
 set(BASEPATH "${CMAKE_CURRENT_SOURCE_DIR}/..")
 INCLUDE_DIRECTORIES("${BASEPATH}")
 
-set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
-
 # add_executable(
 #     lu
 #     lu.cc

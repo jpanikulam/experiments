@@ -22,10 +22,6 @@ find_package(GLEW REQUIRED)
 # Life is what you cmake of it
 #
 
-set(CMAKE_CXX_COMPILER "g++-5")
-
-set(CMAKE_CXX_FLAGS "--std=c++14 -g -fno-omit-frame-pointer -Wall ${CMAKE_CXX_FLAGS}")
-
 add_library(geometry geometry.cc)
 add_test(geometry_test geometry_test.cc geometry)
 
