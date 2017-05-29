@@ -21,6 +21,18 @@ find_package(GLEW REQUIRED)
 # Life is what you cmake of it
 #
 
+add_library(spatial_hash spatial_hash.cc)
+
 add_executable(meanshift_view meanshift_view.cc)
-target_link_libraries(meanshift_view window_2d window_manager ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})
-# set_target_properties(meanshift_view PROPERTIES ${CMAKE_CXX_FLAGS} "-O2")
+target_link_libraries(
+    meanshift_view
+
+    spatial_hash
+
+    window_2d
+    window_manager
+
+    ${OPENGL_LIBRARIES}
+    ${GLFW_LIBRARIES}
+    ${GLEW_LIBRARIES}
+)

@@ -1,12 +1,15 @@
-#include "out.hh"
+#include "spatial_hash.hh"
 
 #include "viewer/window_2d.hh"
 #include "viewer/window_manager.hh"
+
+#include "out.hh"
 
 #include <Eigen/Dense>
 
 namespace clustering {
 using Vec2 = Eigen::Vector2d;
+using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
 
 struct MeanShiftState {
@@ -44,25 +47,47 @@ void run() {
   constexpr int NUM_PTS = 500;
   std::vector<Vec2> points(NUM_PTS);
   for (int k = 0; k < 250; ++k) {
-    points[k] = (Vec2::Random() * 2.0) + Vec2(-2.5, -2.5);
+    points[k] = (Vec2::Random() * 2.0) + Vec2(-1, -1.5);
   }
 
   for (int k = 250; k < NUM_PTS; ++k) {
-    points[k] = (Vec2::Random() * 2.0) + Vec2(2.5, 2.5);
+    points[k] = (Vec2::Random() * 2.0) + Vec2(1, 1.5);
   }
 
   std::vector<Vec2> deformed_pts(points);
 
+  constexpr double MEANSHIFT_RADIUS = 1.0;
   for (int k = 0; k < 100; ++k) {
     viewer->clear();
     viewer->add_points({points, Vec4(0.0, 1.0, 0.0, 0.8)});
     if (k == 0) {
       viewer->spin_until_step();
     }
-    shift_means(vout(deformed_pts), 3.0);
+    shift_means(vout(deformed_pts), MEANSHIFT_RADIUS);
     viewer->add_points({deformed_pts, Vec4(1.0, 0.0, 0.0, 0.8)});
-    // viewer->spin_until_step();
-    gl_viewer::WindowManager::draw();
+    gl_viewer::WindowManager::draw(5);
+  }
+
+  //
+  // Compute the cluster identities using an lsh
+  //
+
+  const std::vector<HashInt> identities = spatial_hash(deformed_pts, 100.0);
+  std::map<HashInt, std::vector<Vec2>> identified_points;
+  for (size_t k = 0; k < identities.size(); ++k) {
+    const HashInt id = identities[k];
+    identified_points[id].push_back(points[k]);
+  }
+
+  //
+  // Draw the identified points
+  //
+
+  viewer->clear();
+  for (const auto &pt_group : identified_points) {
+    const Vec3 color = (Vec3::Random() + Vec3::Ones()) * 0.5;
+    const Vec4 color_and_alpha = (Vec4() << color, 1.0).finished();
+    viewer->add_points({pt_group.second, color_and_alpha});
   }
   gl_viewer::WindowManager::spin();
 }
