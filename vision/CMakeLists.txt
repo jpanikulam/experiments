@@ -14,13 +14,12 @@ include_directories("${BASEPATH}")
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-set(CMAKE_CXX_COMPILER "g++-5")
-set(CMAKE_CXX_FLAGS "--std=c++14 -g -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
-
 find_package( OpenCV REQUIRED )
 
 add_library(features features.cc)
 target_link_libraries(features ${OpenCV_LIBS})
+add_test(features_test features_test.cc features ${OpenCV_LIBS})
+
 
 add_library(visualization visualization.cc)
 target_link_libraries(visualization ${OpenCV_LIBS})
@@ -28,8 +27,11 @@ target_link_libraries(visualization ${OpenCV_LIBS})
 add_library(io io.cc)
 target_link_libraries(io ${OpenCV_LIBS})
 
+add_library(histogram_equalize histogram_equalize.cc)
+target_link_libraries(histogram_equalize features ${OpenCV_LIBS})
+add_test(histogram_equalize_test histogram_equalize_test.cc histogram_equalize ${OpenCV_LIBS})
+
 add_library(images images.cc)
-target_link_libraries(images)
 
 add_executable(main main.cc)
-target_link_libraries(main features images io ${OpenCV_LIBS})
+target_link_libraries(main features images histogram_equalize io ${OpenCV_LIBS})
