@@ -17,12 +17,13 @@ function(add_test test_name test_file test_libs)
 endfunction(add_test)
 
 set(CMAKE_CXX_COMPILER "g++-5")
-set(CMAKE_CXX_FLAGS "--std=c++14 -g -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=c++14 -g -O2 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
 
 add_subdirectory(clustering)
 add_subdirectory(numerics)
 add_subdirectory(raytracing)
 add_subdirectory(spatial_geometry)
+add_subdirectory(util)
 add_subdirectory(viewer)
 add_subdirectory(vision)
 
