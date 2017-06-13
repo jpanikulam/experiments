@@ -58,3 +58,8 @@ template <typename T>
 Vout<T> vout(T& obj) {
   return Vout<T>(obj);
 }
+
+template <typename T>
+T& is_out(T& arg) {
+  return arg;
+}
