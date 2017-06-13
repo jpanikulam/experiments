@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Eigen/Dense"
+#include "eigen.hh"
 
-#include "spatial_geometry/eigen.hh"
+#include "Eigen/Dense"
 
 namespace geometry {
 

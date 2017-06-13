@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Eigen/StdVector>
 #include <sophus/se2.hpp>
 #include <sophus/so2.hpp>

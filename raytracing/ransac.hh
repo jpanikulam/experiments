@@ -1,3 +1,5 @@
+#pragma once
+
 #include "out.hh"
 #include "raytracing/geometry.hh"
 
