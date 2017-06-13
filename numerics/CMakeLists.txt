@@ -17,3 +17,4 @@ INCLUDE_DIRECTORIES("${BASEPATH}")
 
 # add_library(numdiff numdiff.cc)
 add_test(numdiff_test numdiff_test.cc "")
+add_test(covariance_test covariance_test.cc "")
