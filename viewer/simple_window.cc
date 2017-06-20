@@ -34,21 +34,16 @@ void SimpleWindow::mouse_moved(double x, double y) {
 }
 
 bool SimpleWindow::left_mouse_held() const {
-  const auto search = held_mouse_buttons_.find(GLFW_MOUSE_BUTTON_LEFT);
-  if (search != held_mouse_buttons_.end()) {
-    return search->second;
-  } else {
-    return false;
-  }
+  return held_mouse_buttons_[GLFW_MOUSE_BUTTON_LEFT];
 }
 
 bool SimpleWindow::right_mouse_held() const {
-  const auto search = held_mouse_buttons_.find(GLFW_MOUSE_BUTTON_RIGHT);
-  if (search != held_mouse_buttons_.end()) {
-    return search->second;
-  } else {
-    return false;
-  }
+  return held_mouse_buttons_[GLFW_MOUSE_BUTTON_RIGHT];
+}
+
+void SimpleWindow::resize(const GlSize &gl_size) {
+  glViewport(0, 0, gl_size.width, gl_size.height);
+  gl_size_ = gl_size;
 }
 
 void SimpleWindow::set_title(const std::string title) {
@@ -63,7 +58,7 @@ const std::map<int, bool> &SimpleWindow::held_keys() const {
   return held_keys_;
 }
 
-const std::map<int, bool> &SimpleWindow::held_mouse_buttons() const {
+const std::array<bool, 3> &SimpleWindow::held_mouse_buttons() const {
   return held_mouse_buttons_;
 }
 

@@ -5,13 +5,13 @@ namespace gl_viewer {
 struct GlSize {
   GlSize() {
   }
-  GlSize(int h, int w) {
-    height = h;
+  GlSize(int w, int h) {
     width  = w;
+    height = h;
   }
 
-  int height = 640;
-  int width  = 480;
+  int width  = 0;
+  int height = 0;
 };
 
 }  // gl_viewer

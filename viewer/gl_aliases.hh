@@ -28,11 +28,11 @@ using se3 = Sophus::SE3<double>;
 // Vertex (4)
 //
 
-void glVertex(const Eigen::Vector4d &vec) {
+inline void glVertex(const Eigen::Vector4d &vec) {
   glVertex4d(vec.x(), vec.y(), vec.z(), vec.w());
 }
 
-void glVertex(const Eigen::Vector4f &vec) {
+inline void glVertexf(const Eigen::Vector4f &vec) {
   glVertex4f(vec.x(), vec.y(), vec.z(), vec.w());
 }
 
@@ -40,11 +40,11 @@ void glVertex(const Eigen::Vector4f &vec) {
 // Vertex (3)
 //
 
-void glVertex(const Eigen::Vector3d &vec) {
+inline void glVertex(const Eigen::Vector3d &vec) {
   glVertex3d(vec.x(), vec.y(), vec.z());
 }
 
-void glVertex(const Eigen::Vector3f &vec) {
+inline void glVertexf(const Eigen::Vector3f &vec) {
   glVertex3f(vec.x(), vec.y(), vec.z());
 }
 
@@ -52,12 +52,12 @@ void glVertex(const Eigen::Vector3f &vec) {
 // Vertex (2)
 //
 
-void glVertex(const Eigen::Vector2d &vec) {
+inline void glVertex(const Eigen::Vector2d &vec) {
   // temp for testing
   glVertex3d(vec.x(), vec.y(), 0.0);
 }
 
-void glVertex(const Eigen::Vector2f &vec) {
+inline void glVertexf(const Eigen::Vector2f &vec) {
   glVertex2f(vec.x(), vec.y());
 }
 
@@ -65,11 +65,11 @@ void glVertex(const Eigen::Vector2f &vec) {
 // Color (4)
 //
 
-void glColor(const Eigen::Vector4d &vec) {
+inline void glColor(const Eigen::Vector4d &vec) {
   glColor4d(vec.x(), vec.y(), vec.z(), vec.w());
 }
 
-void glColor(const Eigen::Vector4f &vec) {
+inline void glColorf(const Eigen::Vector4f &vec) {
   glColor4f(vec.x(), vec.y(), vec.z(), vec.w());
 }
 
@@ -77,11 +77,11 @@ void glColor(const Eigen::Vector4f &vec) {
 // Color (3)
 //
 
-void glColor(const Eigen::Vector3d &vec) {
+inline void glColor(const Eigen::Vector3d &vec) {
   glColor3d(vec.x(), vec.y(), vec.z());
 }
 
-void glColor(const Eigen::Vector3f &vec) {
+inline void glColorf(const Eigen::Vector3f &vec) {
   glColor3f(vec.x(), vec.y(), vec.z());
 }
 
@@ -89,11 +89,11 @@ void glColor(const Eigen::Vector3f &vec) {
 // Scale (3)
 //
 
-void glScale(const Eigen::Vector3d &vec) {
+inline void glScale(const Eigen::Vector3d &vec) {
   glScaled(vec.x(), vec.y(), vec.z());
 }
 
-void glScale(const Eigen::Vector3f &vec) {
+inline void glScale(const Eigen::Vector3f &vec) {
   glScalef(vec.x(), vec.y(), vec.z());
 }
 
@@ -105,15 +105,15 @@ void glScale(const Eigen::Vector3f &vec) {
 // Rotate/Translate (2D)
 //
 
-void glRotate(const so2 &T) {
+inline void glRotate(const so2 &T) {
   glRotated(T.log(), 0.0, 0.0, 1.0);
 }
 
-void glTranslate(const Eigen::Vector2d &vec) {
+inline void glTranslate(const Eigen::Vector2d &vec) {
   glTranslated(vec.x(), vec.y(), 0.0);
 }
 
-void glTransform(const se2 &T) {
+inline void glTransform(const se2 &T) {
   glRotate(T.so2());
   glTranslate(T.translation());
 }
@@ -121,20 +121,29 @@ void glTransform(const se2 &T) {
 //
 // Rotate/Translate (3D)
 //
-void glRotate(const so3 &T) {
-  const Eigen::Vector3d log = T.log();
+inline void glRotate(const so3 &T) {
+  const Eigen::Vector3d log  = T.log();
   const double          norm = log.norm();
   const Eigen::Vector3d axis = log / norm;
 
   glRotated(norm, axis.x(), axis.y(), axis.z());
 }
 
-void glTranslate(const Eigen::Vector3d &vec) {
+inline void glTranslate(const Eigen::Vector3d &vec) {
   glTranslated(vec.x(), vec.y(), vec.z());
 }
 
-void glTransform(const se3 &T) {
-  // glLoadMatrixd(T.matrix().transpose().data());
-  glMultMatrixd(T.matrix().transpose().data());
+inline void glTransform(const se3 &T) {
+  const Eigen::Matrix4d transposed = T.matrix();
+  glMultMatrixd(transposed.data());
+}
+
+inline void glApply(const Eigen::Matrix4d &matrix) {
+  const Eigen::Matrix4d transposed = matrix;
+  glMultMatrixd(transposed.data());
+}
+
+inline void lookAt(const Eigen::Vector3d &eye, const Eigen::Vector3d &target, const Eigen::Vector3d &up) {
+  gluLookAt(eye(0), eye(1), eye(2), target(0), target(1), target(2), up(0), up(1), up(2));
 }
 }

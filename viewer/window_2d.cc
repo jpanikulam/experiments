@@ -4,6 +4,7 @@
 
 #include "window_2d.hh"
 
+// inc order weird for these guys
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
