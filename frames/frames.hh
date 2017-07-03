@@ -18,8 +18,8 @@ enum class FrameId {
 template <FrameId destination, FrameId source, typename GROUP = SE3>
 class Transform {
  public:
-  Transform() {
-  }
+  // Transform() {
+  // }
 
   Transform(const GROUP& g) : destination_from_source_(g) {
   }
@@ -28,6 +28,7 @@ class Transform {
   Transform<destination, other_source, GROUP> operator*(const Transform<source, other_source, GROUP>& other) const {
     return destination_from_source_ * other.destination_from_source();
   }
+
   Transform<source, destination, GROUP> inverse() const {
     return {destination_from_source_.inverse()};
   }
