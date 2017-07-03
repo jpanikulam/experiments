@@ -2,8 +2,7 @@
 
 #include <Eigen/Dense>
 
-// todo
-#include <iostream>
+#include "geometry/ray.hh"
 
 namespace slam {
 

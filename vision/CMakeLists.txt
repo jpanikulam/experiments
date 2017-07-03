@@ -10,16 +10,15 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # So we can use those cool looking angle brackets
 set(BASEPATH "${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${BASEPATH}")
-# I mean, let's be honest...
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
 
-find_package( OpenCV REQUIRED )
+find_package(OpenCV REQUIRED)
 
 add_library(features features.cc)
 target_link_libraries(features ${OpenCV_LIBS})
 add_test(features_test features_test.cc features ${OpenCV_LIBS})
 
+add_test(camera_model_test camera_model_test.cc ${OpenCV_LIBS})
+add_test(robust_estimator_test robust_estimator_test.cc "")
 
 add_library(visualization visualization.cc)
 target_link_libraries(visualization ${OpenCV_LIBS})
@@ -31,7 +30,61 @@ add_library(histogram_equalize histogram_equalize.cc)
 target_link_libraries(histogram_equalize features ${OpenCV_LIBS})
 add_test(histogram_equalize_test histogram_equalize_test.cc histogram_equalize ${OpenCV_LIBS})
 
+add_library(image_align image_align.cc)
+target_link_libraries(image_align ${OpenCV_LIBS})
+add_test(image_align_test image_align_test.cc image_align ${OpenCV_LIBS})
+
 add_library(images images.cc)
 
-add_executable(main main.cc)
-target_link_libraries(main features images histogram_equalize io ${OpenCV_LIBS})
+add_executable(run_map run_map.cc)
+target_link_libraries(run_map features images histogram_equalize io ${OpenCV_LIBS})
+
+find_package(realsense)
+add_executable(real_sense_demo real_sense_demo.cc)
+target_link_libraries(real_sense_demo features images histogram_equalize realsense /usr/local/lib/x86_64-linux-gnu/librealsense.so.1 ${OpenCV_LIBS})
+
+add_executable(calibration_sim calibration_sim.cc)
+target_link_libraries(
+    calibration_sim
+    image_align
+    features
+    images
+    histogram_equalize
+    io
+
+    window_3d
+    window_manager
+    image
+    frame
+    image_frame
+    simple_geometry
+
+
+    ${OpenCV_LIBS})
+
+
+
+# add_executable(calibrate calibrate.cc)
+# target_link_libraries(
+#     calibrate
+#     image_align
+#     features
+#     images
+#     histogram_equalize
+#     io
+#
+#     window_3d
+#     window_manager
+#     image
+#     frame
+#     image_frame
+#     simple_geometry
+#
+#
+#     ${OpenCV_LIBS}
+# )
+
+add_executable(quick_experiment quick_experiment.cc)
+target_link_libraries(quick_experiment features images histogram_equalize io ${OpenCV_LIBS})
+
+add_subdirectory(bootstrapping)
