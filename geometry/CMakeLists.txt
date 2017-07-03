@@ -10,5 +10,10 @@ include_directories(${EIGEN3_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}/unsupported)
 # Life is what you cmake of it
 #
 
-add_library(spatial_geometry geometry.cc plane.cc)
+add_library(spatial_geometry plane.cc)
+
 add_test(perp_test perp_test.cc "")
+
+
+add_library(ray_ray_approx_intersect ray_ray_approx_intersect.cc plane.cc)
+add_test(ray_ray_approx_intersect_test ray_ray_approx_intersect_test.cc ray_ray_approx_intersect)

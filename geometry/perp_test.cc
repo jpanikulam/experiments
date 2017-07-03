@@ -1,4 +1,4 @@
-#include "spatial_geometry/perp.hh"
+#include "geometry/perp.hh"
 #include "testing/gtest.hh"
 
 // TODO: Remove

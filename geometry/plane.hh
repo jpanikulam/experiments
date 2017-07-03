@@ -3,7 +3,8 @@
 #include <Eigen/Dense>
 #include "out.hh"
 
-#include "spatial_geometry/line.hh"
+#include "geometry/line.hh"
+#include "geometry/ray.hh"
 
 namespace geometry {
 
