@@ -1,5 +1,5 @@
 #include "raytracing/ransac.hh"
-#include "spatial_geometry/perp.hh"
+#include "geometry/perp.hh"
 
 // TODO
 #include "viewer/window_2d.hh"

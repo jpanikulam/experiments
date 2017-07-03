@@ -48,7 +48,6 @@ target_link_libraries(
 
     projection
     window_manager
-    spatial_geometry
 
     ${OPENGL_LIBRARIES}
     ${GLFW_LIBRARIES}

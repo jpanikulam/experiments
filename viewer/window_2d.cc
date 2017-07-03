@@ -9,7 +9,7 @@
 #include <GLFW/glfw3.h>
 
 #include "gl_aliases.hh"
-#include "spatial_geometry/plane.hh"
+#include "geometry/plane.hh"
 #include "viewer/window_manager.hh"
 
 #include <iostream>

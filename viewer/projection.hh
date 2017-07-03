@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gl_types.hh"
-#include "spatial_geometry/line.hh"
+#include "geometry/ray.hh"
 
 #include <Eigen/Dense>
 
