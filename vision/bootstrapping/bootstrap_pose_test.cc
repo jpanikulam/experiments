@@ -9,10 +9,10 @@ using Vec3 = Eigen::Vector3d;
 class BootstrapPoseTest : public ::testing::Test {
  protected:
   BootstrapPoseTest() {
-    constexpr double FX = 10.0;
-    constexpr double FY = 10.0;
-    constexpr double CX = 5.0;
-    constexpr double CY = 5.0;
+    constexpr double FX = 100;
+    constexpr double FY = 100;
+    constexpr double CX = 50.0;
+    constexpr double CY = 50.0;
     cam_model_          = CameraModel(FX, FY, CX, CY);
   }
 
@@ -20,7 +20,7 @@ class BootstrapPoseTest : public ::testing::Test {
     std::vector<Vec3> points_object_frame(num_pts);
 
     for (int k = 0; k < num_pts; ++k) {
-      const Vec3 pt_object_frame = Vec3::Random();
+      const Vec3 pt_object_frame = Vec3(100.0, 100.0, 1.0).asDiagonal() * (Vec3::Random() - Vec3(0.5, 0.5, 0.0));
       points_object_frame[k]     = pt_object_frame;
     }
     return points_object_frame;
@@ -37,14 +37,21 @@ class BootstrapPoseTest : public ::testing::Test {
   CameraModel cam_model_ = CameraModel(Eigen::Matrix3d::Identity());
 };
 
-TEST(BootstrapPoseTest, can_bootstrap) {
+TEST_F(BootstrapPoseTest, can_bootstrap) {
   //
   // Setup
   //
 
-  const Vec3 vv = Vec3::UnitX();
-  const SO3  R  = SO3::exp(Vec3(0.0, 0.0, 0.0));
+  const SE3 camera_a_from_object = SE3(SO3(), Vec3(0.0, 0.0, 15.0));
+  const SE3 camera_b_from_object = SE3(SO3::exp(Vec3(0.0, -0.5, 0.0)), Vec3(5.0, 0.0, 15.0));
+  // const SE3 camera_b_from_object = SE3(SO3::exp(Vec3(0.0, 0.0, 0.00)), Vec3(5.0, 0.0, -5.0));
 
-  std::cout << (R * vv).transpose() << std::endl;
+  const auto object_pts = generate_object(20);
+
+  const std::vector<Vec2> image_points_a  = view_object_from_pose(object_pts, camera_a_from_object);
+  const std::vector<Vec2> image_points_b  = view_object_from_pose(object_pts, camera_b_from_object);
+  const SE3               camera_b_from_a = camera_b_from_object * camera_a_from_object.inverse();
+
+  compute_nonmetric_pose(image_points_a, image_points_b, cam_model_, camera_b_from_a);
 }
 }
