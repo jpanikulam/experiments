@@ -26,7 +26,7 @@ class View3D {
   SE3 target_from_world;
 
   // Default identity
-  SE3 camera_from_target;
+  SE3 camera_from_target = SE3(SO3(), Vec3(0.0, 0.0, 15.0));
 
   // Time
   double last_update_time = 0.0;

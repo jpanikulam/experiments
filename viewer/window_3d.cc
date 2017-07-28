@@ -21,10 +21,12 @@ void View3D::apply() {
   const Eigen::Quaterniond q(elev_rot * az_rot);
   const SE3                instantaneous_rotation(SO3(q), Vec3::Zero());
   const SE3                offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0)));
-  glTransform(camera_from_target.inverse() * instantaneous_rotation * target_from_world);
+  // glTransform(camera_from_target.inverse() * instantaneous_rotation * target_from_world);
+  glTransform(camera_from_target.inverse() * instantaneous_rotation);
+  glScaled(zoom, zoom, zoom);
+  glTransform(target_from_world * SE3(SO3::exp(Vec3(0.0, 0.0, 3.1415)), Vec3::Zero()));
   draw_axes({target_from_world.inverse(), 0.5});
 
-  glScaled(zoom, zoom, zoom);
   simulate();
 }
 
@@ -34,10 +36,11 @@ void View3D::simulate() {
   last_update_time   = t_now;
 
   const VecNd<6> delta = jcc::vstack(velocity, angular_velocity) * dt;
-  camera_from_target   = SE3::exp(delta) * camera_from_target;
+  // camera_from_target   = SE3::exp(delta) * camera_from_target;
+  target_from_world = SE3::exp(delta) * target_from_world;
 
-  constexpr double translation_damping = 0.95;
-  constexpr double rotation_damping    = 0.98;
+  constexpr double translation_damping = 0.9;
+  constexpr double rotation_damping    = 0.9;
 
   velocity *= translation_damping;
   angular_velocity *= rotation_damping;
@@ -93,16 +96,22 @@ void Window3D::on_mouse_move(const WindowPoint& mouse_pos) {
     const Eigen::Quaterniond q(elev_rot * az_rot);
     const SE3                instantaneous_rotation(SO3(q), Vec3::Zero());
 
-    const Vec3 motion_target_frame = instantaneous_rotation.inverse() * (motion_camera_frame * 0.005);
+    // const double motion_scaling = view_.camera_from_target.translation().norm();
+    // std::cout << motion_scaling << std::endl;
+    // std::cout << "z:" << view_.zoom << std::endl;
+
+    const double inv_zoom = 1.0 / view_.zoom;
+
+    // const Vec3 motion_target_frame = instantaneous_rotation.inverse() * (motion_camera_frame * view_.zoom * 15.0);
+    const Vec3 motion_target_frame = instantaneous_rotation.inverse() * (motion_camera_frame * inv_zoom * 0.05);
     view_.target_from_world.translation() += motion_target_frame;
   }
 }
 
 void Window3D::on_scroll(const double amount) {
-  const double scroll_acceleration = 0.8;
   view_.zoom *= std::exp(amount);
-  if (view_.zoom <= 0.001) {
-    view_.zoom = 0.001;
+  if (view_.zoom <= 0.0001) {
+    view_.zoom = 0.0001;
   }
 }
 
@@ -156,7 +165,7 @@ void Window3D::render() {
 
 void Window3D::apply_keys_to_view() {
   const auto   keys         = held_keys();
-  const double acceleration = 0.1;
+  const double acceleration = 0.005;
 
   Vec3 delta_vel = Vec3::Zero();
   for (const auto& key_element : keys) {
@@ -184,13 +193,18 @@ void Window3D::apply_keys_to_view() {
         delta_vel(0) -= acceleration;
         break;
 
-      // ctrl
-      case 341:
+      case (static_cast<int>('C')):
         delta_vel(1) += acceleration;
         break;
 
       case 32:
         delta_vel(1) -= acceleration;
+        break;
+
+      case (static_cast<int>('R')):
+        // view_.camera_from_target               = SE3();
+        // view_.camera_from_target.translation() = Vec3(2.0, 2.0, 2.0);
+        view_.target_from_world = SE3();
         break;
     }
   }

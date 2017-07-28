@@ -2,6 +2,7 @@
 
 #include "simple_geometry_primitives.hh"
 
+#include "geometry/ray.hh"
 #include "primitive.hh"
 #include "sophus.hh"
 
@@ -22,7 +23,14 @@ class SimpleGeometry final : public Primitive {
   }
 
   void add_ray(const Ray& ray) {
-    lines_.push_back({ray.origin, ray.origin + (ray.direction * ray.length), ray.color, ray.width});
+    const Eigen::Vector3d first_endpoint = ray.origin + (ray.direction * 0.9 * ray.length);
+    lines_.push_back({ray.origin, ray.origin + (ray.direction * 0.9 * ray.length), ray.color, ray.width});
+    const Eigen::Vector4d new_color(ray.color.y(), ray.color.x(), ray.color.z(), ray.color.w());
+    lines_.push_back({first_endpoint, first_endpoint + (ray.direction * 0.1 * ray.length), new_color, 1.1 * ray.width});
+  }
+
+  void add_ray(const geometry::Ray& ray, const double length, const Eigen::Vector4d& color) {
+    add_ray({ray.origin, ray.direction, length, color});
   }
 
   void add_points(const Points& points) {
@@ -31,6 +39,13 @@ class SimpleGeometry final : public Primitive {
 
   void add_points2d(const Points2d& points) {
     points2d_.push_back(points);
+  }
+
+  void clear() {
+    axes_.clear();
+    lines_.clear();
+    points_.clear();
+    points2d_.clear();
   }
 
  private:

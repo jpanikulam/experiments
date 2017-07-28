@@ -21,7 +21,7 @@ void Frame::add_primitive(std::shared_ptr<Primitive> primitive) {
 void Frame::draw() const {
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
-  glTransform(frame_from_parent_);
+  glTransform(frame_from_parent_.inverse());
   for (const auto& primitive : primitives_) {
     primitive->draw();
   }

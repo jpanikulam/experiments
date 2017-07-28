@@ -10,7 +10,12 @@ Image::Image(const cv::Mat& image, const double scale, double alpha) {
 }
 
 void Image::update_image(const cv::Mat& image, const double scale) {
-  image.copyTo(image_);
+  if (image.channels() == 1) {
+    cv::cvtColor(image, image_, cv::COLOR_GRAY2BGR);
+  } else {
+    image.copyTo(image_);
+  }
+
   scale_ = scale;
 
   if (!allocated_texture_) {
