@@ -25,11 +25,11 @@ IntersectionParameters ray_ray_approx_intersect(const Ray& a, const Ray& b) {
     return result;
   }
 
-  // const double d = (-(p * r) * inv_st_min_p2) + (q / (s - (p_sqr / t)));
-  // const double e = ((p * q) * inv_st_min_p2) - (r / (t - (p_sqr / s)));
-
+  // const double d2 = (-(p * r) * inv_st_min_p2) + (q / (s - (p_sqr / t)));
+  // const double e2 = ((p * q) * inv_st_min_p2) - (r / (t - (p_sqr / s)));
   const double d = ((-p * r) + (q * t)) * inv_st_min_p2;
   const double e = ((p * q) - (r * s)) * inv_st_min_p2;
+
   result.valid   = true;
   result.along_a = d;
   result.along_b = e;

@@ -2,6 +2,8 @@
 
 #include <Eigen/Dense>
 
+#include "sophus.hh"
+
 namespace geometry {
 
 struct Ray {
@@ -13,4 +15,6 @@ struct Ray {
     return origin + (t * direction);
   }
 };
+
+Ray operator*(const SE3& destination_from_source, const Ray& ray);
 }
