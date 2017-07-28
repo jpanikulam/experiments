@@ -59,6 +59,7 @@ target_link_libraries(
     image_frame
     simple_geometry
 
+    ray
 
     ${OpenCV_LIBS})
 
@@ -88,3 +89,4 @@ add_executable(quick_experiment quick_experiment.cc)
 target_link_libraries(quick_experiment features images histogram_equalize io ${OpenCV_LIBS})
 
 add_subdirectory(bootstrapping)
+add_subdirectory(render)

@@ -23,18 +23,20 @@ TEST(CameraModel, project_inverts_unproject) {
 
   constexpr double EPS = 1e-6;
   {
-    const Vec2 pt(630, 290);
-    const Vec3 ray       = model.unproject(pt);
-    const Vec2 projected = model.project(ray);
+    const Vec2          pt(630, 290);
+    const geometry::Ray ray       = model.unproject(pt);
+    const Vec2          projected = model.project(ray.direction);
 
     EXPECT_LT((pt - projected).norm(), EPS);
   }
 
   {
-    const Vec2 pt(12, 82);
-    const Vec3 ray       = model.unproject(pt);
-    const Vec2 projected = model.project(ray);
+    const Vec2          pt(12, 82);
+    const geometry::Ray ray         = model.unproject(pt);
+    const Vec2          projected   = model.project(ray.direction);
+    const Vec2          projected_2 = model.project(ray.direction * 3.0);
     EXPECT_LT((pt - projected).norm(), EPS);
+    EXPECT_LT((pt - projected_2).norm(), EPS);
   }
 }
 

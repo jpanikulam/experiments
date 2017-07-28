@@ -45,6 +45,8 @@ class ImageAligner {
 
   ImageAligner(const ImageAlignmentConfig& config = {}) : config_(config){};
 
+  // Solve pnp
+  // todo: cool kids solve p3p in closed form
   ImageAlignmentResult perspective_npoint(const CameraModel&         cam_model,
                                           const SE3&                 initial_camera_from_object,
                                           const std::vector<Vec2>&   observed,

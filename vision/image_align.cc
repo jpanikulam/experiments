@@ -40,12 +40,14 @@ ImageAlignmentResult ImageAligner::perspective_npoint(const CameraModel&        
 
     const Vec2 v_k = (image_pt - cam_model.project(initial_camera_from_object * obj_pt));
 
-    /*    const CostWeight cost_weight = estimator(v_k.dot(v_k));
-        residual += cost_weight.cost;
-        result.weights[k] = cost_weight.weight;
-        constexpr double LEVENBERG_LAMBDA = 0.0;
-        information += cost_weight.weight * J_k.transpose() * J_k + (LEVENBERG_LAMBDA * Mat6::Identity());
-        innovation += cost_weight.weight * J_k.transpose() * v_k;*/
+    /*
+    const CostWeight cost_weight = estimator(v_k.dot(v_k));
+    residual += cost_weight.cost;
+    result.weights[k] = cost_weight.weight;
+    constexpr double LEVENBERG_LAMBDA = 0.0;
+    information += cost_weight.weight * J_k.transpose() * J_k + (LEVENBERG_LAMBDA * Mat6::Identity());
+    innovation += cost_weight.weight * J_k.transpose() * v_k;
+    */
 
     const CostWeight cost_weight_x = estimator(v_k(0) * v_k(0));
     const CostWeight cost_weight_y = estimator(v_k(1) * v_k(1));

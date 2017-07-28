@@ -11,10 +11,11 @@ enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
-function(add_test test_name test_file test_libs)
+macro(add_test test_name test_file test_libs)
     add_executable(${test_name} ${test_file})
+    message("${test_libs}")
     target_link_libraries(${test_name} ${test_libs} ${GTEST_LIBRARIES} pthread)
-endfunction(add_test)
+endmacro(add_test)
 
 # I mean, let's be honest...
 find_package(Eigen3 REQUIRED)
@@ -32,4 +33,3 @@ add_subdirectory(geometry)
 add_subdirectory(util)
 add_subdirectory(viewer)
 add_subdirectory(vision)
-

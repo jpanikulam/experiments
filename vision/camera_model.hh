@@ -35,24 +35,35 @@ class CameraModel {
     return projected;
   }
 
+  // Fire that little guy right back through the image plane!
+  //
   // @param image_point: Point in the image frame (2d)
-  // @returns ray passing through the image point
-  Vec3 unproject(const Vec2& image_point) const {
+  // @returns ray passing through the image point, originating at the center of projection
+  geometry::Ray unproject(const Vec2& image_point) const {
+    const Eigen::PartialPivLU<ProjMat>& K_inv = get_k_inv();
+
+    const Vec3 image_point_h = Vec3(image_point.x(), image_point.y(), 1.0);
+    // const Vec3 soln          = K_inv.solve(K_.transpose() * image_point_h);
+    const Vec3 soln        = K_inv.solve(image_point_h);
+    const Vec3 unprojected = soln;
+    // std::cout << "upj : " << unprojected.norm() << std::endl;
+    // const geometry::Ray unprojected_ray{.origin = Vec3::Zero(), .direction = unprojected};
+    const geometry::Ray unprojected_ray{.origin = Vec3::Zero(), .direction = unprojected.normalized()};
+    // const geometry::Ray unprojected_ray{.origin = Vec3::Zero(), .direction = unprojected_fx.normalized()};
+    return unprojected_ray;
+  }
+
+  const ProjMat& get_k() const {
+    return K_;
+  }
+
+  const Eigen::PartialPivLU<ProjMat>& get_k_inv() const {
     if (!inv_set_) {
       // const ProjMat ktk = K_.transpose() * K_;
       K_inv_   = Eigen::PartialPivLU<ProjMat>(K_);
       inv_set_ = true;
     }
-
-    const Vec3 image_point_h = Vec3(image_point.x(), image_point.y(), 1.0);
-    // const Vec3 soln          = K_inv_.solve(K_.transpose() * image_point_h);
-    const Vec3 soln        = K_inv_.solve(image_point_h);
-    const Vec3 unprojected = soln;
-    return unprojected;
-  }
-
-  const ProjMat& get_k() const {
-    return K_;
+    return K_inv_;
   }
 
  private:
