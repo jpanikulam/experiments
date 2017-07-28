@@ -117,7 +117,7 @@ Eigen::Matrix<double, cols, 1> gauss_newton(const Eigen::Matrix<double, cols, 1>
 
   double last_cost = fcn(x);
   for (int k = 0; k < max_iters; ++k) {
-    // todo: use dense QR
+    // todo: llt
     const Gradient J = jac(x);
     const VecX     c = (J.transpose() * J).inverse() * J.transpose() * fcn(x);
     x                = x - c;
