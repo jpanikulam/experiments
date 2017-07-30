@@ -54,7 +54,16 @@ target_link_libraries(
 )
 
 add_executable(view_demo view_demo.cc)
-target_link_libraries(view_demo window_manager window_2d ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_libraries(view_demo
+    window_manager
+    window_2d
+
+    plot
+
+    ${OPENGL_LIBRARIES}
+    ${GLFW_LIBRARIES}
+    ${GLEW_LIBRARIES}
+)
 
 add_executable(view_demo_3d view_demo_3d.cc)
 target_link_libraries(

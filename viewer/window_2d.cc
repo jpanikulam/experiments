@@ -15,6 +15,39 @@
 #include <iostream>
 
 namespace gl_viewer {
+namespace {
+void draw_points(const Points &points) {
+  glColor(points.color);
+  glBegin(GL_POINTS);
+  {
+    for (const auto &pt : points.points) {
+      glVertex(pt);
+    }
+  }
+  glEnd();
+}
+void pre_render() {
+  //
+  // Flag soup
+  //
+
+  glShadeModel(GL_SMOOTH);
+
+  // Check depth when rendering
+  glEnable(GL_DEPTH_TEST);
+
+  // Turn on lighting
+  // glEnable(GL_LIGHTING);
+
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+  glEnable(GL_LINE_SMOOTH);
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+}
+}
 
 void Window2D::View2D::apply() {
   //
@@ -38,16 +71,16 @@ void Window2D::View2D::simulate() {
   //
 
   const double t_now = glfwGetTime();
-  const double dt    = t_now - last_update_time;
-  last_update_time   = t_now;
+  const double dt = t_now - last_update_time;
+  last_update_time = t_now;
 
   //
   // Apply the current transform and derivatives
   //
 
-  const Vec3 delta    = dt * velocity;
-  const se2  expdelta = se2::exp(delta);
-  camera_pose         = expdelta * camera_pose;
+  const Vec3 delta = dt * velocity;
+  const se2 expdelta = se2::exp(delta);
+  camera_pose = expdelta * camera_pose;
 
   camera_height += dcamera_height * dt;
   zoom *= std::exp(0.2 * dzoom * dt);
@@ -57,9 +90,9 @@ void Window2D::View2D::simulate() {
   //
 
   constexpr double translation_damping = 0.95;
-  constexpr double rotation_damping    = 0.98;
-  constexpr double scroll_damping      = 0.90;
-  constexpr double zoom_damping        = 0.85;
+  constexpr double rotation_damping = 0.98;
+  constexpr double scroll_damping = 0.90;
+  constexpr double zoom_damping = 0.85;
 
   velocity.head<2>() *= translation_damping;
   velocity(2) *= rotation_damping;
@@ -83,8 +116,8 @@ void Window2D::spin_until_step() {
   should_continue_ = false;
 }
 
-bool point_on_plane(const Projection& proj, const WindowPoint& point, Out<Vec3> intersection) {
-  const geometry::Ray   ray = proj.unproject(point);
+bool point_on_plane(const Projection &proj, const WindowPoint &point, Out<Vec3> intersection) {
+  const geometry::Ray ray = proj.unproject(point);
   const geometry::Plane plane({Vec3::Zero(), Vec3::UnitZ()});
   return plane.intersect(ray, intersection);
 }
@@ -94,7 +127,7 @@ void Window2D::on_mouse_button(int button, int action, int mods) {
   }
 }
 
-void Window2D::on_mouse_move(const WindowPoint& position) {
+void Window2D::on_mouse_move(const WindowPoint &position) {
   if (left_mouse_held()) {
   }
 
@@ -102,8 +135,9 @@ void Window2D::on_mouse_move(const WindowPoint& position) {
     Vec3 intersection;
     if (point_on_plane(projection_, position, out(intersection))) {
       const double t_now = glfwGetTime();
-      const Vec4   color((std::sin(t_now / 5.0) + 1.0) * 0.5, (std::sin(t_now / 1.0) + 1.0) * 0.5, 0.2, 0.9);
-      add_circle({Vec2(intersection.x(), intersection.y()), 0.3, color});
+      const Vec4 color((std::sin(t_now / 5.0) + 1.0) * 0.5, (std::sin(t_now / 1.0) + 1.0) * 0.5, 0.2, 0.9);
+      (void)color;
+      // add_circle({Vec2(intersection.x(), intersection.y()), 0.3, color});
     }
   }
 }
@@ -113,8 +147,8 @@ void Window2D::on_scroll(const double amount) {
   view_.dzoom += amount * scroll_acceleration;
 }
 
-void Window2D::resize(const GlSize& gl_size) {
-  glViewport(0, 0, gl_size.height, gl_size.width);
+void Window2D::resize(const GlSize &gl_size) {
+  glViewport(0, 0, gl_size.width, gl_size.height);
   gl_size_ = gl_size;
 }
 
@@ -124,54 +158,43 @@ void Window2D::apply_keys_to_view() {
   const double acceleration = 0.1 / view_.zoom;
 
   Vec3 delta_vel = Vec3::Zero();
-  for (const auto& key_element : keys) {
+  for (const auto &key_element : keys) {
     const bool held = key_element.second;
-    const int  key  = key_element.first;
+    const int key = key_element.first;
 
     if (!held) {
       continue;
     }
 
     switch (key) {
-      case (static_cast<int>('W')):
-        delta_vel(1) += acceleration;
-        break;
+    case (static_cast<int>('W')):
+      delta_vel(1) += acceleration;
+      break;
 
-      case (static_cast<int>('A')):
-        delta_vel(0) -= acceleration;
-        break;
+    case (static_cast<int>('A')):
+      delta_vel(0) -= acceleration;
+      break;
 
-      case (static_cast<int>('S')):
-        delta_vel(1) -= acceleration;
+    case (static_cast<int>('S')):
+      delta_vel(1) -= acceleration;
 
-        break;
-      case (static_cast<int>('D')):
-        delta_vel(0) += acceleration;
-        break;
+      break;
+    case (static_cast<int>('D')):
+      delta_vel(0) += acceleration;
+      break;
     }
   }
 
   view_.velocity += delta_vel;
 }
 
-void draw_points(const Points& points) {
-  glColor(points.color);
-  glBegin(GL_POINTS);
-  {
-    for (const auto& pt : points.points) {
-      glVertex(pt);
-    }
-  }
-  glEnd();
-}
-
-void Window2D::draw_renderables(const Renderables& renderables) const {
+void Window2D::draw_renderables(const Renderables &renderables) const {
   //
   // Draw lines
   //
 
   glBegin(GL_LINES);
-  for (const auto& line : renderables.lines) {
+  for (const auto &line : renderables.lines) {
     glColor(line.color);
     glVertex(line.start);
     glVertex(line.end);
@@ -183,7 +206,7 @@ void Window2D::draw_renderables(const Renderables& renderables) const {
   //
 
   glBegin(GL_LINES);
-  for (const auto& ray : renderables.rays) {
+  for (const auto &ray : renderables.rays) {
     glColor(ray.color);
     glVertex(ray.origin);
 
@@ -196,11 +219,11 @@ void Window2D::draw_renderables(const Renderables& renderables) const {
   // Draw circles
   //
 
-  for (const auto& circle : renderables.circles) {
-    constexpr double SEGMENTS_PER_RADIAN      = 20.0;
-    const double     circumference            = circle.radius * 2.0 * M_PI;
-    const int        num_segments             = static_cast<int>(SEGMENTS_PER_RADIAN * circumference);
-    const double     segment_angular_fraction = 2.0 * M_PI / num_segments;
+  for (const auto &circle : renderables.circles) {
+    constexpr double SEGMENTS_PER_RADIAN = 20.0;
+    const double circumference = circle.radius * 2.0 * M_PI;
+    const int num_segments = static_cast<int>(SEGMENTS_PER_RADIAN * circumference);
+    const double segment_angular_fraction = 2.0 * M_PI / num_segments;
 
     glColor(circle.color);
     // glBegin(GL_LINE_LOOP);
@@ -218,31 +241,9 @@ void Window2D::draw_renderables(const Renderables& renderables) const {
   // Draw points
   //
 
-  for (const auto& pts : renderables.points) {
+  for (const auto &pts : renderables.points) {
     draw_points(pts);
   }
-}
-
-void pre_render() {
-  //
-  // Flag soup
-  //
-
-  glShadeModel(GL_SMOOTH);
-
-  // Check depth when rendering
-  glEnable(GL_DEPTH_TEST);
-
-  // Turn on lighting
-  // glEnable(GL_LIGHTING);
-
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_BLEND);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-  glEnable(GL_LINE_SMOOTH);
-  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
 void Window2D::render() {
@@ -254,7 +255,7 @@ void Window2D::render() {
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(60, static_cast<double>(gl_size_.height) / static_cast<double>(gl_size_.width), 0.1, 100.0);
+  gluPerspective(60, static_cast<double>(gl_size_.width) / static_cast<double>(gl_size_.height), 0.1, 100.0);
 
   //
   // Compute ground plane intersection
@@ -270,6 +271,10 @@ void Window2D::render() {
   apply_keys_to_view();
   view_.apply();
 
+  for (const auto &primitive : primitives_) {
+    primitive->draw();
+  }
+
   draw_renderables(renderables_);
 
   glFlush();
@@ -282,12 +287,12 @@ struct Window2DGlobalState {
 
 Window2DGlobalState window_2d_state;
 
-std::shared_ptr<Window2D> get_window2d(const std::string& title) {
+std::shared_ptr<Window2D> get_window2d(const std::string &title) {
   const auto it = window_2d_state.windows.find(title);
   if (it != window_2d_state.windows.end()) {
     return it->second;
   } else {
-    auto window                    = std::make_shared<Window2D>();
+    auto window = std::make_shared<Window2D>();
     window_2d_state.windows[title] = window;
     WindowManager::register_window(GlSize(640, 640), window, title);
     return window;

@@ -1,5 +1,6 @@
-#include "window_2d.hh"
-#include "window_manager.hh"
+#include "window.hh"
+
+#include "primitives/plot.hh"
 
 #include <iostream>
 #include <memory>
@@ -23,6 +24,18 @@ void run() {
 
   win2d_2->add_line({Vec2(-0.5, -0.5), Vec2(0.5, 0.5), Vec4(0.8, 0.0, 0.4, 1.0)});
   win2d_2->add_line({Vec2(-0.5, 0.5), Vec2(0.5, -0.5), Vec4(0.8, 0.0, 0.4, 1.0)});
+
+  auto plotter = std::make_shared<Plot>();
+
+  std::vector<double> vals;
+  for (int k = 0; k < 10000; ++k) {
+    // const double v = k % 20;
+    const double v = Eigen::Vector2d::Random()[0];
+    vals.push_back(v * v);
+  }
+
+  plotter->add_histogram({vals, {100}, {0.0, 1.0, 0.0, 0.8}});
+  win2d_2->add_primitive(plotter);
 
   WindowManager::spin();
   std::cout << "Done" << std::endl;
