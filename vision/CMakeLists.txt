@@ -39,9 +39,9 @@ add_library(images images.cc)
 add_executable(run_map run_map.cc)
 target_link_libraries(run_map features images histogram_equalize io ${OpenCV_LIBS})
 
-find_package(realsense)
-add_executable(real_sense_demo real_sense_demo.cc)
-target_link_libraries(real_sense_demo features images histogram_equalize realsense /usr/local/lib/x86_64-linux-gnu/librealsense.so.1 ${OpenCV_LIBS})
+# find_package(realsense)
+# add_executable(real_sense_demo real_sense_demo.cc)
+# target_link_libraries(real_sense_demo features images histogram_equalize realsense /usr/local/lib/x86_64-linux-gnu/librealsense.so.1 ${OpenCV_LIBS})
 
 add_executable(calibration_sim calibration_sim.cc)
 target_link_libraries(

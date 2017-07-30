@@ -4,7 +4,6 @@
 
 namespace slam {
 
-namespace {
 cv::Mat normalize(const cv::Mat &grayscale_image) {
   // Compute a block normalization of an grayscale_image
 
@@ -14,8 +13,9 @@ cv::Mat normalize(const cv::Mat &grayscale_image) {
   double min, max;
   cv::minMaxLoc(float_gs_image, &min, &max);
 
-  return (float_gs_image - min) / (max - min);
-}
+  const cv::Mat normalized_image = (float_gs_image - min) / (max - min);
+  const float mean = cv::mean(normalized_image)[0];
+  return normalized_image - mean;
 }
 
 cv::Mat ncc(const cv::Mat &image, const cv::Mat &kernel) {

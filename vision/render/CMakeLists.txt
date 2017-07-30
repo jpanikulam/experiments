@@ -24,8 +24,13 @@ add_executable(tracking_simulator tracking_simulator.cc)
 target_link_libraries(
     tracking_simulator
 
+    render_from_pose
+    features
+
+    window_2d
     window_3d
     window_manager
+    plot
     image
     frame
     image_frame
