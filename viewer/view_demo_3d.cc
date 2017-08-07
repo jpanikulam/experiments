@@ -67,14 +67,14 @@ void run() {
   geometry->add_ray({Vec3::Zero(), Vec3(1.0, 1.0, 1.0).normalized(), 10.0});
   geometry->add_ray({Vec3(3.0, 0.0, 0.0), Vec3(1.0, 1.0, 1.0).normalized(), 10.0, Vec4(1.0, 0.4, 0.2, 1.0), 5.0});
 
-  // auto plot = std::make_shared<Plot>();
-  // win->add_primitive(plot);
+  auto plot = std::make_shared<Plot>();
+  win->add_primitive(plot);
 
-  // const Eigen::MatrixXd quadratic_surface = make_quadratic_thing();
-  // plot->add_surface({quadratic_surface, 0.01});
+  const Eigen::MatrixXd quadratic_surface = make_quadratic_thing();
+  plot->add_surface({quadratic_surface, 0.01});
 
-  // auto image = std::make_shared<Image>(calibration_image_color, 0.01);
-  // win->add_primitive(image);
+  auto image = std::make_shared<Image>(calibration_image_color, 0.01);
+  win->add_primitive(image);
 
   WindowManager::spin();
   std::cout << "Done" << std::endl;
