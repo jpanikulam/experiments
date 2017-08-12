@@ -2,9 +2,6 @@
 
 #include "eigen.hh"
 
-// TODO
-#include <iostream>
-
 namespace numerics {
 
 namespace {
@@ -16,8 +13,12 @@ double compute_line_minimization(const VecNd<ROWS> &gradient, const double dqd, 
 }
 }
 
+// Solve a minimization problem of the following form:
+//        \min_{x} x'Qx - b'x
 //
-// Solve the implied quadratic minimization problem via conjugate gradient
+// Notes:
+// Incidentally, it looks like (up to a nontrivial precision) it produces the same answer as Eigen Q.inverse() * b
+// Which is at least a little
 //
 template <int ROWS>
 VecNd<ROWS> conjugate_gradient_solve(const MatNd<ROWS, ROWS> &Q, const VecNd<ROWS> b) {
