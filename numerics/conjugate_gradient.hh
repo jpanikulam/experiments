@@ -18,7 +18,7 @@ double compute_line_minimization(const VecNd<ROWS> &gradient, const double dqd, 
 //
 // Notes:
 // Incidentally, it looks like (up to a nontrivial precision) it produces the same answer as Eigen Q.inverse() * b
-// Which is at least a little
+// Which is surprising.
 //
 template <int ROWS>
 VecNd<ROWS> conjugate_gradient_solve(const MatNd<ROWS, ROWS> &Q, const VecNd<ROWS> b) {
