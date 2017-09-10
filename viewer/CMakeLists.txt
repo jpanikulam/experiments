@@ -69,6 +69,8 @@ add_executable(view_demo_3d view_demo_3d.cc)
 target_link_libraries(
     view_demo_3d
 
+    read_stl
+
     window_manager
     window_3d
 

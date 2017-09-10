@@ -47,8 +47,9 @@ void View3D::apply() {
   // glTransform(camera_from_target.inverse() * instantaneous_rotation * target_from_world);
   glTransform(camera_from_target.inverse() * instantaneous_rotation);
   glScaled(zoom, zoom, zoom);
+
   glTransform(target_from_world * SE3(SO3::exp(Vec3(0.0, 0.0, 3.1415)), Vec3::Zero()));
-  draw_axes({target_from_world.inverse(), 0.5});
+  draw_axes({(target_from_world * SE3(SO3::exp(Vec3(0.0, 0.0, 3.1415)), Vec3::Zero())).inverse(), 0.5});
 
   simulate();
 }
