@@ -5,32 +5,43 @@
 #include <algorithm>
 #include <vector>
 
-//
-// Non-owning heap
-//
-
-template <typename T, class Compare>
+// Max heap
+template <typename T, class Compare = std::less<T>>
 class Heap {
-  Heap(std::vector<T>& vector) vector_(vector) {
+public:
+  Heap() {}
+  Heap(const std::vector<T> &vector)
+      : vector_(vector) {
+    std::make_heap(vector_, cmp_);
   }
 
-  void pop() {
-    std::pop_heap(vector_);
+  void drop() {
+    std::pop_heap(vector_.begin(), vector_.end(), cmp_);
     vector_.pop_back();
   }
 
   T pop() {
-    std::pop_heap(vector_);
+    std::pop_heap(vector_.begin(), vector_.end(), cmp_);
     const T result = vector_.back();
     vector_.pop_back();
-    return T;
+    return result;
   }
 
-  const T& top() {
+  const T &top() {
     return vector_.front();
   }
 
- private:
+  void push(const T &item) {
+    vector_.push_back(item);
+    std::push_heap(vector_.begin(), vector_.end(), cmp_);
+  }
+
+  void clear() {
+    vector_.clear();
+  }
+
+private:
   // Store only a reference
-  std::vector<T>& vector_;
+  std::vector<T> vector_;
+  Compare cmp_ = Compare();
 };
