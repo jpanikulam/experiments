@@ -98,7 +98,6 @@ void draw_circle(const Vec3 &center, const Vec3 &normal, const double radius, co
 }
 
 void draw_billboard_circle(const Sphere &billboard_circle) {
-
   draw_circle(billboard_circle.center, Vec3::UnitX(), billboard_circle.radius, billboard_circle.color);
   draw_circle(billboard_circle.center, Vec3::UnitY(), billboard_circle.radius, billboard_circle.color);
   draw_circle(billboard_circle.center, Vec3::UnitZ(), billboard_circle.radius, billboard_circle.color);

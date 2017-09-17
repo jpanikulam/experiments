@@ -59,6 +59,14 @@ struct Sphere {
   Vec4 color = Vec4(0.0, 1.0, 0.0, 1.0);
 };
 
+struct AxisAlignedBox {
+  using Vec3 = Eigen::Vector3d;
+  using Vec4 = Eigen::Vector4d;
+  Vec3 lower;
+  Vec3 upper;
+  Vec4 color = Vec4(1.0, 0.0, 1.0, 0.6);
+};
+
 void draw_axes(const Axes &axes);
 
 void draw_lines(const std::vector<Line> &lines);

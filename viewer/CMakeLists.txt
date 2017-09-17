@@ -69,7 +69,9 @@ add_executable(view_demo_3d view_demo_3d.cc)
 target_link_libraries(
     view_demo_3d
 
+    raycaster
     read_stl
+    # sphere_volume
 
     window_manager
     window_3d

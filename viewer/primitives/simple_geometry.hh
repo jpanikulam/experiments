@@ -45,11 +45,53 @@ public:
     billboard_circles_.push_back(sphere);
   }
 
+  void add_box(const AxisAlignedBox &box) {
+    using Vec3 = Eigen::Vector3d;
+
+    add_line({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
+              Vec3(box.lower.x(), box.upper.y(), box.upper.z()),
+              box.color});
+    add_line({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
+              Vec3(box.lower.x(), box.lower.y(), box.lower.z()),
+              box.color});
+    add_line({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
+              Vec3(box.upper.x(), box.lower.y(), box.upper.z()),
+              box.color});
+    add_line({Vec3(box.lower.x(), box.upper.y(), box.upper.z()),
+              Vec3(box.upper.x(), box.upper.y(), box.upper.z()),
+              box.color});
+    add_line({Vec3(box.lower.x(), box.upper.y(), box.upper.z()),
+              Vec3(box.lower.x(), box.upper.y(), box.lower.z()),
+              box.color});
+    add_line({Vec3(box.upper.x(), box.upper.y(), box.upper.z()),
+              Vec3(box.upper.x(), box.upper.y(), box.lower.z()),
+              box.color});
+    add_line({Vec3(box.upper.x(), box.upper.y(), box.upper.z()),
+              Vec3(box.upper.x(), box.lower.y(), box.upper.z()),
+              box.color});
+    add_line({Vec3(box.upper.x(), box.upper.y(), box.lower.z()),
+              Vec3(box.upper.x(), box.lower.y(), box.lower.z()),
+              box.color});
+    add_line({Vec3(box.upper.x(), box.upper.y(), box.lower.z()),
+              Vec3(box.lower.x(), box.upper.y(), box.lower.z()),
+              box.color});
+    add_line({Vec3(box.upper.x(), box.lower.y(), box.lower.z()),
+              Vec3(box.lower.x(), box.lower.y(), box.lower.z()),
+              box.color});
+    add_line({Vec3(box.upper.x(), box.lower.y(), box.lower.z()),
+              Vec3(box.upper.x(), box.lower.y(), box.upper.z()),
+              box.color});
+    add_line({Vec3(box.lower.x(), box.lower.y(), box.lower.z()),
+              Vec3(box.lower.x(), box.upper.y(), box.lower.z()),
+              box.color});
+  }
+
   void clear() {
     axes_.clear();
     lines_.clear();
     points_.clear();
     points2d_.clear();
+    billboard_circles_.clear();
   }
 
 private:

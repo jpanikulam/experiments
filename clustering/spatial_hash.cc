@@ -1,5 +1,7 @@
 #include "spatial_hash.hh"
 
+#include "geometry/spatial/bounding_box.hh"
+
 #include <limits>
 #include <unordered_set>
 
@@ -7,35 +9,12 @@ namespace clustering {
 namespace {
 using Vec2 = Eigen::Vector2d;
 using Vec2Int = Eigen::Matrix<HashInt, 2, 1>;
-
-template <int DIM, typename Scalar = double>
-class BoundingBox {
-public:
-  using Vec = Eigen::Matrix<Scalar, DIM, 1>;
-
-  void expand(const Vec &point) {
-    lower_ = lower_.cwiseMin(point);
-    upper_ = upper_.cwiseMax(point);
-  }
-
-  const Vec &lower() {
-    return lower_;
-  }
-
-  const Vec &upper() {
-    return upper_;
-  }
-
-private:
-  Vec lower_;
-  Vec upper_;
-};
 }
 
 //
 std::vector<HashInt> spatial_hash(const std::vector<Vec2> &points, double scale) {
 
-  BoundingBox<2> bbox;
+  geometry::spatial::BoundingBox<2> bbox;
   for (const auto &pt : points) {
     bbox.expand(pt);
   }
