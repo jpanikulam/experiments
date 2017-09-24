@@ -1,6 +1,10 @@
 #pragma once
 
+#include "geometry/ray.hh"
+#include "intersection.hh"
+
 #include "eigen.hh"
+
 #include <limits>
 
 namespace geometry {
@@ -34,8 +38,32 @@ public:
     for (int i = 0; i < DIM; ++i) {
       sa += 2.0 * delta(i) * delta((i + 1) % DIM);
     }
-
     return sa;
+  }
+
+  // Note: It looks like it would be easy check that an intersection took place with no divisions
+  // (Just don't compute the distance, only verify that the ray passes through at all)
+  Intersection intersect(const Ray &ray) {
+    static_assert(DIM == 3, "Dimension must be 3 because rays are of dim 3 so");
+    Intersection intersection;
+
+    const double distance = std::numeric_limits<double>::max();
+    int faces = 0;
+    for (int i = 0; i < DIM; ++i) {
+      const double inv_ray_dir_i = 1.0 / ray.direction(i);
+      const double u_t = (upper_(i) - ray.origin(i)) * inv_ray_dir_i;
+      const double l_t = (lower_(i) - ray.origin(i)) * inv_ray_dir_i;
+
+      if (u_t > 0.0 && l_t > 0.0) {
+        faces += 2;
+        distance = std::min(std::min(u_t, l_t), distance);
+      } else if (u_t > 0.0 || l_t > 0.0) {
+        ++faces;
+        distance = std::min(std::max(u_t, l_t), distance);
+      }
+    }
+    intersection.intersected = set;
+    intersection.distance = distance;
   }
 
   const Vec &lower() const {

@@ -9,11 +9,11 @@ target_link_libraries(
     read_stl
     bounding_volume_hierarchy
 
-    window_manager
-    window_3d
-
     box
     simple_geometry
+    viridis
+    window_manager
+    window_3d
 
     ${OPENGL_LIBRARIES}
     ${GLFW_LIBRARIES}

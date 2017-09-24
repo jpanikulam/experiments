@@ -3,19 +3,10 @@
 #include "geometry/ray.hh"
 #include "bounding_box.hh"
 
+#include "intersection.hh"
+
 namespace geometry {
 namespace spatial {
-
-struct Intersection {
-  double distance;
-  bool intersected = false;
-
-  static Intersection no_intersection() {
-    Intersection intersect;
-    intersect.intersected = false;
-    return intersect;
-  }
-};
 
 struct Sphere {
   double radius;
