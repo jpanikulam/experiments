@@ -32,6 +32,24 @@ TEST(Heap, pushdrop) {
   EXPECT_EQ(heap.top(), 0);
 }
 
+TEST(Heap, alt_cmp) {
+  const auto cmp = [](const int &a, const int &b) { return a > b; };
+  Heap<int> heap(cmp);
+
+  heap.push(1);
+  heap.push(0);
+  heap.push(2);
+
+  EXPECT_EQ(heap.top(), 0);
+  EXPECT_EQ(heap.pop(), 0);
+
+  EXPECT_EQ(heap.top(), 1);
+  EXPECT_EQ(heap.pop(), 1);
+
+  EXPECT_EQ(heap.top(), 2);
+  EXPECT_EQ(heap.pop(), 2);
+}
+
 TEST(Heap, pushpoppushpop) {
   Heap<int> heap;
 

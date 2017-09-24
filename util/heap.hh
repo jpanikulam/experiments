@@ -2,16 +2,22 @@
 
 #include "out.hh"
 
+#include <functional>
 #include <algorithm>
 #include <vector>
 
 // Max heap
-template <typename T, class Compare = std::less<T>>
+template <typename T>
 class Heap {
 public:
-  Heap() {}
-  Heap(const std::vector<T> &vector)
-      : vector_(vector) {
+  using CompareFunction = std::function<bool(const T &a, const T &b)>;
+
+  Heap(const CompareFunction &cmp = [](const T &a, const T &b) { return std::less<T>()(a, b); })
+      : cmp_(cmp) {}
+  Heap(const std::vector<T> &vector,
+       const CompareFunction &cmp = [](const T &a, const T &b) { return std::less<T>()(a, b); })
+      : cmp_(cmp)
+      , vector_(vector) {
     std::make_heap(vector_, cmp_);
   }
 
@@ -40,8 +46,15 @@ public:
     vector_.clear();
   }
 
+  size_t size() const {
+    return vector_.size();
+  }
+
+  bool empty() const {
+    return vector_.empty();
+  }
+
 private:
-  // Store only a reference
+  CompareFunction cmp_;
   std::vector<T> vector_;
-  Compare cmp_ = Compare();
 };
