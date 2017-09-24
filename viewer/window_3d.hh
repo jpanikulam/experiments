@@ -14,15 +14,15 @@
 
 namespace gl_viewer {
 namespace {
-using Vec2    = Eigen::Vector2d;
-using Vec3    = Eigen::Vector3d;
-using Vec4    = Eigen::Vector4d;
+using Vec2 = Eigen::Vector2d;
+using Vec3 = Eigen::Vector3d;
+using Vec4 = Eigen::Vector4d;
 using Vec2Map = Eigen::Map<const Eigen::Vector2d>;
 using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
 }
 
 class View3D {
- public:
+public:
   SE3 target_from_world;
 
   // Default identity
@@ -37,8 +37,8 @@ class View3D {
   Vec3 velocity;
   Vec3 angular_velocity;
 
-  double azimuth        = 0.0;
-  double elevation      = 0.0;
+  double azimuth = 0.0;
+  double elevation = 0.0;
   double dist_to_target = 1.0;
 
   // Apply the transformation
@@ -48,17 +48,17 @@ class View3D {
 };
 
 class Window3D final : public SimpleWindow {
- public:
+public:
   Window3D() = default;
 
   void on_key(int key, int scancode, int action, int mods) override;
   void on_mouse_button(int button, int action, int mods) override;
-  void on_mouse_move(const WindowPoint& mouse_pos) override;
+  void on_mouse_move(const WindowPoint &mouse_pos) override;
   void on_scroll(const double amount) override;
 
   void render() override;
 
-  void resize(const GlSize& gl_size) override;
+  void resize(const GlSize &gl_size) override;
 
   void spin_until_step();
 
@@ -66,11 +66,18 @@ class Window3D final : public SimpleWindow {
     primitives_.push_back(std::move(primitive));
   }
 
+  template <typename PrimitiveType, typename... Args>
+  std::shared_ptr<PrimitiveType> add_primitive(const Args &... args) {
+    auto ptr = std::make_shared<PrimitiveType>(args...);
+    primitives_.push_back(ptr);
+    return ptr;
+  }
+
   void clear() {
     primitives_.clear();
   }
 
- private:
+private:
   void apply_keys_to_view();
 
   Vec2 mouse_direction_ = Vec2::Zero();
@@ -79,9 +86,9 @@ class Window3D final : public SimpleWindow {
   // Track some window properties
   //
 
-  View3D     view_;
+  View3D view_;
   Projection projection_;
-  bool       should_continue_ = false;
+  bool should_continue_ = false;
 
   std::vector<std::shared_ptr<Primitive>> primitives_;
 
@@ -90,5 +97,5 @@ class Window3D final : public SimpleWindow {
   WindowPoint mouse_pos_last_click_;
 };
 
-std::shared_ptr<Window3D> get_window3d(const std::string& title = "main");
+std::shared_ptr<Window3D> get_window3d(const std::string &title = "main");
 }

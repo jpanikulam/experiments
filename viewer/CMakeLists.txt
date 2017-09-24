@@ -29,6 +29,7 @@ find_package(GLEW REQUIRED)
 #
 
 add_subdirectory(primitives)
+add_subdirectory(colors)
 
 add_library(simple_window simple_window.cc)
 target_link_libraries(simple_window ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES})
