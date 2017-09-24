@@ -2,6 +2,9 @@
 
 #include "eigen.hh"
 
+// TODO
+#include <iostream>
+
 namespace numerics {
 
 namespace {
@@ -48,6 +51,9 @@ VecNd<ROWS> conjugate_gradient_solve(const MatNd<ROWS, ROWS> &Q, const VecNd<ROW
     const double alpha        = compute_line_minimization(gradient, dQd[k], direction_k);
 
     x += alpha * direction_k;
+
+    // std::cout << (Q * x - b).norm() << std::endl;
+    std::cout << (x.dot(Q * x) - b.dot(x)) << std::endl;
   }
   return x;
 }

@@ -2,6 +2,7 @@
 
 #include <vector>
 
+// Compute the covariance of a list of vectors in a numerically stable manner
 template <int DIM>
 Eigen::Matrix<double, DIM, DIM> compute_covariance(const std::vector<Eigen::Matrix<double, DIM, 1>>& data) {
   using OutputMat = Eigen::Matrix<double, DIM, DIM>;
