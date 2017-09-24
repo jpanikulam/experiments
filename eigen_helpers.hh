@@ -20,4 +20,12 @@ MatNd<rows, a_cols + b_cols> hstack(const MatNd<rows, a_cols> &a, const MatNd<ro
   ab.template rightCols<b_cols>() = b;
   return ab;
 }
+
+template <int cols>
+VecNd<cols + 1> augment(const VecNd<cols> &a, const double val) {
+  VecNd<cols + 1> v;
+  v << a, val;
+  // v(cols) = val;
+  return v;
+}
 }
