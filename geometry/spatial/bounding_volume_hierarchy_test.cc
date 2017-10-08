@@ -116,7 +116,7 @@ void climb_tree(const geometry::spatial::BoundingVolumeHierarchy &bvh) {
 TEST(BoundingVolumeHierarchyTest, intersection) {
   auto win = gl_viewer::get_window3d("Window A");
 
-  const std::string file_path = "/home/jacob/repos/experiments/test_stuff2.stl";
+  const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
   const auto        tri       = geometry::import::read_stl(file_path);
 
   gl_viewer::WindowManager::draw();
@@ -189,7 +189,7 @@ TEST(BoundingVolumeHierarchyTest, intersection) {
 TEST(BoundingVolumeHierarchyTest, bounding_volumes) { /*
    auto win = gl_viewer::get_window3d("Window A");
 
-   const std::string file_path = "/home/jacob/repos/experiments/test_stuff2.stl";
+   const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
    const auto        tri       = geometry::import::read_stl(file_path);
 
    gl_viewer::WindowManager::draw();

@@ -59,7 +59,7 @@ Eigen::MatrixXd mat_from_cv(const cv::Mat &image) {
 void run() {
   auto win = get_window3d("Window A");
 
-  const std::string file_path = "/home/jacob/repos/experiments/test_stuff.stl";
+  const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff.stl";
   const auto tri = geometry::import::read_stl(file_path);
 
   const std::string godzilla_image_filename = "/home/jacob/repos/slam/data/calibration/godzilla.jpg";
