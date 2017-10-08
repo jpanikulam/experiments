@@ -29,6 +29,7 @@ Eigen::Vector3f read_vec3(std::ifstream &stream) {
 }
 
 // Read an stl from a file
+// https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL
 TriMesh read_stl(const std::string &file_path) {
   std::ifstream stl_file(file_path, std::ios::binary);
   // Seek 80 chars
@@ -36,11 +37,11 @@ TriMesh read_stl(const std::string &file_path) {
   stl_file.seekg(HEADER_SIZE, std::ios::beg);
   const uint32_t triangle_count = read_from_file<uint32_t>(stl_file);
 
-  constexpr size_t BYTES_PER_FLOAT = 4;
-  constexpr size_t FLOATS_PER_VERT = 3;
-  constexpr size_t VERTS_PER_TRI = 4;
+  constexpr size_t BYTES_PER_FLOAT      = 4;
+  constexpr size_t FLOATS_PER_VERT      = 3;
+  constexpr size_t VERTS_PER_TRI        = 4;
   constexpr size_t BYTES_ATTRIB_BYTE_CT = 2;
-  constexpr size_t BYTES_PER_TRI = FLOATS_PER_VERT * BYTES_PER_FLOAT * VERTS_PER_TRI + BYTES_ATTRIB_BYTE_CT;
+  constexpr size_t BYTES_PER_TRI        = FLOATS_PER_VERT * BYTES_PER_FLOAT * VERTS_PER_TRI + BYTES_ATTRIB_BYTE_CT;
 
   TriMesh tri_mesh;
   for (size_t i = 0; i < triangle_count; ++i) {
