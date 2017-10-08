@@ -2,8 +2,6 @@
 
 // TODO:
 //  - Add cmake support for adding frames
-//  - Document permitted groups
-//  - Add conversion to generic transform so that it can be passed to functions
 
 namespace frames {
 enum class FrameId {
@@ -15,29 +13,29 @@ enum class FrameId {
   WORLD     //
 };
 
-template <FrameId destination, FrameId source, typename GROUP = SE3>
+// A templated frame class, enforcing transforms via the type system
+// The transform encodes a transform from source to destination
+//
+template <FrameId destination, FrameId source, typename Group = SE3>
 class Transform {
  public:
-  // Transform() {
-  // }
-
-  Transform(const GROUP& g) : destination_from_source_(g) {
+  Transform(const Group& g) : destination_from_source_(g) {
   }
 
   template <FrameId other_source>
-  Transform<destination, other_source, GROUP> operator*(const Transform<source, other_source, GROUP>& other) const {
+  Transform<destination, other_source, Group> operator*(const Transform<source, other_source, Group>& other) const {
     return destination_from_source_ * other.destination_from_source();
   }
 
-  Transform<source, destination, GROUP> inverse() const {
+  Transform<source, destination, Group> inverse() const {
     return {destination_from_source_.inverse()};
   }
 
-  const GROUP& destination_from_source() const {
+  const Group& destination_from_source() const {
     return destination_from_source_;
   }
 
  private:
-  GROUP destination_from_source_;
+  Group destination_from_source_;
 };
 }
