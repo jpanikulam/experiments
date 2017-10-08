@@ -32,3 +32,5 @@ target_link_libraries(
     ray
 )
 add_test(raycaster_test raycaster_test.cc read_stl)
+
+add_test(bounding_box_test bounding_box_test.cc "")

@@ -10,21 +10,26 @@
 namespace geometry {
 namespace spatial {
 
+// Axis aligned bounding box, with some nice geometric helpers.
 template <int DIM, typename Scalar = double>
 class BoundingBox {
-public:
+ public:
   using Vec = Eigen::Matrix<Scalar, DIM, 1>;
 
+  // Expand to contain a point
   void expand(const Vec &point) {
     lower_ = lower_.cwiseMin(point);
     upper_ = upper_.cwiseMax(point);
   }
 
+  // Expand to contain another axis-aligned bounding box
   void expand(const BoundingBox<DIM> &box) {
-    // lower_ = lower_.cwiseMin(box.lower());
-    // upper_ = upper_.cwiseMax(box.upper());
     expand(box.lower());
     expand(box.upper());
+  }
+
+  bool contains(const Vec &point) const {
+    return (point.array() < upper_.array()).all() && (point.array() > lower_.array()).all();
   }
 
   Vec center() const {
@@ -34,36 +39,50 @@ public:
   double surface_area() const {
     static_assert(DIM == 3, "Dimension must be 3 because how do I higher dimensions?");
     const Vec delta = upper_ - lower_;
-    double sa = 0.0;
+    double    sa    = 0.0;
     for (int i = 0; i < DIM; ++i) {
       sa += 2.0 * delta(i) * delta((i + 1) % DIM);
     }
     return sa;
   }
 
-  // Note: It looks like it would be easy check that an intersection took place with no divisions
-  // (Just don't compute the distance, only verify that the ray passes through at all)
-  Intersection intersect(const Ray &ray) {
+  // Compute an intersection using the slab method
+  Intersection intersect(const Ray &ray) const {
     static_assert(DIM == 3, "Dimension must be 3 because rays are of dim 3 so");
-    Intersection intersection;
 
-    const double distance = std::numeric_limits<double>::max();
-    int faces = 0;
+    double max_t_near = std::numeric_limits<double>::lowest();
+    double min_t_far  = std::numeric_limits<double>::max();
+
     for (int i = 0; i < DIM; ++i) {
-      const double inv_ray_dir_i = 1.0 / ray.direction(i);
-      const double u_t = (upper_(i) - ray.origin(i)) * inv_ray_dir_i;
-      const double l_t = (lower_(i) - ray.origin(i)) * inv_ray_dir_i;
-
-      if (u_t > 0.0 && l_t > 0.0) {
-        faces += 2;
-        distance = std::min(std::min(u_t, l_t), distance);
-      } else if (u_t > 0.0 || l_t > 0.0) {
-        ++faces;
-        distance = std::min(std::max(u_t, l_t), distance);
+      // Note: We're really just trying to avoid denormals, in principle the operations that follow
+      // are permissible for arbitrary nonzero floats
+      constexpr double EPS = 1e-10;
+      if (std::abs(ray.direction(i)) < EPS) {
+        if (ray.origin(i) < lower_(i) || ray.origin(i) > upper_(i)) {
+          return {-1.0, false};
+        }
       }
+
+      const double inv_direction_i = 1.0 / ray.direction(i);
+      const double t1              = (lower_(i) - ray.origin(i)) * inv_direction_i;
+      const double t2              = (upper_(i) - ray.origin(i)) * inv_direction_i;
+
+      const double t_near = std::min(t1, t2);
+      const double t_far  = std::max(t1, t2);
+
+      max_t_near = std::max(max_t_near, t_near);
+      min_t_far  = std::min(min_t_far, t_far);
     }
-    intersection.intersected = set;
-    intersection.distance = distance;
+
+    Intersection intersection;
+    if (contains(ray.origin)) {
+      intersection.intersected = true;
+      intersection.distance    = min_t_far;
+    } else {
+      intersection.intersected = (max_t_near < min_t_far) && max_t_near >= 0.0;
+      intersection.distance    = max_t_near;
+    }
+    return intersection;
   }
 
   const Vec &lower() const {
@@ -74,7 +93,7 @@ public:
     return upper_;
   }
 
-private:
+ private:
   Vec lower_ = Vec::Ones() * std::numeric_limits<double>::max();
   Vec upper_ = Vec::Ones() * std::numeric_limits<double>::lowest();
 };
