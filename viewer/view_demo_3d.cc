@@ -97,7 +97,7 @@ void run() {
   const auto sphere = std::make_shared<geometry::spatial::SphereVolume>(Vec3(5.0, 1.0, 1.0), 3.0);
   ray_caster.add_volume(sphere);
 
-  for (double t = 0.0; t < 200.0; t += 0.1) {
+  for (double t = 0.0; t < 200.0; t += 0.01) {
     lidar_geometry->clear();
 
     const auto world_from_caster = (SE3::exp(jcc::vstack(Vec3(0.0, 0.0, 0.0), Vec3(0.0, t, 0.0))));
