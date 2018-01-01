@@ -83,7 +83,7 @@ private:
     double last_update_time = 0.0;
 
     // Tangent vector; Left tangent space or gtfo
-    Vec3 velocity;
+    Vec3 velocity = Vec3::Zero();
 
     // Apply the transformation
     void apply();
