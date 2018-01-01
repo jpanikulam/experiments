@@ -4,17 +4,17 @@
 
 namespace numerics {
 
-template <int cols, typename Callable>
-Eigen::Matrix<double, cols, 1> numerical_gradient(const Eigen::Matrix<double, cols, 1> &x,
+template <int rows, typename Callable>
+Eigen::Matrix<double, rows, 1> numerical_gradient(const Eigen::Matrix<double, rows, 1> &x,
                                                   const Callable &fcn,
-                                                  const double    feps = 1e-6) {
-  using OutVec = Eigen::Matrix<double, cols, 1>;
+                                                  const double feps = 1e-6) {
+  using OutVec = Eigen::Matrix<double, rows, 1>;
 
   OutVec jac = OutVec::Zero();
 
-  for (int k = 0; k < cols; ++k) {
+  for (int k = 0; k < rows; ++k) {
     OutVec zero = OutVec::Zero();
-    zero(k)     = feps;
+    zero(k) = feps;
 
     jac(k) = (fcn(x + zero) - fcn(x - zero)) / (2 * feps);
   }
@@ -24,20 +24,20 @@ Eigen::Matrix<double, cols, 1> numerical_gradient(const Eigen::Matrix<double, co
 template <int output_rows, int input_rows, typename Callable>
 Eigen::Matrix<double, output_rows, input_rows> numerical_jacobian(const Eigen::Matrix<double, input_rows, 1> &x,
                                                                   const Callable &fcn,
-                                                                  const double    feps = 1e-6) {
+                                                                  const double feps = 1e-6) {
   // df1/dx1    df1/dx2 ....
   // df2/dx1    df2/dx2 ....
   //    :          :
   //    :          :
 
-  using OutVec   = Eigen::Matrix<double, input_rows, 1>;
+  using OutVec = Eigen::Matrix<double, input_rows, 1>;
   using Jacobian = Eigen::Matrix<double, output_rows, input_rows>;
-  Jacobian jac   = Jacobian::Zero();
+  Jacobian jac = Jacobian::Zero();
 
   for (int k = 0; k < input_rows; ++k) {
     OutVec zero = OutVec::Zero();
-    zero(k)     = feps;
-    jac.col(k)  = (fcn(x + zero) - fcn(x - zero)) / (2 * feps);
+    zero(k) = feps;
+    jac.col(k) = (fcn(x + zero) - fcn(x - zero)) / (2 * feps);
   }
   return jac;
 }

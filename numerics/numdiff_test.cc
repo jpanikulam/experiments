@@ -1,4 +1,5 @@
 #include "numdiff.hh"
+#include "num_hessian.hh"
 
 #include "eigen.hh"
 
@@ -40,7 +41,7 @@ TEST(NumericalGradient, gfunc) {
   // Action
   //
 
-  const Vec2 J = numerical_gradient<2>(x, gfunc);
+  const Vec2 J = numerical_gradient(x, gfunc);
 
   //
   // Verification
@@ -53,15 +54,33 @@ TEST(NumericalGradient, gfunc) {
 TEST(NumericalJacobian, zfunc) {
   // const double EPS = 1e-6;
 
-  const std::vector<Vec3> test_pts = {Vec3(0.0, 0.0, 0.0), Vec3(1.0, -2.0, 7.0), Vec3(9.0, -12.0, 0.0),
-                                      Vec3(1.0, 2.0, 1.0)};
+  const std::vector<Vec3> test_pts = {
+      Vec3(0.0, 0.0, 0.0), Vec3(1.0, -2.0, 7.0), Vec3(9.0, -12.0, 0.0), Vec3(1.0, 2.0, 1.0)};
 
   for (const auto x : test_pts) {
-    const MatNd<2, 3> J          = numerical_jacobian<2, 3>(x, zfunc);
+    const MatNd<2, 3> J = numerical_jacobian<2>(x, zfunc);
     const MatNd<2, 3> expected_J = dzfunc_da(x);
 
     constexpr double EPS = 1e-3;
     EXPECT_LT((J - expected_J).norm(), EPS);
+  }
+}
+TEST(NumericalHessian, ufunc) {
+  const std::vector<Vec3> test_pts = {
+      Vec3(0.0, 0.0, 0.0), Vec3(1.0, -2.0, 7.0), Vec3(9.0, -12.0, 0.0), Vec3(1.0, 2.0, 1.0)};
+
+  using TMat = Eigen::Matrix<double, 3, 3>;
+  const TMat A_u = TMat::Random();
+  const TMat hessian = A_u + A_u.transpose();
+
+  const auto test_func = [hessian](const Vec3 &x) -> double {
+    //
+    return (0.5 * x.transpose() * hessian * x);
+  };
+  for (const auto x : test_pts) {
+    const TMat numerical_hess = numerical_hessian(x, test_func);
+    constexpr double EPS = 0.1;
+    EXPECT_LT((numerical_hess - hessian).norm(), EPS);
   }
 }
 }
