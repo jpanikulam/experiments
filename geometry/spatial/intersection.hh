@@ -4,7 +4,7 @@ namespace geometry {
 namespace spatial {
 
 struct Intersection {
-  double distance;
+  double distance = -1.0;
   bool   intersected = false;
 
   static Intersection no_intersection() {
