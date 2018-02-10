@@ -8,6 +8,7 @@ template <int rows, typename Callable>
 Eigen::Matrix<double, rows, 1> numerical_gradient(const Eigen::Matrix<double, rows, 1> &x,
                                                   const Callable &fcn,
                                                   const double feps = 1e-6) {
+  static_assert(rows != Eigen::Dynamic, "No dynamic");
   using OutVec = Eigen::Matrix<double, rows, 1>;
 
   OutVec jac = OutVec::Zero();
@@ -25,6 +26,9 @@ template <int output_rows, int input_rows, typename Callable>
 Eigen::Matrix<double, output_rows, input_rows> numerical_jacobian(const Eigen::Matrix<double, input_rows, 1> &x,
                                                                   const Callable &fcn,
                                                                   const double feps = 1e-6) {
+  static_assert(output_rows != Eigen::Dynamic, "No dynamic");
+  static_assert(input_rows != Eigen::Dynamic, "No dynamic");
+
   // df1/dx1    df1/dx2 ....
   // df2/dx1    df2/dx2 ....
   //    :          :

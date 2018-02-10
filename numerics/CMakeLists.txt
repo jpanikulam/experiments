@@ -21,3 +21,10 @@ add_test(covariance_test covariance_test.cc "")
 add_test(gauss_newton_test gauss_newton_test.cc "")
 
 add_test(conjugate_gradient_test conjugate_gradient_test.cc "")
+
+add_library(
+    gradient_descent
+    gradient_descent.cc
+)
+
+add_test(gradient_descent_test gradient_descent_test.cc "gradient_descent")

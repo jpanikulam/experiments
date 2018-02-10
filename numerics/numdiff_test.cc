@@ -10,15 +10,15 @@ using Vec2 = Eigen::Vector2d;
 using Vec3 = Eigen::Vector3d;
 namespace numerics {
 namespace {
-double gfunc(const Vec2 &z) {
+double gfunc(const Vec2& z) {
   return z(0) * z(0) + 5 * z(1);
 }
 
-Vec2 zfunc(const Vec3 &a) {
+Vec2 zfunc(const Vec3& a) {
   return Vec2(a(0) * a(1), 4.0 * a(2));
 }
 
-MatNd<2, 3> dzfunc_da(const Vec3 &a) {
+MatNd<2, 3> dzfunc_da(const Vec3& a) {
   MatNd<2, 3> J;
 
   J.row(0) << a(1), a(0), 0.0;
@@ -52,8 +52,6 @@ TEST(NumericalGradient, gfunc) {
 }
 
 TEST(NumericalJacobian, zfunc) {
-  // const double EPS = 1e-6;
-
   const std::vector<Vec3> test_pts = {
       Vec3(0.0, 0.0, 0.0), Vec3(1.0, -2.0, 7.0), Vec3(9.0, -12.0, 0.0), Vec3(1.0, 2.0, 1.0)};
 
@@ -73,19 +71,18 @@ TEST(NumericalHessian, ufunc) {
   const TMat A_u = TMat::Random();
   const TMat hessian = A_u + A_u.transpose();
 
-  const auto test_func = [hessian](const Vec3 &x) -> double {
-    //
+  const auto test_func = [hessian](const Vec3& x) -> double {  //
     return (0.5 * x.transpose() * hessian * x);
   };
   for (const auto x : test_pts) {
     const TMat numerical_hess = numerical_hessian(x, test_func);
-    constexpr double EPS = 0.1;
+    constexpr double EPS = 0.05;
     EXPECT_LT((numerical_hess - hessian).norm(), EPS);
   }
 }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

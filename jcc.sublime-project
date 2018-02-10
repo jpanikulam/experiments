@@ -17,6 +17,6 @@
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
             "working_dir": "$project_path/bin",
             "selector": "source.cpp"
-        }
+        },
     ]
 }
