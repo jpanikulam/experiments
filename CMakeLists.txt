@@ -4,6 +4,11 @@ set(BASEPATH "${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${BASEPATH}/third_party/Sophus")
 include_directories("${BASEPATH}")
 
+
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+
+
 #########################
 # GTest
 #
@@ -19,7 +24,9 @@ endmacro(add_test)
 
 # I mean, let's be honest...
 find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
+include_directories(${EIGEN3_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}/unsupported)
+
+find_package(OpenCV REQUIRED)
 
 
 set(CMAKE_CXX_COMPILER "g++-5")
@@ -27,10 +34,10 @@ set(CMAKE_CXX_FLAGS "--std=c++14 -g -O1 -fno-omit-frame-pointer -Wall -Wno-depre
 
 add_subdirectory(clustering)
 add_subdirectory(frames)
+add_subdirectory(geometry)
+add_subdirectory(viewer)
 add_subdirectory(numerics)
 add_subdirectory(raytracing)
-add_subdirectory(viewer)
-add_subdirectory(geometry)
 add_subdirectory(util)
 add_subdirectory(vision)
 add_subdirectory(maxwell)

@@ -1,7 +1,9 @@
 #pragma once
 
+#include "eigen.hh"
 #include "primitive.hh"
 
+#include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 
 namespace gl_viewer {
@@ -9,8 +11,10 @@ namespace gl_viewer {
 class Image final : public Primitive {
  public:
   Image(const cv::Mat& image, double scale = 1.0, double alpha = 0.7);
+  Image(const Eigen::MatrixXd& image, double scale = 1.0, double alpha = 0.7);
 
   void update_image(const cv::Mat& image, double scale = 1.0);
+  void update_image(const Eigen::MatrixXd& image, double scale = 1.0);
 
   void draw() const override;
 

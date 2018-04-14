@@ -33,6 +33,7 @@ GlobalState *global_state;
 
 GlobalState *maybe_create_global_state() {
   if (!global_state) {
+    std::cout << "Creating global state" << std::endl;
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit()) {
@@ -56,12 +57,15 @@ void WindowManager::register_window(const GlSize &                      size,
                                     const std::string &                 window_name) {
   maybe_create_global_state();
 
+  std::cout << "size.height: " << size.height << std::endl;
+  std::cout << "size.width: " << size.width << std::endl;
+
   GLFWwindow *window = glfwCreateWindow(size.height, size.width, window_name.c_str(), nullptr, nullptr);
   simple_window->set_title(window_name);
 
   if (!window) {
     glfwTerminate();
-    std::cerr << "Failed to create new window" << std::endl;
+    std::cerr << "\nFailed to create new window" << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -122,6 +126,7 @@ void WindowManager::spin() {
 }
 
 void error_callback(int error, const char *description) {
+  std::cout << "Got an error" << std::endl;
   fputs(description, stderr);
 }
 

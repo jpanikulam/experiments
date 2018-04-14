@@ -5,14 +5,6 @@ if(NOT CMAKE_BUILD_TYPE)
   # SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 endif()
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-# So we can use those cool looking angle brackets
-set(BASEPATH "${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("${BASEPATH}")
-
-find_package(OpenCV REQUIRED)
-
 add_library(features features.cc)
 target_link_libraries(features ${OpenCV_LIBS})
 add_test(features_test features_test.cc features ${OpenCV_LIBS})

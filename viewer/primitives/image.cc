@@ -9,6 +9,16 @@ Image::Image(const cv::Mat& image, const double scale, double alpha) {
   alpha_ = alpha;
 }
 
+Image::Image(const Eigen::MatrixXd& image, double scale, double alpha) {
+  update_image(image, scale);
+  alpha_ = alpha;
+}
+
+void Image::update_image(const Eigen::MatrixXd& image, double scale) {
+  cv::eigen2cv(image, image_);
+  update_image(image_, scale);
+}
+
 void Image::update_image(const cv::Mat& image, const double scale) {
   if (image.channels() == 1) {
     cv::cvtColor(image, image_, cv::COLOR_GRAY2BGR);
