@@ -15,7 +15,7 @@ void Frame::update_transform(const SE3& frame_from_parent) {
 }
 
 void Frame::add_primitive(std::shared_ptr<Primitive> primitive) {
-  primitives_.emplace_back(std::move(primitive));
+  primitives_.emplace_back(primitive);
 }
 
 void Frame::draw() const {

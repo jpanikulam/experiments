@@ -5,7 +5,7 @@
 
 #include "out.hh"
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 namespace clustering {
 using Vec2 = Eigen::Vector2d;

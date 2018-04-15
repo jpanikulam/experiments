@@ -9,7 +9,7 @@ TEST(JacobiLaplacianImage, test_converges) {
   //
   //
 
-  constexpr int ROWS = 5;
+  constexpr int ROWS = 50;
   using Mat          = SquareMatNd<ROWS>;
 
   const Mat x = Mat::Random();
@@ -19,4 +19,4 @@ TEST(JacobiLaplacianImage, test_converges) {
 
   std::cout << result << std::endl;
 }
-}
+}  // namespace numerics

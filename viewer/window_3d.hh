@@ -7,7 +7,7 @@
 #include "sophus.hh"
 #include "viewer/primitives/primitive.hh"
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 #include <memory>
 #include <vector>

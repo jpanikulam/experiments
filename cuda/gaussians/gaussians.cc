@@ -10,7 +10,7 @@
 // - Render an array summing an exp of them exp(x)
 //
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 #include <GL/freeglut.h>
 

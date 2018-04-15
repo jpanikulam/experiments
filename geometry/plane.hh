@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include "out.hh"
 
 #include "geometry/line.hh"

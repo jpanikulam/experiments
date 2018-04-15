@@ -10,7 +10,7 @@
 #include "vision/features.hh"
 #include "vision/render/render_from_pose.hh"
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include <opencv2/opencv.hpp>
 
 #include <iostream>

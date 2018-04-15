@@ -15,8 +15,10 @@ Image::Image(const Eigen::MatrixXd& image, double scale, double alpha) {
 }
 
 void Image::update_image(const Eigen::MatrixXd& image, double scale) {
-  cv::eigen2cv(image, image_);
-  update_image(image_, scale);
+  const Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> image_as_uchar = (image * 255.0).cast<uint8_t>();
+  cv::Mat                                                      new_image;
+  cv::eigen2cv(image_as_uchar, new_image);
+  update_image(new_image, scale);
 }
 
 void Image::update_image(const cv::Mat& image, const double scale) {
@@ -77,4 +79,4 @@ void Image::draw() const {
 
   glDisable(GL_TEXTURE_2D);
 }
-}
+}  // namespace gl_viewer

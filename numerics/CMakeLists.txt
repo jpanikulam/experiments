@@ -12,18 +12,5 @@ add_library(
 
 add_test(gradient_descent_test gradient_descent_test.cc "gradient_descent")
 
-add_executable(jacobi_laplacian_test jacobi_laplacian_test.cc)
-target_link_libraries(jacobi_laplacian_test
-    window_3d
-    window_manager
-    plot
-    image
-    frame
-    image_frame
-    simple_geometry
-    ${OpenCV_LIBS}
+add_test(jacobi_laplacian_test jacobi_laplacian_test.cc "")
 
-    ${GTEST_LIBRARIES}
-    pthread
-
-)
