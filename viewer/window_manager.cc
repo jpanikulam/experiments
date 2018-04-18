@@ -24,7 +24,7 @@ void error_callback(int error, const char *description);
 //
 
 struct GlobalState {
-  GLFWwindow *active_window;
+  GLFWwindow *                                          active_window;
   std::map<GLFWwindow *, std::shared_ptr<SimpleWindow>> windows;
 };
 
@@ -33,7 +33,6 @@ GlobalState *global_state;
 
 GlobalState *maybe_create_global_state() {
   if (!global_state) {
-    std::cout << "Creating global state" << std::endl;
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit()) {
@@ -56,9 +55,6 @@ void WindowManager::register_window(const GlSize &                      size,
                                     const std::shared_ptr<SimpleWindow> simple_window,
                                     const std::string &                 window_name) {
   maybe_create_global_state();
-
-  std::cout << "size.height: " << size.height << std::endl;
-  std::cout << "size.width: " << size.width << std::endl;
 
   GLFWwindow *window = glfwCreateWindow(size.height, size.width, window_name.c_str(), nullptr, nullptr);
   simple_window->set_title(window_name);
@@ -126,7 +122,6 @@ void WindowManager::spin() {
 }
 
 void error_callback(int error, const char *description) {
-  std::cout << "Got an error" << std::endl;
   fputs(description, stderr);
 }
 
@@ -166,4 +161,4 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 void window_size_callback(GLFWwindow *window, int width, int height) {
   global_state->windows.at(window)->resize(GlSize(width, height));
 }
-}
+}  // namespace gl_viewer

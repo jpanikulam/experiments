@@ -7,6 +7,7 @@ namespace fluids {
 namespace plane {
 
 // Vector field operations
+// ∇f(x, y)
 std::array<Eigen::MatrixXd, 2> compute_gradient(const Eigen::MatrixXd& potential_field, const double dx) {
   std::array<Eigen::MatrixXd, 2> out;
 
@@ -26,6 +27,7 @@ std::array<Eigen::MatrixXd, 2> compute_gradient(const Eigen::MatrixXd& potential
 }
 
 // Scalar field operations
+// ∇·<x, y>
 Eigen::MatrixXd compute_divergence(const std::array<Eigen::MatrixXd, 2>& vector_field, const double dx) {
   const auto& u = vector_field[0];
   const auto& v = vector_field[1];
@@ -43,6 +45,7 @@ Eigen::MatrixXd compute_divergence(const std::array<Eigen::MatrixXd, 2>& vector_
   return result;
 }
 
+// Δf(x, y)
 Eigen::MatrixXd compute_laplacian(const Eigen::MatrixXd& field, const double dx) {
   const int rows = field.rows();
   const int cols = field.cols();

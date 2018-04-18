@@ -13,3 +13,8 @@ TODO:
 * Add an overload for add_primitive in Window2d:
     `void add_primitive(std::shared_ptr<Primitive>, SE2 primitive_from_world);`
     Which generates a frame, by se3ing our se2
+
+* Add default threaded-ness
+* Add primitives (like images) that exist and work by default in 2d
+* Add primitives (like 2d plots) that exist and work by default in 2d
+* Add some mechanism for drawing these things in 3d

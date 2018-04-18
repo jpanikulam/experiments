@@ -4,18 +4,18 @@ namespace jcc {
 namespace fluids {
 namespace plane {
 
-// using VectorField = std::array<Eigen::MatrixXd, 2, Eigen::aligned_allocator<Eigen::Vector4f>>;
-
 struct SimulationConfig {
   // Pressure constant
-  const double rho = 1e3;
+  double rho = 1e3;
 
   // Viscosity
-  const double nu = 0.9;
+  double nu = 0.9;
 
-  const double dx = 1e-1;
+  // Grid spacing
+  double dx = 1e-1;
 
-  const double dt = 1e-3;
+  // Time step
+  double dt = 1e-3;
 };
 
 struct SimulationState {
@@ -23,6 +23,23 @@ struct SimulationState {
   std::array<Eigen::MatrixXd, 2> velocity_field;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
+
+struct JacobiConfig {
+  double alpha     = -1e-1;
+  double beta      = 4.0;
+  int    max_iters = -1;
+  // Convergence criteria for jacobi iteration
+  double min_rel_delta = 1e-3;
+};
+
+// Solve a poisson equation
+//
+// That is:
+// Generate an image `x` such that Δ(x) = b
+//
+Eigen::MatrixXd solve_poisson_jacobi_image(const Eigen::MatrixXd& x0,
+                                           const Eigen::MatrixXd& b,
+                                           const JacobiConfig&    config);
 
 std::array<Eigen::MatrixXd, 2> compute_advection(const std::array<Eigen::MatrixXd, 2> velocity_field,
                                                  const SimulationConfig&              config);

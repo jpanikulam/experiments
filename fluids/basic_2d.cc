@@ -41,7 +41,7 @@ std::array<Eigen::MatrixXd, 2> add(const std::array<Eigen::MatrixXd, 2>& a, cons
 }
 
 void simulate() {
-  constexpr int          SIZE = 160;
+  constexpr int          SIZE = 200;
   plane::SimulationState state;
   state.pressure_field = Eigen::MatrixXd::Zero(SIZE, SIZE);
   // state.pressure_field.block(40, 40, 20, 20).array() = 0.001;

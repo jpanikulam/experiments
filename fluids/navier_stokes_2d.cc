@@ -4,19 +4,14 @@
 
 #include "fields_2d.hh"
 
+// TODO
+#include <iostream>
+
 namespace jcc {
 namespace fluids {
 namespace plane {
 
-namespace {
-struct JacobiConfig {
-  double alpha = -1e-1;
-  double beta  = 4.0;
-
-  int max_iters = -1;
-};
-
-Eigen::MatrixXd jacobi_laplacian_image(const Eigen::MatrixXd& x, const Eigen::MatrixXd& b, const JacobiConfig& config) {
+Eigen::MatrixXd solve_poisson_jacobi_image(const Eigen::MatrixXd& x, const Eigen::MatrixXd& b, const JacobiConfig& config) {
   const int rows      = x.rows();
   using Out           = Eigen::MatrixXd;
   const int max_iters = config.max_iters == -1 ? 100 * rows : config.max_iters;
@@ -40,13 +35,17 @@ Eigen::MatrixXd jacobi_laplacian_image(const Eigen::MatrixXd& x, const Eigen::Ma
     tmp.topRows(rows - 1) += x_soln.bottomRows(rows - 1);
 
     tmp += config.alpha * b;
+    tmp *= inv_beta;
 
-    x_soln = tmp * inv_beta;
+    const double delta = (x_soln - tmp).norm() / x_soln.norm();
+    x_soln = tmp;
+    if (delta < config.min_rel_delta) {
+      break;
+    }
   }
 
   return x_soln;
 }
-}  // namespace
 
 std::array<Eigen::MatrixXd, 2> compute_advection(const std::array<Eigen::MatrixXd, 2> velocity_field,
                                                  const SimulationConfig&              cfg) {
@@ -94,7 +93,7 @@ SimulationState compute_projection(const std::array<Eigen::MatrixXd, 2> divergen
   const Eigen::MatrixXd initialization      = Eigen::MatrixXd::Random(rows, cols);
 
   const JacobiConfig jacobi_cfg{.alpha = -(cfg.dx * cfg.dx), .beta = 4};
-  result.pressure_field = jacobi_laplacian_image(initialization, velocity_divergence, jacobi_cfg);
+  result.pressure_field = solve_poisson_jacobi_image(velocity_divergence, velocity_divergence, jacobi_cfg);
 
   const std::array<Eigen::MatrixXd, 2> grad_p = compute_gradient(result.pressure_field, cfg.dx);
 
