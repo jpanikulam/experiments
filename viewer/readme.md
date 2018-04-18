@@ -18,3 +18,4 @@ TODO:
 * Add primitives (like images) that exist and work by default in 2d
 * Add primitives (like 2d plots) that exist and work by default in 2d
 * Add some mechanism for drawing these things in 3d
+* Reduce the overhead for adding primitives -- right now it's a lot of mungling
