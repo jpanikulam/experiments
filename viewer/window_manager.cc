@@ -1,8 +1,10 @@
 #include "window_manager.hh"
 
+#include <atomic>
 #include <chrono>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -23,15 +25,36 @@ void error_callback(int error, const char *description);
 // Manage a global registry of the created windows
 //
 
+std::mutex view_mutex;
+std::mutex global_state_mutex;
+
+std::mutex &WindowManager::get_mutex() {
+  return view_mutex;
+}
+
 struct GlobalState {
-  GLFWwindow *                                          active_window;
   std::map<GLFWwindow *, std::shared_ptr<SimpleWindow>> windows;
 };
-
 // Global state singleton
-GlobalState *global_state;
+std::shared_ptr<GlobalState> global_state;
 
-GlobalState *maybe_create_global_state() {
+std::atomic<bool> ready(false);
+
+void render_func() {
+  while (true) {
+    if (ready) {
+      const std::lock_guard<std::mutex> lk(global_state_mutex);
+      WindowManager::draw(16);
+    } else {
+      std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    }
+  }
+}
+
+std::thread render_thread(render_func);
+
+std::shared_ptr<GlobalState> maybe_create_global_state() {
+  std::unique_lock<std::mutex> lk(global_state_mutex);
   if (!global_state) {
     glfwSetErrorCallback(error_callback);
 
@@ -46,7 +69,9 @@ GlobalState *maybe_create_global_state() {
     glewExperimental = GL_TRUE;
     glewInit();
 
-    global_state = new GlobalState;
+    global_state = std::make_shared<GlobalState>();
+
+    ready = true;
   }
   return global_state;
 }
@@ -72,13 +97,13 @@ void WindowManager::register_window(const GlSize &                      size,
   glfwSetScrollCallback(window, scroll_callback);
 
   global_state->windows[window] = simple_window;
-  draw();
 }
 
 //
 // Render all of the managed windows
 //
 void WindowManager::render() {
+  const std::lock_guard<std::mutex> lk(get_mutex());
   for (auto it = global_state->windows.begin(); it != global_state->windows.end(); it++) {
     auto &glfw_win = it->first;
     auto &window   = it->second;
@@ -88,7 +113,6 @@ void WindowManager::render() {
     if (!glfwWindowShouldClose(glfw_win)) {
       window->render();
       glfwSwapBuffers(glfw_win);
-
     } else {
       glfwDestroyWindow(glfw_win);
       global_state->windows.erase(it);
@@ -99,8 +123,12 @@ void WindowManager::render() {
 }
 
 bool WindowManager::any_windows() {
-  maybe_create_global_state();
-  return !global_state->windows.empty();
+  // maybe_create_global_state();
+  // Not thread-safe, figure out later
+  if (global_state) {
+    return !global_state->windows.empty();
+  }
+  return false;
 }
 
 void WindowManager::draw(const int ms) {

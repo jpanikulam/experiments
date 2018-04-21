@@ -1,3 +1,5 @@
+#pragma once
+
 #include "sophus.hh"
 
 // TODO:

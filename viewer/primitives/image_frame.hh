@@ -1,3 +1,5 @@
+#pragma once
+
 #include "frame.hh"
 
 namespace gl_viewer {

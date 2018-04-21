@@ -29,13 +29,25 @@ add_library(simple_window simple_window.cc)
 target_link_libraries(simple_window ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES})
 
 add_library(window_manager window_manager.cc)
-target_link_libraries(window_manager simple_window ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_libraries(window_manager
+    simple_window
+    ${OPENGL_LIBRARIES}
+    ${GLFW_LIBRARIES}
+    ${GLEW_LIBRARIES}
+    pthread
+)
 
 add_library(projection projection.cc)
 target_link_libraries(projection ${OPENGL_LIBRARIES})
 
 add_library(window_2d window_2d.cc)
-target_link_libraries(window_2d projection window_manager spatial_geometry ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES})
+target_link_libraries(window_2d
+    projection
+    window_manager
+    spatial_geometry
+    ${OPENGL_LIBRARIES}
+    ${GLFW_LIBRARIES}
+)
 
 add_library(window_3d window_3d.cc)
 target_link_libraries(

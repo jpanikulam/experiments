@@ -1,3 +1,5 @@
+#pragma once
+
 #include <sophus/se2.hpp>
 #include <sophus/se3.hpp>
 #include <sophus/sim3.hpp>

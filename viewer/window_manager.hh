@@ -7,6 +7,7 @@
 #include "simple_window.hh"  // Can't include before glew
 
 #include <memory>
+#include <mutex>
 
 namespace gl_viewer {
 
@@ -19,9 +20,9 @@ class WindowManager {
 
   // Create and register windows with the manager
   //
-  static void register_window(const GlSize &                      size,
+  static void register_window(const GlSize&                       size,
                               const std::shared_ptr<SimpleWindow> win,
-                              const std::string &                 window_name);
+                              const std::string&                  window_name);
 
   // Render all of the managed windows
   //
@@ -35,5 +36,7 @@ class WindowManager {
   static void spin();
 
   static void draw(const int ms = 16);
+
+  static std::mutex& get_mutex();
 };
-}
+}  // namespace gl_viewer
