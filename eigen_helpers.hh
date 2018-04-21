@@ -2,7 +2,7 @@
 
 #include "eigen.hh"
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 namespace jcc {
 

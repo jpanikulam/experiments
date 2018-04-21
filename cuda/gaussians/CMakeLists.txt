@@ -8,8 +8,6 @@ include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
 #########################
 # Eigen
 #
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}/unsupported)
 
 set(BASEPATH "${CMAKE_CURRENT_SOURCE_DIR}/..")
 INCLUDE_DIRECTORIES("${BASEPATH}")

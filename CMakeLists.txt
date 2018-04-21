@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 2.8)
 
 set(BASEPATH "${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${BASEPATH}/third_party/Sophus")
+include_directories("${BASEPATH}/third_party/eigen3")
 include_directories("${BASEPATH}")
+
+message("${BASEPATH}")
 
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -23,8 +26,8 @@ macro(add_test test_name test_file test_libs)
 endmacro(add_test)
 
 # I mean, let's be honest...
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}/unsupported)
+# find_package(Eigen3 REQUIRED)
+# include_directories(${EIGEN3_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}/unsupported)
 
 find_package(OpenCV REQUIRED)
 

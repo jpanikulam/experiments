@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 template <int ROWS>
 using VecNd = Eigen::Matrix<double, ROWS, 1>;

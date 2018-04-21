@@ -5,7 +5,7 @@
 #include <helper_math.h>
 
 #define EIGEN_DEFAULT_DENSE_INDEX_TYPE int
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 __device__ uint rgbaFloatToInt(float4 rgba) {
   rgba.x = __saturatef(rgba.x); // clamp to [0.0, 1.0]

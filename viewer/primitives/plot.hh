@@ -2,7 +2,7 @@
 
 #include "primitive.hh"
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 #include <vector>
 

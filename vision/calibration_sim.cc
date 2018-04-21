@@ -11,7 +11,7 @@
 #include "viewer/window_3d.hh"
 #include "viewer/window_manager.hh"
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 
 #include <iostream>

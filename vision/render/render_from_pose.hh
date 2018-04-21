@@ -5,7 +5,7 @@
 
 #include "vision/camera_model.hh"
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 
 #include <vector>

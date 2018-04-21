@@ -1,7 +1,7 @@
 #include "histogram_equalize.hh"
 #include "features.hh"
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 namespace slam {
 namespace {

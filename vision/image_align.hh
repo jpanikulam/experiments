@@ -6,7 +6,7 @@
 #include "out.hh"
 #include "sophus/se3.hpp"
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <vector>
 
 namespace slam {
