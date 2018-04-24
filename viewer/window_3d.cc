@@ -10,6 +10,8 @@
 
 #include "primitives/simple_geometry_primitives.hh"
 
+#include <thread>
+
 namespace gl_viewer {
 namespace {
 void pre_render() {
@@ -33,7 +35,7 @@ void pre_render() {
   glEnable(GL_LINE_SMOOTH);
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
-}
+}  // namespace
 
 void View3D::apply() {
   glMatrixMode(GL_MODELVIEW);
@@ -71,12 +73,15 @@ void View3D::simulate() {
 
 void Window3D::spin_until_step() {
   while (!should_continue_ && WindowManager::any_windows()) {
-    WindowManager::draw();
+    // WindowManager::draw();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
   should_continue_ = false;
 }
 
 void Window3D::on_key(int key, int scancode, int action, int mods) {
+  const std::lock_guard<std::mutex> lk(behavior_mutex_);
+
   if (action == GLFW_PRESS) {
     if (key == static_cast<int>('N')) {
       should_continue_ = true;
@@ -84,10 +89,14 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
   }
 }
 void Window3D::on_mouse_button(int button, int action, int mods) {
+  const std::lock_guard<std::mutex> lk(behavior_mutex_);
+
   mouse_pos_last_click_ = mouse_pos();
 }
 
 void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
+  const std::lock_guard<std::mutex> lk(behavior_mutex_);
+
   if (left_mouse_held()) {
     const Vec2 motion     = mouse_pos.point - mouse_pos_last_click_.point;
     mouse_pos_last_click_ = mouse_pos;
@@ -132,18 +141,23 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
 }
 
 void Window3D::on_scroll(const double amount) {
-  view_.zoom *= std::exp(amount);
+  const std::lock_guard<std::mutex> lk(behavior_mutex_);
+
+  view_.zoom *= std::exp(0.1 * amount);
   if (view_.zoom <= 0.0001) {
     view_.zoom = 0.0001;
   }
 }
 
 void Window3D::resize(const GlSize &gl_size) {
+  const std::lock_guard<std::mutex> lk(behavior_mutex_);
+
   glViewport(0, 0, gl_size.width, gl_size.height);
   gl_size_ = gl_size;
 }
 
 void Window3D::render() {
+  const std::lock_guard<std::mutex> lk(behavior_mutex_);
   pre_render();
 
   glMatrixMode(GL_PROJECTION);
@@ -203,8 +217,6 @@ void Window3D::apply_keys_to_view() {
         break;
 
       case (static_cast<int>('R')):
-        // view_.camera_from_target               = SE3();
-        // view_.camera_from_target.translation() = Vec3(2.0, 2.0, 2.0);
         view_.target_from_world = SE3();
         break;
     }
@@ -230,4 +242,4 @@ std::shared_ptr<Window3D> get_window3d(const std::string &title) {
     return window;
   }
 }
-}
+}  // namespace gl_viewer

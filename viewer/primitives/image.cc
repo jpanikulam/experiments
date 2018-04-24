@@ -5,31 +5,42 @@
 namespace gl_viewer {
 
 Image::Image(const cv::Mat& image, const double scale, double alpha) {
+  to_update_ = true;
+  alpha_     = alpha;
   update_image(image, scale);
-  alpha_ = alpha;
 }
 
 Image::Image(const Eigen::MatrixXd& image, double scale, double alpha) {
+  to_update_ = true;
+  alpha_     = alpha;
   update_image(image, scale);
-  alpha_ = alpha;
 }
 
 void Image::update_image(const Eigen::MatrixXd& image, double scale) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+
+  scale_ = scale;
+
   const Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> image_as_uchar = (image * 255.0).cast<uint8_t>();
   cv::Mat                                                      new_image;
   cv::eigen2cv(image_as_uchar, new_image);
-  update_image(new_image, scale);
+  cv::cvtColor(new_image, image_, cv::COLOR_GRAY2BGR);
+  to_update_ = true;
 }
 
-void Image::update_image(const cv::Mat& image, const double scale) {
+void Image::update_image(const cv::Mat& image, double scale) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+
+  scale_ = scale;
   if (image.channels() == 1) {
     cv::cvtColor(image, image_, cv::COLOR_GRAY2BGR);
   } else {
     image.copyTo(image_);
   }
+  to_update_ = true;
+}
 
-  scale_ = scale;
-
+void Image::update_gl() const {
   if (!allocated_texture_) {
     glGenTextures(1, &texture_id_);
     allocated_texture_ = true;
@@ -47,6 +58,13 @@ void Image::update_image(const cv::Mat& image, const double scale) {
 }
 
 void Image::draw() const {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+
+  if (to_update_) {
+    update_gl();
+    to_update_ = false;
+  }
+
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texture_id_);
 

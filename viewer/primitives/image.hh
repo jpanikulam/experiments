@@ -1,5 +1,8 @@
 #pragma once
 
+#include <atomic>
+#include <mutex>
+
 #include "eigen.hh"
 #include "primitive.hh"
 
@@ -19,11 +22,16 @@ class Image final : public Primitive {
   void draw() const override;
 
  private:
+  void update_gl() const;
+
   cv::Mat      image_;
-  unsigned int texture_id_;
   double       scale_ = 1.0;
   double       alpha_ = 0.7;
 
-  bool allocated_texture_ = false;
+
+  mutable unsigned int texture_id_;
+  mutable bool allocated_texture_ = false;
+  mutable std::atomic<bool> to_update_{false};
+  mutable std::mutex        draw_mutex_;
 };
-}
+}  // namespace gl_viewer

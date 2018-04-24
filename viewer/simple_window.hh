@@ -34,8 +34,11 @@ class SimpleWindow {
 
   virtual void render() = 0;
 
+  // Make the title something
   void set_title(const std::string title);
-  const std::string &title();
+
+  // Get the title
+  const std::string &title() const;
 
   const std::map<int, bool> &held_keys() const;
   const std::array<bool, 3> &held_mouse_buttons() const;
@@ -46,11 +49,11 @@ class SimpleWindow {
   bool right_mouse_held() const;
 
  private:
-  std::string title_;
+  std::string         title_;
   std::map<int, bool> held_keys_;
   std::array<bool, 3> held_mouse_buttons_;
 
   GlSize      gl_size_;
   WindowPoint mouse_pos_;
 };
-}
+}  // namespace gl_viewer

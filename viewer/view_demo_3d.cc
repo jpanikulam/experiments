@@ -68,65 +68,57 @@ void run() {
       "/home/jacob/repos/slam/data/calibration/domestic_goat_kid_in_capeweed.jpg";
   const cv::Mat calibration_image_color = cv::imread(calibration_image_filename);
 
-  auto                         scene_geometry = std::make_shared<SimpleGeometry>();
-  auto                         lidar_geometry = std::make_shared<SimpleGeometry>();
+  const auto                   scene_geometry = std::make_shared<SimpleGeometry>();
+  const auto                   lidar_geometry = std::make_shared<SimpleGeometry>();
   const auto                   cfg            = geometry::spatial::build_raycaster_config();
   geometry::spatial::RayCaster ray_caster(cfg);
-  {
-    std::cout << "Getting window lock" << std::endl;
-    const std::lock_guard<std::mutex> lk(WindowManager::get_mutex());
-    win->add_primitive(scene_geometry);
-    win->add_primitive(lidar_geometry);
 
-    scene_geometry->add_axes({SE3()});
+  std::cout << "Adding primitives" << std::endl;
+  win->add_primitive(scene_geometry);
+  win->add_primitive(lidar_geometry);
 
+  scene_geometry->add_axes({SE3()});
 
-    for (size_t k = 0; k < tri.triangles.size(); ++k) {
-      scene_geometry->add_line({tri.triangles[k].vertices[0], tri.triangles[k].vertices[1]});
-      scene_geometry->add_line({tri.triangles[k].vertices[1], tri.triangles[k].vertices[2]});
-      scene_geometry->add_line({tri.triangles[k].vertices[2], tri.triangles[k].vertices[0]});
+  for (size_t k = 0; k < tri.triangles.size(); ++k) {
+    scene_geometry->add_line({tri.triangles[k].vertices[0], tri.triangles[k].vertices[1]});
+    scene_geometry->add_line({tri.triangles[k].vertices[1], tri.triangles[k].vertices[2]});
+    scene_geometry->add_line({tri.triangles[k].vertices[2], tri.triangles[k].vertices[0]});
 
-      const auto tri_volume = std::make_shared<geometry::spatial::TriangleVolume>(tri.triangles[k].vertices);
-      ray_caster.add_volume(tri_volume);
-    }
-
-    scene_geometry->add_billboard_circle({Vec3(5.0, 1.0, 1.0), 3.0});
-    scene_geometry->add_box({Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 3.0), Vec4(1.0, 0.2, 0.2, 0.6)});
-    scene_geometry->add_box({Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 2.0), Vec4(0.0, 1.0, 0.2, 0.6)});
-
-    const auto sphere = std::make_shared<geometry::spatial::SphereVolume>(Vec3(5.0, 1.0, 1.0), 3.0);
-    ray_caster.add_volume(sphere);
+    const auto tri_volume = std::make_shared<geometry::spatial::TriangleVolume>(tri.triangles[k].vertices);
+    ray_caster.add_volume(tri_volume);
   }
+
+  scene_geometry->add_billboard_circle({Vec3(5.0, 1.0, 1.0), 3.0});
+
+  scene_geometry->add_box({Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 3.0), Vec4(1.0, 0.2, 0.2, 0.6)});
+  scene_geometry->add_box({Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 2.0), Vec4(0.0, 1.0, 0.2, 0.6)});
+
+  const auto sphere = std::make_shared<geometry::spatial::SphereVolume>(Vec3(5.0, 1.0, 1.0), 3.0);
+  ray_caster.add_volume(sphere);
 
   for (double t = 0.0; t < 200.0; t += 0.01) {
     const auto world_from_caster = (SE3::exp(jcc::vstack(Vec3(0.0, 0.0, 0.0), Vec3(0.0, t, 0.0))));
     const auto distances         = ray_caster.cast_rays(world_from_caster);
 
-    {
-      const std::lock_guard<std::mutex> lk(WindowManager::get_mutex());
-      lidar_geometry->clear();
-      for (size_t k = 0; k < ray_caster.config().rays.size(); ++k) {
-        const auto ray = world_from_caster * ray_caster.config().rays[k];
-        if (distances[k] < 1000.0) {
-          lidar_geometry->add_ray({ray.origin, ray.direction}, distances[k], Vec4(0.0, 1.0, 0.0, 0.5));
-        } else {
-          lidar_geometry->add_ray({ray.origin, ray.direction}, 10.0, Vec4(1.0, 0.0, 0.0, 0.25));
-        }
+    lidar_geometry->clear();
+
+    for (size_t k = 0; k < ray_caster.config().rays.size(); ++k) {
+      const auto ray = world_from_caster * ray_caster.config().rays[k];
+      if (distances[k] < 1000.0) {
+        lidar_geometry->add_ray({ray.origin, ray.direction}, distances[k], Vec4(0.0, 1.0, 0.0, 0.5));
+      } else {
+        lidar_geometry->add_ray({ray.origin, ray.direction}, 10.0, Vec4(1.0, 0.0, 0.0, 0.25));
       }
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
-    // WindowManager::draw(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
-  std::cout << "Done window lock" << std::endl;
   while (true) {
-    std::cout << "Spinning" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(16));
   }
 
-  // WindowManager::spin();
   std::cout << "Done" << std::endl;
-}
+}  // namespace gl_viewer
 }  // namespace gl_viewer
 
 int main(void) {

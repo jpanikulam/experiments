@@ -70,7 +70,7 @@ void simulate() {
     // image->update_image(state.pressure_field);
     image->update_image((state.pressure_field / state.pressure_field.maxCoeff()));
     // viewer->spin_until_step();
-    gl_viewer::WindowManager::draw(16);
+    // gl_viewer::WindowManager::draw(16);
     const auto advection = plane::compute_advection(state.velocity_field, cfg);
     const auto pressure  = plane::compute_pressure(state.pressure_field, cfg);
     const auto diffusion = plane::compute_diffusion(state.velocity_field, cfg);

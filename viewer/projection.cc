@@ -16,7 +16,7 @@ Projection Projection::get_from_current() {
   double projection[16];
   glGetDoublev(GL_PROJECTION_MATRIX, projection);
   const Eigen::Map<Mat4, Eigen::RowMajor> gl_projection_mat(projection);
-  const Mat4 eigen_projection = gl_projection_mat;
+  const Mat4                              eigen_projection = gl_projection_mat;
 
   //
   // Get a the modelview matrix
@@ -25,7 +25,7 @@ Projection Projection::get_from_current() {
   double modelview[16];
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
   const Eigen::Map<Mat4, Eigen::RowMajor> gl_modelview_mat(modelview);
-  const Mat4 eigen_modelview = gl_modelview_mat;
+  const Mat4                              eigen_modelview = gl_modelview_mat;
 
   //
   // Get the viewport dimensions

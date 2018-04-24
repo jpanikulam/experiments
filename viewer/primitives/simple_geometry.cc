@@ -3,6 +3,8 @@
 namespace gl_viewer {
 
 void SimpleGeometry::draw() const {
+  std::lock_guard<std::mutex> lk(draw_mutex_);
+
   for (const auto &axes : axes_) {
     draw_axes(axes);
   }
@@ -21,4 +23,4 @@ void SimpleGeometry::draw() const {
 
   draw_lines(lines_);
 }
-}
+}  // namespace gl_viewer

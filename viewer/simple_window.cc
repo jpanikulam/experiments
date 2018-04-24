@@ -50,7 +50,7 @@ void SimpleWindow::set_title(const std::string title) {
   title_ = title;
 }
 
-const std::string &SimpleWindow::title() {
+const std::string &SimpleWindow::title() const {
   return title_;
 }
 
