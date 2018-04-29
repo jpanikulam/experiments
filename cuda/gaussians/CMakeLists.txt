@@ -13,6 +13,9 @@ set(BASEPATH "${CMAKE_CURRENT_SOURCE_DIR}/..")
 INCLUDE_DIRECTORIES("${BASEPATH}")
 INCLUDE_DIRECTORIES("${BASEPATH}/common/inc")
 
+include_directories("${BASEPATH}/../third_party/Sophus")
+include_directories("${BASEPATH}/../third_party/eigen3")
+
 set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
 
 list(APPEND CUDA_NVCC_FLAGS "-std=c++11;-O2;-DVERBOSE;-gencode;arch=compute_61,code=sm_61;--expt-relaxed-constexpr")

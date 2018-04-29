@@ -8,7 +8,7 @@
 #include <Eigen/Dense>
 
 __device__ uint rgbaFloatToInt(float4 rgba) {
-  rgba.x = __saturatef(rgba.x); // clamp to [0.0, 1.0]
+  rgba.x = __saturatef(rgba.x);  // clamp to [0.0, 1.0]
   rgba.y = __saturatef(rgba.y);
   rgba.z = __saturatef(rgba.z);
   rgba.w = __saturatef(rgba.w);
@@ -71,4 +71,4 @@ void render_kernel(dim3             gridSize,
       d_output, imageW, imageH, scale, view_center, means, information_matrices, N, normalization, tstep);
 }
 
-#endif // #ifndef _DIST_KERNEL_CU_
+#endif  // #ifndef _DIST_KERNEL_CU_
