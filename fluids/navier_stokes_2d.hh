@@ -31,7 +31,7 @@ struct JacobiConfig {
   double beta      = 4.0;
   int    max_iters = -1;
   // Convergence criteria for jacobi iteration
-  double min_rel_delta = 1e-3;
+  double min_rel_delta = 1e-6;
 };
 
 // Solve a poisson equation

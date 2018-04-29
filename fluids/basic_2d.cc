@@ -24,7 +24,7 @@ plane::SimulationState enforce_boundary_conditions(const plane::SimulationState&
 
 std::array<Eigen::MatrixXd, 2> mul(const std::array<Eigen::MatrixXd, 2>& a, const double b) {
   std::array<Eigen::MatrixXd, 2> c;
-    constexpr int                  N = 2;
+  constexpr int                  N = 2;
   for (int k = 0; k < N; ++k) {
     c[k] = a[k] * b;
   }
@@ -46,16 +46,14 @@ void simulate() {
   state.pressure_field = Eigen::MatrixXd::Zero(SIZE, SIZE);
   // state.pressure_field.block(40, 40, 20, 20).array() = 0.001;
 
-  state.velocity_field[0] = Eigen::MatrixXd::Zero(SIZE, SIZE);
-  state.velocity_field[1] = Eigen::MatrixXd::Zero(SIZE, SIZE);
-  Eigen::MatrixXd force_x = Eigen::MatrixXd::Zero(SIZE, SIZE);
+  state.velocity_field[0]             = Eigen::MatrixXd::Zero(SIZE, SIZE);
+  state.velocity_field[1]             = Eigen::MatrixXd::Zero(SIZE, SIZE);
+  Eigen::MatrixXd force_x             = Eigen::MatrixXd::Zero(SIZE, SIZE);
   force_x.block(3, 20, 1, 30).array() = 0.1;
 
   auto viewer = gl_viewer::get_window3d("America's Favorite Visualization Tool");
-  auto image  = std::make_shared<gl_viewer::Image>(state.pressure_field);
-  auto frame  = std::make_shared<gl_viewer::Frame>(SE3());
-  frame->add_primitive(image);
-  viewer->add_primitive(frame);
+  auto image  = std::make_shared<gl_viewer::Image>(state.pressure_field, 100.0);
+  viewer->add_primitive(image);
 
   const plane::SimulationConfig cfg;
   for (int k = 0; k < 100; ++k) {
@@ -69,8 +67,6 @@ void simulate() {
 
     // image->update_image(state.pressure_field);
     image->update_image((state.pressure_field / state.pressure_field.maxCoeff()));
-    // viewer->spin_until_step();
-    // gl_viewer::WindowManager::draw(16);
     const auto advection = plane::compute_advection(state.velocity_field, cfg);
     const auto pressure  = plane::compute_pressure(state.pressure_field, cfg);
     const auto diffusion = plane::compute_diffusion(state.velocity_field, cfg);
@@ -78,10 +74,10 @@ void simulate() {
     auto divergent_dvel = add(add(advection, pressure), diffusion);
     divergent_dvel[0] += force_x;
 
-    const auto divergent_vel  = add(mul(divergent_dvel, cfg.dt), state.velocity_field);
+    const auto divergent_vel = add(mul(divergent_dvel, cfg.dt), state.velocity_field);
 
-    state                     = plane::compute_projection(divergent_vel, cfg);
-    state                     = enforce_boundary_conditions(state, cfg);
+    state = plane::compute_projection(divergent_vel, cfg);
+    state = enforce_boundary_conditions(state, cfg);
   }
 }
 

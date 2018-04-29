@@ -20,7 +20,8 @@ Eigen::MatrixXd solve_poisson_jacobi_image(const Eigen::MatrixXd& x, const Eigen
 
   const double inv_beta = 1.0 / config.beta;
 
-  for (int k = 0; k < max_iters; ++k) {
+  int k = 0;
+  for (; k < max_iters; ++k) {
     Out tmp = Out::Zero(rows, rows);
     // x_{i - 1, j}
     tmp.rightCols(rows - 1) += x_soln.leftCols(rows - 1);
@@ -40,9 +41,12 @@ Eigen::MatrixXd solve_poisson_jacobi_image(const Eigen::MatrixXd& x, const Eigen
     const double delta = (x_soln - tmp).norm() / x_soln.norm();
     x_soln = tmp;
     if (delta < config.min_rel_delta) {
+      std::cout << "Done at : " << k << std::endl;
       break;
     }
   }
+
+  std::cout << "Giving up at k : " << k << std::endl;
 
   return x_soln;
 }
