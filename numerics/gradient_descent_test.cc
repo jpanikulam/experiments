@@ -13,14 +13,21 @@ TEST(GradientDescent, does_it_work) {
     return x.transpose() * Q * x;
   };
 
-  const auto gd_cost_func = [cost_func](const Eigen::VectorXd &x, Eigen::VectorXd *grad) {  //
-    const double cost = cost_func(x);
+  const Eigen::Vector3d offset = Eigen::Vector3d::Ones();
+  const auto gd_cost_func = [cost_func, offset](const Eigen::VectorXd &x, Eigen::VectorXd *grad) {  //
+    const double cost = cost_func(x - offset);
     if (grad) {
-      *grad = numerical_gradient(Eigen::Vector3d(x), cost_func);
+      *grad = numerical_gradient(Eigen::Vector3d(x - offset), cost_func);
     }
     return cost;
   };
 
-  minimize_gradient_descent(Eigen::Vector3d::Random(), gd_cost_func);
+  const Eigen::VectorXd result = minimize_gradient_descent(Eigen::Vector3d::Random() * 500, gd_cost_func);
+
+  std::cout << result.transpose() << std::endl;
+  std::cout << offset.transpose() << std::endl;
+
+  constexpr double EPS = 1e-5;
+  EXPECT_LT((result - offset).squaredNorm(), EPS);
 }
-}
+}  // namespace numerics
