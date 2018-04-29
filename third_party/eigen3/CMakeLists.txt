@@ -28,7 +28,7 @@ endif()
 
 
 #############################################################################
-# retrieve version infomation                                               #
+# retrieve version information                                               #
 #############################################################################
 
 # automatically parse the version number
@@ -153,11 +153,7 @@ if(NOT MSVC)
   ei_add_cxx_compiler_flag("-Wdouble-promotion")
 #  ei_add_cxx_compiler_flag("-Wconversion")
   
-  # -Wshadow is insanely too strict with gcc, hopefully it will become usable with gcc 6
-  # if(NOT CMAKE_COMPILER_IS_GNUCXX OR (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "5.0.0"))
-  if(NOT CMAKE_COMPILER_IS_GNUCXX)
-    ei_add_cxx_compiler_flag("-Wshadow")
-  endif()
+  ei_add_cxx_compiler_flag("-Wshadow")
   
   ei_add_cxx_compiler_flag("-Wno-psabi")
   ei_add_cxx_compiler_flag("-Wno-variadic-macros")
@@ -232,7 +228,10 @@ if(NOT MSVC)
 
   option(EIGEN_TEST_AVX512 "Enable/Disable AVX512 in tests/examples" OFF)
   if(EIGEN_TEST_AVX512)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512f -fabi-version=6 -DEIGEN_ENABLE_AVX512")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512f -DEIGEN_ENABLE_AVX512")
+    if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fabi-version=6")
+    endif()
     message(STATUS "Enabling AVX512 in tests/examples")
   endif()
 
@@ -271,9 +270,15 @@ if(NOT MSVC)
     message(STATUS "Enabling NEON in tests/examples")
   endif()
 
-  option(EIGEN_TEST_ZVECTOR "Enable/Disable S390X(zEC13) ZVECTOR in tests/examples" OFF)
-  if(EIGEN_TEST_ZVECTOR)
+  option(EIGEN_TEST_Z13 "Enable/Disable S390X(zEC13) ZVECTOR in tests/examples" OFF)
+  if(EIGEN_TEST_Z13)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=z13 -mzvector")
+    message(STATUS "Enabling S390X(zEC13) ZVECTOR in tests/examples")
+  endif()
+
+  option(EIGEN_TEST_Z14 "Enable/Disable S390X(zEC14) ZVECTOR in tests/examples" OFF)
+  if(EIGEN_TEST_Z14)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=z14 -mzvector")
     message(STATUS "Enabling S390X(zEC13) ZVECTOR in tests/examples")
   endif()
 
@@ -416,16 +421,15 @@ add_subdirectory(Eigen)
 
 add_subdirectory(doc EXCLUDE_FROM_ALL)
 
-include(EigenConfigureTesting)
+option(BUILD_TESTING "Enable creation of Eigen tests." ON)
+if(BUILD_TESTING)
+  include(EigenConfigureTesting)
 
-# fixme, not sure this line is still needed:
-enable_testing() # must be called from the root CMakeLists, see man page
-
-
-if(EIGEN_LEAVE_TEST_IN_ALL_TARGET)
-  add_subdirectory(test) # can't do EXCLUDE_FROM_ALL here, breaks CTest
-else()
-  add_subdirectory(test EXCLUDE_FROM_ALL)
+  if(EIGEN_LEAVE_TEST_IN_ALL_TARGET)
+    add_subdirectory(test) # can't do EXCLUDE_FROM_ALL here, breaks CTest
+  else()
+    add_subdirectory(test EXCLUDE_FROM_ALL)
+  endif()
 endif()
 
 if(EIGEN_LEAVE_TEST_IN_ALL_TARGET)
@@ -438,10 +442,17 @@ endif()
 
 # add SYCL
 option(EIGEN_TEST_SYCL "Add Sycl support." OFF)
+option(EIGEN_SYCL_TRISYCL "Use the triSYCL Sycl implementation (ComputeCPP by default)." OFF)
 if(EIGEN_TEST_SYCL)
   set (CMAKE_MODULE_PATH "${CMAKE_ROOT}/Modules" "cmake/Modules/" "${CMAKE_MODULE_PATH}")
-  include(FindComputeCpp)
-endif()
+  if(EIGEN_SYCL_TRISYCL)
+    message(STATUS "Using triSYCL")
+    include(FindTriSYCL)
+  else(EIGEN_SYCL_TRISYCL)
+    message(STATUS "Using ComputeCPP SYCL")
+    include(FindComputeCpp)
+  endif(EIGEN_SYCL_TRISYCL)
+endif(EIGEN_TEST_SYCL)
 
 add_subdirectory(unsupported)
 
@@ -461,7 +472,9 @@ endif(NOT WIN32)
 
 configure_file(scripts/cdashtesting.cmake.in cdashtesting.cmake @ONLY)
 
-ei_testing_print_summary()
+if(BUILD_TESTING)
+  ei_testing_print_summary()
+endif()
 
 message(STATUS "")
 message(STATUS "Configured Eigen ${EIGEN_VERSION_NUMBER}")

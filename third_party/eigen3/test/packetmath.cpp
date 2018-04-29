@@ -28,7 +28,7 @@ template<typename T> T negate(const T& x) { return -x; }
 }
 }
 
-// NOTE: we disbale inlining for this function to workaround a GCC issue when using -O3 and the i387 FPU.
+// NOTE: we disable inlining for this function to workaround a GCC issue when using -O3 and the i387 FPU.
 template<typename Scalar> EIGEN_DONT_INLINE
 bool isApproxAbs(const Scalar& a, const Scalar& b, const typename NumTraits<Scalar>::Real& refvalue)
 {
@@ -248,12 +248,13 @@ template<typename Scalar> void packetmath()
   VERIFY(isApproxAbs(ref[0], internal::predux(internal::pload<Packet>(data1)), refvalue) && "internal::predux");
 
   {
-    for (int i=0; i<4; ++i)
+    int HalfPacketSize = PacketSize>4 ? PacketSize/2 : PacketSize;
+    for (int i=0; i<HalfPacketSize; ++i)
       ref[i] = 0;
     for (int i=0; i<PacketSize; ++i)
-      ref[i%4] += data1[i];
-    internal::pstore(data2, internal::predux_downto4(internal::pload<Packet>(data1)));
-    VERIFY(areApprox(ref, data2, PacketSize>4?PacketSize/2:PacketSize) && "internal::predux_downto4");
+      ref[i%HalfPacketSize] += data1[i];
+    internal::pstore(data2, internal::predux_half_dowto4(internal::pload<Packet>(data1)));
+    VERIFY(areApprox(ref, data2, HalfPacketSize) && "internal::predux_half_dowto4");
   }
 
   ref[0] = 1;
@@ -436,8 +437,10 @@ template<typename Scalar> void packetmath_real()
   if(internal::random<float>(0,1)<0.1f)
     data1[internal::random<int>(0, PacketSize)] = 0;
   CHECK_CWISE1_IF(PacketTraits::HasSqrt, std::sqrt, internal::psqrt);
+  CHECK_CWISE1_IF(PacketTraits::HasSqrt, Scalar(1)/std::sqrt, internal::prsqrt);
   CHECK_CWISE1_IF(PacketTraits::HasLog, std::log, internal::plog);
 #if EIGEN_HAS_C99_MATH && (__cplusplus > 199711L)
+  CHECK_CWISE1_IF(PacketTraits::HasExpm1, std::expm1, internal::pexpm1);
   CHECK_CWISE1_IF(PacketTraits::HasLog1p, std::log1p, internal::plog1p);
   CHECK_CWISE1_IF(internal::packet_traits<Scalar>::HasLGamma, std::lgamma, internal::plgamma);
   CHECK_CWISE1_IF(internal::packet_traits<Scalar>::HasErf, std::erf, internal::perf);
@@ -448,35 +451,41 @@ template<typename Scalar> void packetmath_real()
   {
     data1[0] = std::numeric_limits<Scalar>::quiet_NaN();
     data1[1] = std::numeric_limits<Scalar>::epsilon();
-    packet_helper<PacketTraits::HasLog,Packet> h;
-    h.store(data2, internal::plog(h.load(data1)));
-    VERIFY((numext::isnan)(data2[0]));
-    VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::epsilon()), data2[1]);
+    {
+      packet_helper<PacketTraits::HasLog,Packet> h;
+      h.store(data2, internal::plog(h.load(data1)));
+      VERIFY((numext::isnan)(data2[0]));
+      VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::epsilon()), data2[1]);
 
-    data1[0] = -std::numeric_limits<Scalar>::epsilon();
-    data1[1] = 0;
-    h.store(data2, internal::plog(h.load(data1)));
-    VERIFY((numext::isnan)(data2[0]));
-    VERIFY_IS_EQUAL(std::log(Scalar(0)), data2[1]);
+      data1[0] = -std::numeric_limits<Scalar>::epsilon();
+      data1[1] = 0;
+      h.store(data2, internal::plog(h.load(data1)));
+      VERIFY((numext::isnan)(data2[0]));
+      VERIFY_IS_EQUAL(std::log(Scalar(0)), data2[1]);
 
-    data1[0] = (std::numeric_limits<Scalar>::min)();
-    data1[1] = -(std::numeric_limits<Scalar>::min)();
-    h.store(data2, internal::plog(h.load(data1)));
-    VERIFY_IS_EQUAL(std::log((std::numeric_limits<Scalar>::min)()), data2[0]);
-    VERIFY((numext::isnan)(data2[1]));
+      data1[0] = (std::numeric_limits<Scalar>::min)();
+      data1[1] = -(std::numeric_limits<Scalar>::min)();
+      h.store(data2, internal::plog(h.load(data1)));
+      VERIFY_IS_EQUAL(std::log((std::numeric_limits<Scalar>::min)()), data2[0]);
+      VERIFY((numext::isnan)(data2[1]));
 
-    data1[0] = std::numeric_limits<Scalar>::denorm_min();
-    data1[1] = -std::numeric_limits<Scalar>::denorm_min();
-    h.store(data2, internal::plog(h.load(data1)));
-    // VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::denorm_min()), data2[0]);
-    VERIFY((numext::isnan)(data2[1]));
+      data1[0] = std::numeric_limits<Scalar>::denorm_min();
+      data1[1] = -std::numeric_limits<Scalar>::denorm_min();
+      h.store(data2, internal::plog(h.load(data1)));
+      // VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::denorm_min()), data2[0]);
+      VERIFY((numext::isnan)(data2[1]));
 
-    data1[0] = Scalar(-1.0f);
-    h.store(data2, internal::plog(h.load(data1)));
-    VERIFY((numext::isnan)(data2[0]));
-    h.store(data2, internal::psqrt(h.load(data1)));
-    VERIFY((numext::isnan)(data2[0]));
-    VERIFY((numext::isnan)(data2[1]));
+      data1[0] = Scalar(-1.0f);
+      h.store(data2, internal::plog(h.load(data1)));
+      VERIFY((numext::isnan)(data2[0]));
+    }
+    {
+      packet_helper<PacketTraits::HasSqrt,Packet> h;
+      data1[0] = Scalar(-1.0f);
+      h.store(data2, internal::psqrt(h.load(data1)));
+      VERIFY((numext::isnan)(data2[0]));
+      VERIFY((numext::isnan)(data2[1]));
+    }
   }
 }
 

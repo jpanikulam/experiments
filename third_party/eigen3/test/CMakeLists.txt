@@ -1,5 +1,5 @@
 # generate split test header file only if it does not yet exist
-# in order to prevent a rebuild everytime cmake is configured
+# in order to prevent a rebuild every time cmake is configured
 if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/split_test_helper.h)  
   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/split_test_helper.h "")
   foreach(i RANGE 1 999)
@@ -66,6 +66,17 @@ if(UMFPACK_FOUND)
   ei_add_property(EIGEN_TESTED_BACKENDS "UmfPack, ")
 else()
   ei_add_property(EIGEN_MISSING_BACKENDS "UmfPack, ")
+endif()
+
+find_package(KLU)
+if(KLU_FOUND)
+  add_definitions("-DEIGEN_KLU_SUPPORT")
+  include_directories(${KLU_INCLUDES})
+  set(SPARSE_LIBS ${SPARSE_LIBS} ${KLU_LIBRARIES} ${EIGEN_BLAS_LIBRARIES})
+  set(KLU_ALL_LIBS ${KLU_LIBRARIES} ${EIGEN_BLAS_LIBRARIES})
+  ei_add_property(EIGEN_TESTED_BACKENDS "KLU, ")
+else()
+  ei_add_property(EIGEN_MISSING_BACKENDS "KLU, ")
 endif()
 
 find_package(SuperLU 4.0)
@@ -170,6 +181,8 @@ ei_add_test(redux)
 ei_add_test(visitor)
 ei_add_test(block)
 ei_add_test(corners)
+ei_add_test(symbolic_index)
+ei_add_test(indexed_view)
 ei_add_test(swap)
 ei_add_test(resize)
 ei_add_test(conservative_resize)
@@ -293,6 +306,10 @@ endif(QT4_FOUND)
 
 if(UMFPACK_FOUND)
   ei_add_test(umfpack_support "" "${UMFPACK_ALL_LIBS}")
+endif()
+
+if(KLU_FOUND OR SuiteSparse_FOUND)
+  ei_add_test(klu_support "" "${KLU_ALL_LIBS}")
 endif()
 
 if(SUPERLU_FOUND)
