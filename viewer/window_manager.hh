@@ -7,7 +7,6 @@
 #include "simple_window.hh"  // Can't include before glew
 
 #include <memory>
-#include <mutex>
 
 namespace gl_viewer {
 
@@ -36,7 +35,5 @@ class WindowManager {
   static void spin();
 
   static void draw(const int ms = 16);
-
-  static std::mutex& get_mutex();
 };
 }  // namespace gl_viewer

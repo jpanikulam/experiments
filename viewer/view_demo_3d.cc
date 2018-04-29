@@ -5,7 +5,6 @@
 #include "primitives/simple_geometry.hh"
 
 #include "window_3d.hh"
-#include "window_manager.hh"
 
 #include "geometry/import/read_stl.hh"
 #include "geometry/spatial/raycaster.hh"

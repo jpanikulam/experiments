@@ -25,12 +25,7 @@ void error_callback(int error, const char *description);
 // Manage a global registry of the created windows
 //
 
-std::mutex view_mutex;
 std::mutex global_state_mutex;
-
-std::mutex &WindowManager::get_mutex() {
-  return view_mutex;
-}
 
 struct GlobalState {
   std::map<GLFWwindow *, std::shared_ptr<SimpleWindow>> windows;
@@ -103,7 +98,6 @@ void WindowManager::register_window(const GlSize &                      size,
 // Render all of the managed windows
 //
 void WindowManager::render() {
-  const std::lock_guard<std::mutex> lk(get_mutex());
   for (auto it = global_state->windows.begin(); it != global_state->windows.end(); it++) {
     auto &glfw_win = it->first;
     auto &window   = it->second;

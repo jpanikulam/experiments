@@ -7,19 +7,19 @@ namespace gl_viewer {
 Image::Image(const cv::Mat& image, const double scale, double alpha) {
   to_update_ = true;
   alpha_     = alpha;
-  update_image(image, scale);
+  scale_     = scale;
+  update_image(image);
 }
 
 Image::Image(const Eigen::MatrixXd& image, double scale, double alpha) {
   to_update_ = true;
   alpha_     = alpha;
-  update_image(image, scale);
+  scale_     = scale;
+  update_image(image);
 }
 
-void Image::update_image(const Eigen::MatrixXd& image, double scale) {
+void Image::update_image(const Eigen::MatrixXd& image) {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
-
-  scale_ = scale;
 
   const Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> image_as_uchar = (image * 255.0).cast<uint8_t>();
   cv::Mat                                                      new_image;
@@ -28,10 +28,8 @@ void Image::update_image(const Eigen::MatrixXd& image, double scale) {
   to_update_ = true;
 }
 
-void Image::update_image(const cv::Mat& image, double scale) {
+void Image::update_image(const cv::Mat& image) {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
-
-  scale_ = scale;
   if (image.channels() == 1) {
     cv::cvtColor(image, image_, cv::COLOR_GRAY2BGR);
   } else {
