@@ -18,7 +18,7 @@ struct Line {
   Vec3 start;
   Vec3 end;
   Vec4 color = Vec4::Ones();
-  double width = 1.0;
+  double width = 2.6;
 };
 
 struct Ray {

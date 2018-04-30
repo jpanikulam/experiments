@@ -41,11 +41,11 @@ void View3D::apply() {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  const Eigen::AngleAxisd  az_rot(azimuth, Vec3::UnitY());
-  const Eigen::AngleAxisd  elev_rot(elevation, Vec3::UnitX());
+  const Eigen::AngleAxisd az_rot(azimuth, Vec3::UnitY());
+  const Eigen::AngleAxisd elev_rot(elevation, Vec3::UnitX());
   const Eigen::Quaterniond q(elev_rot * az_rot);
-  const SE3                instantaneous_rotation(SO3(q), Vec3::Zero());
-  const SE3                offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0)));
+  const SE3 instantaneous_rotation(SO3(q), Vec3::Zero());
+  const SE3 offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0)));
   glTransform(camera_from_target.inverse() * instantaneous_rotation);
   glScaled(zoom, zoom, zoom);
 
@@ -57,26 +57,32 @@ void View3D::apply() {
 
 void View3D::simulate() {
   const double t_now = glfwGetTime();
-  const double dt    = t_now - last_update_time;
-  last_update_time   = t_now;
+  const double dt = t_now - last_update_time;
+  last_update_time = t_now;
 
   const VecNd<6> delta = jcc::vstack(velocity, angular_velocity) * dt;
   // camera_from_target   = SE3::exp(delta) * camera_from_target;
   target_from_world = SE3::exp(delta) * target_from_world;
 
   constexpr double translation_damping = 0.9;
-  constexpr double rotation_damping    = 0.9;
+  constexpr double rotation_damping = 0.9;
 
   velocity *= translation_damping;
   angular_velocity *= rotation_damping;
 }
 
 void Window3D::spin_until_step() {
-  while (!should_continue_ && WindowManager::any_windows()) {
-    // WindowManager::draw();
+  while (!should_step_ && !should_continue_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-  should_continue_ = false;
+
+  if (should_continue_) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+
+  if (should_step_) {
+    should_step_ = false;
+  }
 }
 
 void Window3D::on_key(int key, int scancode, int action, int mods) {
@@ -84,7 +90,11 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
 
   if (action == GLFW_PRESS) {
     if (key == static_cast<int>('N')) {
-      should_continue_ = true;
+      should_step_ = true;
+    }
+
+    if (key == static_cast<int>('C')) {
+      should_continue_ = !should_continue_;
     }
   }
 }
@@ -98,7 +108,7 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
   if (left_mouse_held()) {
-    const Vec2 motion     = mouse_pos.point - mouse_pos_last_click_.point;
+    const Vec2 motion = mouse_pos.point - mouse_pos_last_click_.point;
     mouse_pos_last_click_ = mouse_pos;
 
     view_.azimuth += motion(0) * 0.005;
@@ -118,15 +128,15 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   }
 
   if (right_mouse_held()) {
-    const Vec2 motion     = mouse_pos.point - mouse_pos_last_click_.point;
+    const Vec2 motion = mouse_pos.point - mouse_pos_last_click_.point;
     mouse_pos_last_click_ = mouse_pos;
 
     const Vec3 motion_camera_frame(motion.x(), -motion.y(), 0.0);
 
-    const Eigen::AngleAxisd  az_rot(view_.azimuth, Vec3::UnitY());
-    const Eigen::AngleAxisd  elev_rot(view_.elevation, Vec3::UnitX());
+    const Eigen::AngleAxisd az_rot(view_.azimuth, Vec3::UnitY());
+    const Eigen::AngleAxisd elev_rot(view_.elevation, Vec3::UnitX());
     const Eigen::Quaterniond q(elev_rot * az_rot);
-    const SE3                instantaneous_rotation(SO3(q), Vec3::Zero());
+    const SE3 instantaneous_rotation(SO3(q), Vec3::Zero());
 
     // const double motion_scaling = view_.camera_from_target.translation().norm();
     // std::cout << motion_scaling << std::endl;
@@ -179,13 +189,13 @@ void Window3D::render() {
 }
 
 void Window3D::apply_keys_to_view() {
-  const auto   keys         = held_keys();
+  const auto keys = held_keys();
   const double acceleration = 0.005;
 
   Vec3 delta_vel = Vec3::Zero();
   for (const auto &key_element : keys) {
     const bool held = key_element.second;
-    const int  key  = key_element.first;
+    const int key = key_element.first;
 
     if (!held) {
       continue;
@@ -236,7 +246,7 @@ std::shared_ptr<Window3D> get_window3d(const std::string &title) {
   if (it != window_3d_state.windows.end()) {
     return it->second;
   } else {
-    auto window                    = std::make_shared<Window3D>();
+    auto window = std::make_shared<Window3D>();
     window_3d_state.windows[title] = window;
     WindowManager::register_window(GlSize(640, 640), window, title);
     return window;

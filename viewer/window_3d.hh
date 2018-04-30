@@ -12,6 +12,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <atomic>
 
 namespace gl_viewer {
 namespace {
@@ -89,7 +90,8 @@ class Window3D final : public SimpleWindow {
 
   View3D     view_;
   Projection projection_;
-  bool       should_continue_ = false;
+  std::atomic<bool> should_step_{false};
+  std::atomic<bool> should_continue_{false};
 
   std::vector<std::shared_ptr<Primitive>> primitives_;
 

@@ -67,6 +67,7 @@ std::shared_ptr<GlobalState> maybe_create_global_state() {
     global_state = std::make_shared<GlobalState>();
 
     ready = true;
+    render_thread.detach();
   }
   return global_state;
 }
