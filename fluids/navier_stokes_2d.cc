@@ -11,9 +11,11 @@ namespace jcc {
 namespace fluids {
 namespace plane {
 
-Eigen::MatrixXd solve_poisson_jacobi_image(const Eigen::MatrixXd& x, const Eigen::MatrixXd& b, const JacobiConfig& config) {
-  const int rows      = x.rows();
-  using Out           = Eigen::MatrixXd;
+Eigen::MatrixXd solve_poisson_jacobi_image(const Eigen::MatrixXd& x,
+                                           const Eigen::MatrixXd& b,
+                                           const JacobiConfig& config) {
+  const int rows = x.rows();
+  using Out = Eigen::MatrixXd;
   const int max_iters = config.max_iters == -1 ? 100 * rows : config.max_iters;
 
   Out x_soln = x;
@@ -21,8 +23,9 @@ Eigen::MatrixXd solve_poisson_jacobi_image(const Eigen::MatrixXd& x, const Eigen
   const double inv_beta = 1.0 / config.beta;
 
   int k = 0;
+  Out tmp = Out::Zero(rows, rows);
   for (; k < max_iters; ++k) {
-    Out tmp = Out::Zero(rows, rows);
+    tmp.setZero();
     // x_{i - 1, j}
     tmp.rightCols(rows - 1) += x_soln.leftCols(rows - 1);
 
@@ -39,6 +42,11 @@ Eigen::MatrixXd solve_poisson_jacobi_image(const Eigen::MatrixXd& x, const Eigen
     tmp *= inv_beta;
 
     const double delta = (x_soln - tmp).norm() / x_soln.norm();
+
+    if (std::isnan(delta)) {
+      break;
+    }
+
     x_soln = tmp;
     if (delta < config.min_rel_delta) {
       std::cout << "Done at : " << k << std::endl;
@@ -52,7 +60,7 @@ Eigen::MatrixXd solve_poisson_jacobi_image(const Eigen::MatrixXd& x, const Eigen
 }
 
 std::array<Eigen::MatrixXd, 2> compute_advection(const std::array<Eigen::MatrixXd, 2> velocity_field,
-                                                 const SimulationConfig&              cfg) {
+                                                 const SimulationConfig& cfg) {
   // Divergence of velocity
   const Eigen::MatrixXd div_velocity = compute_divergence(velocity_field, cfg.dx);
 
@@ -78,7 +86,7 @@ std::array<Eigen::MatrixXd, 2> compute_pressure(const Eigen::MatrixXd pressure_f
 
 // TODO: Use jacobi
 std::array<Eigen::MatrixXd, 2> compute_diffusion(const std::array<Eigen::MatrixXd, 2> velocity_field,
-                                                 const SimulationConfig&              cfg) {
+                                                 const SimulationConfig& cfg) {
   std::array<Eigen::MatrixXd, 2> result;
 
   constexpr int DEPTH = 2;
@@ -88,21 +96,21 @@ std::array<Eigen::MatrixXd, 2> compute_diffusion(const std::array<Eigen::MatrixX
   return result;
 }
 
-SimulationState compute_projection(const std::array<Eigen::MatrixXd, 2> divergent_velocity,
-                                   const SimulationConfig&              cfg) {
-  SimulationState       result;
-  const Eigen::MatrixXd velocity_divergence = compute_divergence(divergent_velocity, cfg.dx);
-  const int             rows                = velocity_divergence.rows();
-  const int             cols                = velocity_divergence.cols();
-  const Eigen::MatrixXd initialization      = Eigen::MatrixXd::Random(rows, cols);
+SimulationState compute_projection(const SimulationState& current_state, const SimulationConfig& cfg) {
+  SimulationState result;
 
-  const JacobiConfig jacobi_cfg{.alpha = -(cfg.dx * cfg.dx), .beta = 4};
-  result.pressure_field = solve_poisson_jacobi_image(velocity_divergence, velocity_divergence, jacobi_cfg);
+  const Eigen::MatrixXd velocity_divergence = compute_divergence(current_state.velocity_field, cfg.dx);
+  const int rows = velocity_divergence.rows();
+  const int cols = velocity_divergence.cols();
+  const Eigen::MatrixXd initialization = Eigen::MatrixXd::Random(rows, cols);
+
+  const JacobiConfig jacobi_cfg{.alpha = -(cfg.dx * cfg.dx), .beta = 4.0, .max_iters = -1, .min_rel_delta = 1e-3};
+  result.pressure_field = solve_poisson_jacobi_image(current_state.pressure_field, velocity_divergence, jacobi_cfg);
 
   const std::array<Eigen::MatrixXd, 2> grad_p = compute_gradient(result.pressure_field, cfg.dx);
 
-  constexpr int DEPTH   = 2;
-  result.velocity_field = divergent_velocity;
+  constexpr int DEPTH = 2;
+  result.velocity_field = current_state.velocity_field;
   for (int k = 0; k < DEPTH; ++k) {
     result.velocity_field[k] -= grad_p[k];
   }

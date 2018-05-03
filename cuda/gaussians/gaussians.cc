@@ -339,7 +339,7 @@ int main(int argc, char **argv) {
   for (int k = 0; k < count; ++k) {
     const Eigen::Vector2f mean = Eigen::Vector2f::Random() * 5.0f;
 
-    const Eigen::Vector2f diag = 1.0 * (Eigen::Vector2f::Random().array() + 1.25f).matrix();
+    const Eigen::Vector2f diag = 3.0 * (Eigen::Vector2f::Random().array() + 1.25f).matrix();
     const float rand = Eigen::Vector2f::Random()(0);
     const Eigen::Rotation2Df rot = Eigen::Rotation2Df(rand);
     const Eigen::Matrix2f cov = rot * diag.asDiagonal() * rot.inverse();
