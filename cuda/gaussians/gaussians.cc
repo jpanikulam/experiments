@@ -30,29 +30,30 @@
 #include <cuda_gl_interop.h>
 #include <helper_gl.h>
 
-template <typename Derived> using EigStdVector = std::vector<Derived, Eigen::aligned_allocator<Derived>>;
+template <typename Derived>
+using EigStdVector = std::vector<Derived, Eigen::aligned_allocator<Derived>>;
 
-void render_kernel(dim3             gridSize,
-                   dim3             blockSize,
-                   uint *           d_output,
-                   uint             imageW,
-                   uint             imageH,
-                   float            scale,
-                   float2           view_center,
+void render_kernel(dim3 gridSize,
+                   dim3 blockSize,
+                   uint *d_output,
+                   uint imageW,
+                   uint imageH,
+                   float scale,
+                   float2 view_center,
                    Eigen::Vector2f *means,
                    Eigen::Matrix2f *information_matrices,
-                   int              N,
-                   float            normalization,
-                   float            tstep);
+                   int N,
+                   float normalization,
+                   float tstep);
 
 int iDivUp(int a, int b) {
   return (a % b != 0) ? (a / b + 1) : (a / b);
 }
 
 struct State {
-  float2 view_center      = make_float2(0.0, 0.0);
+  float2 view_center = make_float2(0.0, 0.0);
   float2 prev_view_center = make_float2(0.0, 0.0);
-  float2 prev_mouse_pos   = make_float2(0.0, 0.0);
+  float2 prev_mouse_pos = make_float2(0.0, 0.0);
 
   // OpenGL pixel buffer object
   GLuint pbo = 0;
@@ -64,28 +65,28 @@ struct State {
   struct cudaGraphicsResource *cuda_pbo_resource;
 
   // Image render dimensions
-  uint width  = 512;
+  uint width = 512;
   uint height = 512;
 
   float scale = 1.0;
 
   dim3 blockSize = dim3(16, 16);
-  dim3 gridSize  = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
+  dim3 gridSize = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
 
   //
   // Rendering paramters
   //
-  float       time_step    = 0.0;
-  float       direction    = 1.0;
+  float time_step = 0.0;
+  float direction = 1.0;
   const float time_spacing = 0.005;
-  const float min_time     = 0.5;
+  const float min_time = 0.5;
 
   //
   // Distribution paramters
   //
   EigStdVector<Eigen::Vector2f> means;
   EigStdVector<Eigen::Matrix2f> information_matrices;
-  float                         normalization = 1.0;
+  float normalization = 1.0;
 
   Eigen::Vector2f *d_means;
   Eigen::Matrix2f *d_covariances;
@@ -150,7 +151,7 @@ float compute_eta(const EigStdVector<Eigen::Vector2f> &means,
                   const EigStdVector<Eigen::Matrix2f> &information_matrices) {
   float sum_norm = 0.0;
   for (size_t k = 0; k < means.size(); ++k) {
-    const float norm = sqrt((2.0f * 3.14f / information_matrices[k].determinant()));
+    const float norm = sqrt((2.0f * 3.14f * information_matrices[k].determinant()));
     sum_norm += norm;
   }
   return sum_norm;
@@ -272,10 +273,8 @@ void mouse(int button, int state, int x, int y) {
   }
 
   // It's a wheel event
-  if ((button == 3) || (button == 4))
-  {
-    if (state == GLUT_UP)
-      return;
+  if ((button == 3) || (button == 4)) {
+    if (state == GLUT_UP) return;
 
     gstate.scale *= (button == 3) ? 0.9 : 1.1;
   }
@@ -285,27 +284,27 @@ void mouse(int button, int state, int x, int y) {
 
 void keyboard(unsigned char key, int x, int y) {
   switch (key) {
-  case 27:
-    glutDestroyWindow(glutGetWindow());
-    return;
+    case 27:
+      glutDestroyWindow(glutGetWindow());
+      return;
 
-  case 'f':
-    break;
+    case 'f':
+      break;
 
-  case 'G':
-    std::cout << "Resetting" << std::endl;
-    gstate.view_center = make_float2(0.0, 0.0);
-    gstate.scale       = 1.0f;
-    break;
+    case 'G':
+      std::cout << "Resetting" << std::endl;
+      gstate.view_center = make_float2(0.0, 0.0);
+      gstate.scale = 1.0f;
+      break;
 
-  case 'q':
-  case 'Q':
-    std::cout << "Attempting to exit" << std::endl;
-    glutDestroyWindow(glutGetWindow());
-    return;
+    case 'q':
+    case 'Q':
+      std::cout << "Attempting to exit" << std::endl;
+      glutDestroyWindow(glutGetWindow());
+      return;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   glutPostRedisplay();
@@ -336,19 +335,19 @@ int main(int argc, char **argv) {
   //
   initPixelBuffer();
 
-  const int count = 25;
+  const int count = 60;
   for (int k = 0; k < count; ++k) {
-    const Eigen::Vector2f mean = Eigen::Vector2f::Random() * 5.0;
+    const Eigen::Vector2f mean = Eigen::Vector2f::Random() * 5.0f;
 
-    const Eigen::Vector2f    diag = (Eigen::Vector2f::Random().array() + 1.25f).matrix();
-    const float              rand = Eigen::Vector2f::Random()(0);
-    const Eigen::Rotation2Df rot  = Eigen::Rotation2Df(rand);
-    const Eigen::Matrix2f    cov  = rot * diag.asDiagonal() * rot.inverse();
+    const Eigen::Vector2f diag = 1.0 * (Eigen::Vector2f::Random().array() + 1.25f).matrix();
+    const float rand = Eigen::Vector2f::Random()(0);
+    const Eigen::Rotation2Df rot = Eigen::Rotation2Df(rand);
+    const Eigen::Matrix2f cov = rot * diag.asDiagonal() * rot.inverse();
     gstate.means.emplace_back(mean);
     gstate.information_matrices.emplace_back(cov);
   }
   send_parameters(gstate.means, gstate.information_matrices);
-  const float eta      = compute_eta(gstate.means, gstate.information_matrices);
+  const float eta = compute_eta(gstate.means, gstate.information_matrices);
   gstate.normalization = static_cast<float>(count) / eta;
 
   glutMainLoop();
