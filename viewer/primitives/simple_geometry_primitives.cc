@@ -52,6 +52,20 @@ void draw_lines(const std::vector<Line> &lines) {
   glPopAttrib();
 }
 
+void draw_polygon(const Polygon &polygon) {
+  glPushAttrib(GL_CURRENT_BIT);
+  glLineWidth(polygon.width);
+
+  glBegin(GL_LINE_STRIP);
+  glColor(polygon.color);
+  for (const auto &point : polygon.points) {
+    glVertex(point);
+  }
+  glEnd();
+
+  glPopAttrib();
+}
+
 void draw_points(const Points &points) {
   glPushAttrib(GL_POINT_BIT | GL_CURRENT_BIT);
   glColor(points.color);
@@ -102,4 +116,4 @@ void draw_billboard_circle(const Sphere &billboard_circle) {
   draw_circle(billboard_circle.center, Vec3::UnitY(), billboard_circle.radius, billboard_circle.color);
   draw_circle(billboard_circle.center, Vec3::UnitZ(), billboard_circle.radius, billboard_circle.color);
 }
-}
+}  // namespace gl_viewer

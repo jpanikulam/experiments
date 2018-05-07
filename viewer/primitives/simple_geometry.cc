@@ -21,6 +21,10 @@ void SimpleGeometry::draw() const {
     draw_billboard_circle(circle);
   }
 
+  for (const auto &polygon : polygons_) {
+    draw_polygon(polygon);
+  }
+
   draw_lines(lines_);
 }
 }  // namespace gl_viewer
