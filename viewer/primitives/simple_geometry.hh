@@ -38,6 +38,7 @@ class SimpleGeometry final : public Primitive {
   }
 
   void add_polygon(const Polygon &polygon) {
+    std::lock_guard<std::mutex> lk(draw_mutex_);
     polygons_.push_back(polygon);
   }
 

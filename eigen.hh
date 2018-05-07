@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/StdVector>
 #include <Eigen/Dense>
 
 template <int ROWS>

@@ -99,6 +99,7 @@ def load_first_n_features(txt, n):
 
 def main():
     # file = "/home/jacob/Downloads/doop.geojsoin"
+    # file = "/home/jacob/Downloads/Allegheny_County_Parcel_Boundaries.geojson"
     file = "/home/jacob/Downloads/Allegheny_County_Parcel_Boundaries.geojson"
 
     state = {
@@ -112,7 +113,7 @@ def main():
     with open(file) as f:
         txt = f.read()
         print 'Finished reading'
-        load_first_n_features(txt, 10000)
+        load_first_n_features(txt, 100000)
         # while(True):
         #     file_string = f.read(10)
         #     if file_string == '':

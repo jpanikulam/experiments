@@ -2,9 +2,6 @@
 
 #include <tao/json.hpp>
 
-// TODO
-#include <iostream>
-
 namespace geojson {
 namespace {
 using Vec2 = Eigen::Vector2d;
@@ -23,19 +20,12 @@ std::vector<Feature> read_json(const std::string& path) {
     features.push_back({});
     Feature& feature = features.back();
 
-    std::cout << "k " << k << std::endl;
-    if (k == 101) {
-      std::cout << val << std::endl;
-    }
-
     if (val.at("geometry").at("type") != "Polygon") {
       continue;
     }
 
     const auto& coordinates = val.at("geometry").at("coordinates").get_array();
     feature.points_ll.reserve(coordinates.size());
-
-    // if (k == 101) {}
 
     for (const auto& point : coordinates.at(0).get_array()) {
       const auto& point_vec = point.get_array();
