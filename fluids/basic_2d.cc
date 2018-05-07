@@ -7,7 +7,6 @@
 #include "viewer/primitives/image.hh"
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
-#include "viewer/window_manager.hh"
 
 namespace jcc {
 namespace fluids {

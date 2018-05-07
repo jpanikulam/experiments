@@ -1,18 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
 #########################
-# OpenGL/GLUT
-#
-find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
-include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS})
-
-find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3)
-include_directories(${GLFW_INCLUDE_DIRS})
-find_package(GLEW REQUIRED)
-
-#########################
 # Life is what you cmake of it
 #
 
