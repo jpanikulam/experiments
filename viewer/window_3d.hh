@@ -9,16 +9,16 @@
 
 #include <Eigen/Dense>
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <vector>
-#include <atomic>
 
 namespace gl_viewer {
 namespace {
-using Vec2    = Eigen::Vector2d;
-using Vec3    = Eigen::Vector3d;
-using Vec4    = Eigen::Vector4d;
+using Vec2 = Eigen::Vector2d;
+using Vec3 = Eigen::Vector3d;
+using Vec4 = Eigen::Vector4d;
 using Vec2Map = Eigen::Map<const Eigen::Vector2d>;
 using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
 }  // namespace
@@ -39,8 +39,8 @@ class View3D {
   Vec3 velocity;
   Vec3 angular_velocity;
 
-  double azimuth        = 0.0;
-  double elevation      = 0.0;
+  double azimuth = 0.0;
+  double elevation = 0.0;
   double dist_to_target = 1.0;
 
   // Apply the transformation
@@ -68,6 +68,10 @@ class Window3D final : public SimpleWindow {
     primitives_.push_back(std::move(primitive));
   }
 
+  void set_target_from_world(const SE3 &se3) {
+    view_.target_from_world = se3;
+  }
+
   template <typename PrimitiveType, typename... Args>
   std::shared_ptr<PrimitiveType> add_primitive(const Args &... args) {
     auto ptr = std::make_shared<PrimitiveType>(args...);
@@ -88,7 +92,7 @@ class Window3D final : public SimpleWindow {
   // Track some window properties
   //
 
-  View3D     view_;
+  View3D view_;
   Projection projection_;
   std::atomic<bool> should_step_{false};
   std::atomic<bool> should_continue_{false};

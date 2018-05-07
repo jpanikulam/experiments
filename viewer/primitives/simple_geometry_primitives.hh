@@ -59,6 +59,7 @@ struct AxisAlignedBox {
 struct Polygon {
   std::vector<Vec3, Eigen::aligned_allocator<Vec3>> points;
   double width = 3.0;
+  double height = 1.0;
   Vec4 color = Vec4(1.0, 0.0, 1.0, 0.6);
 };
 

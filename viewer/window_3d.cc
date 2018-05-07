@@ -50,7 +50,8 @@ void View3D::apply() {
   glScaled(zoom, zoom, zoom);
 
   draw_axes({SE3(), 0.5});
-  glTransform(target_from_world * SE3(SO3::exp(Vec3(0.0, 0.0, 3.1415)), Vec3::Zero()));
+  // glTransform(target_from_world * SE3(SO3::exp(Vec3(0.0, 0.0, 3.1415)), Vec3::Zero()));
+  glTransform(target_from_world);
   draw_axes({SE3(), 1.5});
   simulate();
 }
@@ -61,7 +62,6 @@ void View3D::simulate() {
   last_update_time = t_now;
 
   const VecNd<6> delta = jcc::vstack(velocity, angular_velocity) * dt;
-  // camera_from_target   = SE3::exp(delta) * camera_from_target;
   target_from_world = SE3::exp(delta) * target_from_world;
 
   constexpr double translation_damping = 0.9;

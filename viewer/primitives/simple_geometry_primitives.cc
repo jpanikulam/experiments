@@ -56,14 +56,37 @@ void draw_polygon(const Polygon &polygon) {
   glPushAttrib(GL_CURRENT_BIT);
   glLineWidth(polygon.width);
 
-  glBegin(GL_LINE_STRIP);
+  const int n_points = static_cast<int>(polygon.points.size());
+  const Eigen::Vector3d offset(0.0, 0.0, polygon.height);
+  glBegin(GL_QUADS);
   glColor(polygon.color);
-  for (const auto &point : polygon.points) {
-    glVertex(point);
+  for (int k = 0; k < n_points; ++k) {
+    const auto &start = polygon.points[k];
+    const auto &end = polygon.points[(k + 1) % n_points];
+    glVertex(start);
+    glVertex(end);
+
+    glVertex(Vec3(end + offset));
+    glVertex(Vec3(start + offset));
   }
   glEnd();
 
+
+  glLineWidth(0.8);
+  glBegin(GL_LINE_LOOP);
+  glColor(Vec4(Vec4::Ones()));
+  for (int k = 0; k < n_points; ++k) {
+    const auto &start = polygon.points[k];
+    const auto &end = polygon.points[(k + 1) % n_points];
+    glVertex(start);
+    glVertex(end);
+
+    glVertex(Vec3(end + offset));
+    glVertex(Vec3(start + offset));
+  }
+  glEnd();
   glPopAttrib();
+
 }
 
 void draw_points(const Points &points) {

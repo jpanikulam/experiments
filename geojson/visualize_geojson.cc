@@ -12,6 +12,7 @@ using Vec3 = Eigen::Vector3d;
 void visualize(const std::vector<Feature>& features) {
   //
   auto viewer = gl_viewer::get_window3d("Poopy Sand");
+  viewer->set_target_from_world(SE3(SO3::exp(Vec3(-3.1415 * 0.5, 0.0, 0.0)), Vec3::Zero()));
   auto geom = viewer->add_primitive<gl_viewer::SimpleGeometry>();
 
   Vec2 sum = Vec2::Zero();
@@ -20,13 +21,15 @@ void visualize(const std::vector<Feature>& features) {
       sum += ftr.points_ll.front();
     }
   }
-  const Vec2 mean = sum / features.size();
 
+
+  const Vec2 mean = sum / features.size();
   for (const auto& ftr : features) {
     gl_viewer::Polygon polygon;
 
     const Vec3 color = (Vec3::Random() * 0.5).array() + 0.5;
     polygon.color = jcc::augment(color, 1.0);
+    polygon.height = std::sqrt(ftr.area) * 0.01;
 
     for (const Eigen::Vector2d& pt : ftr.points_ll) {
       const Vec2 point_mean_subtracted = pt - mean;
@@ -43,7 +46,7 @@ void visualize(const std::vector<Feature>& features) {
 }  // namespace geojson
 
 int main() {
-  const std::string path = "/home/jacob/repos/experiments/geojson/reduced.json";
+  const std::string path = "/home/jacob/repos/reduced.json";
 
   const std::vector<geojson::Feature> features = geojson::read_json(path);
   geojson::visualize(features);

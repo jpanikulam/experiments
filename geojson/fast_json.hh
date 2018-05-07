@@ -10,6 +10,8 @@ struct Feature {
   std::string pin;
 
   std::vector<Eigen::Vector2d> points_ll;
+
+  double area = 0.0;
 };
 
 std::vector<Feature> read_json(const std::string& path);
