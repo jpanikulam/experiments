@@ -1,7 +1,5 @@
 #pragma once
 
-//%lib(navier_stokes_2d, navier_stokes_2d.cc)
-
 #include "eigen.hh"
 
 namespace jcc {

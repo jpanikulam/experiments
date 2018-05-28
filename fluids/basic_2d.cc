@@ -1,12 +1,8 @@
-//%bin(basic_2d)
-
 #include "eigen.hh"
 
 #include "fluids/navier_stokes_2d.hh"
 
 // Rendering
-//%deps(frame, image, simple_geometry, window_3d)
-#include "viewer/primitives/frame.hh"
 #include "viewer/primitives/image.hh"
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"

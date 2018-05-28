@@ -1,7 +1,5 @@
 #pragma once
 
-//%lib(fields_2d, fields_2d.cc)
-
 #include "eigen.hh"
 
 namespace jcc {

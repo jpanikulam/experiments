@@ -1,6 +1,6 @@
 #include "testing/gtest.hh"
 
-#include "frames.hh"
+#include "frames/frames.hh"
 
 namespace frames {
 

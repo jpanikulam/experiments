@@ -1,3 +1,4 @@
+//%ignore
 #include <iostream>
 #include <vector>
 
