@@ -39,7 +39,6 @@ def resolve_include(file_path, include_path, available_include_paths=None):
 
 
 def parse_ignore(path):
-    print path
     assert '.ignore' in os.listdir(path)
     with open(os.path.join(path, '.ignore')) as f:
         text = f.read()

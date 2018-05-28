@@ -1,117 +1,10 @@
 import argparse
 import os
+
+from log import Log
 from file_system import get_files, resolve_include
-from parse import splitstrip, needs, between
-
-pairs = {
-    '<': '>',
-    '(': ')',
-    '"': '"',
-    "'": "'",
-}
-
-
-def grab_dependencies(line):
-    '''Parse dependencies out of a line'''
-    needs(line, ['(', ')'])
-    needs(line, ['//%deps'])
-
-    args = between(line, '(', ')')
-    deps = splitstrip(args)
-    print '    deps: {}'.format(deps)
-    return {'deps': deps}
-
-
-def grab_lib(line):
-    needs(line, ['(', ')'])
-    needs(line, ['//%lib'])
-    args = between(line, '(', ')')
-    arg_tokens = splitstrip(args)
-    print '    lib: {}'.format(arg_tokens)
-    return {'lib': {'target': arg_tokens[0], 'srcs': arg_tokens[1:]}}
-
-
-def grab_bin(line):
-    needs(line, ['(', ')'])
-    needs(line, ['//%bin'])
-    args = between(line, '(', ')')
-    arg_tokens = splitstrip(args)
-    print '    bin: {}'.format(arg_tokens)
-    assert len(arg_tokens) == 1, "Wrong number of arguments"
-    return {'bin': {'target': arg_tokens[0]}}
-
-
-def grab_include(line):
-    needs(line, ['#include'])
-
-    incl_path = ""
-    for start, end in pairs.items():
-        if start in line:
-            incl_path = between(line, start, end)
-            break
-
-    if start == '"':
-        incl_type = "local"
-    elif start == '<':
-        incl_type = "system"
-    else:
-        raise NotImplementedError("wtf?")
-    print "    inc: {} ({})".format(incl_path, incl_type)
-
-    return {'include': {'given_path': incl_path, 'type': incl_type}}
-
-tokens = {
-    '//%bin': grab_bin,
-    '//%deps': grab_dependencies,
-    '//%lib': grab_lib,
-    '#include': grab_include,
-    # '//%hdrlib': grab_hdr_lib,
-}
-
-
-def incremental_update(d, new_d):
-    for key, item in new_d.items():
-        if key not in d:
-            d[key] = []
-
-        if isinstance(item, list):
-            d[key].extend(item)
-        else:
-            d[key].append(item)
-
-
-def parse_text(text):
-    elements = {
-        'bin': [],
-        'deps': [],
-        'lib': [],
-        'include': [],
-    }
-
-    lines = text.split('\n')
-    for line in lines:
-        for token, action in tokens.items():
-            if line.startswith(token):
-                update = action(line)
-                incremental_update(elements, update)
-
-    return elements
-
-
-def create_lib(target_name, srcs, deps):
-    reduced_srcs = map(lambda o: os.path.split(o)[-1], srcs)
-    txt = "add_library({} {})".format(target_name, " ".join(reduced_srcs))
-    if len(deps):
-        txt += "\ntarget_link_libraries({} {})".format(target_name, " ".join(deps))
-    return txt
-
-
-def create_bin(target_name, srcs, deps):
-    reduced_srcs = map(lambda o: os.path.split(o)[-1], srcs)
-    txt = "add_executable({} {})".format(target_name, " ".join(reduced_srcs))
-    if len(deps):
-        txt += "\ntarget_link_libraries({} {})".format(target_name, " ".join(deps))
-    return txt
+from parse import parse_text, has_annotations, should_ignore
+from cmake import build_cmakes
 
 
 def get_src_path(file, src):
@@ -124,7 +17,7 @@ def what_libs(file, elements, all_tree, known_libs):
     # Obviated dependencies
     for dep in elements['deps']:
         if dep not in known_libs:
-            print "  no lib: {}".format(dep)
+            Log.warn("  no lib: {}".format(dep))
 
     required_libs.extend(elements['deps'])
 
@@ -134,7 +27,6 @@ def what_libs(file, elements, all_tree, known_libs):
             src_libs = set(what_libs(resolved, all_tree[resolved], all_tree, known_libs))
 
             # HACK: Don't depend on self
-            print lib['target'], src_libs
             src_libs = src_libs.difference({lib['target']})
             required_libs.extend(src_libs)
 
@@ -152,7 +44,63 @@ def what_libs(file, elements, all_tree, known_libs):
     return required_libs
 
 
+def discover_unlabelled_bins(tree):
+    '''Does mutation in place.'''
+
+    for file, elements in tree.items():
+        raw_name, extension = os.path.splitext(file)
+        _, name = os.path.split(raw_name)
+
+        if extension == '.cc':
+            if 'has_main' in elements['flags']:
+                Log.debug("Inferring bin (existence of main): {} ".format(name))
+
+                if has_annotations(elements):
+                    Log.warn("Inferred binary has annotations: {}".format(raw_name))
+                else:
+                    src_file = name + '.cc'
+                    elements['bin'].append({
+                        'target': name,
+                        'srcs': [src_file]
+                    })
+
+            if 'is_test' in elements['flags']:
+                Log.debug("Inferring bin (test): {}".format(name))
+                src_file = name + '.cc'
+                elements['bin'].append({
+                    'target': name,
+                    'srcs': [src_file],
+                    'flags': ['test'],
+                })
+
+
+def discover_unlabelled_libs(tree):
+    '''Does mutation in place.'''
+    pairs = []
+
+    for file, elements in tree.items():
+        raw_name, extension = os.path.splitext(file)
+        _, name = os.path.split(raw_name)
+
+        if extension == '.hh':
+            if raw_name + '.cc' in tree.keys():
+                Log.debug("Inferring Lib (Header Pair): {} ".format(name))
+                pairs.append((file, raw_name + '.cc'))
+
+                if has_annotations(elements):
+                    Log.warn("Header pair has annotations: {}".format(raw_name))
+                else:
+                    src_file = name + '.cc'
+                    elements['lib'].append({
+                        'target': name,
+                        'srcs': [src_file]
+                    })
+
+
 def build_dependency_table(all_tree):
+    discover_unlabelled_bins(all_tree)
+    discover_unlabelled_libs(all_tree)
+
     libs = []
     for file, elements in all_tree.items():
         for lib in elements['lib']:
@@ -160,22 +108,27 @@ def build_dependency_table(all_tree):
 
     to_build = {}
     for file, elements in all_tree.items():
-        no_deps = len(elements['deps']) == 0
-        no_bin = len(elements['bin']) == 0
-        no_lib = len(elements['lib']) == 0
-        if all([no_deps, no_bin, no_lib]):
+        if not has_annotations(elements):
             continue
 
-        print file
+        if should_ignore(elements):
+            Log.warn("ignore flag: {}".format(file))
+            continue
+
+        Log.debug("In: {}".format(file))
         required_libs = what_libs(file, elements, all_tree, libs)
-        print '  need: {}'.format(required_libs)
+        Log.debug('  needs: {}'.format(required_libs))
+
+        location = os.path.dirname(file)
 
         for binary in elements['bin']:
             to_build[binary['target']] = {
                 'target': binary['target'],
                 'srcs': [file],
                 'deps': required_libs,
-                'kind': 'binary'
+                'kind': 'binary',
+                'flags': elements['flags'],
+                'location': location
             }
 
         for lib in elements['lib']:
@@ -183,42 +136,35 @@ def build_dependency_table(all_tree):
                 'target': lib['target'],
                 'srcs': lib['srcs'],
                 'deps': required_libs,
-                'kind': 'lib'
+                'kind': 'lib',
+                'flags': elements['flags'],
+                'location': location
             }
 
-    actions = {
-        'lib': create_lib,
-        'binary': create_bin
-    }
-
-    from graph import dependency_sort
-    write_order = dependency_sort(to_build)
-
-    print '\n\n'
-    print 'Generating cmake....'
-    for write in write_order:
-        if write in to_build:
-            build_item = to_build[write]
-            action = actions[build_item['kind']]
-            print action(build_item['target'], build_item['srcs'], build_item['deps'])
+    return to_build
 
 
 def parse_file(path):
     with open(path) as file:
         text = file.read()
 
-    print path
+    Log.debug('Parsing: {} '.format(path))
     parse_result = parse_text(text)
-    # import json
-    # print json.dumps(parse_result, indent=1)
-    print '---'
     return {path: parse_result}
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--path", type=str)
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=str,
+        choices=Log.get_verbosities(),
+        default='info'
+    )
     args = parser.parse_args()
+    Log.set_verbosity(args.verbosity)
 
     here = os.path.dirname(os.path.realpath(__file__))
 
@@ -238,7 +184,8 @@ def main():
     results = {}
     for file in files:
         results.update(parse_file(file))
-    build_dependency_table(results)
+    to_build = build_dependency_table(results)
+    build_cmakes(to_build, path)
 
 
 if __name__ == '__main__':
