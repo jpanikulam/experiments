@@ -43,7 +43,11 @@ def should_create_target(build_item):
 
 
 def write_cmake(text, base_directory):
-    write_path = os.path.join(base_directory, "tmp", "CMakeLists.txt")
+    write_folder = os.path.join(base_directory, "tmp")
+    if not os.path.exists(write_folder):
+        os.makedirs(write_folder)
+
+    write_path = os.path.join(write_folder, "CMakeLists.txt")
     with open(write_path, 'w') as cmake_out:
         cmake_out.write(text)
 

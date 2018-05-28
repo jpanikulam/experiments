@@ -89,5 +89,6 @@ ENV/
 .ropeproject
 
 bin/
+tmp/
 
 *.sublime-workspace
