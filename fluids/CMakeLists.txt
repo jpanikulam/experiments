@@ -16,11 +16,8 @@ target_link_libraries(
     navier_stokes_2d
 
     window_3d
-    window_manager
-    plot
     image
     frame
     image_frame
     simple_geometry
 )
-

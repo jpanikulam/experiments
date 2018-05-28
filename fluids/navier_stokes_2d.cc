@@ -1,8 +1,8 @@
-#include "navier_stokes_2d.hh"
+#include "fluids/navier_stokes_2d.hh"
 
 #include "eigen.hh"
 
-#include "fields_2d.hh"
+#include "fluids/fields_2d.hh"
 
 // TODO
 #include <iostream>

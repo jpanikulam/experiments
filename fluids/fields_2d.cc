@@ -1,4 +1,4 @@
-#include "fields_2d.hh"
+#include "fluids/fields_2d.hh"
 
 #include "eigen.hh"
 

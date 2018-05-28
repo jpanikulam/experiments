@@ -1,6 +1,6 @@
-#include "navier_stokes_2d.hh"
+#include "fluids/navier_stokes_2d.hh"
 
-#include "fields_2d.hh"
+#include "fluids/fields_2d.hh"
 
 #include "testing/gtest.hh"
 
