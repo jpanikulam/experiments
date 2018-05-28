@@ -1,4 +1,4 @@
-#include "simple_geometry_primitives.hh"
+#include "viewer/primitives/simple_geometry_primitives.hh"
 
 #include <GL/glew.h>
 #include "viewer/gl_aliases.hh"

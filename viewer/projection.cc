@@ -1,4 +1,4 @@
-#include "projection.hh"
+#include "viewer/projection.hh"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

@@ -1,4 +1,4 @@
-#include "window.hh"
+#include "viewer/window.hh"
 
 #include "primitives/plot.hh"
 

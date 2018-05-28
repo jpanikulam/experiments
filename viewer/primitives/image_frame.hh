@@ -1,6 +1,6 @@
 #pragma once
 
-#include "frame.hh"
+#include "viewer/primitives/frame.hh"
 
 namespace gl_viewer {
 

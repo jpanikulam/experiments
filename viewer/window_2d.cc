@@ -2,14 +2,14 @@
 // All members of the collective may share in its bounty
 //
 
-#include "window_2d.hh"
+#include "viewer/window_2d.hh"
 
 // inc order weird for these guys
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "gl_aliases.hh"
 #include "geometry/plane.hh"
+#include "viewer/gl_aliases.hh"
 #include "viewer/window_manager.hh"
 
 #include <iostream>
@@ -47,7 +47,7 @@ void pre_render() {
   glEnable(GL_LINE_SMOOTH);
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
-}
+}  // namespace
 
 void Window2D::View2D::apply() {
   //
@@ -167,21 +167,21 @@ void Window2D::apply_keys_to_view() {
     }
 
     switch (key) {
-    case (static_cast<int>('W')):
-      delta_vel(1) += acceleration;
-      break;
+      case (static_cast<int>('W')):
+        delta_vel(1) += acceleration;
+        break;
 
-    case (static_cast<int>('A')):
-      delta_vel(0) -= acceleration;
-      break;
+      case (static_cast<int>('A')):
+        delta_vel(0) -= acceleration;
+        break;
 
-    case (static_cast<int>('S')):
-      delta_vel(1) -= acceleration;
+      case (static_cast<int>('S')):
+        delta_vel(1) -= acceleration;
 
-      break;
-    case (static_cast<int>('D')):
-      delta_vel(0) += acceleration;
-      break;
+        break;
+      case (static_cast<int>('D')):
+        delta_vel(0) += acceleration;
+        break;
     }
   }
 
@@ -298,4 +298,4 @@ std::shared_ptr<Window2D> get_window2d(const std::string &title) {
     return window;
   }
 }
-}
+}  // namespace gl_viewer

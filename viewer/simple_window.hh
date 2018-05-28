@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gl_size.hh"
-#include "gl_types.hh"
+#include "viewer/gl_size.hh"
+#include "viewer/gl_types.hh"
 
 #include <map>
 #include <string>

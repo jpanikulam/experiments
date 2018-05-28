@@ -2,11 +2,11 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "viewer/gl_aliases.hh"
+#include "viewer/window_3d.hh"
 #include "viewer/window_manager.hh"
-#include "window_3d.hh"
 
 #include "eigen_helpers.hh"
-#include "gl_aliases.hh"
 
 #include "primitives/simple_geometry_primitives.hh"
 

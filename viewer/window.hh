@@ -1,5 +1,5 @@
 #pragma once
 
-#include "window_2d.hh"
-#include "window_3d.hh"
-#include "window_manager.hh"
+#include "viewer/window_2d.hh"
+#include "viewer/window_3d.hh"
+#include "viewer/window_manager.hh"

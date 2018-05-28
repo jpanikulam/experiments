@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl_types.hh"
+#include "viewer/gl_types.hh"
 #include "geometry/ray.hh"
 
 #include <Eigen/Dense>

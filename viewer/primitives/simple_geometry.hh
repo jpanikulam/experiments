@@ -1,10 +1,10 @@
 #pragma once
 
-#include "simple_geometry_primitives.hh"
+#include "viewer/primitives/simple_geometry_primitives.hh"
 
 #include "geometry/ray.hh"
-#include "primitive.hh"
 #include "sophus.hh"
+#include "viewer/primitives/primitive.hh"
 
 #include <mutex>
 #include <vector>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "primitive.hh"
+#include "viewer/primitives/primitive.hh"
 
 #include <Eigen/Dense>
 

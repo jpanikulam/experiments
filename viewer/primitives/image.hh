@@ -4,7 +4,7 @@
 #include <mutex>
 
 #include "eigen.hh"
-#include "primitive.hh"
+#include "viewer/primitives/primitive.hh"
 
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>

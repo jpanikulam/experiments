@@ -1,4 +1,4 @@
-#include "simple_window.hh"
+#include "viewer/simple_window.hh"
 
 #include <GLFW/glfw3.h>
 

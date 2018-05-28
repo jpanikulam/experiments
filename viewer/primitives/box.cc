@@ -1,4 +1,4 @@
-#include "box.hh"
+#include "viewer/primitives/box.hh"
 
 #include <GL/glew.h>
 

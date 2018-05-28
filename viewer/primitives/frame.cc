@@ -1,5 +1,5 @@
 
-#include "frame.hh"
+#include "viewer/primitives/frame.hh"
 
 #include <GL/glew.h>
 #include "viewer/gl_aliases.hh"

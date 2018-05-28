@@ -3,8 +3,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "gl_size.hh"
-#include "simple_window.hh"  // Can't include before glew
+#include "viewer/gl_size.hh"
+#include "viewer/simple_window.hh"  // Can't include before glew
 
 #include <memory>
 
@@ -19,9 +19,9 @@ class WindowManager {
 
   // Create and register windows with the manager
   //
-  static void register_window(const GlSize&                       size,
+  static void register_window(const GlSize& size,
                               const std::shared_ptr<SimpleWindow> win,
-                              const std::string&                  window_name);
+                              const std::string& window_name);
 
   // Render all of the managed windows
   //

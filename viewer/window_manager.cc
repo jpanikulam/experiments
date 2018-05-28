@@ -1,4 +1,4 @@
-#include "window_manager.hh"
+#include "viewer/window_manager.hh"
 
 #include <atomic>
 #include <chrono>

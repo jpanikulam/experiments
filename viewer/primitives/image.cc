@@ -1,4 +1,4 @@
-#include "image.hh"
+#include "viewer/primitives/image.hh"
 
 #include <GL/glew.h>
 

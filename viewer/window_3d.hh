@@ -1,8 +1,8 @@
 #pragma once
 
-#include "gl_size.hh"
-#include "projection.hh"
-#include "simple_window.hh"
+#include "viewer/gl_size.hh"
+#include "viewer/projection.hh"
+#include "viewer/simple_window.hh"
 
 #include "sophus.hh"
 #include "viewer/primitives/primitive.hh"

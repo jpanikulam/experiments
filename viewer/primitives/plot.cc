@@ -1,4 +1,4 @@
-#include "plot.hh"
+#include "viewer/primitives/plot.hh"
 
 #include <GL/glew.h>
 #include "viewer/gl_aliases.hh"

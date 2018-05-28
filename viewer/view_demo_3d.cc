@@ -1,10 +1,10 @@
 
-#include "primitives/box.hh"
-#include "primitives/image.hh"
-#include "primitives/plot.hh"
-#include "primitives/simple_geometry.hh"
+#include "viewer/primitives/box.hh"
+#include "viewer/primitives/image.hh"
+#include "viewer/primitives/plot.hh"
+#include "viewer/primitives/simple_geometry.hh"
 
-#include "window_3d.hh"
+#include "viewer/window_3d.hh"
 
 #include "geometry/import/read_stl.hh"
 #include "geometry/spatial/raycaster.hh"
@@ -29,11 +29,11 @@ Eigen::MatrixXd make_quadratic_thing() {
   using Vec2 = Eigen::Vector2d;
 
   constexpr double SCALE = 0.01;
-  Eigen::MatrixXd  values(500, 500);
-  Eigen::Matrix2d  hessian = Eigen::Matrix2d::Identity();
-  hessian(0, 0)            = 2.0;
-  hessian(1, 0)            = -2.0;
-  const Vec2 origin        = Vec2(values.rows() / 2, values.cols() / 2) * SCALE;
+  Eigen::MatrixXd values(500, 500);
+  Eigen::Matrix2d hessian = Eigen::Matrix2d::Identity();
+  hessian(0, 0) = 2.0;
+  hessian(1, 0) = -2.0;
+  const Vec2 origin = Vec2(values.rows() / 2, values.cols() / 2) * SCALE;
 
   for (int row = 0; row < values.rows(); ++row) {
     for (int col = 0; col < values.cols(); ++col) {
@@ -46,7 +46,7 @@ Eigen::MatrixXd make_quadratic_thing() {
 
 Eigen::MatrixXd mat_from_cv(const cv::Mat &image) {
   constexpr double INV_255 = 1.0 / 255.0;
-  Eigen::MatrixXd  mat(image.rows, image.cols);
+  Eigen::MatrixXd mat(image.rows, image.cols);
   for (int row = 0; row < image.rows; ++row) {
     for (int col = 0; col < image.cols; ++col) {
       mat(row, col) = static_cast<double>(image.at<uint8_t>(row, col, 0)) * INV_255;
@@ -59,17 +59,17 @@ void run() {
   auto win = get_window3d("Window A");
 
   const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff.stl";
-  const auto        tri       = geometry::import::read_stl(file_path);
+  const auto tri = geometry::import::read_stl(file_path);
 
   const std::string godzilla_image_filename = "/home/jacob/repos/slam/data/calibration/godzilla.jpg";
-  const cv::Mat     godzilla_image_color    = cv::imread(godzilla_image_filename);
+  const cv::Mat godzilla_image_color = cv::imread(godzilla_image_filename);
   const std::string calibration_image_filename =
       "/home/jacob/repos/slam/data/calibration/domestic_goat_kid_in_capeweed.jpg";
   const cv::Mat calibration_image_color = cv::imread(calibration_image_filename);
 
-  const auto                   scene_geometry = std::make_shared<SimpleGeometry>();
-  const auto                   lidar_geometry = std::make_shared<SimpleGeometry>();
-  const auto                   cfg            = geometry::spatial::build_raycaster_config();
+  const auto scene_geometry = std::make_shared<SimpleGeometry>();
+  const auto lidar_geometry = std::make_shared<SimpleGeometry>();
+  const auto cfg = geometry::spatial::build_raycaster_config();
   geometry::spatial::RayCaster ray_caster(cfg);
 
   std::cout << "Adding primitives" << std::endl;
@@ -97,7 +97,7 @@ void run() {
 
   for (double t = 0.0; t < 200.0; t += 0.01) {
     const auto world_from_caster = (SE3::exp(jcc::vstack(Vec3(0.0, 0.0, 0.0), Vec3(0.0, t, 0.0))));
-    const auto distances         = ray_caster.cast_rays(world_from_caster);
+    const auto distances = ray_caster.cast_rays(world_from_caster);
 
     lidar_geometry->clear();
 

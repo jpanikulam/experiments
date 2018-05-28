@@ -1,11 +1,11 @@
 #pragma once
 
-#include "gl_size.hh"
-#include "projection.hh"
-#include "simple_window.hh"
+#include "viewer/gl_size.hh"
+#include "viewer/projection.hh"
+#include "viewer/simple_window.hh"
 
-#include "viewer/primitives/primitive_types.hh"
 #include "viewer/primitives/primitive.hh"
+#include "viewer/primitives/primitive_types.hh"
 
 #include <Eigen/Dense>
 #include <sophus/se2.hpp>
@@ -20,13 +20,13 @@ using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
 using Vec2Map = Eigen::Map<const Eigen::Vector2d>;
 using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
-}
+}  // namespace
 
 class Window2D final : public SimpleWindow {
   using so2 = Sophus::SO2<double>;
   using se2 = Sophus::SE2<double>;
 
-public:
+ public:
   Window2D() {
     view_.camera_height = 3.0;
   }
@@ -67,7 +67,7 @@ public:
     renderables_.clear();
   }
 
-private:
+ private:
   struct View2D {
     // Default identity
     se2 camera_pose;
@@ -113,4 +113,4 @@ private:
 };
 
 std::shared_ptr<Window2D> get_window2d(const std::string &title = "main");
-}
+}  // namespace gl_viewer

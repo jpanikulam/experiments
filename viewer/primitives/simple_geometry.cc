@@ -1,4 +1,4 @@
-#include "simple_geometry.hh"
+#include "viewer/primitives/simple_geometry.hh"
 
 namespace gl_viewer {
 
