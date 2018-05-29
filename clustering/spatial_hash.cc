@@ -1,4 +1,4 @@
-#include "spatial_hash.hh"
+#include "clustering/spatial_hash.hh"
 
 #include "geometry/spatial/bounding_box.hh"
 

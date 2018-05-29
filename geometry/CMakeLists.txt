@@ -14,5 +14,5 @@ add_library(ray_ray_approx_intersect ray_ray_approx_intersect.cc plane.cc)
 add_test(ray_ray_approx_intersect_test ray_ray_approx_intersect_test.cc ray_ray_approx_intersect)
 
 
-add_subdirectory(import)
+# add_subdirectory(import)
 add_subdirectory(spatial)

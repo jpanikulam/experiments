@@ -35,17 +35,16 @@ find_package(OpenCV REQUIRED)
 set(CMAKE_CXX_COMPILER "g++-5")
 set(CMAKE_CXX_FLAGS "--std=c++14 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
 
-add_subdirectory(clustering)
+add_subdirectory(tmp)
+
 add_subdirectory(geometry)
 add_subdirectory(viewer)
 add_subdirectory(raytracing)
-add_subdirectory(util)
 add_subdirectory(numerics)
 
-add_subdirectory(tmp)
 
 add_subdirectory(vision)
-add_subdirectory(maxwell)
-add_subdirectory(geojson)
+# add_subdirectory(maxwell)
+# add_subdirectory(geojson)
 
 # add_subdirectory(planning)

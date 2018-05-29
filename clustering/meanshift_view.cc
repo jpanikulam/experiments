@@ -1,4 +1,4 @@
-#include "spatial_hash.hh"
+#include "clustering/spatial_hash.hh"
 
 #include "viewer/window_2d.hh"
 #include "viewer/window_manager.hh"

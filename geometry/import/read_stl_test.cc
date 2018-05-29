@@ -1,5 +1,5 @@
 #include "testing/gtest.hh"
-#include "read_stl.hh"
+#include "geometry/import/read_stl.hh"
 
 namespace geometry {
 namespace import {

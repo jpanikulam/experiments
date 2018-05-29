@@ -1,4 +1,5 @@
-#include "physics.hh"
+//%ignore
+#include "maxwell/physics.hh"
 
 #include "viewer/window.hh"
 #include "viewer/primitives/plot.hh"

@@ -1,4 +1,4 @@
-#include "fast_json.hh"
+#include "geojson/fast_json.hh"
 
 #include <tao/json.hpp>
 

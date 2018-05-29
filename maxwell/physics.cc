@@ -1,4 +1,4 @@
-#include "physics.hh"
+#include "maxwell/physics.hh"
 
 namespace maxwell {
 
