@@ -83,6 +83,7 @@ def grab_include(line):
 
 def make_flagger(flag_name):
     def flagger(line):
+        Log.debug('    flag: {}'.format(flag_name))
         return {'flags': [flag_name]}
     return flagger
 

@@ -57,7 +57,8 @@ def discover_unlabelled_bins(tree):
 
                 if has_annotations(elements):
                     Log.warn("Inferred binary has annotations: {}".format(raw_name))
-                else:
+
+                if len(elements['bin']) == 0:
                     src_file = name + '.cc'
                     elements['bin'].append({
                         'target': name,
@@ -117,7 +118,8 @@ def build_dependency_table(all_tree):
 
         Log.debug("In: {}".format(file))
         required_libs = what_libs(file, elements, all_tree, libs)
-        Log.debug('  needs: {}'.format(required_libs))
+        if len(required_libs):
+            Log.debug('  needs: {}'.format(required_libs))
 
         location = os.path.dirname(file)
 

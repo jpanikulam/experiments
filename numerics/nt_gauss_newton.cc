@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "nt_gauss_newton.hh"
+#include "numerics/nt_gauss_newton.hh"
 
 namespace numerics {
 

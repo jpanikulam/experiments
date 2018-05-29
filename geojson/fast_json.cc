@@ -2,9 +2,6 @@
 
 #include <tao/json.hpp>
 
-// TODO
-#include <iostream>
-
 namespace geojson {
 namespace {
 using Vec2 = Eigen::Vector2d;

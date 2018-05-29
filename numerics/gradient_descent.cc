@@ -1,4 +1,4 @@
-#include "gradient_descent.hh"
+#include "numerics/gradient_descent.hh"
 
 namespace numerics {
 

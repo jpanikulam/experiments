@@ -1,6 +1,6 @@
-#include "octree.hh"
+#include "geometry/spatial/octree.hh"
 
-#include "bounding_box.hh"
+#include "geometry/spatial/bounding_box.hh"
 
 namespace geometry {
 namespace spatial {

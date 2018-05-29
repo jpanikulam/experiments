@@ -1,8 +1,7 @@
 #pragma once
 
-#include "bounding_box.hh"
-#include "sphere_volume.hh"
-#include "volume.hh"
+#include "geometry/spatial/bounding_box.hh"
+#include "geometry/spatial/volume.hh"
 
 #include "out.hh"
 
@@ -12,8 +11,7 @@
 namespace geometry {
 namespace spatial {
 
-// Implemented as a binary spherical bvh
-constexpr int                 DIM = 3;
+constexpr int DIM = 3;
 class BoundingVolumeHierarchy final : public Volume {
  public:
   struct TreeElement {
@@ -31,12 +29,12 @@ class BoundingVolumeHierarchy final : public Volume {
       Leaf leaf;
     };
     BoundingBox<DIM> bounding_box;
-    bool             is_leaf = false;
+    bool is_leaf = false;
   };
 
   struct AABB {
     BoundingBox<DIM> bbox;
-    int              volume_index;
+    int volume_index;
   };
 
   using NodeBuildVisitorFunction = std::function<void(const BoundingBox<DIM> &box, int depth, bool leaf)>;
@@ -45,7 +43,7 @@ class BoundingVolumeHierarchy final : public Volume {
   // Build a bvh
   // @param[in] volumes The volumes around which to build the hierarchy
   // @param[in] visitor A function that will be called on every new node
-  void build(const std::vector<Volume *> &   volumes,
+  void build(const std::vector<Volume *> &volumes,
              const NodeBuildVisitorFunction &visitor = [](const BoundingBox<DIM> &, int, bool) {});
 
   Intersection intersect(const Ray &ray, const IntersectVisitorFunction &visitor) const;
@@ -66,17 +64,17 @@ class BoundingVolumeHierarchy final : public Volume {
   }
 
  private:
-  int add_node_and_children(std::vector<AABB> &             bounding_boxes,
-                            size_t                          node_index,
-                            size_t                          begin,
-                            size_t                          end,
-                            int                             depth,
+  int add_node_and_children(std::vector<AABB> &bounding_boxes,
+                            size_t node_index,
+                            size_t begin,
+                            size_t end,
+                            int depth,
                             const NodeBuildVisitorFunction &visitor);
 
   double traverse_leaf(const TreeElement::Leaf &leaf, const Ray &ray, Out<int> closest) const;
 
   std::vector<TreeElement> tree_;
-  std::vector<AABB>        aabb_;
+  std::vector<AABB> aabb_;
 };
-}  // namespace geometry
 }  // namespace spatial
+}  // namespace geometry

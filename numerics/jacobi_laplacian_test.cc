@@ -1,4 +1,4 @@
-#include "jacobi_laplacian.hh"
+#include "numerics/jacobi_laplacian.hh"
 
 #include "testing/gtest.hh"
 
@@ -10,7 +10,7 @@ TEST(JacobiLaplacianImage, test_converges) {
   //
 
   constexpr int ROWS = 50;
-  using Mat          = SquareMatNd<ROWS>;
+  using Mat = SquareMatNd<ROWS>;
 
   const Mat x = Mat::Random();
   const Mat b = Mat::Random() * 0.3;

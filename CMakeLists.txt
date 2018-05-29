@@ -15,6 +15,29 @@ enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
+#########################
+# OpenCV
+#
+find_package(OpenCV REQUIRED)
+
+#########################
+# OpenGL
+#
+find_package(OpenGL REQUIRED)
+include_directories( ${OPENGL_INCLUDE_DIRS})
+
+#########################
+# GLFW
+#
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
+include_directories(${GLFW_INCLUDE_DIRS})
+
+#########################
+# GLEW
+#
+find_package(GLEW REQUIRED)
+
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/run)
 
 macro(add_test test_name test_file test_libs)
@@ -30,21 +53,12 @@ macro(add_test test_name test_file test_libs)
     target_link_libraries(${test_name} ${test_libs} ${GTEST_LIBRARIES} pthread)
 endmacro(add_test)
 
-find_package(OpenCV REQUIRED)
+
 
 set(CMAKE_CXX_COMPILER "g++-5")
 set(CMAKE_CXX_FLAGS "--std=c++14 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
 
-add_subdirectory(tmp)
 
-add_subdirectory(geometry)
 add_subdirectory(viewer)
-add_subdirectory(raytracing)
-add_subdirectory(numerics)
-
-
+add_subdirectory(tmp)
 add_subdirectory(vision)
-# add_subdirectory(maxwell)
-# add_subdirectory(geojson)
-
-# add_subdirectory(planning)

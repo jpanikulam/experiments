@@ -1,6 +1,6 @@
 #pragma once
 
-#include "volume.hh"
+#include "geometry/spatial/volume.hh"
 #include "geometry/ray.hh"
 
 #include "sophus.hh"

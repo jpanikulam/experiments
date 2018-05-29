@@ -1,4 +1,4 @@
-#include "ray_ray_approx_intersect.hh"
+#include "geometry/ray_ray_approx_intersect.hh"
 #include "testing/gtest.hh"
 
 namespace geometry {

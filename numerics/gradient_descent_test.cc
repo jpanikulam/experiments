@@ -1,5 +1,6 @@
-#include "gradient_descent.hh"
-#include "numdiff.hh"
+#include "numerics/gradient_descent.hh"
+
+#include "numerics/numdiff.hh"
 
 #include "testing/gtest.hh"
 

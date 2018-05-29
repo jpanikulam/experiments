@@ -1,4 +1,6 @@
-#include "testing/gtest.hh"
+// %deps(${OPENGL_LIBRARIES})
+// %deps(${GLFW_LIBRARIES})
+// %deps(${GLEW_LIBRARIES})
 
 #include "viewer/colors/viridis.hh"
 #include "viewer/primitives/box.hh"
@@ -25,7 +27,7 @@ void verify_all_leaves_unique(const geometry::spatial::BoundingVolumeHierarchy &
   for (const auto &node : bvh.tree()) {
     if (node.is_leaf) {
       for (int k = node.leaf.start; k < node.leaf.end; ++k) {
-        EXPECT_EQ(already_used.count(k), 0u);
+        // EXPECT_EQ(already_used.count(k), 0u);
         already_used.insert(k);
       }
     }
@@ -112,7 +114,7 @@ void climb_tree(const geometry::spatial::BoundingVolumeHierarchy &bvh) {
   }
 }
 
-TEST(BoundingVolumeHierarchyTest, intersection) {
+void demo_intersection() {
   auto win = gl_viewer::get_window3d("Window A");
 
   const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
@@ -164,7 +166,7 @@ TEST(BoundingVolumeHierarchyTest, intersection) {
 
     scene_geometry->add_ray(ray, 10.0, Vec4(1.0, 0.0, 0.0, 1.0));
     const auto intersection = bvh.intersect(ray, visitor);
-    EXPECT_FALSE(intersection.intersected);
+    // EXPECT_FALSE(intersection.intersected);
   }
   {
     visitor_geometry->clear();
@@ -174,16 +176,16 @@ TEST(BoundingVolumeHierarchyTest, intersection) {
 
     scene_geometry->add_ray(ray, 10.0, Vec4(1.0, 0.0, 0.0, 1.0));
     const auto intersection = bvh.intersect(ray, visitor);
-    EXPECT_TRUE(intersection.intersected);
+    // EXPECT_TRUE(intersection.intersected);
     constexpr double EPS = 1e-4;
-    EXPECT_NEAR(intersection.distance, 2.80121, EPS);
+    // EXPECT_NEAR(intersection.distance, 2.80121, EPS);
   }
 
   win->spin_until_step();
   visitor_geometry->clear();
 }
 
-TEST(BoundingVolumeHierarchyTest, bounding_volumes) {
+void demo_bounding_volumes() {
   auto win = gl_viewer::get_window3d("Window A");
 
   const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
@@ -242,4 +244,9 @@ TEST(BoundingVolumeHierarchyTest, bounding_volumes) {
     visitor_geometry->clear();
   }
   win->spin_until_step();
+}
+
+int main() {
+  demo_intersection();
+  demo_bounding_volumes();
 }

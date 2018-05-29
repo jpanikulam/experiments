@@ -1,24 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
 #########################
-# OpenGL
-#
-find_package(OpenGL REQUIRED)
-include_directories( ${OPENGL_INCLUDE_DIRS})
-
-#########################
-# GLFW
-#
-find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3)
-include_directories(${GLFW_INCLUDE_DIRS})
-
-#########################
-# GLEW
-#
-find_package(GLEW REQUIRED)
-
-#########################
 # Life is what you cmake of it
 #
 
@@ -44,7 +26,10 @@ add_library(window_2d window_2d.cc)
 target_link_libraries(window_2d
     projection
     window_manager
-    spatial_geometry
+
+    plane
+    ray_ray_approx_intersect
+
     ${OPENGL_LIBRARIES}
     ${GLFW_LIBRARIES}
 )

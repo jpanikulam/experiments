@@ -1,4 +1,4 @@
-#include "bounding_volume_hierarchy.hh"
+#include "geometry/spatial/bounding_volume_hierarchy.hh"
 
 #include "util/heap.hh"
 

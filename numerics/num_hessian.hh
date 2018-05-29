@@ -1,4 +1,4 @@
-#include "numdiff.hh"
+#include "numerics/numdiff.hh"
 
 namespace numerics {
 
@@ -18,4 +18,4 @@ Eigen::Matrix<double, rows, rows> numerical_hessian(const Eigen::Matrix<double, 
   const auto hessian = numerical_jacobian<rows>(x, gradient_fnc, feps);
   return hessian;
 }
-}
+}  // namespace numerics

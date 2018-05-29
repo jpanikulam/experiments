@@ -1,7 +1,7 @@
 // Möller–Trumbore
 #pragma once
 
-#include "volume.hh"
+#include "geometry/spatial/volume.hh"
 
 namespace geometry {
 namespace spatial {

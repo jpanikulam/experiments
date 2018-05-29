@@ -1,7 +1,7 @@
 
 #include "testing/gtest.hh"
 
-#include "bounding_box.hh"
+#include "geometry/spatial/bounding_box.hh"
 #include "eigen.hh"
 
 using Vec3 = Eigen::Vector3d;

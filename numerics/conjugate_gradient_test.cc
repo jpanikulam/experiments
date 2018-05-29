@@ -1,4 +1,4 @@
-#include "conjugate_gradient.hh"
+#include "numerics/conjugate_gradient.hh"
 
 #include "testing/gtest.hh"
 

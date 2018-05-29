@@ -1,5 +1,5 @@
-#include "numdiff.hh"
-#include "num_hessian.hh"
+#include "numerics/numdiff.hh"
+#include "numerics/num_hessian.hh"
 
 #include "eigen.hh"
 

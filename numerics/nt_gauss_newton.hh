@@ -1,3 +1,5 @@
+//%ignore
+
 #include "eigen.hh"
 
 #include <vector>
