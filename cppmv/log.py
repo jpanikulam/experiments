@@ -1,9 +1,19 @@
-from colorama import init as colorama_init
-from colorama import Fore, Style
+try:
+    from colorama import init as colorama_init
+    from colorama import Fore, Style
+    colorama_init()
+
+except(ImportError):
+    print "Could not import colorama: Skipping coloration"
+
+    class Dummy(object):
+        def __getattr__(self, key):
+            return ''
+
+    Fore = Dummy()
+    Style = Dummy()
 
 from collections import OrderedDict
-
-colorama_init()
 
 
 class Log(object):
@@ -54,5 +64,3 @@ if __name__ == '__main__':
     Log.success("success:", 2)
     Log.info("info:", 3)
     Log.debug("debug:", 4)
-
-    # Log.set(["info", )

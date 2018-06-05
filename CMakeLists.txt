@@ -53,7 +53,10 @@ macro(add_test test_name test_file test_libs)
     target_link_libraries(${test_name} ${test_libs} ${GTEST_LIBRARIES} pthread)
 endmacro(add_test)
 
-
+# TODO: Make this run whenever make is run
+execute_process(
+    COMMAND python ${CMAKE_SOURCE_DIR}/cppmv/cppmv.py -v success -p ${CMAKE_SOURCE_DIR}
+)
 
 set(CMAKE_CXX_COMPILER "g++-5")
 set(CMAKE_CXX_FLAGS "--std=c++14 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
