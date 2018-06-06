@@ -32,8 +32,6 @@ MinimizationResult nt_gauss_newton(const Eigen::VectorXd &initialization,
     for (const auto &func : problem.hessian_functions) {
       hess.setZero();
       const OutVec innovation = func(x, &gradient, &hess);
-      // jtj += jac.transpose() * jac;
-      // jti += jac.transpose() * innovation;
       jtj += hess;
       jti += gradient;
     }

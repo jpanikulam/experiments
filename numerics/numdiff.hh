@@ -5,9 +5,10 @@
 namespace numerics {
 
 template <int rows, typename Callable>
-Eigen::Matrix<double, rows, 1> numerical_gradient(const Eigen::Matrix<double, rows, 1> &x,
-                                                  const Callable &fcn,
-                                                  const double feps = 1e-6) {
+Eigen::Matrix<double, rows, 1> numerical_gradient(
+    const Eigen::Matrix<double, rows, 1> &x,
+    const Callable &fcn,
+    const double feps = 1e-6) {
   static_assert(rows != Eigen::Dynamic, "No dynamic");
   using OutVec = Eigen::Matrix<double, rows, 1>;
 
@@ -17,15 +18,33 @@ Eigen::Matrix<double, rows, 1> numerical_gradient(const Eigen::Matrix<double, ro
     OutVec zero = OutVec::Zero();
     zero(k) = feps;
 
-    jac(k) = (fcn(x + zero) - fcn(x - zero)) / (2 * feps);
+    jac(k) = (fcn(x + zero) - fcn(x - zero)) / (2.0 * feps);
+  }
+  return jac;
+}
+
+Eigen::VectorXd dynamic_numerical_gradient(
+    const Eigen::VectorXd &x,
+    const std::function<double(const Eigen::VectorXd &)> &fcn,
+    const double feps = 1e-6) {
+  using OutVec = Eigen::VectorXd;
+
+  OutVec jac = OutVec::Zero(x.rows());
+
+  for (int k = 0; k < x.rows(); ++k) {
+    OutVec twiddle = OutVec::Zero(x.rows());
+    twiddle(k) = feps;
+
+    jac(k) = (fcn(x + twiddle) - fcn(x - twiddle)) / (2.0 * feps);
   }
   return jac;
 }
 
 template <int output_rows, int input_rows, typename Callable>
-Eigen::Matrix<double, output_rows, input_rows> numerical_jacobian(const Eigen::Matrix<double, input_rows, 1> &x,
-                                                                  const Callable &fcn,
-                                                                  const double feps = 1e-6) {
+Eigen::Matrix<double, output_rows, input_rows> numerical_jacobian(
+    const Eigen::Matrix<double, input_rows, 1> &x,
+    const Callable &fcn,
+    const double feps = 1e-6) {
   static_assert(output_rows != Eigen::Dynamic, "No dynamic");
   static_assert(input_rows != Eigen::Dynamic, "No dynamic");
 
@@ -45,4 +64,4 @@ Eigen::Matrix<double, output_rows, input_rows> numerical_jacobian(const Eigen::M
   }
   return jac;
 }
-}
+}  // namespace numerics
