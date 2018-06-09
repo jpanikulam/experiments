@@ -65,6 +65,7 @@ class Window3D final : public SimpleWindow {
   void spin_until_step();
 
   void add_primitive(const std::shared_ptr<Primitive> primitive) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     primitives_.push_back(std::move(primitive));
   }
 
@@ -74,12 +75,15 @@ class Window3D final : public SimpleWindow {
 
   template <typename PrimitiveType, typename... Args>
   std::shared_ptr<PrimitiveType> add_primitive(const Args &... args) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
+
     auto ptr = std::make_shared<PrimitiveType>(args...);
     primitives_.push_back(ptr);
     return ptr;
   }
 
   void clear() {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     primitives_.clear();
   }
 

@@ -28,15 +28,15 @@ LinesearchResult line_search(const OptimizationState& current_state,
   bool did_decrease = false;
 
   // for (const double alpha : {0.001, 0.01, 0.2, 0.5, 1.0, 2.0, 5.0, 9.0}) {
-  // for (const double alpha : {0.2, 0.5, 1.0, 2.0, 5.0, 9.0}) {
-  for (const double alpha : {0.001, 0.1, 0.2, 0.5, 1.0}) {
+  for (const double alpha : {0.001, 0.2, 0.5, 1.0, 5.0, 9.0, 25.0}) {
+    // for (const double alpha : {0.001, 0.1, 0.2, 0.5, 1.0}) {
     const detail::Vecx evaluation_pt = current_state.x - (alpha * direction);
     const double cost_at_alpha =
         problem.objective(evaluation_pt, nullptr, nullptr);
 
-    std::cout << alpha << " : " << cost_at_alpha << std::endl;
+    // std::cout << alpha << " : " << cost_at_alpha << std::endl;
     if (cost_at_alpha < best_cost_so_far) {
-      std::cout << "  take" << std::endl;
+      // std::cout << "  take" << std::endl;
       best_cost_so_far = cost_at_alpha;
       best_x = evaluation_pt;
       did_decrease = true;
