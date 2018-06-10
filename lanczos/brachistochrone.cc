@@ -26,8 +26,8 @@ struct BrachistochroneParameters {
   double dx = 0.001;
 };
 
-Eigen::VectorXd augment(const Eigen::VectorXd &y,
-                        const BrachistochroneParameters &params) {
+Eigen::VectorXd add_boundary_conditions(
+    const Eigen::VectorXd &y, const BrachistochroneParameters &params) {
   Eigen::VectorXd y_augmented(y.rows() + 2);
   y_augmented(0) = params.alpha;
   y_augmented.segment(1, y.rows()) = y;
@@ -45,7 +45,7 @@ void visualize_curve(const Eigen::VectorXd &y,
   view->clear();
   const auto geo = view->add_primitive<gl_viewer::SimpleGeometry>();
 
-  const Eigen::VectorXd y_augmented = augment(y, params);
+  const Eigen::VectorXd y_augmented = add_boundary_conditions(y, params);
 
   for (int k = 1; k < y_augmented.rows(); ++k) {
     const double x0 = (k - 1) * params.dx;
@@ -72,40 +72,42 @@ double cost_function(const Eigen::VectorXd &y,
 
   const auto true_cost = [params](const Eigen::VectorXd &x,
                                   bool debug_output = false) {
-    const Eigen::VectorXd x_augmented = augment(x, params);
+    const Eigen::VectorXd heights = add_boundary_conditions(x, params);
 
     Eigen::VectorXd arclength(x.rows() + 1);
-    for (int k = 1; k < x_augmented.rows(); ++k) {
-      const double height_diff = x_augmented(k) - x_augmented(k - 1);
+    for (int k = 1; k < heights.rows(); ++k) {
+      const double height_diff = heights(k) - heights(k - 1);
       arclength(k - 1) = std::hypot(height_diff, params.dx);
     }
 
     const double sqrt_two_g = std::sqrt(2.0 * params.g);
     Eigen::VectorXd velocity(x.rows() + 1);
-    for (int k = 1; k < x_augmented.rows(); ++k) {
+    for (int k = 1; k < heights.rows(); ++k) {
       const double v_prev =
-          sqrt_two_g * std::sqrt(params.alpha - x_augmented(k - 1));
-      const double v_this =
-          sqrt_two_g * std::sqrt(params.alpha - x_augmented(k));
+          sqrt_two_g * std::sqrt(params.alpha - heights(k - 1));
+      const double v_this = sqrt_two_g * std::sqrt(params.alpha - heights(k));
       velocity(k - 1) = 0.5 * (v_prev + v_this);
     }
 
-    const Eigen::VectorXd times = (arclength.array() / velocity.array());
+    const Eigen::VectorXd times = arclength.array() / velocity.array();
     const double total_time = times.sum();
     if (debug_output) {
       std::cout << "arclength:\n" << arclength.transpose() << std::endl;
       std::cout << "velocity:\n" << velocity.transpose() << std::endl;
       std::cout << "times:\n" << times.transpose() << std::endl;
-      std::cout << "heights:\n" << x_augmented.transpose() << std::endl;
+      std::cout << "heights:\n" << heights.transpose() << std::endl;
     }
     return total_time;
   };
 
   if (gradient) {
     *gradient = numerics::dynamic_numerical_gradient(y, true_cost);
+
+    //
+    // Debug Nonsense
+    //
     constexpr bool PRINT_DEBUG = false;
     true_cost(y, PRINT_DEBUG);
-
     static int debug_output_increment = 0;
     if (debug_output_increment % 2 == 0) {
       visualize_curve(y, *gradient, params);
@@ -126,7 +128,7 @@ void solve() {
   problem.objective = cost_function;
 
   numerics::OptimizationState state;
-  state.x = 1.0 * Eigen::VectorXd::Random(1000).array() + 1.0;
+  state.x = 1.0 * Eigen::VectorXd::Ones(1000).array();
 
   const auto result =
       numerics::optimize<numerics::ObjectiveMethod::kGradientDescent,

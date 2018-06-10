@@ -14,8 +14,8 @@ OptimizationState compute_lagrange_update(
 }
 
 struct LinesearchResult {
-  bool valid;
-  double cost;
+  bool valid = false;
+  double cost = std::numeric_limits<double>::max();
   detail::Vecx best_x;
 };
 
@@ -26,10 +26,7 @@ LinesearchResult line_search(const OptimizationState& current_state,
   double best_cost_so_far = problem.objective(best_x, nullptr, nullptr);
 
   bool did_decrease = false;
-
-  // for (const double alpha : {0.001, 0.01, 0.2, 0.5, 1.0, 2.0, 5.0, 9.0}) {
   for (const double alpha : {0.001, 0.2, 0.5, 1.0, 5.0, 9.0, 25.0}) {
-    // for (const double alpha : {0.001, 0.1, 0.2, 0.5, 1.0}) {
     const detail::Vecx evaluation_pt = current_state.x - (alpha * direction);
     const double cost_at_alpha =
         problem.objective(evaluation_pt, nullptr, nullptr);
@@ -40,10 +37,8 @@ LinesearchResult line_search(const OptimizationState& current_state,
       did_decrease = true;
     }
   }
-  LinesearchResult result;
-  result.best_x = best_x;
-  result.cost = best_cost_so_far;
-  result.valid = did_decrease;
+  const LinesearchResult result(
+      {.valid = did_decrease, .cost = best_cost_so_far, .best_x = best_x});
   return result;
 }
 
