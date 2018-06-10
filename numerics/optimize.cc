@@ -34,9 +34,7 @@ LinesearchResult line_search(const OptimizationState& current_state,
     const double cost_at_alpha =
         problem.objective(evaluation_pt, nullptr, nullptr);
 
-    // std::cout << alpha << " : " << cost_at_alpha << std::endl;
     if (cost_at_alpha < best_cost_so_far) {
-      // std::cout << "  take" << std::endl;
       best_cost_so_far = cost_at_alpha;
       best_x = evaluation_pt;
       did_decrease = true;
