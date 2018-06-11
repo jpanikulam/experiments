@@ -7,21 +7,21 @@
 namespace lanczos {
 
 Eigen::VectorXd sigmoid_blend(const Eigen::VectorXd &x,
-                              const double alpha,
-                              const double beta) {
+                              const double y0,
+                              const double y1) {
   constexpr double scale = 25.0;
   const Eigen::VectorXd x_exp = (scale * x).array().exp();
   const Eigen::VectorXd t = x_exp.array() / (x_exp.array() + 1.0);
 
   const Eigen::VectorXd convex_blend =
-      ((1.0 - t.array()) * alpha) + (t.array() * beta);
+      ((1.0 - t.array()) * y0) + (t.array() * y1);
 
   return convex_blend;
 }
 
 struct BrachistochroneParameters {
-  double alpha = 2.0;
-  double beta = 0.0;
+  double y0 = 2.0;
+  double y1 = 0.0;
   double g = 9.0;
   double dx = 0.001;
 };
@@ -29,9 +29,9 @@ struct BrachistochroneParameters {
 Eigen::VectorXd add_boundary_conditions(
     const Eigen::VectorXd &y, const BrachistochroneParameters &params) {
   Eigen::VectorXd y_augmented(y.rows() + 2);
-  y_augmented(0) = params.alpha;
+  y_augmented(0) = params.y0;
   y_augmented.segment(1, y.rows()) = y;
-  y_augmented(y.rows() + 1) = params.beta;
+  y_augmented(y.rows() + 1) = params.y1;
   return y_augmented;
 }
 
@@ -57,8 +57,8 @@ void visualize_curve(const Eigen::VectorXd &y,
     constexpr bool VIS_GRAD = true;
     if (VIS_GRAD && k < gradient.rows()) {
       const double grad = gradient(k);
-      const double normalized_grad = grad * 0.5;
-      const Eigen::Vector3d grad_end(x1, 0.0, y_augmented(k) + normalized_grad);
+      const double scaled_grad = grad * 0.5;
+      const Eigen::Vector3d grad_end(x1, 0.0, y_augmented(k) + scaled_grad);
       geo->add_line({end, grad_end, Eigen::Vector4d(1.0, 0.0, 0.5, 0.5)});
     }
   }
@@ -83,9 +83,8 @@ double cost_function(const Eigen::VectorXd &y,
     const double sqrt_two_g = std::sqrt(2.0 * params.g);
     Eigen::VectorXd velocity(x.rows() + 1);
     for (int k = 1; k < heights.rows(); ++k) {
-      const double v_prev =
-          sqrt_two_g * std::sqrt(params.alpha - heights(k - 1));
-      const double v_this = sqrt_two_g * std::sqrt(params.alpha - heights(k));
+      const double v_prev = sqrt_two_g * std::sqrt(params.y0 - heights(k - 1));
+      const double v_this = sqrt_two_g * std::sqrt(params.y0 - heights(k));
       velocity(k - 1) = 0.5 * (v_prev + v_this);
     }
 
@@ -103,9 +102,7 @@ double cost_function(const Eigen::VectorXd &y,
   if (gradient) {
     *gradient = numerics::dynamic_numerical_gradient(y, true_cost);
 
-    //
     // Debug Nonsense
-    //
     constexpr bool PRINT_DEBUG = false;
     true_cost(y, PRINT_DEBUG);
     static int debug_output_increment = 0;
@@ -128,7 +125,7 @@ void solve() {
   problem.objective = cost_function;
 
   numerics::OptimizationState state;
-  state.x = 1.0 * Eigen::VectorXd::Ones(1000).array();
+  state.x = 1.0 * Eigen::VectorXd::Ones(100).array();
 
   const auto result =
       numerics::optimize<numerics::ObjectiveMethod::kGradientDescent,
