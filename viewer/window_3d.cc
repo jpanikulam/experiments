@@ -138,13 +138,8 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
     const Eigen::Quaterniond q(elev_rot * az_rot);
     const SE3 instantaneous_rotation(SO3(q), Vec3::Zero());
 
-    // const double motion_scaling = view_.camera_from_target.translation().norm();
-    // std::cout << motion_scaling << std::endl;
-    // std::cout << "z:" << view_.zoom << std::endl;
-
     const double inv_zoom = 1.0 / view_.zoom;
 
-    // const Vec3 motion_target_frame = instantaneous_rotation.inverse() * (motion_camera_frame * view_.zoom * 15.0);
     const Vec3 motion_target_frame = instantaneous_rotation.inverse() * (motion_camera_frame * inv_zoom * 0.05);
     view_.target_from_world.translation() += motion_target_frame;
   }

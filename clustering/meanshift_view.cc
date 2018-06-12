@@ -1,7 +1,6 @@
 #include "clustering/spatial_hash.hh"
 
 #include "viewer/window_2d.hh"
-#include "viewer/window_manager.hh"
 
 #include "out.hh"
 
@@ -17,7 +16,9 @@ struct MeanShiftState {
   std::vector<Vec2> current_points;
 };
 
-Vec2 local_mean(const std::vector<Vec2> &points, const int index, const double window_size) {
+Vec2 local_mean(const std::vector<Vec2> &points,
+                const int index,
+                const double window_size) {
   Vec2 mean = Vec2::Zero();
   int added = 0;
   for (const auto &pt : points) {
@@ -60,12 +61,9 @@ void run() {
   for (int k = 0; k < 100; ++k) {
     viewer->clear();
     viewer->add_points({points, Vec4(0.0, 1.0, 0.0, 0.8)});
-    if (k == 0) {
-      viewer->spin_until_step();
-    }
     shift_means(vout(deformed_pts), MEANSHIFT_RADIUS);
     viewer->add_points({deformed_pts, Vec4(1.0, 0.0, 0.0, 0.8)});
-    gl_viewer::WindowManager::draw(5);
+    viewer->spin_until_step();
   }
 
   //
@@ -89,9 +87,9 @@ void run() {
     const Vec4 color_and_alpha = (Vec4() << color, 1.0).finished();
     viewer->add_points({pt_group.second, color_and_alpha});
   }
-  gl_viewer::WindowManager::spin();
+  viewer->spin_until_step();
 }
-}
+}  // namespace clustering
 
 int main() {
   clustering::run();

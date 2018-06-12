@@ -13,6 +13,7 @@
 #include "viewer/window_manager.hh"
 
 #include <iostream>
+#include <thread>
 
 namespace gl_viewer {
 namespace {
@@ -110,8 +111,10 @@ void Window2D::on_key(int key, int scancode, int action, int mods) {
 }
 
 void Window2D::spin_until_step() {
-  while (!should_continue_ && WindowManager::any_windows()) {
-    WindowManager::draw();
+  while (!should_continue_) {
+    // std::lock_guard<std::mutex> lk(behavior_mutex_);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
   should_continue_ = false;
 }
@@ -123,11 +126,13 @@ bool point_on_plane(const Projection &proj, const WindowPoint &point, Out<Vec3> 
 }
 
 void Window2D::on_mouse_button(int button, int action, int mods) {
+  std::lock_guard<std::mutex> lk(behavior_mutex_);
   if (left_mouse_held()) {
   }
 }
 
 void Window2D::on_mouse_move(const WindowPoint &position) {
+  std::lock_guard<std::mutex> lk(behavior_mutex_);
   if (left_mouse_held()) {
   }
 
@@ -143,11 +148,13 @@ void Window2D::on_mouse_move(const WindowPoint &position) {
 }
 
 void Window2D::on_scroll(const double amount) {
+  std::lock_guard<std::mutex> lk(behavior_mutex_);
   const double scroll_acceleration = 0.8;
   view_.dzoom += amount * scroll_acceleration;
 }
 
 void Window2D::resize(const GlSize &gl_size) {
+  std::lock_guard<std::mutex> lk(behavior_mutex_);
   glViewport(0, 0, gl_size.width, gl_size.height);
   gl_size_ = gl_size;
 }
@@ -247,6 +254,7 @@ void Window2D::draw_renderables(const Renderables &renderables) const {
 }
 
 void Window2D::render() {
+  std::lock_guard<std::mutex> lk(behavior_mutex_);
   pre_render();
 
   //

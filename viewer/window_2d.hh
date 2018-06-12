@@ -11,6 +11,7 @@
 #include <sophus/se2.hpp>
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace gl_viewer {
@@ -43,26 +44,33 @@ class Window2D final : public SimpleWindow {
   void spin_until_step();
 
   void add_line(const Line &line) {
+    std::lock_guard<std::mutex> lk(behavior_mutex_);
     renderables_.lines.push_back(line);
   }
 
   void add_ray(const Ray &ray) {
+    std::lock_guard<std::mutex> lk(behavior_mutex_);
     renderables_.rays.push_back(ray);
   }
 
   void add_circle(const Circle &circle) {
+    std::lock_guard<std::mutex> lk(behavior_mutex_);
     renderables_.circles.push_back(circle);
   }
 
   void add_points(const Points &points) {
+    std::lock_guard<std::mutex> lk(behavior_mutex_);
     renderables_.points.push_back(points);
   }
 
   void add_primitive(const std::shared_ptr<Primitive> primitive) {
+    std::lock_guard<std::mutex> lk(behavior_mutex_);
     primitives_.push_back(std::move(primitive));
   }
 
   void clear() {
+    std::lock_guard<std::mutex> lk(behavior_mutex_);
+
     primitives_.clear();
     renderables_.clear();
   }
@@ -110,6 +118,7 @@ class Window2D final : public SimpleWindow {
   std::vector<std::shared_ptr<Primitive>> primitives_;
 
   GlSize gl_size_ = GlSize(640, 640);
+  mutable std::mutex behavior_mutex_;
 };
 
 std::shared_ptr<Window2D> get_window2d(const std::string &title = "main");

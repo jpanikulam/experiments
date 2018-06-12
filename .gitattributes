@@ -1,2 +1,4 @@
 *.png binary
 *.stl binary
+*.pgm binary
+*.ppm binary
