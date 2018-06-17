@@ -41,7 +41,7 @@ class DirectedAcyclicGraph(object):
 
 
 class OpGraph(object):
-    def __init__(self):
+    def __init__(self, scope_name='main'):
         self.tree = DirectedAcyclicGraph()
 
     def symbol(self, name):
@@ -72,5 +72,6 @@ if __name__ == '__main__':
     st.symbol('a')
     st.symbol('b')
     st.op('add', ['a', 'b'])
+    st.op('sub', ['add(a, b)', 'b'])
 
     print st.tree.pretty_print()
