@@ -28,3 +28,4 @@ make
     * Generate malloc-free sparse matrix operations
 * stm32f adventures
 * Lanczos
+* Little 4-legged walker

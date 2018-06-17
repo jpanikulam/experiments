@@ -14,8 +14,9 @@ TODO:
     `void add_primitive(std::shared_ptr<Primitive>, SE2 primitive_from_world);`
     Which generates a frame, by se3ing our se2
 
-* Add default threaded-ness
 * Add primitives (like images) that exist and work by default in 2d
 * Add primitives (like 2d plots) that exist and work by default in 2d
 * Add some mechanism for drawing these things in 3d
 * Reduce the overhead for adding primitives -- right now it's a lot of mungling
+* Add basic interaction and interaction widgets
+* Add basic scene graph features
