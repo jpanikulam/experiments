@@ -4,7 +4,8 @@ from bokeh.io import show
 from bokeh.models import (
     ColumnDataSource,
     HoverTool,
-    LogColorMapper
+    LogColorMapper,
+    BoxSelectTool
 )
 from bokeh.palettes import Viridis6 as palette
 from bokeh.plotting import figure
@@ -28,7 +29,7 @@ def get_points(parcel):
 
 
 def generate_parcel_images(geojson):
-    ftrs = geojson['features'][:1000]
+    ftrs = geojson['features']
     # parcel_names = [f['properties']['PIN'] for f in ftrs]
     parcel_names = []
     parcel_xs = []
@@ -48,23 +49,31 @@ def generate_parcel_images(geojson):
         'y': parcel_ys,
         'name': parcel_names
     })
-    TOOLS = "pan,wheel_zoom,reset,hover,save"
+    TOOLS = "pan,wheel_zoom,reset,hover,box_select"
 
     p = figure(
         title='Allegheny County Parcels',
         tools=TOOLS,
         x_axis_location=None,
         y_axis_location=None,
-        output_backend="webgl"
+        # output_backend="webgl"
     )
 
-    p.patches('x', 'y', source=source)
+    p.patches(
+        'x', 'y', source=source,
+        # fill_color={'field': 'rate', 'transform': color_mapper},
+        # fill_alpha=0.7, line_color="white", line_width=0.5
+    )
+
     hover = p.select_one(HoverTool)
     hover.point_policy = "follow_mouse"
     hover.tooltips = [
         ("Name", "@name"),
         ("(Long, Lat)", "($x, $y)"),
     ]
+
+    box = p.select_one(BoxSelectTool)
+    box.point_policy = "follow_mouse"
 
     show(p)
 

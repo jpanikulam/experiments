@@ -16,7 +16,16 @@ def load_first_n_features(txt, n):
         u'type': u'FeatureCollection',
     }
 
-    with open('reduced.json', 'w') as foop:
+    for ftr in new_json['features']:
+        acreage = ftr['properties']['CALCACREAGE']
+        ftr['properties'] = {'PIN': ftr['properties']['PIN']}
+        ftr['properties']['altitude'] = acreage
+        # ftr['geometry']['coordinates'] = [ftr['geometry']['coordinates'][0]]
+        ftr['properties']['lon'] = ftr['geometry']['coordinates'][0][0][0]
+        ftr['properties']['lat'] = ftr['geometry']['coordinates'][0][0][1]
+        ftr['geometry'] = []
+
+    with open('reduced-huge.json', 'w') as foop:
         foop.write(json.dumps(new_json))
 
 
@@ -29,7 +38,7 @@ def main():
     with open(file) as f:
         txt = f.read()
         print 'Finished reading'
-        load_first_n_features(txt, 10000)
+        load_first_n_features(txt, 1000000)
         print 'Finished writing'
 
 
