@@ -38,7 +38,7 @@ def main():
     with open(file) as f:
         txt = f.read()
         print 'Finished reading'
-        load_first_n_features(txt, 1000000)
+        load_first_n_features(txt, 10000000)
         print 'Finished writing'
 
 

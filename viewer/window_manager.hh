@@ -21,7 +21,8 @@ class WindowManager {
   //
   static void register_window(const GlSize& size,
                               const std::shared_ptr<SimpleWindow> win,
-                              const std::string& window_name);
+                              const std::string& window_name,
+                              int win_ver_maj = 2);
 
   // Render all of the managed windows
   //

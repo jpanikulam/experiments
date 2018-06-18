@@ -13,9 +13,13 @@
 
 namespace gl_viewer {
 
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void key_callback(
+    GLFWwindow *window, int key, int scancode, int action, int mods);
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos);
-void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
+void mouse_button_callback(GLFWwindow *window,
+                           int button,
+                           int action,
+                           int mods);
 void window_size_callback(GLFWwindow *window, int width, int height);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
@@ -57,10 +61,6 @@ std::shared_ptr<GlobalState> maybe_create_global_state() {
       exit(EXIT_FAILURE);
     }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-
     glewExperimental = GL_TRUE;
     glewInit();
 
@@ -72,12 +72,19 @@ std::shared_ptr<GlobalState> maybe_create_global_state() {
   return global_state;
 }
 
-void WindowManager::register_window(const GlSize &                      size,
-                                    const std::shared_ptr<SimpleWindow> simple_window,
-                                    const std::string &                 window_name) {
+void WindowManager::register_window(
+    const GlSize &size,
+    const std::shared_ptr<SimpleWindow> simple_window,
+    const std::string &window_name,
+    const int win_ver_maj) {
   maybe_create_global_state();
 
-  GLFWwindow *window = glfwCreateWindow(size.height, size.width, window_name.c_str(), nullptr, nullptr);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, win_ver_maj);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+
+  GLFWwindow *window = glfwCreateWindow(
+      size.height, size.width, window_name.c_str(), nullptr, nullptr);
   simple_window->set_title(window_name);
 
   if (!window) {
@@ -99,9 +106,11 @@ void WindowManager::register_window(const GlSize &                      size,
 // Render all of the managed windows
 //
 void WindowManager::render() {
-  for (auto it = global_state->windows.begin(); it != global_state->windows.end(); it++) {
+  for (auto it = global_state->windows.begin();
+       it != global_state->windows.end();
+       it++) {
     auto &glfw_win = it->first;
-    auto &window   = it->second;
+    auto &window = it->second;
 
     glfwMakeContextCurrent(glfw_win);
 
@@ -118,7 +127,6 @@ void WindowManager::render() {
 }
 
 bool WindowManager::any_windows() {
-  // maybe_create_global_state();
   // Not thread-safe, figure out later
   if (global_state) {
     return !global_state->windows.empty();
@@ -148,7 +156,8 @@ void error_callback(int error, const char *description) {
   fputs(description, stderr);
 }
 
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+void key_callback(
+    GLFWwindow *window, int key, int scancode, int action, int mods) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GL_TRUE);
   }
@@ -164,7 +173,10 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
   global_state->windows.at(window)->mouse_moved(xpos, ypos);
 }
 
-void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+void mouse_button_callback(GLFWwindow *window,
+                           int button,
+                           int action,
+                           int mods) {
   if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
   }
 
