@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 #include "viewer/gl_aliases.hh"
 
-namespace gl_viewer {
+namespace viewer {
 
 Frame::Frame(const SE3& frame_from_parent) {
   update_transform(frame_from_parent);

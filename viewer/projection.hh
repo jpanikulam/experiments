@@ -7,7 +7,7 @@
 
 #include <stdexcept>
 
-namespace gl_viewer {
+namespace viewer {
 
 class Projection {
   using Mat4 = Eigen::Matrix4d;
@@ -69,4 +69,4 @@ class Projection {
   Vec4i                  viewport_dimensions_;
 };
 
-}  // namespace gl_viewer
+}  // namespace viewer

@@ -1,6 +1,6 @@
 #include "viewer/primitives/simple_geometry.hh"
 
-namespace gl_viewer {
+namespace viewer {
 
 void SimpleGeometry::draw() const {
   std::lock_guard<std::mutex> lk(draw_mutex_);
@@ -27,4 +27,4 @@ void SimpleGeometry::draw() const {
 
   draw_lines(lines_);
 }
-}  // namespace gl_viewer
+}  // namespace viewer

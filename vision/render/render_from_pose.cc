@@ -51,10 +51,10 @@ cv::Mat render_from_pose(const cv::Mat& ref_image, const CameraModel& cam_model,
 
   constexpr bool DRAW_DEBUG_DATA = false;
   if (DRAW_DEBUG_DATA) {
-    auto viewer = gl_viewer::get_window3d("America's Favorite Visualization Tool");
-    auto geom   = std::make_shared<gl_viewer::SimpleGeometry>();
-    auto image  = std::make_shared<gl_viewer::Image>(ref_image);
-    auto frame  = std::make_shared<gl_viewer::Frame>(image_from_camera);
+    auto viewer = viewer::get_window3d("America's Favorite Visualization Tool");
+    auto geom   = std::make_shared<viewer::SimpleGeometry>();
+    auto image  = std::make_shared<viewer::Image>(ref_image);
+    auto frame  = std::make_shared<viewer::Frame>(image_from_camera);
     frame->add_primitive(image);
 
     viewer->add_primitive(geom);

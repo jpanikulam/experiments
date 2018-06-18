@@ -14,7 +14,7 @@
 #include <mutex>
 #include <vector>
 
-namespace gl_viewer {
+namespace viewer {
 namespace {
 using Vec2 = Eigen::Vector2d;
 using Vec3 = Eigen::Vector3d;
@@ -122,4 +122,4 @@ class Window2D final : public SimpleWindow {
 };
 
 std::shared_ptr<Window2D> get_window2d(const std::string &title = "main");
-}  // namespace gl_viewer
+}  // namespace viewer

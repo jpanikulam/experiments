@@ -49,7 +49,7 @@ TEST(LineModel, test_detects) {
 
   const Vec2 origin = Vec2::Zero();
 
-  auto win2d_1 = gl_viewer::get_window2d("Ransac View");
+  auto win2d_1 = viewer::get_window2d("Ransac View");
 
 
   std::vector<Observation> observations(points.size());

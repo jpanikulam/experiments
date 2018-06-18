@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 
-namespace gl_viewer {
+namespace viewer {
 
 void SimpleWindow::key_pressed(int key, int scancode, int action, int mods) {
   if (action == GLFW_PRESS) {

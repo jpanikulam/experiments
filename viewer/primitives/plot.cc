@@ -7,7 +7,7 @@
 #include <iostream>
 #include <limits>
 
-namespace gl_viewer {
+namespace viewer {
 using Vec2 = Eigen::Vector2d;
 using Vec4 = Eigen::Vector4d;
 
@@ -128,4 +128,4 @@ void Plot::draw() const {
     histogram.draw();
   }
 }
-} // namespace gl_viewer
+} // namespace viewer

@@ -23,7 +23,7 @@ using Vec2 = Eigen::Vector2d;
 using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
 
-namespace gl_viewer {
+namespace viewer {
 
 Eigen::MatrixXd make_quadratic_thing() {
   using Vec2 = Eigen::Vector2d;
@@ -117,9 +117,9 @@ void run() {
   }
 
   std::cout << "Done" << std::endl;
-}  // namespace gl_viewer
-}  // namespace gl_viewer
+}  // namespace viewer
+}  // namespace viewer
 
 int main(void) {
-  gl_viewer::run();
+  viewer::run();
 }

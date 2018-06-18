@@ -10,7 +10,7 @@ using Vec2 = Eigen::Vector2d;
 using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
 
-namespace gl_viewer {
+namespace viewer {
 
 void run() {
   auto win2d_1 = get_window2d("Window A");
@@ -46,5 +46,5 @@ void run() {
 }
 
 int main(void) {
-  gl_viewer::run();
+  viewer::run();
 }

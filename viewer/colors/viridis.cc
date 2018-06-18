@@ -4,7 +4,7 @@
 
 #include <vector>
 
-namespace gl_viewer {
+namespace viewer {
 namespace colors {
 
 using Vec3 = Eigen::Vector3d;

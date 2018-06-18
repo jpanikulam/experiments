@@ -4,7 +4,7 @@
 
 #include <vector>
 
-namespace gl_viewer {
+namespace viewer {
 
 using Vec2 = Eigen::Vector2d;
 using Vec4 = Eigen::Vector4d;

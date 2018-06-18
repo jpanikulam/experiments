@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-namespace gl_viewer {
+namespace viewer {
 
 // (Static)
 Projection Projection::get_from_current() {
@@ -80,4 +80,4 @@ ViewportPoint Projection::project(const Vec3& world_point) const {
   return point;
 }
 
-}  // namespace gl_viewer
+}  // namespace viewer

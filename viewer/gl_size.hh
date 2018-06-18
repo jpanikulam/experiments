@@ -1,6 +1,6 @@
 #pragma once
 
-namespace gl_viewer {
+namespace viewer {
 
 struct GlSize {
   GlSize() {
@@ -14,4 +14,4 @@ struct GlSize {
   int height = 0;
 };
 
-}  // gl_viewer
+}  // viewer

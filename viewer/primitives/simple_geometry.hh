@@ -9,7 +9,7 @@
 #include <mutex>
 #include <vector>
 
-namespace gl_viewer {
+namespace viewer {
 
 class SimpleGeometry final : public Primitive {
  public:
@@ -107,4 +107,4 @@ class SimpleGeometry final : public Primitive {
 
   mutable std::mutex draw_mutex_;
 };
-}  // namespace gl_viewer
+}  // namespace viewer

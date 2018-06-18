@@ -41,9 +41,9 @@ void visualize_curve(const Eigen::VectorXd &y,
   std::cout << "Grad: " << std::endl;
   std::cout << gradient.transpose() << std::endl;
 
-  const auto view = gl_viewer::get_window3d("Curve Visualization");
+  const auto view = viewer::get_window3d("Curve Visualization");
   view->clear();
-  const auto geo = view->add_primitive<gl_viewer::SimpleGeometry>();
+  const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
   const Eigen::VectorXd y_augmented = add_boundary_conditions(y, params);
 
@@ -116,7 +116,7 @@ double cost_function(const Eigen::VectorXd &y,
 }
 
 void solve() {
-  const auto view = gl_viewer::get_window3d("Curve Visualization");
+  const auto view = viewer::get_window3d("Curve Visualization");
   view->set_target_from_world(
       SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)),
           Eigen::Vector3d::Zero()));

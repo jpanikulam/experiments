@@ -11,9 +11,9 @@ using Vec3 = Eigen::Vector3d;
 
 void visualize(const std::vector<Feature>& features) {
   //
-  auto viewer = gl_viewer::get_window3d("Poopy Sand");
+  auto viewer = viewer::get_window3d("Poopy Sand");
   viewer->set_target_from_world(SE3(SO3::exp(Vec3(-3.1415 * 0.5, 0.0, 0.0)), Vec3::Zero()));
-  auto geom = viewer->add_primitive<gl_viewer::SimpleGeometry>();
+  auto geom = viewer->add_primitive<viewer::SimpleGeometry>();
 
   Vec2 sum = Vec2::Zero();
   for (const auto& ftr : features) {
@@ -25,7 +25,7 @@ void visualize(const std::vector<Feature>& features) {
 
   const Vec2 mean = sum / features.size();
   for (const auto& ftr : features) {
-    gl_viewer::Polygon polygon;
+    viewer::Polygon polygon;
 
     const Vec3 color = (Vec3::Random() * 0.5).array() + 0.5;
     polygon.color = jcc::augment(color, 1.0);

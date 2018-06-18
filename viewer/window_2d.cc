@@ -15,7 +15,7 @@
 #include <iostream>
 #include <thread>
 
-namespace gl_viewer {
+namespace viewer {
 namespace {
 void draw_points(const Points &points) {
   glColor(points.color);
@@ -306,4 +306,4 @@ std::shared_ptr<Window2D> get_window2d(const std::string &title) {
     return window;
   }
 }
-}  // namespace gl_viewer
+}  // namespace viewer

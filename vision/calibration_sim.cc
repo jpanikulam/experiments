@@ -73,8 +73,8 @@ void estimate_camera_pose(const CameraModel&       model,
 
   std::cout << camera_from_object.log().transpose() << std::endl;
 
-  auto win  = gl_viewer::get_window3d("Window A");
-  auto geom = std::make_shared<gl_viewer::SimpleGeometry>();
+  auto win  = viewer::get_window3d("Window A");
+  auto geom = std::make_shared<viewer::SimpleGeometry>();
   win->add_primitive(geom);
 
   if (result.success) {
@@ -135,11 +135,11 @@ int main() {
   cv::Mat calibration_image;
   cv::cvtColor(calibration_image_color, is_out(calibration_image), CV_BGR2GRAY);
 
-  auto win = gl_viewer::get_window3d("Window A");
+  auto win = viewer::get_window3d("Window A");
   {
-    auto calibration_img_primitive = std::make_shared<gl_viewer::Image>(calibration_image_color, 1.0);
+    auto calibration_img_primitive = std::make_shared<viewer::Image>(calibration_image_color, 1.0);
     auto calibration_img_primitive_frame =
-        std::make_shared<gl_viewer::Frame>(SE3(SO3(), Vec3(0.0, 0.0, DISTANCE + 0.1)));
+        std::make_shared<viewer::Frame>(SE3(SO3(), Vec3(0.0, 0.0, DISTANCE + 0.1)));
     calibration_img_primitive_frame->add_primitive(calibration_img_primitive);
     win->add_primitive(calibration_img_primitive_frame);
   }

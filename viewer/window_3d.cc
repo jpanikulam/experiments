@@ -12,7 +12,7 @@
 
 #include <thread>
 
-namespace gl_viewer {
+namespace viewer {
 namespace {
 void pre_render() {
   //
@@ -247,4 +247,4 @@ std::shared_ptr<Window3D> get_window3d(const std::string &title) {
     return window;
   }
 }
-}  // namespace gl_viewer
+}  // namespace viewer

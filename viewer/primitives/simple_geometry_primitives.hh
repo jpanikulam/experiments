@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace gl_viewer {
+namespace viewer {
 using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
 
@@ -74,4 +74,4 @@ void draw_points2d(const Points2d &points);
 void draw_polygon(const Polygon &polygon);
 
 void draw_billboard_circle(const Sphere &billboard_circle);
-}  // namespace gl_viewer
+}  // namespace viewer

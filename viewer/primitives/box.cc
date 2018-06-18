@@ -2,7 +2,7 @@
 
 #include <GL/glew.h>
 
-namespace gl_viewer {
+namespace viewer {
 
 void Box::draw() const {
   glBegin(GL_QUADS);

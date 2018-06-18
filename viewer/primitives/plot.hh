@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace gl_viewer {
+namespace viewer {
 
 struct Surface {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;

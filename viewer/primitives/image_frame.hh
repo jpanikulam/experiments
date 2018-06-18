@@ -2,7 +2,7 @@
 
 #include "viewer/primitives/frame.hh"
 
-namespace gl_viewer {
+namespace viewer {
 
 class ImageFrame final : public Frame {
  public:
@@ -16,4 +16,4 @@ class ImageFrame final : public Frame {
   double scale_ = 1.0;
 };
 
-}  // namespace gl_viewer
+}  // namespace viewer

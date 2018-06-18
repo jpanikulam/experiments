@@ -8,7 +8,7 @@
 #include <sophus/se2.hpp>
 #include <sophus/se3.hpp>
 
-namespace gl_viewer {
+namespace viewer {
 
 // for now: Only support double
 namespace {
@@ -146,4 +146,4 @@ inline void glApply(const Eigen::Matrix4d &matrix) {
 inline void lookAt(const Eigen::Vector3d &eye, const Eigen::Vector3d &target, const Eigen::Vector3d &up) {
   gluLookAt(eye(0), eye(1), eye(2), target(0), target(1), target(2), up(0), up(1), up(2));
 }
-}  // namespace gl_viewer
+}  // namespace viewer

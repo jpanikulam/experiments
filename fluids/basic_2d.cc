@@ -47,9 +47,9 @@ void simulate() {
   state.velocity_field[0] = Eigen::MatrixXd::Zero(SIZE, SIZE);
   state.velocity_field[1] = Eigen::MatrixXd::Zero(SIZE, SIZE);
 
-  auto viewer = gl_viewer::get_window3d("America's Favorite Visualization Tool");
+  auto viewer = viewer::get_window3d("America's Favorite Visualization Tool");
   constexpr double SCALE = 100.0;
-  auto image = std::make_shared<gl_viewer::Image>(state.pressure_field, SCALE);
+  auto image = std::make_shared<viewer::Image>(state.pressure_field, SCALE);
   viewer->add_primitive(image);
 
   const plane::SimulationConfig cfg;

@@ -35,8 +35,8 @@ void verify_all_leaves_unique(const geometry::spatial::BoundingVolumeHierarchy &
 }
 
 void draw_children(const geometry::spatial::BoundingVolumeHierarchy &bvh, int base_node_ind) {
-  auto win = gl_viewer::get_window3d("Window A");
-  auto draw_children_geometry = win->add_primitive<gl_viewer::SimpleGeometry>();
+  auto win = viewer::get_window3d("Window A");
+  auto draw_children_geometry = win->add_primitive<viewer::SimpleGeometry>();
 
   Heap<int> stack;
   stack.push(base_node_ind);
@@ -46,7 +46,7 @@ void draw_children(const geometry::spatial::BoundingVolumeHierarchy &bvh, int ba
     if (node.is_leaf) {
       for (int k = node.leaf.start; k < node.leaf.end; ++k) {
         const auto &aabb = bvh.aabb()[k];
-        gl_viewer::AxisAlignedBox gl_aabb;
+        viewer::AxisAlignedBox gl_aabb;
         gl_aabb.lower = aabb.bbox.lower();
         gl_aabb.upper = aabb.bbox.upper();
 
@@ -62,8 +62,8 @@ void draw_children(const geometry::spatial::BoundingVolumeHierarchy &bvh, int ba
 }
 
 void climb_tree(const geometry::spatial::BoundingVolumeHierarchy &bvh) {
-  auto win = gl_viewer::get_window3d("Window A");
-  auto tree_climb_geometry = win->add_primitive<gl_viewer::SimpleGeometry>();
+  auto win = viewer::get_window3d("Window A");
+  auto tree_climb_geometry = win->add_primitive<viewer::SimpleGeometry>();
 
   // Explore first branch every time
   struct ExplorationCandidate {
@@ -95,14 +95,14 @@ void climb_tree(const geometry::spatial::BoundingVolumeHierarchy &bvh) {
       // continue;
       // }
 
-      gl_viewer::AxisAlignedBox aabb;
+      viewer::AxisAlignedBox aabb;
       aabb.lower = node.bounding_box.lower();
       aabb.upper = node.bounding_box.upper();
 
       if (colors.count(next.depth) == 0) {
         colors[next.depth] = Eigen::Vector4d::Random();
         const double t = next.depth * (1.0 / 10.0);
-        colors[next.depth] = jcc::augment(gl_viewer::colors::viridis(t), 1.0);
+        colors[next.depth] = jcc::augment(viewer::colors::viridis(t), 1.0);
       }
       aabb.color = colors[next.depth];
 
@@ -115,12 +115,12 @@ void climb_tree(const geometry::spatial::BoundingVolumeHierarchy &bvh) {
 }
 
 void demo_intersection() {
-  auto win = gl_viewer::get_window3d("Window A");
+  auto win = viewer::get_window3d("Window A");
 
   const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
   const auto tri = geometry::import::read_stl(file_path);
-  auto scene_geometry = win->add_primitive<gl_viewer::SimpleGeometry>();
-  auto visitor_geometry = win->add_primitive<gl_viewer::SimpleGeometry>();
+  auto scene_geometry = win->add_primitive<viewer::SimpleGeometry>();
+  auto visitor_geometry = win->add_primitive<viewer::SimpleGeometry>();
 
   std::vector<geometry::spatial::Volume *> tri_ptrs;
   tri_ptrs.reserve(tri.triangles.size());
@@ -140,7 +140,7 @@ void demo_intersection() {
 
   const auto visitor = [&visitor_geometry, &win](const geometry::spatial::BoundingVolumeHierarchy::TreeElement &element,
                                                  const bool intersected) {
-    gl_viewer::AxisAlignedBox aabb;
+    viewer::AxisAlignedBox aabb;
     aabb.lower = element.bounding_box.lower();
     aabb.upper = element.bounding_box.upper();
     if (element.is_leaf) {
@@ -186,13 +186,13 @@ void demo_intersection() {
 }
 
 void demo_bounding_volumes() {
-  auto win = gl_viewer::get_window3d("Window A");
+  auto win = viewer::get_window3d("Window A");
 
   const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
   const auto tri = geometry::import::read_stl(file_path);
 
-  auto scene_geometry = win->add_primitive<gl_viewer::SimpleGeometry>();
-  auto visitor_geometry = win->add_primitive<gl_viewer::SimpleGeometry>();
+  auto scene_geometry = win->add_primitive<viewer::SimpleGeometry>();
+  auto visitor_geometry = win->add_primitive<viewer::SimpleGeometry>();
 
   std::vector<geometry::spatial::Volume *> tri_ptrs;
   tri_ptrs.reserve(tri.triangles.size());
@@ -221,7 +221,7 @@ void demo_bounding_volumes() {
       if ((depth != stop_depth) && !leaf) {
         return;
       }
-      gl_viewer::AxisAlignedBox aabb;
+      viewer::AxisAlignedBox aabb;
       aabb.lower = box.lower();
       aabb.upper = box.upper();
 

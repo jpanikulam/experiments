@@ -77,3 +77,8 @@ target_link_libraries(
     ${GLFW_LIBRARIES}
     ${GLEW_LIBRARIES}
 )
+
+find_package(CUDA QUIET REQUIRED)
+if (CUDA_FOUND)
+    add_subdirectory(cuda)
+endif(CUDA_FOUND)

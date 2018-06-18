@@ -138,15 +138,15 @@ void try_align(const std::vector<cv::KeyPoint>&   observed_pts,
   const auto                 result = aligner.standard_align(model, initial, observed, object, fake_correspondences);
   // const auto                 result = aligner.standard_align(model, initial, observed, object, correspondences);
 
-  auto win  = gl_viewer::get_window3d("Window A");
-  auto geom = std::make_shared<gl_viewer::SimpleGeometry>();
+  auto win  = viewer::get_window3d("Window A");
+  auto geom = std::make_shared<viewer::SimpleGeometry>();
 
   static bool first = true;
   if (first) {
     first = false;
     geom->add_axes({SE3(), 10.0});
-    auto contained_geom = std::make_shared<gl_viewer::SimpleGeometry>();
-    auto image_frame    = std::make_shared<gl_viewer::ImageFrame>(SE3(SO3(), Vec3(0.0, 0.0, 0.0)), 1067, 1600, 0.01);
+    auto contained_geom = std::make_shared<viewer::SimpleGeometry>();
+    auto image_frame    = std::make_shared<viewer::ImageFrame>(SE3(SO3(), Vec3(0.0, 0.0, 0.0)), 1067, 1600, 0.01);
 
     contained_geom->add_points({object_pts_real, Eigen::Vector4d(0.0, 0.8, 0.1, 0.7), 25.0});
     contained_geom->add_points2d({observed_effective, Eigen::Vector4d(0.7, 0.2, 0.1, 0.7), 25.0, FX});
@@ -199,19 +199,19 @@ int main() {
   cv::Mat calibration_image;
   cv::cvtColor(calibration_image_color, is_out(calibration_image), CV_BGR2GRAY);
 
-  auto win = gl_viewer::get_window3d("Window A");
+  auto win = viewer::get_window3d("Window A");
 
   {
-    auto calibration_img_primitive       = std::make_shared<gl_viewer::Image>(calibration_image_color, 0.01);
-    auto calibration_img_primitive_frame = std::make_shared<gl_viewer::Frame>(SE3(SO3(), Vec3(0.0, 0.0, 50.1)));
+    auto calibration_img_primitive       = std::make_shared<viewer::Image>(calibration_image_color, 0.01);
+    auto calibration_img_primitive_frame = std::make_shared<viewer::Frame>(SE3(SO3(), Vec3(0.0, 0.0, 50.1)));
     calibration_img_primitive_frame->add_primitive(calibration_img_primitive);
     win->add_primitive(calibration_img_primitive_frame);
   }
 
   {
-    auto calibration_img_primitive = std::make_shared<gl_viewer::Image>(calibration_image_color, 0.0001, 0.3);
+    auto calibration_img_primitive = std::make_shared<viewer::Image>(calibration_image_color, 0.0001, 0.3);
 
-    auto calibration_img_primitive_frame = std::make_shared<gl_viewer::Frame>(SE3(SO3(), Vec3(0.0, 0.0, 1.0)));
+    auto calibration_img_primitive_frame = std::make_shared<viewer::Frame>(SE3(SO3(), Vec3(0.0, 0.0, 1.0)));
     calibration_img_primitive_frame->add_primitive(calibration_img_primitive);
     win->add_primitive(calibration_img_primitive_frame);
   }

@@ -2,7 +2,7 @@
 
 #include "Eigen/Dense"
 
-namespace gl_viewer {
+namespace viewer {
 namespace colors {
 
 Eigen::Vector3d viridis(double t);

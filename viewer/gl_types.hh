@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 
-namespace gl_viewer {
+namespace viewer {
 
 struct WindowPoint {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -18,4 +18,4 @@ struct ViewportPoint {
   Eigen::Vector2d                      point;
 };
 
-}  // gl_viewer
+}  // viewer

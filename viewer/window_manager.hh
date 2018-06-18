@@ -8,7 +8,7 @@
 
 #include <memory>
 
-namespace gl_viewer {
+namespace viewer {
 
 //
 // Callback router
@@ -37,4 +37,4 @@ class WindowManager {
 
   static void draw(const int ms = 16);
 };
-}  // namespace gl_viewer
+}  // namespace viewer

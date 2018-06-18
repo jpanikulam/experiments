@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace gl_viewer {
+namespace viewer {
 
 class Frame : public Primitive {
  public:

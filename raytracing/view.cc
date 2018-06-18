@@ -72,9 +72,9 @@ class Map {
 };
 
 void run() {
-  gl_viewer::WindowManager win_man;
-  auto                     win2d_1 = std::make_shared<gl_viewer::Window2D>();
-  win_man.register_window(gl_viewer::GlSize(640, 640), win2d_1, "Two Dimensional Debugging");
+  viewer::WindowManager win_man;
+  auto                     win2d_1 = std::make_shared<viewer::Window2D>();
+  win_man.register_window(viewer::GlSize(640, 640), win2d_1, "Two Dimensional Debugging");
 
   Map map;
   for (int k = 0; k < 15; ++k) {

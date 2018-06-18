@@ -1,6 +1,6 @@
 #pragma once
 
-namespace gl_viewer {
+namespace viewer {
 class Primitive {
  public:
   virtual ~Primitive() = default;

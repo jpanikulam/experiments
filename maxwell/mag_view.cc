@@ -20,7 +20,7 @@ int main() {
     loops.push_back(circle);
   }
 
-  auto viewer = gl_viewer::get_window2d("Current Loop B-Field");
+  auto viewer = viewer::get_window2d("Current Loop B-Field");
 
   std::cout << "Generating field..." << std::endl;
   constexpr double INTERVAL = 0.1;
@@ -64,5 +64,5 @@ int main() {
     }*/
 
   std::cout << "Done generating field" << std::endl;
-  gl_viewer::WindowManager::spin();
+  viewer::WindowManager::spin();
 }

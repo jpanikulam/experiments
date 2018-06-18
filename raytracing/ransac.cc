@@ -140,7 +140,7 @@ void discover_models(const std::vector<Observation>&       observations,
   std::vector<DirectedLineSegment> to_test_models;
   std::vector<int>                 inlier_indices;
 
-  auto win2d_1 = gl_viewer::get_window2d("Ransac View");
+  auto win2d_1 = viewer::get_window2d("Ransac View");
 
   for (int test_num = 0; test_num < config.max_fit_ct; ++test_num) {
     // Attempt a series of model fits, followed by inlier counting and refinement
@@ -191,9 +191,9 @@ void discover_models(const std::vector<Observation>&       observations,
       const Vec2 end   = model.center - (perp * model.radius);
       win2d_1->add_line({start, end, color});
 
-      gl_viewer::WindowManager::draw(20);
+      viewer::WindowManager::draw(20);
     }
   }
-  gl_viewer::WindowManager::spin();
+  viewer::WindowManager::spin();
 }
 }

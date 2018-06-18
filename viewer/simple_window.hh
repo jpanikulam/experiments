@@ -6,7 +6,7 @@
 #include <map>
 #include <string>
 
-namespace gl_viewer {
+namespace viewer {
 
 //
 // The window that you, the neighborhood dingus, get to manipulate
@@ -56,4 +56,4 @@ class SimpleWindow {
   GlSize      gl_size_;
   WindowPoint mouse_pos_;
 };
-}  // namespace gl_viewer
+}  // namespace viewer

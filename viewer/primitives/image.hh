@@ -9,7 +9,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 
-namespace gl_viewer {
+namespace viewer {
 
 class Image final : public Primitive {
  public:
@@ -33,4 +33,4 @@ class Image final : public Primitive {
   mutable std::atomic<bool> to_update_{false};
   mutable std::mutex        draw_mutex_;
 };
-}  // namespace gl_viewer
+}  // namespace viewer

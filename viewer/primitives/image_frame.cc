@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 #include "viewer/gl_aliases.hh"
 
-namespace gl_viewer {
+namespace viewer {
 
 ImageFrame::ImageFrame(const SE3& frame_from_parent, int rows, int cols, double scale) : Frame(frame_from_parent) {
   update_transform(frame_from_parent);

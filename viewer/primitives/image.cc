@@ -2,7 +2,7 @@
 
 #include <GL/glew.h>
 
-namespace gl_viewer {
+namespace viewer {
 
 Image::Image(const cv::Mat& image, const double scale, double alpha) {
   to_update_ = true;
@@ -95,4 +95,4 @@ void Image::draw() const {
 
   glDisable(GL_TEXTURE_2D);
 }
-}  // namespace gl_viewer
+}  // namespace viewer

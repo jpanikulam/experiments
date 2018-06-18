@@ -11,7 +11,7 @@
 
 #define GLSL(src) #src
 
-namespace gl_viewer {
+namespace viewer {
 
 void key_callback(
     GLFWwindow *window, int key, int scancode, int action, int mods);
@@ -196,4 +196,4 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 void window_size_callback(GLFWwindow *window, int width, int height) {
   global_state->windows.at(window)->resize(GlSize(width, height));
 }
-}  // namespace gl_viewer
+}  // namespace viewer

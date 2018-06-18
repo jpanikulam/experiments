@@ -73,8 +73,8 @@ cv::Mat compute_hessians(const cv::Mat &image) {
     }
   }
 
-  auto win2d   = gl_viewer::get_window2d("Window A");
-  auto plotter = std::make_shared<gl_viewer::Plot>();
+  auto win2d   = viewer::get_window2d("Window A");
+  auto plotter = std::make_shared<viewer::Plot>();
   plotter->add_histogram({vals, {100, true, -30.0, 30.0}, {0.0, 1.0, 0.0, 0.8}});
   win2d->add_primitive(plotter);
   // win2d->spin_until_step();

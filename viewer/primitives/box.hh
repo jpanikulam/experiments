@@ -2,7 +2,7 @@
 
 #include "viewer/primitives/primitive.hh"
 
-namespace gl_viewer {
+namespace viewer {
 
 class Box final : public Primitive {
  public:
