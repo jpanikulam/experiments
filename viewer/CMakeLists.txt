@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 # Life is what you cmake of it
 #
 
+add_subdirectory(interaction)
 add_subdirectory(primitives)
 add_subdirectory(colors)
 
@@ -38,6 +39,7 @@ add_library(window_3d window_3d.cc)
 target_link_libraries(
     window_3d
 
+    view3d
     projection
     window_manager
 

@@ -2,8 +2,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "viewer/gl_aliases.hh"
-#include "viewer/window_3d.hh"
+#include "viewer/cuda/window_cuda.hh"
 #include "viewer/window_manager.hh"
 
 #include "eigen_helpers.hh"
@@ -13,52 +12,8 @@
 #include <thread>
 
 namespace viewer {
-namespace {
 
-void apply_view(const View3d &view) {
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-
-  const Eigen::AngleAxisd az_rot(view.azimuth, Vec3::UnitY());
-  const Eigen::AngleAxisd elev_rot(view.elevation, Vec3::UnitX());
-  const Eigen::Quaterniond q(view.elev_rot * view.az_rot);
-  const SE3 instantaneous_rotation(SO3(q), Vec3::Zero());
-  const SE3 offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0)));
-  glTransform(view.camera_from_target.inverse() * instantaneous_rotation);
-  glScaled(view.zoom, view.zoom, view.zoom);
-
-  draw_axes({SE3(), 0.5});
-  // glTransform(target_from_world * SE3(SO3::exp(Vec3(0.0, 0.0, 3.1415)),
-  // Vec3::Zero()));
-  glTransform(view.target_from_world);
-  draw_axes({SE3(), 1.5});
-  simulate();
-}
-
-void pre_render() {
-  //
-  // Flag soup
-  //
-
-  glShadeModel(GL_SMOOTH);
-
-  // Check depth when rendering
-  glEnable(GL_DEPTH_TEST);
-
-  // Turn on lighting
-  // glEnable(GL_LIGHTING);
-
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_BLEND);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-  glEnable(GL_LINE_SMOOTH);
-  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-}
-}  // namespace
-
-void Window3D::spin_until_step() {
+void WindowCuda::spin_until_step() {
   while (!should_step_ && !should_continue_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
@@ -72,7 +27,7 @@ void Window3D::spin_until_step() {
   }
 }
 
-void Window3D::on_key(int key, int scancode, int action, int mods) {
+void WindowCuda::on_key(int key, int scancode, int action, int mods) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
   if (action == GLFW_PRESS) {
@@ -85,13 +40,13 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
     }
   }
 }
-void Window3D::on_mouse_button(int button, int action, int mods) {
+void WindowCuda::on_mouse_button(int button, int action, int mods) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
   mouse_pos_last_click_ = mouse_pos();
 }
 
-void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
+void WindowCuda::on_mouse_move(const WindowPoint &mouse_pos) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
   if (left_mouse_held()) {
@@ -133,7 +88,7 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   }
 }
 
-void Window3D::on_scroll(const double amount) {
+void WindowCuda::on_scroll(const double amount) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
   view_.zoom *= std::exp(0.1 * amount);
@@ -142,17 +97,15 @@ void Window3D::on_scroll(const double amount) {
   }
 }
 
-void Window3D::resize(const GlSize &gl_size) {
+void WindowCuda::resize(const GlSize &gl_size) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
   glViewport(0, 0, gl_size.width, gl_size.height);
   gl_size_ = gl_size;
 }
 
-void Window3D::render() {
+void WindowCuda::render() {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
-  pre_render();
-
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluPerspective(60,
@@ -168,16 +121,13 @@ void Window3D::render() {
   }
 
   apply_keys_to_view();
-  const double t_now = glfwGetTime();
-  const double dt = t_now - last_update_time_;
-  view_.apply(dt);
-  last_update_time_ = t_now;
+  view_.apply();
 
   glFlush();
   glFinish();
 }
 
-void Window3D::apply_keys_to_view() {
+void WindowCuda::apply_keys_to_view() {
   const auto keys = held_keys();
   const double acceleration = 0.005;
 
@@ -224,20 +174,21 @@ void Window3D::apply_keys_to_view() {
   view_.velocity -= delta_vel;
 }
 
-struct Window3DGlobalState {
-  std::map<std::string, std::shared_ptr<Window3D>> windows;
+struct WindowCudaGlobalState {
+  std::map<std::string, std::shared_ptr<WindowCuda>> windows;
 };
 
-Window3DGlobalState window_3d_state;
+WindowCudaGlobalState window_cuda_state;
 
-std::shared_ptr<Window3D> get_window3d(const std::string &title) {
-  const auto it = window_3d_state.windows.find(title);
-  if (it != window_3d_state.windows.end()) {
+std::shared_ptr<WindowCuda> get_window_cuda(const std::string &title) {
+  const auto it = window_cuda_state.windows.find(title);
+  if (it != window_cuda_state.windows.end()) {
     return it->second;
   } else {
-    auto window = std::make_shared<Window3D>();
-    window_3d_state.windows[title] = window;
-    WindowManager::register_window(GlSize(640, 640), window, title);
+    auto window = std::make_shared<WindowCuda>();
+    window_cuda_state.windows[title] = window;
+    constexpr int GL_VERSION = 3;
+    WindowManager::register_window(GlSize(640, 640), window, title, GL_VERSION);
     return window;
   }
 }

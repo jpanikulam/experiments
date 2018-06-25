@@ -1,7 +1,6 @@
 #pragma once
 
 #include "viewer/gl_size.hh"
-#include "viewer/interaction/view3d.hh"
 #include "viewer/projection.hh"
 #include "viewer/simple_window.hh"
 
@@ -20,13 +19,11 @@ namespace {
 using Vec2 = Eigen::Vector2d;
 using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
-using Vec2Map = Eigen::Map<const Eigen::Vector2d>;
-using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
 }  // namespace
 
-class Window3D final : public SimpleWindow {
+class WindowCuda final : public SimpleWindow {
  public:
-  Window3D() = default;
+  WindowCuda() = default;
 
   void on_key(int key, int scancode, int action, int mods) override;
   void on_mouse_button(int button, int action, int mods) override;
@@ -48,15 +45,6 @@ class Window3D final : public SimpleWindow {
     view_.target_from_world = se3;
   }
 
-  template <typename PrimitiveType, typename... Args>
-  std::shared_ptr<PrimitiveType> add_primitive(const Args &... args) {
-    const std::lock_guard<std::mutex> lk(behavior_mutex_);
-
-    auto ptr = std::make_shared<PrimitiveType>(args...);
-    primitives_.push_back(ptr);
-    return ptr;
-  }
-
   void clear() {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
     primitives_.clear();
@@ -76,16 +64,12 @@ class Window3D final : public SimpleWindow {
   std::atomic<bool> should_step_{false};
   std::atomic<bool> should_continue_{false};
 
-  std::vector<std::shared_ptr<Primitive>> primitives_;
-
   GlSize gl_size_ = GlSize(640, 640);
 
   WindowPoint mouse_pos_last_click_;
 
-  double last_update_time_ = 0.0;
-
   mutable std::mutex behavior_mutex_;
 };
 
-std::shared_ptr<Window3D> get_window3d(const std::string &title = "main");
+std::shared_ptr<WindowCuda> get_window_cuda(const std::string &title = "main");
 }  // namespace viewer
