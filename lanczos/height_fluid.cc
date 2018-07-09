@@ -35,7 +35,7 @@ class FluidSystem {
     for (int x = 70; x < 80; ++x) {
       for (int y = 25; y < 35; ++y) {
         terrain_field_(x, y) = 1.0;
-        depth_field_(x, y) = 23.0;
+        depth_field_(x, y) = 20.0;
       }
     }
   }
