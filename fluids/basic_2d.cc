@@ -20,24 +20,6 @@ plane::SimulationState enforce_boundary_conditions(const plane::SimulationState&
   return new_state;
 }
 
-std::array<Eigen::MatrixXd, 2> mul(const std::array<Eigen::MatrixXd, 2>& a, const double b) {
-  std::array<Eigen::MatrixXd, 2> c;
-  constexpr int N = 2;
-  for (int k = 0; k < N; ++k) {
-    c[k] = a[k] * b;
-  }
-  return c;
-}
-
-std::array<Eigen::MatrixXd, 2> add(const std::array<Eigen::MatrixXd, 2>& a, const std::array<Eigen::MatrixXd, 2>& b) {
-  std::array<Eigen::MatrixXd, 2> c;
-  constexpr int N = 2;
-  for (int k = 0; k < N; ++k) {
-    c[k] = a[k] + b[k];
-  }
-  return c;
-}
-
 void simulate() {
   constexpr int SIZE = 200;
   plane::SimulationState state;
@@ -77,10 +59,10 @@ void simulate() {
     const auto pressure = plane::compute_pressure(state.pressure_field, cfg);
     const auto diffusion = plane::compute_diffusion(state.velocity_field, cfg);
 
-    auto divergent_dvel = add(add(advection, pressure), diffusion);
+    auto divergent_dvel = plane::add(plane::add(advection, pressure), diffusion);
     divergent_dvel[0] += force_x;
 
-    const auto divergent_vel = add(mul(divergent_dvel, cfg.dt), state.velocity_field);
+    const auto divergent_vel = plane::add(plane::mul(divergent_dvel, cfg.dt), state.velocity_field);
 
     state.velocity_field = divergent_vel;
 

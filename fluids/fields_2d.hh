@@ -13,6 +13,12 @@ Eigen::MatrixXd compute_divergence(const std::array<Eigen::MatrixXd, 2>& vector_
 
 Eigen::MatrixXd compute_laplacian(const Eigen::MatrixXd& potential_field, double dx);
 
+std::array<Eigen::MatrixXd, 2> mul(const std::array<Eigen::MatrixXd, 2>& a,
+                                   const double b);
+
+std::array<Eigen::MatrixXd, 2> add(const std::array<Eigen::MatrixXd, 2>& a,
+                                   const std::array<Eigen::MatrixXd, 2>& b);
+
 }  // namespace plane.
 }  // namespace fluids.
 }  // namespace jcc.
