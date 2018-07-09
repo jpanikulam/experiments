@@ -133,9 +133,9 @@ void demo_intersection() {
   }
 
   for (size_t k = 0; k < tri.triangles.size(); ++k) {
-    scene_geometry->add_line({tri.triangles[k].vertices[0], tri.triangles[k].vertices[1]});
-    scene_geometry->add_line({tri.triangles[k].vertices[1], tri.triangles[k].vertices[2]});
-    scene_geometry->add_line({tri.triangles[k].vertices[2], tri.triangles[k].vertices[0]});
+    scene_geometry->add_line({tri.triangles[k].vertices[0], tri.triangles[k].vertices[1], Vec4(0.8, 0.8, 0.8, 0.4)});
+    scene_geometry->add_line({tri.triangles[k].vertices[1], tri.triangles[k].vertices[2], Vec4(0.8, 0.8, 0.8, 0.4)});
+    scene_geometry->add_line({tri.triangles[k].vertices[2], tri.triangles[k].vertices[0], Vec4(0.8, 0.8, 0.8, 0.4)});
   }
 
   const auto visitor = [&visitor_geometry, &win](const geometry::spatial::BoundingVolumeHierarchy::TreeElement &element,
