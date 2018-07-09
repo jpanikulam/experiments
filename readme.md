@@ -14,7 +14,7 @@ cmake ..
 make
 ```
 
-Note, you'll have to re-run cmake any time you add/remove headers or otherwise change dependencies, because this repo uses an implicit dependency management system, which infers dependencies from header chains.
+Note, you'll have to re-run cmake any time you add/remove headers or otherwise change dependencies, because this repo uses an implicit dependency management system, which infers dependencies from header chains. Any folder without a CMakeLists.txt is generating libraries in this way.
 
 
 # What's Jake Doing Next?
@@ -30,3 +30,6 @@ Note, you'll have to re-run cmake any time you add/remove headers or otherwise c
 * "Plausible" 3D fluids -- how did they do `From Dust`?
 * Signed distance field rendering fmwk
 * Gl4 Window
+
+# Tutorials
+* How to htink about rotation
