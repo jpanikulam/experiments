@@ -4,73 +4,60 @@
 #include "sophus.hh"
 
 #include "lanczos/rigid_body.hh"
+#include "viewer/gl_types.hh"
+
+#include <unordered_map>
 
 namespace viewer {
 namespace {
 using Vec3 = Eigen::Vector3d;
+using Vec2 = Eigen::Vector2d;
 }  // namespace
 
 //
-// A create that generates critical pose information, but importantly,
+// A camera that generates critical pose information
 // *doesn't* tell openGL how to use it
-//
-class AnchoredCamera {
+// That's up to you, amigo
+class OrbitCamera {
  public:
-  using KeyMap = std::unordered_map<char, bool>;
+  using KeyMap = std::unordered_map<int, bool>;
 
   // Get the actual view
   SE3 camera_from_world() const;
 
   SE3 anchor_from_world() const;
 
+  SE3 camera_from_anchor() const;
+
+  void set_anchor_from_world(const SE3& anchor_from_world) {
+    anchor_body_.body_from_world = anchor_from_world;
+  }
+
   double zoom() const;
 
   // Advance the view simulation by some timestep
-  void simulate(const double dt) const;
+  OrbitCamera simulate(const double dt_sec) const;
 
-  void apply_keys_to_view(const KeyMap& held_keys, double dt);
+  void apply_keys(const KeyMap& held_keys, double dt_sec);
+
+  void apply_mouse(const WindowPoint& mouse_pos,
+                   const WindowPoint& mouse_prev,
+                   const bool left_mouse_held,
+                   const bool right_mouse_held);
+
+  void apply_scroll(const double amount);
 
  private:
-  SE3 anchor_from_world_;
+  lanczos::RigidBody anchor_body_;
 
   // Default identity
-  constexpr double INITIAL_Z_OFFSET_M = 15.0;
+  static constexpr double INITIAL_Z_OFFSET_M = 15.0;
   SE3 camera_from_anchor_ = SE3(SO3(), Vec3(0.0, 0.0, INITIAL_Z_OFFSET_M));
-
-  // Tangent vector; Left tangent space or gtfo
-  Vec3 linear_velocity_ = Vec3::Zero();
-  Vec3 angular_velocity_ = Vec3::Zero();
 
   double zoom_ = 0.001;
   double azimuth_ = 0.0;
   double elevation_ = 0.0;
   double dist_to_target_ = 1.0;
 };
-
-SE3 AnchoredCamera::camera_from_world() {
-  return camera_from_anchor_ * anchor_from_world_;
-}
-
-SE3 AnchoredCamera::anchor_from_world() {
-  return anchor_from_world_;
-}
-
-double AnchoredCamera::zoom() {
-  return zoom_;
-}
-
-AnchoredCamera AnchoredCamera::simulate(const double dt) const {
-  // Copy ourselves into the output camera
-  AnchoredCamera out_camera = this;
-
-  const VecNd<6> delta = jcc::vstack(velocity, angular_velocity) * dt;
-  out_camera.anchor_from_world_ = SE3::exp(delta) * anchor_from_world_;
-
-  constexpr double translation_damping = 0.9;
-  constexpr double rotation_damping = 0.9;
-
-  velocity *= translation_damping;
-  angular_velocity *= rotation_damping;
-}
 
 }  // namespace viewer

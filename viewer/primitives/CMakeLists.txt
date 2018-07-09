@@ -28,6 +28,7 @@ target_link_libraries(
     simple_geometry
 
     simple_geometry_primitives
+    viridis
 
     ${OPENGL_LIBRARIES}
 )

@@ -2,7 +2,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include <map>
+#include <unordered_map>
 #include <string>
 
 namespace viewer {
@@ -54,7 +54,7 @@ const std::string &SimpleWindow::title() const {
   return title_;
 }
 
-const std::map<int, bool> &SimpleWindow::held_keys() const {
+const std::unordered_map<int, bool> &SimpleWindow::held_keys() const {
   return held_keys_;
 }
 

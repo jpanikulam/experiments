@@ -140,7 +140,7 @@ static const std::vector<Vec3> viridis_interp = {
     Vec3(0.98386829, 0.90486726, 0.13689671), Vec3(0.99324789, 0.90615657, 0.1439362)};
 
 Vec3 viridis(double t) {
-  const int max_index = viridis_interp.size();
+  const int max_index = viridis_interp.size() - 1;
   const double max_value = max_index;
   const double loc = jcc::clamp(t * max_value, 0.0, max_value);
   const int base_index = static_cast<int>(std::round(loc));

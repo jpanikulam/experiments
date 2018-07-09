@@ -3,7 +3,7 @@
 #include "viewer/gl_size.hh"
 #include "viewer/gl_types.hh"
 
-#include <map>
+#include <unordered_map>
 #include <string>
 
 namespace viewer {
@@ -40,7 +40,7 @@ class SimpleWindow {
   // Get the title
   const std::string &title() const;
 
-  const std::map<int, bool> &held_keys() const;
+  const std::unordered_map<int, bool> &held_keys() const;
   const std::array<bool, 3> &held_mouse_buttons() const;
 
   const WindowPoint &mouse_pos() const;
@@ -50,7 +50,7 @@ class SimpleWindow {
 
  private:
   std::string         title_;
-  std::map<int, bool> held_keys_;
+  std::unordered_map<int, bool> held_keys_;
   std::array<bool, 3> held_mouse_buttons_;
 
   GlSize      gl_size_;

@@ -10,29 +10,22 @@
 
 #include "primitives/simple_geometry_primitives.hh"
 
+#include <map>
 #include <thread>
 
 namespace viewer {
 namespace {
 
-void apply_view(const View3d &view) {
+void apply_view(const OrbitCamera &view) {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  const Eigen::AngleAxisd az_rot(view.azimuth, Vec3::UnitY());
-  const Eigen::AngleAxisd elev_rot(view.elevation, Vec3::UnitX());
-  const Eigen::Quaterniond q(view.elev_rot * view.az_rot);
-  const SE3 instantaneous_rotation(SO3(q), Vec3::Zero());
-  const SE3 offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0)));
-  glTransform(view.camera_from_target.inverse() * instantaneous_rotation);
-  glScaled(view.zoom, view.zoom, view.zoom);
-
+  glTransform(view.camera_from_anchor());
+  glScaled(view.zoom(), view.zoom(), view.zoom());
   draw_axes({SE3(), 0.5});
-  // glTransform(target_from_world * SE3(SO3::exp(Vec3(0.0, 0.0, 3.1415)),
-  // Vec3::Zero()));
-  glTransform(view.target_from_world);
+
+  glTransform(view.anchor_from_world());
   draw_axes({SE3(), 1.5});
-  simulate();
 }
 
 void pre_render() {
@@ -64,7 +57,7 @@ void Window3D::spin_until_step() {
   }
 
   if (should_continue_) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(continue_ms_));
   }
 
   if (should_step_) {
@@ -94,52 +87,19 @@ void Window3D::on_mouse_button(int button, int action, int mods) {
 void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
-  if (left_mouse_held()) {
-    const Vec2 motion = mouse_pos.point - mouse_pos_last_click_.point;
+  const bool left = left_mouse_held();
+  const bool right = right_mouse_held();
+
+  view_.apply_mouse(mouse_pos, mouse_pos_last_click_, left, right);
+
+  if (left || right) {
     mouse_pos_last_click_ = mouse_pos;
-
-    view_.azimuth += motion(0) * 0.005;
-    view_.elevation += motion(1) * 0.005;
-
-    if (view_.azimuth > M_PI) {
-      view_.azimuth = -M_PI;
-    } else if (view_.azimuth < -M_PI) {
-      view_.azimuth = M_PI;
-    }
-
-    if (view_.elevation > M_PI_2) {
-      view_.elevation = M_PI_2;
-    } else if (view_.elevation < -M_PI_2) {
-      view_.elevation = -M_PI_2;
-    }
-  }
-
-  if (right_mouse_held()) {
-    const Vec2 motion = mouse_pos.point - mouse_pos_last_click_.point;
-    mouse_pos_last_click_ = mouse_pos;
-
-    const Vec3 motion_camera_frame(motion.x(), -motion.y(), 0.0);
-
-    const Eigen::AngleAxisd az_rot(view_.azimuth, Vec3::UnitY());
-    const Eigen::AngleAxisd elev_rot(view_.elevation, Vec3::UnitX());
-    const Eigen::Quaterniond q(elev_rot * az_rot);
-    const SE3 instantaneous_rotation(SO3(q), Vec3::Zero());
-
-    const double inv_zoom = 1.0 / view_.zoom;
-
-    const Vec3 motion_target_frame = instantaneous_rotation.inverse() *
-                                     (motion_camera_frame * inv_zoom * 0.05);
-    view_.target_from_world.translation() += motion_target_frame;
   }
 }
 
 void Window3D::on_scroll(const double amount) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
-
-  view_.zoom *= std::exp(0.1 * amount);
-  if (view_.zoom <= 0.0001) {
-    view_.zoom = 0.0001;
-  }
+  view_.apply_scroll(amount);
 }
 
 void Window3D::resize(const GlSize &gl_size) {
@@ -155,10 +115,14 @@ void Window3D::render() {
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(60,
-                 (static_cast<double>(gl_size_.width) /
-                  static_cast<double>(gl_size_.height)),
-                 0.001, 1000.0);
+  const double aspect_ratio =
+      (static_cast<double>(gl_size_.width) / static_cast<double>(gl_size_.height));
+  constexpr double NEAR_CLIP = 0.001;
+  constexpr double FAR_CLIP = 1000.0;
+  constexpr double FOV = 60.0;
+  gluPerspective(FOV, aspect_ratio, NEAR_CLIP, FAR_CLIP);
+
+  apply_view(view_);
 
   // Update projection
   projection_ = Projection::get_from_current();
@@ -167,61 +131,17 @@ void Window3D::render() {
     primitive->draw();
   }
 
-  apply_keys_to_view();
   const double t_now = glfwGetTime();
+
   const double dt = t_now - last_update_time_;
-  view_.apply(dt);
+  view_.apply_keys(held_keys(), dt);
+
+  view_ = view_.simulate(dt);
+
   last_update_time_ = t_now;
 
   glFlush();
   glFinish();
-}
-
-void Window3D::apply_keys_to_view() {
-  const auto keys = held_keys();
-  const double acceleration = 0.005;
-
-  Vec3 delta_vel = Vec3::Zero();
-  for (const auto &key_element : keys) {
-    const bool held = key_element.second;
-    const int key = key_element.first;
-
-    if (!held) {
-      continue;
-    }
-
-    switch (key) {
-      case (static_cast<int>('W')):
-        delta_vel(2) += acceleration;
-        break;
-
-      case (static_cast<int>('A')):
-        delta_vel(0) += acceleration;
-        break;
-
-      case (static_cast<int>('S')):
-        delta_vel(2) -= acceleration;
-
-        break;
-      case (static_cast<int>('D')):
-        delta_vel(0) -= acceleration;
-        break;
-
-      case (static_cast<int>('C')):
-        delta_vel(1) += acceleration;
-        break;
-
-      case (static_cast<int>('Z')):
-        delta_vel(1) -= acceleration;
-        break;
-
-      case (static_cast<int>('R')):
-        view_.target_from_world = SE3();
-        break;
-    }
-  }
-
-  view_.velocity -= delta_vel;
 }
 
 struct Window3DGlobalState {

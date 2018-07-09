@@ -71,7 +71,6 @@ void draw_polygon(const Polygon &polygon) {
   }
   glEnd();
 
-
   glLineWidth(0.8);
   glBegin(GL_LINE_LOOP);
   glColor(Vec4(Vec4::Ones()));
@@ -86,7 +85,6 @@ void draw_polygon(const Polygon &polygon) {
   }
   glEnd();
   glPopAttrib();
-
 }
 
 void draw_points(const Points &points) {
@@ -96,6 +94,18 @@ void draw_points(const Points &points) {
   glBegin(GL_POINTS);
   for (const auto &pt : points.points) {
     glVertex(pt);
+  }
+  glEnd();
+  glPopAttrib();
+}
+
+void draw_colored_points(const ColoredPoints &points) {
+  glPushAttrib(GL_POINT_BIT | GL_CURRENT_BIT);
+  glPointSize(points.size);
+  glBegin(GL_POINTS);
+  for (std::size_t k = 0; k < points.points.size(); ++k) {
+    glColor(points.colors[k]);
+    glVertex(points.points[k]);
   }
   glEnd();
   glPopAttrib();
@@ -113,7 +123,10 @@ void draw_points2d(const Points2d &points) {
   glPopAttrib();
 }
 
-void draw_circle(const Vec3 &center, const Vec3 &normal, const double radius, const Vec4 &color) {
+void draw_circle(const Vec3 &center,
+                 const Vec3 &normal,
+                 const double radius,
+                 const Vec4 &color) {
   constexpr double CIRCLE_RES = 0.05;
 
   const Vec3 x_u = geometry::perp(normal);
@@ -135,8 +148,11 @@ void draw_circle(const Vec3 &center, const Vec3 &normal, const double radius, co
 }
 
 void draw_billboard_circle(const Sphere &billboard_circle) {
-  draw_circle(billboard_circle.center, Vec3::UnitX(), billboard_circle.radius, billboard_circle.color);
-  draw_circle(billboard_circle.center, Vec3::UnitY(), billboard_circle.radius, billboard_circle.color);
-  draw_circle(billboard_circle.center, Vec3::UnitZ(), billboard_circle.radius, billboard_circle.color);
+  draw_circle(billboard_circle.center, Vec3::UnitX(), billboard_circle.radius,
+              billboard_circle.color);
+  draw_circle(billboard_circle.center, Vec3::UnitY(), billboard_circle.radius,
+              billboard_circle.color);
+  draw_circle(billboard_circle.center, Vec3::UnitZ(), billboard_circle.radius,
+              billboard_circle.color);
 }
 }  // namespace viewer

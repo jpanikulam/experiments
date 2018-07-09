@@ -35,6 +35,12 @@ struct Points {
   double size = 1.0;
 };
 
+struct ColoredPoints {
+  std::vector<Vec3> points;
+  std::vector<Vec4> colors;
+  double size = 1.0;
+};
+
 struct Points2d {
   using Vec2 = Eigen::Vector2d;
 
@@ -68,6 +74,8 @@ void draw_axes(const Axes &axes);
 void draw_lines(const std::vector<Line> &lines);
 
 void draw_points(const Points &points);
+
+void draw_colored_points(const ColoredPoints &points);
 
 void draw_points2d(const Points2d &points);
 

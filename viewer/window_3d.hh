@@ -45,7 +45,7 @@ class Window3D final : public SimpleWindow {
   }
 
   void set_target_from_world(const SE3 &se3) {
-    view_.target_from_world = se3;
+    view_.set_anchor_from_world(se3);
   }
 
   template <typename PrimitiveType, typename... Args>
@@ -62,28 +62,38 @@ class Window3D final : public SimpleWindow {
     primitives_.clear();
   }
 
+  void set_continue_time_ms(const int dt_ms) {
+    continue_ms_ = dt_ms;
+  }
+
  private:
-  void apply_keys_to_view();
-
-  Vec2 mouse_direction_ = Vec2::Zero();
-
   //
-  // Track some window properties
+  // Rendering properties
   //
 
-  View3D view_;
   Projection projection_;
-  std::atomic<bool> should_step_{false};
-  std::atomic<bool> should_continue_{false};
-
   std::vector<std::shared_ptr<Primitive>> primitives_;
-
   GlSize gl_size_ = GlSize(640, 640);
 
+  //
+  // UI Control State
+  //
+
   WindowPoint mouse_pos_last_click_;
+  OrbitCamera view_;
+  int continue_ms_ = 100;
+
+  //
+  // Interaction History
+  //
 
   double last_update_time_ = 0.0;
 
+  //
+  // Threading
+  //
+  std::atomic<bool> should_step_{false};
+  std::atomic<bool> should_continue_{false};
   mutable std::mutex behavior_mutex_;
 };
 
