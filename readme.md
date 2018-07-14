@@ -32,4 +32,8 @@ Note, you'll have to re-run cmake any time you add/remove headers or otherwise c
 * Gl4 Window
 
 # Tutorials
-* How to htink about rotation
+* How to think about rotation
+
+
+# Read
+http://hhoppe.com/ravg.pdf
