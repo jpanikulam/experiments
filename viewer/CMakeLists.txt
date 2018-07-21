@@ -80,7 +80,7 @@ target_link_libraries(
     ${GLEW_LIBRARIES}
 )
 
-find_package(CUDA QUIET REQUIRED)
+find_package(CUDA QUIET)
 if (CUDA_FOUND)
     add_subdirectory(cuda)
 endif(CUDA_FOUND)
