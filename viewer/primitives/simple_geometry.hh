@@ -17,24 +17,15 @@ class SimpleGeometry final : public Primitive {
 
   void add_axes(const Axes &axes) {
     std::lock_guard<std::mutex> lk(draw_mutex_);
-    axes_.push_back(axes);
+    back_buffer_.axes.push_back(axes);
   }
 
   void add_line(const Line &line) {
     std::lock_guard<std::mutex> lk(draw_mutex_);
-    lines_.push_back(line);
+    back_buffer_.lines.push_back(line);
   }
 
-  void add_ray(const Ray &ray) {
-    std::lock_guard<std::mutex> lk(draw_mutex_);
-    const Eigen::Vector3d first_endpoint =
-        ray.origin + (ray.direction * 0.9 * ray.length);
-    lines_.push_back({ray.origin, first_endpoint, ray.color, ray.width});
-    const Eigen::Vector4d new_color(ray.color.y(), ray.color.x(), ray.color.z(),
-                                    ray.color.w());
-    lines_.push_back({first_endpoint, first_endpoint + (ray.direction * 0.1 * ray.length),
-                      new_color, 1.1 * ray.width});
-  }
+  void add_ray(const Ray &ray);
 
   void add_ray(const geometry::Ray &ray,
                const double length,
@@ -44,75 +35,62 @@ class SimpleGeometry final : public Primitive {
 
   void add_polygon(const Polygon &polygon) {
     std::lock_guard<std::mutex> lk(draw_mutex_);
-    polygons_.push_back(polygon);
+    back_buffer_.polygons.push_back(polygon);
   }
 
   void add_points(const Points &points) {
     std::lock_guard<std::mutex> lk(draw_mutex_);
-    points_.push_back(points);
+    back_buffer_.points.push_back(points);
   }
 
   void add_colored_points(const Points &points, const std::vector<double> &intensities);
 
   void add_points2d(const Points2d &points) {
     std::lock_guard<std::mutex> lk(draw_mutex_);
-    points2d_.push_back(points);
+    back_buffer_.points2d.push_back(points);
   }
 
   void add_billboard_circle(const Sphere &sphere) {
     std::lock_guard<std::mutex> lk(draw_mutex_);
-    billboard_circles_.push_back(sphere);
+    back_buffer_.billboard_circles.push_back(sphere);
   }
 
-  void add_box(const AxisAlignedBox &box) {
-    std::lock_guard<std::mutex> lk(draw_mutex_);
-    using Vec3 = Eigen::Vector3d;
+  void add_box(const AxisAlignedBox &box);
 
-    lines_.push_back({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
-                      Vec3(box.lower.x(), box.upper.y(), box.upper.z()), box.color});
-    lines_.push_back({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
-                      Vec3(box.lower.x(), box.lower.y(), box.lower.z()), box.color});
-    lines_.push_back({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
-                      Vec3(box.upper.x(), box.lower.y(), box.upper.z()), box.color});
-    lines_.push_back({Vec3(box.lower.x(), box.upper.y(), box.upper.z()),
-                      Vec3(box.upper.x(), box.upper.y(), box.upper.z()), box.color});
-    lines_.push_back({Vec3(box.lower.x(), box.upper.y(), box.upper.z()),
-                      Vec3(box.lower.x(), box.upper.y(), box.lower.z()), box.color});
-    lines_.push_back({Vec3(box.upper.x(), box.upper.y(), box.upper.z()),
-                      Vec3(box.upper.x(), box.upper.y(), box.lower.z()), box.color});
-    lines_.push_back({Vec3(box.upper.x(), box.upper.y(), box.upper.z()),
-                      Vec3(box.upper.x(), box.lower.y(), box.upper.z()), box.color});
-    lines_.push_back({Vec3(box.upper.x(), box.upper.y(), box.lower.z()),
-                      Vec3(box.upper.x(), box.lower.y(), box.lower.z()), box.color});
-    lines_.push_back({Vec3(box.upper.x(), box.upper.y(), box.lower.z()),
-                      Vec3(box.lower.x(), box.upper.y(), box.lower.z()), box.color});
-    lines_.push_back({Vec3(box.upper.x(), box.lower.y(), box.lower.z()),
-                      Vec3(box.lower.x(), box.lower.y(), box.lower.z()), box.color});
-    lines_.push_back({Vec3(box.upper.x(), box.lower.y(), box.lower.z()),
-                      Vec3(box.upper.x(), box.lower.y(), box.upper.z()), box.color});
-    lines_.push_back({Vec3(box.lower.x(), box.lower.y(), box.lower.z()),
-                      Vec3(box.lower.x(), box.upper.y(), box.lower.z()), box.color});
-  }
+  struct Primitives {
+    std::vector<Axes> axes;
+    std::vector<Line> lines;
+    std::vector<Points> points;
+    std::vector<Points2d> points2d;
+    std::vector<Sphere> billboard_circles;
+    std::vector<Polygon> polygons;
+    std::vector<ColoredPoints> colored_points;
+
+    void clear() {
+      axes.clear();
+      lines.clear();
+      points.clear();
+      points2d.clear();
+      billboard_circles.clear();
+      polygons.clear();
+      colored_points.clear();
+    }
+  };
 
   void clear() {
     std::lock_guard<std::mutex> lk(draw_mutex_);
-    axes_.clear();
-    lines_.clear();
-    points_.clear();
-    points2d_.clear();
-    billboard_circles_.clear();
-    polygons_.clear();
-    colored_points_.clear();
+    front_buffer_.clear();
+  }
+
+  void flip() {
+    std::lock_guard<std::mutex> lk(draw_mutex_);
+    front_buffer_ = std::move(back_buffer_);
   }
 
  private:
-  std::vector<Axes> axes_;
-  std::vector<Line> lines_;
-  std::vector<Points> points_;
-  std::vector<Points2d> points2d_;
-  std::vector<Sphere> billboard_circles_;
-  std::vector<Polygon> polygons_;
-  std::vector<ColoredPoints> colored_points_;
+  Primitives back_buffer_;
+  Primitives front_buffer_;
+
   mutable std::mutex draw_mutex_;
 };
 }  // namespace viewer
