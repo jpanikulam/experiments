@@ -14,6 +14,7 @@ This is a bunch of silly little packages celebrating our good friend Cornelius L
 * Generates cool "plausible" 2.5D animated fluids from particular approximations to NSE: The Shallow Water Equation
 
 ### Read
+* [HF Fluids](https://tutcris.tut.fi/portal/files/4312220/kellomaki_1354.pdf)
 * [Galerkin Leadup](http://fischerp.cs.illinois.edu/tam470/refs/notes_time1c.pdf)
 * [General Solutions for Particular Flow Classes](https://arxiv.org/pdf/1502.01206.pdf)
 * [Pitch Game](https://www.coffeestainpublishing.com/pitch-your-game)
