@@ -5,6 +5,8 @@
 sudo pip install colorama
 ```
 
+The C++ dependencies can be found [here](https://github.com/jpanikulam/jpanikulam.github.io/blob/master/bash/setup.sh). If you find yourself using this package, please send me an email, and I'll make this more convenient.
+
 
 # Compile
 ```shell
