@@ -3,6 +3,9 @@ Lanczos
 
 This is a bunch of silly little packages celebrating our good friend Cornelius Lancozs.
 
+# Kinematics
+[] Describe a link-joint structure
+[] Be able to build a quad-pod
 
 # Brachistochrone
 
