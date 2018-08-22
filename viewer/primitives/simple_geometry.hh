@@ -87,6 +87,20 @@ class SimpleGeometry final : public Primitive {
     front_buffer_ = std::move(back_buffer_);
   }
 
+  void flush() {
+    std::lock_guard<std::mutex> lk(draw_mutex_);
+    const auto insert = [](auto &into, const auto &from) {
+      into.insert(into.begin(), from.begin(), from.end());
+    };
+    insert(front_buffer_.axes, back_buffer_.axes);
+    insert(front_buffer_.lines, back_buffer_.lines);
+    insert(front_buffer_.points, back_buffer_.points);
+    insert(front_buffer_.points2d, back_buffer_.points2d);
+    insert(front_buffer_.billboard_circles, back_buffer_.billboard_circles);
+    insert(front_buffer_.polygons, back_buffer_.polygons);
+    insert(front_buffer_.colored_points, back_buffer_.colored_points);
+  }
+
  private:
   Primitives back_buffer_;
   Primitives front_buffer_;
