@@ -55,15 +55,15 @@ class FixedVector {
     size_--;
   }
 
-  std::size_t size() {
+  std::size_t size() const {
     return size_;
   }
 
-  std::size_t capacity() {
+  std::size_t capacity() const {
     return CAPACITY;
   }
 
-  bool empty() {
+  bool empty() const {
     return size_ == 0u;
   }
 };
