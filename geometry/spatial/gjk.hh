@@ -2,6 +2,7 @@
 
 #include "eigen.hh"
 #include "eigen_helpers.hh"
+#include "util/fixed_vector.hh"
 
 #include <functional>
 #include <vector>
@@ -11,16 +12,16 @@ namespace spatial {
 using Vec3 = Eigen::Vector3d;
 
 struct Simplex {
-  constexpr int VERTS = 4;
-  std::array<Vec3, VERTS> vertices;
-  int dim = 0;
+  static constexpr std::size_t MAX_VERTS = 4;
+  jcc::FixedVector<Vec3, MAX_VERTS> vertices;
 };
 
 struct Shape {
   std::vector<Simplex> simplices;
 };
 
-void gjk(const Shape& a, const Vec3& b, const std::function<Simplex>& visitor);
+using VisitorFnc = std::function<void(const Simplex&)>;
+void gjk(const Shape& a, const Vec3& b, const VisitorFnc& visitor);
 
 }  // namespace spatial
 }  // namespace geometry
