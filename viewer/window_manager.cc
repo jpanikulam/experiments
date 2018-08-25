@@ -156,13 +156,14 @@ void error_callback(int error, const char *description) {
   fputs(description, stderr);
 }
 
+void close_window(GLFWwindow *window) {
+  global_state->windows.at(window)->close();
+}
+
 void key_callback(
     GLFWwindow *window, int key, int scancode, int action, int mods) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, GL_TRUE);
-  }
-
-  if (key == GLFW_KEY_Q) {
+  if ((key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) || (key == GLFW_KEY_Q)) {
+    close_window(window);
     glfwSetWindowShouldClose(window, GL_TRUE);
   }
 

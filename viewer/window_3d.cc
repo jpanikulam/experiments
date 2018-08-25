@@ -52,11 +52,11 @@ void pre_render() {
 }  // namespace
 
 void Window3D::spin_until_step() {
-  while (!should_step_ && !should_continue_) {
+  while (!should_step_ && !should_continue_ && !should_close()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
-  if (should_continue_) {
+  if (should_continue_ && !should_close()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(continue_ms_));
   }
 
