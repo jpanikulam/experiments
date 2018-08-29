@@ -48,6 +48,8 @@ void pre_render() {
   glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
   glEnable(GL_LINE_SMOOTH);
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+  glEnable(GL_MULTISAMPLE);
 }
 }  // namespace
 
@@ -115,8 +117,8 @@ void Window3D::render() {
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  const double aspect_ratio =
-      (static_cast<double>(gl_size_.width) / static_cast<double>(gl_size_.height));
+  const double aspect_ratio = (static_cast<double>(gl_size_.width) /
+                               static_cast<double>(gl_size_.height));
   constexpr double NEAR_CLIP = 0.001;
   constexpr double FAR_CLIP = 1000.0;
   constexpr double FOV = 60.0;

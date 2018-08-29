@@ -9,8 +9,6 @@
 #include <string>
 #include <thread>
 
-#define GLSL(src) #src
-
 namespace viewer {
 
 void key_callback(
@@ -83,6 +81,8 @@ void WindowManager::register_window(
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
   glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
+  glfwWindowHint(GLFW_SAMPLES, 4);
+
   GLFWwindow *window = glfwCreateWindow(
       size.height, size.width, window_name.c_str(), nullptr, nullptr);
   simple_window->set_title(window_name);
@@ -98,6 +98,7 @@ void WindowManager::register_window(
   glfwSetMouseButtonCallback(window, mouse_button_callback);
   glfwSetWindowSizeCallback(window, window_size_callback);
   glfwSetScrollCallback(window, scroll_callback);
+
 
   global_state->windows[window] = simple_window;
 }

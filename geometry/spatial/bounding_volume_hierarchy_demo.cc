@@ -57,6 +57,7 @@ void draw_children(const geometry::spatial::BoundingVolumeHierarchy &bvh, int ba
       stack.push(node.node.left_child_index + 1);
     }
   }
+  draw_children_geometry->flush();
   win->spin_until_step();
   draw_children_geometry->clear();
 }
@@ -109,6 +110,7 @@ void climb_tree(const geometry::spatial::BoundingVolumeHierarchy &bvh) {
       tree_climb_geometry->add_box(aabb);
       draw_children(bvh, next.index);
 
+
       win->spin_until_step();
     }
   }
@@ -138,6 +140,8 @@ void demo_intersection() {
     scene_geometry->add_line({tri.triangles[k].vertices[2], tri.triangles[k].vertices[0], Vec4(0.8, 0.8, 0.8, 0.4)});
   }
 
+  scene_geometry->flush();
+
   const auto visitor = [&visitor_geometry, &win](const geometry::spatial::BoundingVolumeHierarchy::TreeElement &element,
                                                  const bool intersected) {
     viewer::AxisAlignedBox aabb;
@@ -154,6 +158,7 @@ void demo_intersection() {
     }
 
     visitor_geometry->add_box(aabb);
+    visitor_geometry->flush();
     win->spin_until_step();
   };
   geometry::spatial::BoundingVolumeHierarchy bvh;
@@ -181,6 +186,7 @@ void demo_intersection() {
     // EXPECT_NEAR(intersection.distance, 2.80121, EPS);
   }
 
+  visitor_geometry->flush();
   win->spin_until_step();
   visitor_geometry->clear();
 }
@@ -240,6 +246,7 @@ void demo_bounding_volumes() {
     };
     geometry::spatial::BoundingVolumeHierarchy bvh;
     bvh.build(tri_ptrs, visitor);
+    visitor_geometry->flush();
     win->spin_until_step();
     visitor_geometry->clear();
   }
