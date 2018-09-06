@@ -2,6 +2,7 @@
 
 #include "fluids/navier_stokes_2d.hh"
 
+#include "fluids/fields_2d.hh"
 // Rendering
 #include "viewer/primitives/image.hh"
 #include "viewer/primitives/simple_geometry.hh"

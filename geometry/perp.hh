@@ -24,11 +24,10 @@ VecNd<ROWS> perp(const VecNd<ROWS>& vec) {
 }
 
 template <int ROWS>
-bool is_perp(const VecNd<ROWS>& a, const VecNd<ROWS>& b) {
-  constexpr double EPS = 1e-9;
-  if (std::abs(a.dot(b)) > EPS) {
+bool is_perp(const VecNd<ROWS>& a, const VecNd<ROWS>& b, double max_abs_cos = 1e-9) {
+  if (std::abs(a.dot(b)) > max_abs_cos) {
     return false;
   }
   return true;
 }
-}
+}  // namespace geometry

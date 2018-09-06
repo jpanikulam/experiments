@@ -5,6 +5,7 @@
 #include "out.hh"
 
 #include <Eigen/Dense>
+#include <map>
 
 namespace clustering {
 using Vec2 = Eigen::Vector2d;
@@ -43,7 +44,7 @@ void shift_means(Vout<std::vector<Vec2>> points, const double radius) {
 }
 
 void run() {
-  auto viewer = gl_viewer::get_window2d("Meanshift View");
+  auto viewer = viewer::get_window2d("Meanshift View");
 
   constexpr int NUM_PTS = 500;
   std::vector<Vec2> points(NUM_PTS);

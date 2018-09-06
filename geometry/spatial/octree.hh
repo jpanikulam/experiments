@@ -9,12 +9,13 @@
 namespace geometry {
 namespace spatial {
 
+// Unimplemented
 class Octree {
-public:
+ public:
   using Vec3 = Eigen::Vector3d;
   void build(const std::vector<Vec3> &points);
 
-private:
+ private:
   struct TreeElement {
     static constexpr int NUM_CHILDREN = 8;
     struct Node {
@@ -32,5 +33,5 @@ private:
   std::vector<TreeElement> nodes_;
   std::vector<Vec3> points_;
 };
-}
-}
+}  // namespace spatial
+}  // namespace geometry

@@ -1,5 +1,7 @@
 #pragma once
 
+//%ignore
+
 #include "eigen.hh"
 #include "sophus.hh"
 
