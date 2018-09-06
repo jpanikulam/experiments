@@ -94,6 +94,10 @@ void SimpleGeometry::draw() const {
     draw_points(points);
   }
 
+  for (const auto &point : front_buffer_.raw_points) {
+    draw_point(point);
+  }
+
   for (const auto &points2d : front_buffer_.points2d) {
     draw_points2d(points2d);
   }

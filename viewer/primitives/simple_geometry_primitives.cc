@@ -155,4 +155,17 @@ void draw_billboard_circle(const Sphere &billboard_circle) {
   draw_circle(billboard_circle.center, Vec3::UnitZ(), billboard_circle.radius,
               billboard_circle.color);
 }
+
+void draw_point(const Point &point) {
+  glPushAttrib(GL_POINT_BIT | GL_CURRENT_BIT);
+  glPointSize(point.size);
+  glColor(point.color);
+
+  glBegin(GL_POINTS);
+  glVertex(point.point);
+  glEnd();
+
+  glPopAttrib();
+}
+
 }  // namespace viewer

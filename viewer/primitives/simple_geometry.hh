@@ -43,6 +43,11 @@ class SimpleGeometry final : public Primitive {
     back_buffer_.points.push_back(points);
   }
 
+  void add_point(const Point &point) {
+    std::lock_guard<std::mutex> lk(draw_mutex_);
+    back_buffer_.raw_points.push_back(point);
+  }
+
   void add_colored_points(const Points &points, const std::vector<double> &intensities);
 
   void add_points2d(const Points2d &points) {
@@ -61,6 +66,7 @@ class SimpleGeometry final : public Primitive {
     std::vector<Axes> axes;
     std::vector<Line> lines;
     std::vector<Points> points;
+    std::vector<Point> raw_points;
     std::vector<Points2d> points2d;
     std::vector<Sphere> billboard_circles;
     std::vector<Polygon> polygons;
@@ -95,6 +101,7 @@ class SimpleGeometry final : public Primitive {
     insert(front_buffer_.axes, back_buffer_.axes);
     insert(front_buffer_.lines, back_buffer_.lines);
     insert(front_buffer_.points, back_buffer_.points);
+    insert(front_buffer_.raw_points, back_buffer_.raw_points);
     insert(front_buffer_.points2d, back_buffer_.points2d);
     insert(front_buffer_.billboard_circles, back_buffer_.billboard_circles);
     insert(front_buffer_.polygons, back_buffer_.polygons);

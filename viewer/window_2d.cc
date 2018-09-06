@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <thread>
+#include <map>
 
 namespace viewer {
 namespace {

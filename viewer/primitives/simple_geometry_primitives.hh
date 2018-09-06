@@ -35,6 +35,12 @@ struct Points {
   double size = 1.0;
 };
 
+struct Point {
+  Vec3 point;
+  Vec4 color = Vec4(1.0, 1.0, 0.0, 1.0);
+  double size = 1.0;
+};
+
 struct ColoredPoints {
   std::vector<Vec3> points;
   std::vector<Vec4> colors;
@@ -82,4 +88,7 @@ void draw_points2d(const Points2d &points);
 void draw_polygon(const Polygon &polygon);
 
 void draw_billboard_circle(const Sphere &billboard_circle);
+
+void draw_point(const Point &point);
+
 }  // namespace viewer
