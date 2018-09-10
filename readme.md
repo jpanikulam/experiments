@@ -39,3 +39,6 @@ Note, you'll have to re-run cmake any time you add/remove headers or otherwise c
 
 # Read
 http://hhoppe.com/ravg.pdf
+
+# TODO
+* Unify VecN...
