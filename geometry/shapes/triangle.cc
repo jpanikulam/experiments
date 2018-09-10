@@ -14,12 +14,14 @@ namespace {
 inline double dot2(const Vec3& v) {
   return v.dot(v);
 }
-
 }  // namespace
 
 //
 // [1] https://iquilezles.org/www/articles/distfunctions/distfunctions.htm
-double sd_triangle(const Vec3& point, const Vec3& a, const Vec3& b, const Vec3& c) {
+double signed_distance_triangle(const Vec3& point,
+                                const Vec3& a,
+                                const Vec3& b,
+                                const Vec3& c) {
   const Vec3 ba = b - a;
   const Vec3 pa = point - a;
   const Vec3 cb = c - b;
