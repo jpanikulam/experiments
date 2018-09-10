@@ -131,7 +131,7 @@ Shape make_triangle() {
   return shape_1;
 }
 
-struct NearestPoint {
+struct NearestSimplex {
   double distance = std::numeric_limits<double>::max();
   int simplex_index = -1;
   Vec3 point;

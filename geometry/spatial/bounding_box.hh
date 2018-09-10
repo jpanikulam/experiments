@@ -11,7 +11,7 @@ namespace geometry {
 namespace spatial {
 
 // Axis aligned bounding box, with some nice geometric helpers.
-template <int DIM, typename Scalar = double>
+template <int DIM = 3, typename Scalar = double>
 class BoundingBox {
  public:
   using Vec = Eigen::Matrix<Scalar, DIM, 1>;
