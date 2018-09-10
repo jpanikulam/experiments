@@ -15,23 +15,6 @@ inline double dot2(const Vec3& v) {
   return v.dot(v);
 }
 
-/*Vec3& smallest(const Vec3& a, const Vec3& b, const Vec3& c) {
-  const double b_sqr = b.squaredNorm();
-  if (a.squaredNorm() < b_sqr) {
-    if (a.squaredNorm()) < c.squaredNorm() {
-        return a;
-      }
-    else {
-      return c;
-    }
-    else if (b_sqr < c.squaredNorm()) {
-      return b;
-    }
-    else {
-      return c;
-    }
-  }*/
-
 }  // namespace
 
 //
