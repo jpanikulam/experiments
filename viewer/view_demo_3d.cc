@@ -91,6 +91,7 @@ void run() {
 
   scene_geometry->add_box({Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 3.0), Vec4(1.0, 0.2, 0.2, 0.6)});
   scene_geometry->add_box({Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 2.0), Vec4(0.0, 1.0, 0.2, 0.6)});
+  scene_geometry->flip();
 
   const auto sphere = std::make_shared<geometry::spatial::SphereVolume>(Vec3(5.0, 1.0, 1.0), 3.0);
   ray_caster.add_volume(sphere);
@@ -109,6 +110,7 @@ void run() {
         lidar_geometry->add_ray({ray.origin, ray.direction}, 10.0, Vec4(1.0, 0.0, 0.0, 0.25));
       }
     }
+    lidar_geometry->flip();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
