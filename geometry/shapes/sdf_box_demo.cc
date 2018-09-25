@@ -52,15 +52,12 @@ void demo_sdf() {
 
   auto win = viewer::get_window3d("Voxel Box");
   auto geom = win->add_primitive<viewer::SimpleGeometry>();
-  auto mesh_a = win->add_primitive<viewer::SimpleGeometry>();
+  auto beauty = win->add_primitive<viewer::SimpleGeometry>();
 
   viewer::Points points;
-  // points.points.reserve(count);
   std::vector<double> intensities;
-  // intensities.reserve(count);
   points.size = 5.0;
 
-  // get_signed_distance_i
   const SampledSdf sdf(shape);
 
   geom->add_box({sdf.bounding_box().lower(), sdf.bounding_box().upper()});
@@ -73,6 +70,33 @@ void demo_sdf() {
 
   geom->add_colored_points(points, intensities);
   geom->flip();
+
+  const Vec3 base_pt = Vec3(3.0, 3.0, 3.0);
+  for (double r = 0.0; r < 90.14; r += 0.05) {
+    const SO3 rot = SO3::exp(Vec3(r, -r, std::exp(std::cos(r))));
+    const Vec3 p = rot * base_pt;
+
+    const Vec3 nearest = sdf.bounding_box().nearest_point(p);
+    beauty->add_line({p, nearest});
+    beauty->add_point({p, Vec4(1.0, 0.0, 0.0, 0.8), 10.0});
+
+    {
+      const Vec3 inward = (sdf.bounding_box().center() - nearest).normalized();
+      const Vec3 closer = nearest + (inward * 0.05);
+
+      beauty->add_point({closer, Vec4(0.7, 1.0, 0.0, 0.8), 10.0});
+
+      const int i = sdf.voxel_index_for_position(closer);
+      std::cout << i << std::endl;
+      std::cout << closer.transpose() << " : ";
+      const Vec3 voxel = sdf.position_for_voxel_index(i);
+      beauty->add_point({voxel, Vec4(0.3, 0.5, 0.8, 0.8), 10.0});
+      std::cout << voxel.transpose() << std::endl;
+    }
+
+    beauty->flip();
+    win->spin_until_step();
+  }
 
   win->spin_until_step();
 }
