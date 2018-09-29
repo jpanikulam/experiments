@@ -87,7 +87,7 @@ double SampledSdf::signed_distance(const Vec3& p) const {
     const int nearest_voxel_ind = voxel_index_for_position(inside_box);
     const Vec3 nearest_voxel_center = position_for_voxel_index(nearest_voxel_ind);
     const double approx_dist_to_mesh =
-        (p - nearest_voxel_center).norm() + signed_distances_.at(i);
+        (p - nearest_voxel_center).norm() + signed_distances_.at(nearest_voxel_ind);
 
     // Distance to the box + distance to the mesh at the surface of the box
     return bbox_.ud_box(p) + approx_dist_to_mesh;
