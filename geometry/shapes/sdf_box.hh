@@ -10,6 +10,11 @@ namespace geometry {
 namespace shapes {
 
 // A contraption for managing a *sampled* sdf
+//
+// TODO:
+// - Tri-linear interpolation for neighboring voxels
+// - Exact distance at the box surface
+//
 class SampledSdf {
  public:
   SampledSdf(const TriMesh& mesh, double voxel_size_m = 0.1);
