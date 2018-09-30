@@ -1,3 +1,5 @@
+#pragma once
+
 #include <limits>
 
 #include "geometry/tri_mesh.hh"

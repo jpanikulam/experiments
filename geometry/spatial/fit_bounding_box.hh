@@ -1,3 +1,5 @@
+#pragma once
+
 #include "geometry/spatial/bounding_box.hh"
 #include "geometry/tri_mesh.hh"
 
