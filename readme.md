@@ -20,6 +20,7 @@ Note, you'll have to re-run cmake any time you add/remove headers or otherwise c
 
 
 # What's Jake Doing Next?
+[ ] Make Gandi refer to github
 * Figure out how to make my github.io display images (Wowee!)
 * pdfs on control
 * Code Generation & compute-graph specification
