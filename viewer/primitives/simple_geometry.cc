@@ -114,6 +114,10 @@ void SimpleGeometry::draw() const {
     draw_colored_points(colored_points);
   }
 
+  for (const auto &plane : front_buffer_.planes) {
+    draw_plane_grid(plane);
+  }
+
   draw_lines(front_buffer_.lines);
 }
 }  // namespace viewer

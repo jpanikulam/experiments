@@ -54,9 +54,9 @@ class OrbitCamera {
   static constexpr double INITIAL_Z_OFFSET_M = 15.0;
   SE3 camera_from_anchor_ = SE3(SO3(), Vec3(0.0, 0.0, INITIAL_Z_OFFSET_M));
 
-  double zoom_ = 0.001;
-  double azimuth_ = 0.0;
-  double elevation_ = 0.0;
+  double zoom_ = 0.1;
+  double azimuth_ = M_PI * 0.25;
+  double elevation_ = M_PI * 0.25;
   double dist_to_target_ = 1.0;
 };
 

@@ -1,7 +1,9 @@
 #pragma once
 
-#include "viewer/primitives/primitive.hh"
 #include "sophus.hh"
+#include "viewer/primitives/primitive.hh"
+
+#include "geometry/shapes/halfspace.hh"
 
 #include <vector>
 
@@ -62,6 +64,12 @@ struct Sphere {
   Vec4 color = Vec4(0.0, 1.0, 0.0, 1.0);
 };
 
+struct Plane {
+  geometry::shapes::Plane plane;
+  double line_spacing = 1.0;
+  Vec4 color = Vec4(0.8, 0.8, 0.8, 0.8);
+};
+
 struct AxisAlignedBox {
   Vec3 lower;
   Vec3 upper;
@@ -79,16 +87,18 @@ void draw_axes(const Axes &axes);
 
 void draw_lines(const std::vector<Line> &lines);
 
+void draw_plane_grid(const Plane &plane);
+
 void draw_points(const Points &points);
 
 void draw_colored_points(const ColoredPoints &points);
 
 void draw_points2d(const Points2d &points);
 
-void draw_polygon(const Polygon &polygon);
-
 void draw_billboard_circle(const Sphere &billboard_circle);
 
 void draw_point(const Point &point);
+
+void draw_polygon(const Polygon &polygon);
 
 }  // namespace viewer

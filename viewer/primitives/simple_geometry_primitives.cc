@@ -156,6 +156,39 @@ void draw_billboard_circle(const Sphere &billboard_circle) {
               billboard_circle.color);
 }
 
+void draw_plane_grid(const Plane &plane) {
+  // for (double x = 0.0; )
+  const Vec3 &n = plane.plane.u_normal;
+  const Vec3 x_dir = geometry::perp(n);
+  const Vec3 y_dir = x_dir.cross(n).normalized();
+
+  const int n_lines = 10;
+  const double displacement = n_lines * plane.line_spacing;
+  const Vec3 offset = plane.plane.u_normal * plane.plane.distance_from_origin;
+
+  const Vec3 y_offset = y_dir * 10.0;
+  const Vec3 x_offset = x_dir * 10.0;
+  glColor(plane.color);
+  glBegin(GL_LINES);
+  for (double x = -displacement; x <= displacement; x += plane.line_spacing) {
+    const Vec3 v = (x * x_dir) + offset;
+
+    // glVertex4d(v.x(), v.y(), v.z(), 0.0);
+    // glVertex4d(y_dir.x(), y_dir.y(), y_dir.z(), 0.0);
+    // glVertex4d(v.x(), v.y(), v.z(), 1.0);
+
+    glVertex(Vec3(v + y_offset));
+    glVertex(Vec3(v - y_offset));
+  }
+  for (double y = -displacement; y <= displacement; y += plane.line_spacing) {
+    const Vec3 v = (y * y_dir) + offset;
+
+    glVertex(Vec3(v + x_offset));
+    glVertex(Vec3(v - x_offset));
+  }
+  glEnd();
+}
+
 void draw_point(const Point &point) {
   glPushAttrib(GL_POINT_BIT | GL_CURRENT_BIT);
   glPointSize(point.size);

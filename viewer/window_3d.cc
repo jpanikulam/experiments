@@ -133,14 +133,6 @@ void Window3D::render() {
     primitive->draw();
   }
 
-  glBegin(GL_LINES);
-  glVertex4d(1.0, 0.0, 0.0, 0.0);
-  glVertex4d(0.0, 0.0, 0.0, 1.0);
-
-  glVertex4d(1.0, 0.0, 0.0, 0.0);
-  glVertex4d(0.0, 0.0, 0.0, 1.0);
-  glEnd();
-
   const double t_now = glfwGetTime();
 
   const double dt = t_now - last_update_time_;

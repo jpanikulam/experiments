@@ -62,6 +62,11 @@ class SimpleGeometry final : public Primitive {
 
   void add_box(const AxisAlignedBox &box);
 
+  void add_plane(const Plane &plane) {
+    std::lock_guard<std::mutex> lk(draw_mutex_);
+    back_buffer_.planes.push_back(plane);
+  }
+
   struct Primitives {
     std::vector<Axes> axes;
     std::vector<Line> lines;
@@ -69,6 +74,7 @@ class SimpleGeometry final : public Primitive {
     std::vector<Point> raw_points;
     std::vector<Points2d> points2d;
     std::vector<Sphere> billboard_circles;
+    std::vector<Plane> planes;
     std::vector<Polygon> polygons;
     std::vector<ColoredPoints> colored_points;
 
@@ -76,8 +82,10 @@ class SimpleGeometry final : public Primitive {
       axes.clear();
       lines.clear();
       points.clear();
+      raw_points.clear();
       points2d.clear();
       billboard_circles.clear();
+      planes.clear();
       polygons.clear();
       colored_points.clear();
     }
@@ -98,12 +106,14 @@ class SimpleGeometry final : public Primitive {
     const auto insert = [](auto &into, const auto &from) {
       into.insert(into.begin(), from.begin(), from.end());
     };
+
     insert(front_buffer_.axes, back_buffer_.axes);
     insert(front_buffer_.lines, back_buffer_.lines);
     insert(front_buffer_.points, back_buffer_.points);
     insert(front_buffer_.raw_points, back_buffer_.raw_points);
     insert(front_buffer_.points2d, back_buffer_.points2d);
     insert(front_buffer_.billboard_circles, back_buffer_.billboard_circles);
+    insert(front_buffer_.planes, back_buffer_.planes);
     insert(front_buffer_.polygons, back_buffer_.polygons);
     insert(front_buffer_.colored_points, back_buffer_.colored_points);
   }
