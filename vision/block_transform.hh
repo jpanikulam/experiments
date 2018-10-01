@@ -8,8 +8,6 @@ namespace slam {
 
 template <int BLOCK_SIZE, typename Callable>
 cv::Mat block_transform(const cv::Mat &input_image, const Callable &function) {
-  //
-
   // OpenCV API sucks
   cv::Mat output(input_image.size(), input_image.type());
 

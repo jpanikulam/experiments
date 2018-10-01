@@ -117,8 +117,8 @@ void Window3D::render() {
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  const double aspect_ratio = (static_cast<double>(gl_size_.width) /
-                               static_cast<double>(gl_size_.height));
+  const double aspect_ratio =
+      (static_cast<double>(gl_size_.width) / static_cast<double>(gl_size_.height));
   constexpr double NEAR_CLIP = 0.001;
   constexpr double FAR_CLIP = 1000.0;
   constexpr double FOV = 60.0;
@@ -133,6 +133,14 @@ void Window3D::render() {
     primitive->draw();
   }
 
+  glBegin(GL_LINES);
+  glVertex4d(1.0, 0.0, 0.0, 0.0);
+  glVertex4d(0.0, 0.0, 0.0, 1.0);
+
+  glVertex4d(1.0, 0.0, 0.0, 0.0);
+  glVertex4d(0.0, 0.0, 0.0, 1.0);
+  glEnd();
+
   const double t_now = glfwGetTime();
 
   const double dt = t_now - last_update_time_;
@@ -142,7 +150,6 @@ void Window3D::render() {
 
   last_update_time_ = t_now;
 
-  glFlush();
   glFinish();
 }
 

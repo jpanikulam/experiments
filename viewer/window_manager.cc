@@ -81,7 +81,8 @@ void WindowManager::register_window(
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
   glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
-  glfwWindowHint(GLFW_SAMPLES, 4);
+  // 8x MSAA
+  glfwWindowHint(GLFW_SAMPLES, 8);
 
   GLFWwindow *window = glfwCreateWindow(
       size.height, size.width, window_name.c_str(), nullptr, nullptr);
