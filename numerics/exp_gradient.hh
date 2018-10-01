@@ -1,7 +1,9 @@
+#pragma once
+
 #include "eigen.hh"
 
-#include <vector>
 #include <limits>
+#include <vector>
 
 // TODO
 #include <iostream>
@@ -25,7 +27,9 @@ struct ExpGradientConfiguration {
 };
 
 template <int dim_in>
-double line_search(const CostFunction<dim_in> &func, const VecNd<dim_in> &x, const ExpGradientConfiguration &opt_cfg) {
+double line_search(const CostFunction<dim_in> &func,
+                   const VecNd<dim_in> &x,
+                   const ExpGradientConfiguration &opt_cfg) {
   double best_value = std::numeric_limits<double>::max();
   double best_alpha = -1.0;
 
@@ -44,4 +48,4 @@ ExpGradientResult<dim_in> exp_gradient_minimize(const CostFunction<dim_in> &func
 
   return result;
 }
-}
+}  // namespace numerics

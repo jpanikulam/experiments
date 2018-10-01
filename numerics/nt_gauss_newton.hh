@@ -1,3 +1,5 @@
+#pragma once
+
 //%ignore
 
 #include "eigen.hh"

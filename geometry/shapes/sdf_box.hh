@@ -48,8 +48,21 @@ class SampledSdf {
     return bbox_;
   }
 
+  // Get the list of voxel signed distances
   const std::vector<double>& get_signed_distances() const {
     return signed_distances_;
+  }
+
+  // Get the list of nearest triangles to voxel centers
+  //
+  // ```
+  // Vec3 p = ...;
+  // int i = sdf.voxel_index_for_position(p);
+  // auto nearest_tri = triangles[indices()[i]];
+  // ```
+  //
+  const std::vector<int>& indices() const {
+    return indices_;
   }
 
  private:

@@ -1,12 +1,14 @@
 #pragma once
 
-#include "eigen.hh"
-
 #include "geometry/shapes/circle.hh"
 #include "geometry/shapes/halfspace.hh"
 #include "geometry/shapes/sphere.hh"
 
 #include "util/optional.hh"
+
+#include "eigen.hh"
+
+#include <cmath>
 
 namespace geometry {
 namespace intersection {
