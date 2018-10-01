@@ -9,11 +9,11 @@ namespace spatial {
 namespace {
 using Vec3 = Eigen::Vector3d;
 // Moller-Trumbore
-Intersection intersect_triangle(
-    const Vec3 &orig, const Vec3 &dir, const Vec3 &vert0, const Vec3 &vert1, const Vec3 &vert2) {
-  // double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
-  // Vec3 edge1[3], edge2[3], tvec[3], pvec[3], qvec[3]
-  // double det, inv_det;
+Intersection intersect_triangle(const Vec3 &orig,
+                                const Vec3 &dir,
+                                const Vec3 &vert0,
+                                const Vec3 &vert1,
+                                const Vec3 &vert2) {
   // SUB(edge1, vert1, vert0);
   const Vec3 edge1 = vert1 - vert0;
   // SUB(edge2, vert2, vert0);
@@ -53,14 +53,15 @@ Intersection intersect_triangle(
   intersection.intersected = t > 0.0;
   return intersection;
 }
-}
+}  // namespace
 
 class TriangleVolume final : public Volume {
-public:
-  TriangleVolume(const std::array<Vec3, 3> &vertices)
-      : vertices_(vertices) {}
+ public:
+  TriangleVolume(const std::array<Vec3, 3> &vertices) : vertices_(vertices) {
+  }
   Intersection intersect(const Ray &ray) const override {
-    return intersect_triangle(ray.origin, ray.direction, vertices_[0], vertices_[1], vertices_[2]);
+    return intersect_triangle(
+        ray.origin, ray.direction, vertices_[0], vertices_[1], vertices_[2]);
   }
   Sphere bounding_sphere() const override {
     return {};
@@ -78,8 +79,8 @@ public:
     return {};
   }
 
-private:
+ private:
   std::array<Vec3, 3> vertices_;
 };
-}
+}  // namespace spatial
 }

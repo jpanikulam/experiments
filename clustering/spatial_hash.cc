@@ -11,9 +11,7 @@ using Vec2 = Eigen::Vector2d;
 using Vec2Int = Eigen::Matrix<HashInt, 2, 1>;
 }
 
-//
 std::vector<HashInt> spatial_hash(const std::vector<Vec2> &points, double scale) {
-
   geometry::spatial::BoundingBox<2> bbox;
   for (const auto &pt : points) {
     bbox.expand(pt);
@@ -27,8 +25,6 @@ std::vector<HashInt> spatial_hash(const std::vector<Vec2> &points, double scale)
 
   const Vec2 range = bbox.upper() - bbox.lower();
   const Vec2 lower = bbox.lower();
-
-  // const double int_max = std::numeric_limits<HashInt>::max() / (std::pow(2, 16));
 
   for (size_t k = 0; k < points.size(); ++k) {
     const Vec2 normalized = (points[k] - lower).cwiseQuotient(range) * scale;

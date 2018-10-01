@@ -26,7 +26,6 @@ EulerianHeightFluid::EulerianHeightFluid(const int size, const double scale) {
 
   for (int x = 190; x < 200; ++x) {
     for (int y = 190; y < 200; ++y) {
-      // depth_field_(x, y) = 27.0;
       velocity_field_[0](x, y) += 0.6;
       velocity_field_[1](x, y) += 0.6;
     }

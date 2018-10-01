@@ -9,9 +9,7 @@ template <int rows, typename Callable>
 Eigen::Matrix<double, rows, rows> numerical_hessian(const Eigen::Matrix<double, rows, 1> &x,
                                                     const Callable &fcn,
                                                     const double feps = 1e-6) {
-  // using RowVec = Eigen::Matrix<double, 1, rows>;
   const auto gradient_fnc = [fcn, feps](const Eigen::Matrix<double, rows, 1> &pt) {
-    //
     return numerical_gradient<rows>(pt, fcn, feps);
   };
 
