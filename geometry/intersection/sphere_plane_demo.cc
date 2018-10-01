@@ -1,10 +1,10 @@
 #include "eigen.hh"
 
 #include "geometry/intersection/sphere_plane.hh"
-#include "geometry/rotation_to.hh"
 #include "geometry/shapes/circle.hh"
 #include "geometry/shapes/halfspace.hh"
 #include "geometry/shapes/sphere.hh"
+#include "geometry/visualization/put_circle.hh"
 
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
@@ -13,23 +13,6 @@ namespace geometry {
 namespace intersection {
 
 using Vec3 = Eigen::Vector3d;
-
-void put_circle(viewer::SimpleGeometry& geo, const geometry::shapes::Circle& circle) {
-  constexpr double DELTA_RAD = 0.01;
-
-  const auto rot_real_from_circle = geometry::rotation_to(Vec3::UnitZ(), circle.u_normal);
-  const SE3 world_from_circle = SE3(rot_real_from_circle, circle.center);
-
-  viewer::Polygon polygon;
-  polygon.outline = true;
-  for (double s = 0.0; s <= M_PI * 2.0; s += DELTA_RAD) {
-    const Vec3 local_pt =
-        Vec3(circle.radius * std::cos(s), circle.radius * std::sin(s), 0.0);
-
-    polygon.points.push_back(world_from_circle * local_pt);
-  }
-  geo.add_polygon(polygon);
-}
 
 void go() {
   const auto view = viewer::get_window3d("Mr. Walks, walks");
@@ -49,7 +32,7 @@ void go() {
     const auto intersection = sphere_plane_intersection(sphere, ground);
 
     if (intersection) {
-      put_circle(*geo, *intersection);
+      visualization::put_circle(*geo, *intersection);
     }
 
     geo->flip();

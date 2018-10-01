@@ -185,7 +185,6 @@ void draw_billboard_circle(const Sphere &billboard_circle) {
 }
 
 void draw_plane_grid(const Plane &plane) {
-  // for (double x = 0.0; )
   const Vec3 &n = plane.plane.u_normal;
   const Vec3 x_dir = geometry::perp(n);
   const Vec3 y_dir = x_dir.cross(n).normalized();
@@ -201,9 +200,12 @@ void draw_plane_grid(const Plane &plane) {
   for (double x = -displacement; x <= displacement; x += plane.line_spacing) {
     const Vec3 v = (x * x_dir) + offset;
 
-    // glVertex4d(v.x(), v.y(), v.z(), 0.0);
-    // glVertex4d(y_dir.x(), y_dir.y(), y_dir.z(), 0.0);
-    // glVertex4d(v.x(), v.y(), v.z(), 1.0);
+    // Lines retreating off to infinity by homogeneousness
+    // turns out, it doesn't look that good.
+
+    /*glVertex4d(v.x(), v.y(), v.z(), 0.0);
+    glVertex4d(y_dir.x(), y_dir.y(), y_dir.z(), 0.0);
+    glVertex4d(v.x(), v.y(), v.z(), 1.0);*/
 
     glVertex(Vec3(v + y_offset));
     glVertex(Vec3(v - y_offset));
