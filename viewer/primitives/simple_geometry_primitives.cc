@@ -58,6 +58,9 @@ void draw_polygon(const Polygon &polygon) {
 
   const int n_points = static_cast<int>(polygon.points.size());
   const Eigen::Vector3d offset(0.0, 0.0, polygon.height);
+
+  // Draw the height of the poly
+  /*
   glBegin(GL_QUADS);
   glColor(polygon.color);
   for (int k = 0; k < n_points; ++k) {
@@ -70,20 +73,45 @@ void draw_polygon(const Polygon &polygon) {
     glVertex(Vec3(start + offset));
   }
   glEnd();
+  */
 
-  glLineWidth(0.8);
-  glBegin(GL_LINE_LOOP);
-  glColor(Vec4(Vec4::Ones()));
+  /*
+  if (polygon.outline) {
+    glLineWidth(0.8);
+    glBegin(GL_LINE_LOOP);
+    glColor(Vec4(Vec4::Ones()));
+    for (int k = 0; k < n_points; ++k) {
+      const auto &start = polygon.points[k];
+      const auto &end = polygon.points[(k + 1) % n_points];
+      glVertex(start);
+      glVertex(end);
+
+      glVertex(Vec3(end + offset));
+      glVertex(Vec3(start + offset));
+    }
+    glEnd();
+  }
+  */
+
+  glBegin(GL_TRIANGLE_FAN);
+  glColor(polygon.color);
   for (int k = 0; k < n_points; ++k) {
-    const auto &start = polygon.points[k];
-    const auto &end = polygon.points[(k + 1) % n_points];
-    glVertex(start);
-    glVertex(end);
-
-    glVertex(Vec3(end + offset));
-    glVertex(Vec3(start + offset));
+    const auto &point = polygon.points[k];
+    glVertex(point);
   }
   glEnd();
+
+  if (polygon.outline) {
+    glLineWidth(3.0);
+    glBegin(GL_LINE_LOOP);
+    glColor(Vec4(Vec4::Ones()));
+    for (int k = 0; k < n_points; ++k) {
+      const auto &point = polygon.points[k];
+      glVertex(point);
+    }
+    glEnd();
+  }
+
   glPopAttrib();
 }
 
