@@ -29,9 +29,9 @@ TEST(SpherePlane, plane_contains_center) {
   ASSERT_TRUE(bool(result));
   EXPECT_FLOAT_EQ(result->radius, SPHERE_RADIUS);
 
-  // These should be *identical*
-  EXPECT_EQ((result->plane.u_normal - plane.u_normal).squaredNorm(), 0.0);
-  EXPECT_EQ(result->plane.distance_from_origin, plane.distance_from_origin);
+  EXPECT_FLOAT_EQ(result->center.norm(), plane.distance_from_origin);
+  // This should be *identical*
+  EXPECT_EQ((result->u_normal - plane.u_normal).squaredNorm(), 0.0);
 }
 
 TEST(SpherePlane, does_not_intersect) {
@@ -78,9 +78,9 @@ TEST(SpherePlane, plane_does_not_contain_center) {
   ASSERT_TRUE(bool(result));
   EXPECT_FLOAT_EQ(result->radius, 0.0);
 
-  // These should be *identical*
-  EXPECT_EQ((result->plane.u_normal - plane.u_normal).squaredNorm(), 0.0);
-  EXPECT_EQ(result->plane.distance_from_origin, plane.distance_from_origin);
+  EXPECT_FLOAT_EQ(result->center.norm(), plane.distance_from_origin);
+  // This should be *identical*
+  EXPECT_EQ((result->u_normal - plane.u_normal).squaredNorm(), 0.0);
 }
 
 }  // namespace intersection

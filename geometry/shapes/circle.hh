@@ -8,7 +8,8 @@ namespace geometry {
 namespace shapes {
 
 struct Circle {
-  Plane plane;
+  Eigen::Vector3d center;
+  Eigen::Vector3d u_normal;
   double radius;
 };
 
