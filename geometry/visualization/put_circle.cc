@@ -18,10 +18,9 @@ void put_circle(viewer::SimpleGeometry& geo, const geometry::shapes::Circle& cir
   viewer::Polygon polygon;
   polygon.outline = true;
   for (double s = 0.0; s <= M_PI * 2.0; s += DELTA_RAD) {
-    const Vec3 local_pt =
-        Vec3(circle.radius * std::cos(s), circle.radius * std::sin(s), 0.0);
+    const Vec3 pt_circle_frame = circle.radius * Vec3(std::cos(s), std::sin(s), 0.0);
 
-    polygon.points.push_back(world_from_circle * local_pt);
+    polygon.points.push_back(world_from_circle * pt_circle_frame);
   }
   geo.add_polygon(polygon);
 }
