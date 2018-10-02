@@ -174,13 +174,13 @@ void draw_circle(const Vec3 &center,
   glEnd();
 }
 
-void draw_billboard_circle(const Sphere &billboard_circle) {
-  draw_circle(billboard_circle.center, Vec3::UnitX(), billboard_circle.radius,
-              billboard_circle.color);
-  draw_circle(billboard_circle.center, Vec3::UnitY(), billboard_circle.radius,
-              billboard_circle.color);
-  draw_circle(billboard_circle.center, Vec3::UnitZ(), billboard_circle.radius,
-              billboard_circle.color);
+void draw_sphere(const Sphere &sphere) {
+  draw_circle(sphere.center, Vec3::UnitX(), sphere.radius,
+              sphere.color);
+  draw_circle(sphere.center, Vec3::UnitY(), sphere.radius,
+              sphere.color);
+  draw_circle(sphere.center, Vec3::UnitZ(), sphere.radius,
+              sphere.color);
 }
 
 void draw_plane_grid(const Plane &plane) {

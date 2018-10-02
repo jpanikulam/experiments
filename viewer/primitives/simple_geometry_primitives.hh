@@ -96,7 +96,7 @@ void draw_colored_points(const ColoredPoints &points);
 
 void draw_points2d(const Points2d &points);
 
-void draw_billboard_circle(const Sphere &billboard_circle);
+void draw_sphere(const Sphere &sphere);
 
 void draw_point(const Point &point);
 

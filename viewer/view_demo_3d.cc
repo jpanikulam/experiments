@@ -87,7 +87,7 @@ void run() {
     ray_caster.add_volume(tri_volume);
   }
 
-  scene_geometry->add_billboard_circle({Vec3(5.0, 1.0, 1.0), 3.0});
+  scene_geometry->add_sphere({Vec3(5.0, 1.0, 1.0), 3.0});
 
   scene_geometry->add_box({Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 3.0), Vec4(1.0, 0.2, 0.2, 0.6)});
   scene_geometry->add_box({Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 2.0), Vec4(0.0, 1.0, 0.2, 0.6)});

@@ -27,7 +27,7 @@ void go() {
     geo->add_plane({ground});
 
     const shapes::Sphere sphere{Vec3(1.0, 1.0, std::cos(t)), 1.0};
-    geo->add_billboard_circle({sphere.center, sphere.radius});
+    geo->add_sphere({sphere.center, sphere.radius});
 
     const auto intersection = sphere_plane_intersection(sphere, ground);
 

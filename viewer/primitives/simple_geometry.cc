@@ -101,8 +101,8 @@ void SimpleGeometry::draw() const {
     draw_points2d(points2d);
   }
 
-  for (const auto &circle : front_buffer_.billboard_circles) {
-    draw_billboard_circle(circle);
+  for (const auto &circle : front_buffer_.spheres) {
+    draw_sphere(circle);
   }
 
   for (const auto &polygon : front_buffer_.polygons) {
