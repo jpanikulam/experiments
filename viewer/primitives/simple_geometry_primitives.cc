@@ -38,7 +38,7 @@ void draw_axes(const Axes &axes) {
 }
 
 void draw_lines(const std::vector<Line> &lines) {
-  glPushAttrib(GL_CURRENT_BIT);
+  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 
   for (const auto &line : lines) {
     glLineWidth(line.width);
@@ -53,12 +53,11 @@ void draw_lines(const std::vector<Line> &lines) {
 }
 
 void draw_polygon(const Polygon &polygon) {
-  glPushAttrib(GL_CURRENT_BIT);
-  glLineWidth(polygon.width);
-
   const int n_points = static_cast<int>(polygon.points.size());
   const Eigen::Vector3d offset(0.0, 0.0, polygon.height);
 
+  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
+  glLineWidth(polygon.width);
   // Draw the height of the poly
   /*
   glBegin(GL_QUADS);
@@ -93,8 +92,8 @@ void draw_polygon(const Polygon &polygon) {
   }
   */
 
-  glBegin(GL_TRIANGLE_FAN);
   glColor(polygon.color);
+  glBegin(GL_TRIANGLE_FAN);
   for (int k = 0; k < n_points; ++k) {
     const auto &point = polygon.points[k];
     glVertex(point);
@@ -103,8 +102,8 @@ void draw_polygon(const Polygon &polygon) {
 
   if (polygon.outline) {
     glLineWidth(3.0);
-    glBegin(GL_LINE_LOOP);
     glColor(Vec4(Vec4::Ones()));
+    glBegin(GL_LINE_LOOP);
     for (int k = 0; k < n_points; ++k) {
       const auto &point = polygon.points[k];
       glVertex(point);
@@ -195,28 +194,33 @@ void draw_plane_grid(const Plane &plane) {
 
   const Vec3 y_offset = y_dir * 10.0;
   const Vec3 x_offset = x_dir * 10.0;
+
+  glPushAttrib(GL_CURRENT_BIT);
   glColor(plane.color);
   glBegin(GL_LINES);
-  for (double x = -displacement; x <= displacement; x += plane.line_spacing) {
-    const Vec3 v = (x * x_dir) + offset;
+  {
+    for (double x = -displacement; x <= displacement; x += plane.line_spacing) {
+      const Vec3 v = (x * x_dir) + offset;
 
-    // Lines retreating off to infinity by homogeneousness
-    // turns out, it doesn't look that good.
+      // Lines retreating off to infinity by homogeneousness
+      // turns out, it doesn't look that good.
 
-    /*glVertex4d(v.x(), v.y(), v.z(), 0.0);
-    glVertex4d(y_dir.x(), y_dir.y(), y_dir.z(), 0.0);
-    glVertex4d(v.x(), v.y(), v.z(), 1.0);*/
+      /*glVertex4d(v.x(), v.y(), v.z(), 0.0);
+      glVertex4d(y_dir.x(), y_dir.y(), y_dir.z(), 0.0);
+      glVertex4d(v.x(), v.y(), v.z(), 1.0);*/
 
-    glVertex(Vec3(v + y_offset));
-    glVertex(Vec3(v - y_offset));
-  }
-  for (double y = -displacement; y <= displacement; y += plane.line_spacing) {
-    const Vec3 v = (y * y_dir) + offset;
+      glVertex(Vec3(v + y_offset));
+      glVertex(Vec3(v - y_offset));
+    }
+    for (double y = -displacement; y <= displacement; y += plane.line_spacing) {
+      const Vec3 v = (y * y_dir) + offset;
 
-    glVertex(Vec3(v + x_offset));
-    glVertex(Vec3(v - x_offset));
+      glVertex(Vec3(v + x_offset));
+      glVertex(Vec3(v - x_offset));
+    }
   }
   glEnd();
+  glPopAttrib();
 }
 
 void draw_point(const Point &point) {
