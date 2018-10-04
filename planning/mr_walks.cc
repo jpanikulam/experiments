@@ -18,20 +18,22 @@ using Vec4 = Eigen::Vector4d;
 Body make_walker() {
   Body body(SE3(SO3(), Vec3(1.0, 0.0, 1.0)));
 
-  const SE3 joint_from_body_1(SO3::exp(Vec3(0.9, 0.0, 0.0)), Vec3(1.0, 0.0, 0.0));
-  const SE3 joint_from_body_2(SO3::exp(Vec3(0.0, 0.8, 0.0)), Vec3(1.0, 2.0, 0.0));
+  const SE3 joint_from_body_1(SO3::exp(Vec3(0.0, 0.0, 1.5)), Vec3(1.0, 0.0, 0.0));
+  const SE3 joint_from_body_2(SO3::exp(Vec3(0.0, 1.5, 1.5)), Vec3(1.0, 2.0, 0.0));
 
   int n = body.attach_link(-1, joint_from_body_1, {0.0, 0.0, 0.1});
   {
+    n = body.attach_link(n, joint_from_body_2, {0.0, 0.7, 0.1});
+    n = body.attach_link(n, joint_from_body_2, {0.0, 0.4, 0.0});
+    n = body.attach_link(n, joint_from_body_2, {0.0, 0.4, 0.0});
+    n = body.attach_link(n, joint_from_body_2, {0.0, 0.4, 0.0});
+  }
+
+  {
+    n = body.attach_link(-1, joint_from_body_2, {0.0, 0.0, 0.3});
     n = body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.1});
     body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.0});
   }
-  /*
-    {
-      n = body.attach_link(-1, joint_from_body_2, {0.0, 0.0, 0.3});
-      n = body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.1});
-      body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.0});
-    }*/
 
   return body;
 }
@@ -88,16 +90,11 @@ void walk() {
   view->set_target_from_world(
       SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)), Eigen::Vector3d::Zero()));
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
+  const auto plan_geo = view->add_primitive<viewer::SimpleGeometry>();
   view->set_continue_time_ms(20);
 
   constexpr double dt = 0.1;
   auto walker = make_walker();
-
-  const JointPlanner planner(walker);
-
-  const auto planning_problem = planner.generate_opt_funcs();
-  const auto opt_problem = planner.build_optimization_problem(planning_problem);
-  const VecX plan = planner.optimize(opt_problem);
 
   // for (double t = 0.0; t < 100.0; t += dt) {
   for (int t = 0; t < 150; ++t) {
@@ -106,8 +103,19 @@ void walk() {
 
     put_body(*geo, walker);
     // walker.coarse_simulate(dt);
-    const auto planned_body = planner.form_body(plan, planning_problem.dynamics, t);
-    put_body(*geo, planned_body, Vec4(1.0, 0.0, 0.0, 0.8));
+
+    const JointPlanner planner(walker);
+    const auto planning_problem = planner.generate_opt_funcs();
+    const auto opt_problem = planner.build_optimization_problem(planning_problem);
+    const VecX plan = planner.optimize(opt_problem);
+
+    for (int tt = 0; tt < 7; ++tt) {
+      const auto planned_body = planner.form_body(plan, planning_problem.dynamics, tt);
+      put_body(
+          *plan_geo, planned_body, Vec4(1.0, 0.0, 0.0, static_cast<double>(t) / 7.0));
+    }
+    plan_geo->flip();
+    walker = planner.form_body(plan, planning_problem.dynamics, 1);
 
     geo->flip();
     view->spin_until_step();

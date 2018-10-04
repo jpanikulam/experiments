@@ -99,7 +99,7 @@ JointPlanner::PlanningProblem JointPlanner::generate_opt_funcs() const {
       const double angle_cost = (angle * angle);
       const double vel_cost = vel * vel;
       const double ctrl_cost = accel * accel;
-      cost += ((angle_cost) + (0.1 * vel_cost) + ctrl_cost);
+      cost += ((angle_cost) + (0.01 * vel_cost) + (0.01 * ctrl_cost));
     }
     return cost;
   };

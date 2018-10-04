@@ -20,7 +20,7 @@ class JointPlanner {
   JointPlanner(const Body& body) : body_(body) {
   }
 
-  static constexpr int HORIZON = 150;
+  static constexpr int HORIZON = 5;
   static constexpr int U_SIZE = 1;
   static constexpr int X_SIZE = 2;
 
