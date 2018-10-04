@@ -2,14 +2,10 @@
 
 #include <limits>
 
-// TODO
-#include <iostream>
-
 namespace numerics {
 namespace {
-OptimizationState compute_lagrange_update(
-    const OptimizationState& current_state,
-    const OptimizationProblem& problem) {
+OptimizationState compute_lagrange_update(const OptimizationState& current_state,
+                                          const OptimizationProblem& problem) {
   return {};
 }
 
@@ -26,10 +22,9 @@ LinesearchResult line_search(const OptimizationState& current_state,
   double best_cost_so_far = problem.objective(best_x, nullptr, nullptr);
 
   bool did_decrease = false;
-  for (const double alpha : {1e-7, 0.001, 0.2, 0.5, 1.0, 5.0, 9.0, 25.0}) {
+  for (const double alpha : {0.001, 0.2, 0.5, 1.0, 5.0, 9.0, 25.0}) {
     const detail::Vecx evaluation_pt = current_state.x - (alpha * direction);
-    const double cost_at_alpha =
-        problem.objective(evaluation_pt, nullptr, nullptr);
+    const double cost_at_alpha = problem.objective(evaluation_pt, nullptr, nullptr);
 
     if (cost_at_alpha < best_cost_so_far) {
       best_cost_so_far = cost_at_alpha;
@@ -45,10 +40,8 @@ LinesearchResult line_search(const OptimizationState& current_state,
 }  // namespace
 
 template <>
-OptimizationState optimize<ObjectiveMethod::kGradientDescent,
-                           ConstraintMethod::kAugLag>(
-    const OptimizationState& initialization,
-    const OptimizationProblem& problem) {
+OptimizationState optimize<ObjectiveMethod::kGradientDescent, ConstraintMethod::kAugLag>(
+    const OptimizationState& initialization, const OptimizationProblem& problem) {
   OptimizationState iteration_state = initialization;
 
   constexpr int MAX_ITERS = 10000;
@@ -58,16 +51,16 @@ OptimizationState optimize<ObjectiveMethod::kGradientDescent,
 
     const auto lsr = line_search(iteration_state, gradient, problem);
     if (!lsr.valid) {
-      std::cout << "Cannot minimize" << std::endl;
+      // Could not minimize
       return iteration_state;
     }
-    const double cost_ratio = (iteration_state.x - lsr.best_x).squaredNorm() /
-                              iteration_state.x.squaredNorm();
+    const double cost_ratio =
+        (iteration_state.x - lsr.best_x).squaredNorm() / iteration_state.x.squaredNorm();
 
     iteration_state.x = lsr.best_x;
     constexpr double COST_CVG_RATIO = 1e-12;
     if (cost_ratio < COST_CVG_RATIO) {
-      std::cout << "Converging" << std::endl;
+      // Converged
       break;
     }
   }

@@ -51,6 +51,7 @@ struct OptimizationState {
   detail::Vecx lambda;
 };
 
+// TODO: Return a value indicating success or failure
 template <ObjectiveMethod OBJECTIVE_METHOD, ConstraintMethod CONSTRAINT_METHOD>
 OptimizationState optimize(const OptimizationState& initialization,
                            const OptimizationProblem& problem);
