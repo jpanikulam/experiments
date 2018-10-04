@@ -2,6 +2,8 @@
 
 #include "eigen.hh"
 
+#include "numerics/cost_function.hh"
+
 #include <functional>
 #include <vector>
 
@@ -11,12 +13,6 @@ namespace detail {
 using Vecx = Eigen::VectorXd;
 using Matx = Eigen::MatrixXd;
 }  // namespace detail
-
-using CostFunction =                                    //
-    std::function<double(const detail::Vecx& x,         // The "state"
-                         detail::Vecx* const gradient,  // Optional
-                         detail::Matx* const hessian    // Optional
-                         )>;
 
 struct BoxConstraint {
   // If max/min are equal to double precision, this will be treated

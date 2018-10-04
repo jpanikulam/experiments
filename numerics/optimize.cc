@@ -26,7 +26,7 @@ LinesearchResult line_search(const OptimizationState& current_state,
   double best_cost_so_far = problem.objective(best_x, nullptr, nullptr);
 
   bool did_decrease = false;
-  for (const double alpha : {0.001, 0.2, 0.5, 1.0, 5.0, 9.0, 25.0}) {
+  for (const double alpha : {1e-7, 0.001, 0.2, 0.5, 1.0, 5.0, 9.0, 25.0}) {
     const detail::Vecx evaluation_pt = current_state.x - (alpha * direction);
     const double cost_at_alpha =
         problem.objective(evaluation_pt, nullptr, nullptr);
