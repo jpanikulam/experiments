@@ -1,4 +1,6 @@
-#include "eigen.hh"
+
+#include "planning/body.hh"
+#include "planning/joint_planner.hh"
 
 #include "geometry/intersection/sphere_plane.hh"
 #include "geometry/shapes/circle.hh"
@@ -9,87 +11,9 @@
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
 
-#include <map>
-#include <queue>
-#include <unordered_map>
-#include <utility>
-
 namespace planning {
 using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
-
-struct Joint {
-  double damping = 0.0;
-  double angle = 0.0;
-  double velocity = 0.0;
-};
-
-struct Link {
-  int joint;
-  SE3 parent_from_joint;
-};
-
-// Compute force at each constrained location by estimating lagrange multiplier
-//
-// TODO:
-// - ? Make all joints rotate -- so invert everything
-//    - But that would not be ideal for a few reasons
-//
-// - Give every joint a "torque" capability
-//   - This way, we can apply the force of gravity
-//
-class Body {
- public:
-  using LinkGraph = std::unordered_map<int, std::vector<Link>>;
-  Body(const SE3& root_from_world) {
-    root_from_world_ = root_from_world;
-  }
-
-  //
-  // Body Manipulation
-  //
-
-  int attach_link(int parent, const SE3& child_from_parent, const Joint& joint) {
-    joints_[current_id_] = joint;
-    parent_to_children_[parent].push_back({current_id_, child_from_parent});
-
-    return current_id_++;
-  }
-
-  //
-  // Simulation
-  //
-
-  // Simulate, purely kinematic
-  void coarse_simulate(const double dt) {
-    for (auto& joint : joints_) {
-      joint.second.angle += joint.second.velocity * dt;
-      joint.second.velocity *= std::pow(1.0 - joint.second.damping, dt);
-    }
-  }
-
-  //
-  // Accessors
-  //
-
-  const std::unordered_map<int, Joint>& joints() const {
-    return joints_;
-  }
-  const LinkGraph& parent_to_children() const {
-    return parent_to_children_;
-  }
-
-  SE3 root_from_world() const {
-    return root_from_world_;
-  }
-
- private:
-  std::unordered_map<int, Joint> joints_;
-  LinkGraph parent_to_children_;
-  int current_id_ = 1;
-
-  SE3 root_from_world_;
-};
 
 Body make_walker() {
   Body body(SE3(SO3(), Vec3(1.0, 0.0, 1.0)));
@@ -97,26 +21,29 @@ Body make_walker() {
   const SE3 joint_from_body_1(SO3::exp(Vec3(0.9, 0.0, 0.0)), Vec3(1.0, 0.0, 0.0));
   const SE3 joint_from_body_2(SO3::exp(Vec3(0.0, 0.8, 0.0)), Vec3(1.0, 2.0, 0.0));
 
-  int n = body.attach_link(0, joint_from_body_1, {0.0, 0.0, 0.1});
+  int n = body.attach_link(-1, joint_from_body_1, {0.0, 0.0, 0.1});
   {
     n = body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.1});
     body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.0});
   }
-
-  {
-    n = body.attach_link(0, joint_from_body_2, {0.0, 0.0, 0.3});
-    body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.0});
-  }
+  /*
+    {
+      n = body.attach_link(-1, joint_from_body_2, {0.0, 0.0, 0.3});
+      n = body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.1});
+      body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.0});
+    }*/
 
   return body;
 }
 
-void put_body(viewer::SimpleGeometry& geo, const Body& body) {
+void put_body(viewer::SimpleGeometry& geo,
+              const Body& body,
+              const Vec4& color = Vec4(1.0, 1.0, 1.0, 1.0)) {
   std::queue<int> q;
-  q.emplace(0);
+  q.emplace(-1);
 
   std::map<int, SE3> world_from_joint;
-  world_from_joint[0] = SE3();
+  world_from_joint[-1] = SE3();
 
   while (!q.empty()) {
     const int parent = q.front();
@@ -130,9 +57,10 @@ void put_body(viewer::SimpleGeometry& geo, const Body& body) {
           {world_from_parent.translation(), JOINT_RADIUS_M, Vec4(1.0, 0.1, 0.1, 0.8)});
       continue;
     } else {
-      geo.add_sphere(
-          {world_from_parent.translation(), JOINT_RADIUS_M, Vec4(0.1, 1.0, 0.1, 0.8)});
+      geo.add_sphere({world_from_parent.translation(), JOINT_RADIUS_M,
+                      Vec4(0.1, 1.0, parent == -1 ? 0.8 : 0.1, 0.8)});
     }
+
     for (const auto& child : body.parent_to_children().at(parent)) {
       const auto& joint = body.joints().at(child.joint);
 
@@ -142,8 +70,8 @@ void put_body(viewer::SimpleGeometry& geo, const Body& body) {
       world_from_joint[child.joint] =
           world_from_parent * child.parent_from_joint * joint_place_from_joint.inverse();
 
-      geo.add_line(
-          {world_from_parent.translation(), world_from_joint[child.joint].translation()});
+      geo.add_line({world_from_parent.translation(),
+                    world_from_joint[child.joint].translation(), color});
 
       const geometry::shapes::Circle joint_circle{
           world_from_joint[child.joint].translation(),
@@ -165,22 +93,21 @@ void walk() {
   constexpr double dt = 0.1;
   auto walker = make_walker();
 
-  for (double t = 0.0; t < 100.0; t += dt) {
+  const JointPlanner planner(walker);
+
+  const auto planning_problem = planner.generate_opt_funcs();
+  const auto opt_problem = planner.build_optimization_problem(planning_problem);
+  const VecX plan = planner.optimize(opt_problem);
+
+  // for (double t = 0.0; t < 100.0; t += dt) {
+  for (int t = 0; t < 150; ++t) {
     const geometry::shapes::Plane ground{Vec3::UnitZ(), 0.0};
     geo->add_plane({ground});
 
-    const geometry::shapes::Sphere sphere{Vec3(5.0, 5.0, std::cos(t)), 1.0};
-    geo->add_sphere({sphere.center, sphere.radius});
-
-    const auto intersection =
-        geometry::intersection::sphere_plane_intersection(sphere, ground);
-
-    if (intersection) {
-      geometry::visualization::put_circle(*geo, *intersection);
-    }
-
     put_body(*geo, walker);
-    walker.coarse_simulate(dt);
+    // walker.coarse_simulate(dt);
+    const auto planned_body = planner.form_body(plan, planning_problem.dynamics, t);
+    put_body(*geo, planned_body, Vec4(1.0, 0.0, 0.0, 0.8));
 
     geo->flip();
     view->spin_until_step();
