@@ -97,7 +97,7 @@ void walk() {
   auto walker = make_walker();
 
   // for (double t = 0.0; t < 100.0; t += dt) {
-  for (int t = 0; t < 150; ++t) {
+  for (int t = 0; t < 500; ++t) {
     const geometry::shapes::Plane ground{Vec3::UnitZ(), 0.0};
     geo->add_plane({ground});
 
