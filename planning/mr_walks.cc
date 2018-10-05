@@ -11,6 +11,8 @@
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
 
+#include <unordered_map>
+
 namespace planning {
 using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
@@ -18,10 +20,10 @@ using Vec4 = Eigen::Vector4d;
 Body make_walker() {
   Body body(SE3(SO3(), Vec3(1.0, 0.0, 1.0)));
 
-  const SE3 joint_from_body_1(SO3::exp(Vec3(0.0, 0.0, 1.5)), Vec3(1.0, 0.0, 0.0));
-  const SE3 joint_from_body_2(SO3::exp(Vec3(0.0, 1.5, 1.5)), Vec3(1.0, 2.0, 0.0));
+  const SE3 joint_from_body_1(SO3::exp(Vec3(0.0, 0.0, M_PI * 0.5)), Vec3(1.0, 0.0, 0.0));
+  const SE3 joint_from_body_2(SO3::exp(Vec3(0.0, M_PI * 0.5, 0.0)), Vec3(1.0, 0.0, 0.0));
 
-  int n = body.attach_link(-1, joint_from_body_1, {0.0, 0.0, 0.1});
+  int n = body.attach_link(-1, SE3(), {0.0, 0.0, 0.1});
   {
     n = body.attach_link(n, joint_from_body_2, {0.0, 0.7, 0.1});
     n = body.attach_link(n, joint_from_body_2, {0.0, 0.4, 0.0});
@@ -29,7 +31,7 @@ Body make_walker() {
     n = body.attach_link(n, joint_from_body_2, {0.0, 0.4, 0.0});
   }
 
-  {
+  if (0) {
     n = body.attach_link(-1, joint_from_body_2, {0.0, 0.0, 0.3});
     n = body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.1});
     body.attach_link(n, joint_from_body_2, {0.0, 0.0, 0.0});
@@ -44,7 +46,7 @@ void put_body(viewer::SimpleGeometry& geo,
   std::queue<int> q;
   q.emplace(-1);
 
-  std::map<int, SE3> world_from_joint;
+  std::unordered_map<int, SE3> world_from_joint;
   world_from_joint[-1] = SE3();
 
   while (!q.empty()) {
@@ -97,9 +99,11 @@ void walk() {
   auto walker = make_walker();
 
   // for (double t = 0.0; t < 100.0; t += dt) {
-  for (int t = 0; t < 500; ++t) {
+  for (int t = 0; t < 1500; ++t) {
     const geometry::shapes::Plane ground{Vec3::UnitZ(), 0.0};
     geo->add_plane({ground});
+    geo->add_plane({{Vec3::UnitX(), 0.0}, Vec4(1.0, 0.0, 0.0, 0.2)});
+    geo->add_plane({{Vec3::UnitY(), 0.0}, Vec4(0.0, 1.0, 0.0, 0.2)});
 
     put_body(*geo, walker);
     // walker.coarse_simulate(dt);
@@ -112,13 +116,16 @@ void walk() {
     for (int tt = 0; tt < 7; ++tt) {
       const auto planned_body = planner.form_body(plan, planning_problem.dynamics, tt);
       put_body(
-          *plan_geo, planned_body, Vec4(1.0, 0.0, 0.0, static_cast<double>(t) / 7.0));
+          *plan_geo, planned_body, Vec4(1.0, 0.0, 0.0, static_cast<double>(tt) / 7.0));
     }
     plan_geo->flip();
     walker = planner.form_body(plan, planning_problem.dynamics, 1);
 
     geo->flip();
     view->spin_until_step();
+    if (view->should_close()) {
+      break;
+    }
   }
 }
 

@@ -47,6 +47,9 @@ class JointPlanner {
 
   Body form_body(const VecX& control_sequence, const Dynamics& dyn, int t) const;
 
+  // TODO: Do this in a smarter way (no need for maps, etc)
+  Body form_body(const VecX& xt) const;
+
   //
   // Accessors
   //

@@ -36,6 +36,15 @@ Body JointPlanner::form_body(const VecX& u,
   return body;
 }
 
+Body JointPlanner::form_body(const VecX& xt) const {
+  Body body = body_;
+  for (const auto& joint : body_.joints()) {
+    body.joint(joint.first).angle = xt[angle_ind(joint.first)];
+    body.joint(joint.first).velocity = xt[velocity_ind(joint.first)];
+  }
+  return body;
+}
+
 numerics::OptimizationProblem JointPlanner::build_optimization_problem(
     const JointPlanner::PlanningProblem& planning_problem) const {
   // Forward shooting
@@ -89,17 +98,35 @@ JointPlanner::PlanningProblem JointPlanner::generate_opt_funcs() const {
 
   const auto per_state_cost = [this, target, target_joint](const VecX& xt,
                                                            const VecX& ut) {
+    const auto this_body = form_body(xt);
+    const auto root_from_joint = this_body.root_from_joint();
+
     double cost = 0.0;
     for (const auto& joint : body_.joints()) {
       const int joint_id = joint.first;
-      const double angle = xt[angle_ind(joint_id)];
-      const double vel = xt[velocity_ind(joint_id)];
-      const double accel = ut[accel_ind(joint_id)];
+      if (joint_id == 3) {
+        constexpr int JOINT_TO_GO = 4;
+        const Vec3 tx = root_from_joint.at(JOINT_TO_GO).translation();
+        const Vec3 error = tx - Vec3(0.0, 1.0, -1.0);
 
-      const double angle_cost = (angle * angle);
-      const double vel_cost = vel * vel;
-      const double ctrl_cost = accel * accel;
-      cost += ((angle_cost) + (0.01 * vel_cost) + (0.01 * ctrl_cost));
+        const double tx_cost = error.dot(error);
+        cost += 100.0 * tx_cost;
+
+      } else {
+        const double angle = xt[angle_ind(joint_id)];
+        const double angle_cost = (angle * angle);
+        cost += 1e-9 * angle_cost;
+      }
+      {
+        const double vel = xt[velocity_ind(joint_id)];
+        const double vel_cost = vel * vel;
+        cost += 0.1 * vel_cost;
+      }
+      {
+        const double accel = ut[accel_ind(joint_id)];
+        const double ctrl_cost = accel * accel;
+        cost += 0.1 * ctrl_cost;
+      }
     }
     return cost;
   };
