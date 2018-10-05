@@ -3,7 +3,6 @@
 #include "eigen.hh"
 #include "sophus.hh"
 
-#include <map>
 #include <queue>
 #include <unordered_map>
 #include <utility>

@@ -52,6 +52,12 @@ std::unordered_map<int, SE3> Body::root_from_joint() const {
     for (const auto& child : parent_to_children_.at(parent)) {
       const auto& joint = joints_.at(child.joint);
 
+      //
+      // TODO(jake): This is broken --
+      //  just don't use end_from_joint when establishing parent_from_joint
+      //  can be fixed by being a bit smarter
+      //
+
       // This is a little tricky -- is it right?
       const SO3 end_from_joint_rot = SO3::exp(Vec3(0.0, 0.0, joint.angle));
       const SE3 end_from_joint = SE3(end_from_joint_rot, Vec3::Zero());
