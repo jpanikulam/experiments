@@ -66,8 +66,8 @@ struct Sphere {
 
 struct Plane {
   geometry::shapes::Plane plane;
-  double line_spacing = 1.0;
   Vec4 color = Vec4(0.8, 0.8, 0.8, 0.8);
+  double line_spacing = 1.0;
 };
 
 struct AxisAlignedBox {
