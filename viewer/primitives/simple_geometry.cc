@@ -5,8 +5,81 @@
 
 namespace viewer {
 
+void SimpleGeometry::add_axes(const Axes &axes) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.axes.push_back(axes);
+}
+
+void SimpleGeometry::add_line(const Line &line) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.lines.push_back(line);
+}
+
+void SimpleGeometry::add_polygon(const Polygon &polygon) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.polygons.push_back(polygon);
+}
+
+void SimpleGeometry::add_points(const Points &points) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.points.push_back(points);
+}
+
+void SimpleGeometry::add_point(const Point &point) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.raw_points.push_back(point);
+}
+
+void SimpleGeometry::add_points2d(const Points2d &points) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.points2d.push_back(points);
+}
+
+void SimpleGeometry::add_sphere(const Sphere &sphere) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.spheres.push_back(sphere);
+}
+
+void SimpleGeometry::add_plane(const Plane &plane) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.planes.push_back(plane);
+}
+
+void SimpleGeometry::clear() {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  front_buffer_.clear();
+}
+
+void SimpleGeometry::flip() {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  front_buffer_ = std::move(back_buffer_);
+}
+
+void SimpleGeometry::flush() {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  const auto insert = [](auto &into, const auto &from) {
+    into.insert(into.begin(), from.begin(), from.end());
+  };
+
+  insert(front_buffer_.axes, back_buffer_.axes);
+  insert(front_buffer_.lines, back_buffer_.lines);
+  insert(front_buffer_.points, back_buffer_.points);
+  insert(front_buffer_.raw_points, back_buffer_.raw_points);
+  insert(front_buffer_.points2d, back_buffer_.points2d);
+  insert(front_buffer_.spheres, back_buffer_.spheres);
+  insert(front_buffer_.planes, back_buffer_.planes);
+  insert(front_buffer_.polygons, back_buffer_.polygons);
+  insert(front_buffer_.colored_points, back_buffer_.colored_points);
+}
+
+void SimpleGeometry::add_ray(const geometry::Ray &ray,
+                             const double length,
+                             const Eigen::Vector4d &color) {
+  add_ray({ray.origin, ray.direction, length, color});
+}
+
 void SimpleGeometry::add_ray(const Ray &ray) {
-  std::lock_guard<std::mutex> lk(draw_mutex_);
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
   const Eigen::Vector3d first_endpoint = ray.origin + (ray.direction * 0.9 * ray.length);
   back_buffer_.lines.push_back({ray.origin, first_endpoint, ray.color, ray.width});
   const Eigen::Vector4d new_color(ray.color.y(), ray.color.x(), ray.color.z(),
@@ -36,12 +109,12 @@ void SimpleGeometry::add_colored_points(const Points &points,
     colored_points.colors.push_back(color);
   }
 
-  std::lock_guard<std::mutex> lk(draw_mutex_);
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
   back_buffer_.colored_points.push_back(colored_points);
 }
 
 void SimpleGeometry::add_box(const AxisAlignedBox &box) {
-  std::lock_guard<std::mutex> lk(draw_mutex_);
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
   using Vec3 = Eigen::Vector3d;
 
   back_buffer_.lines.push_back({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
@@ -83,7 +156,7 @@ void SimpleGeometry::add_box(const AxisAlignedBox &box) {
 }
 
 void SimpleGeometry::draw() const {
-  std::lock_guard<std::mutex> lk(draw_mutex_);
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
 
   for (const auto &axes : front_buffer_.axes) {
     draw_axes(axes);
