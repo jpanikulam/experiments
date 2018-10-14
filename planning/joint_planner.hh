@@ -45,6 +45,9 @@ class JointPlanner {
 
   VecX form_state() const;
 
+  // control_sequence: Sequence of controls
+  // dyn: Dynamics
+  // t: At what time in the plan!
   Body form_body(const VecX& control_sequence, const Dynamics& dyn, int t) const;
 
   // TODO: Do this in a smarter way (no need for maps, etc)

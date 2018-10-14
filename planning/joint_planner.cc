@@ -105,7 +105,7 @@ JointPlanner::PlanningProblem JointPlanner::generate_opt_funcs() const {
     for (const auto& joint : body_.joints()) {
       const int joint_id = joint.first;
       if (joint_id == 3) {
-        constexpr int JOINT_TO_GO = 4;
+        constexpr int JOINT_TO_GO = 5;
         const Vec3 tx = root_from_joint.at(JOINT_TO_GO).translation();
         const Vec3 error = tx - Vec3(0.0, 1.0, -1.0);
 
@@ -115,12 +115,12 @@ JointPlanner::PlanningProblem JointPlanner::generate_opt_funcs() const {
       } else {
         const double angle = xt[angle_ind(joint_id)];
         const double angle_cost = (angle * angle);
-        cost += 1e-9 * angle_cost;
+        // cost += 1e-9 * angle_cost;
       }
       {
         const double vel = xt[velocity_ind(joint_id)];
         const double vel_cost = vel * vel;
-        cost += 0.1 * vel_cost;
+        cost += 1.01 * vel_cost;
       }
       {
         const double accel = ut[accel_ind(joint_id)];
@@ -135,3 +135,6 @@ JointPlanner::PlanningProblem JointPlanner::generate_opt_funcs() const {
 }
 
 }  // namespace planning
+
+// - Can I come up with a better nonlinear mpc solver?
+// - "Tools for synthesizing plausible motions"
