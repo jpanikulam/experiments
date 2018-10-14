@@ -120,7 +120,7 @@ JointPlanner::PlanningProblem JointPlanner::generate_opt_funcs() const {
       {
         const double vel = xt[velocity_ind(joint_id)];
         const double vel_cost = vel * vel;
-        cost += 1.01 * vel_cost;
+        cost += 0.001 * vel_cost;
       }
       {
         const double accel = ut[accel_ind(joint_id)];
