@@ -28,4 +28,5 @@ RigidBody body_frame(const SE3& body_from_world,
 RigidBody simulate(const RigidBody& in_body,
                    const RigidBodySimulationConfig& cfg,
                    const double dt);
+
 }  // namespace lanczos

@@ -36,8 +36,9 @@ RigidBody simulate(const RigidBody& in_body,
   // Compute new velocities, including damping
   //
   out_body.positional_velocity =
-      in_body.positional_velocity * positional_damping;
-  out_body.angular_velocity = in_body.angular_velocity * angular_damping;
+      in_body.positional_velocity * (1.0 - positional_damping);
+  out_body.angular_velocity =
+      in_body.angular_velocity * (1.0 - angular_damping);
 
   //
   // Compute the change in pose affecting the object
@@ -45,7 +46,9 @@ RigidBody simulate(const RigidBody& in_body,
   const VecNd<6> log_delta =
       jcc::vstack(in_body.positional_velocity, in_body.angular_velocity) *
       dt_sec;
-  const SE3 out_body_from_in_body = SE3::exp(log_delta);
+  const SE3 out_body_from_in_body =
+      SE3::exp(in_body.body_from_world.Adj() * log_delta);
+
   out_body.body_from_world = out_body_from_in_body * in_body.body_from_world;
 
   return out_body;
