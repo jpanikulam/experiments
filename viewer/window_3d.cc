@@ -45,7 +45,7 @@ void pre_render() {
   glEnable(GL_BLEND);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+  // glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
   glEnable(GL_LINE_SMOOTH);
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
