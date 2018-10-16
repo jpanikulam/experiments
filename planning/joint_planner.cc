@@ -109,13 +109,14 @@ JointPlanner::PlanningProblem JointPlanner::generate_opt_funcs() const {
         const Vec3 tx = root_from_joint.at(JOINT_TO_GO).translation();
         const Vec3 error = tx - Vec3(0.0, 1.0, -1.0);
 
-        const double tx_cost = error.dot(error);
-        cost += 100.0 * tx_cost;
+        const double tx_l1 = error.lpNorm<1>();
+        const double tx_l2 = error.lpNorm<2>();
+        cost += (1.0 * (tx_l1 * tx_l1)) + (50.0 * (tx_l2 * tx_l2));
 
       } else {
         const double angle = xt[angle_ind(joint_id)];
         const double angle_cost = (angle * angle);
-        // cost += 1e-9 * angle_cost;
+        cost += 0.0 * angle_cost;
       }
       {
         const double vel = xt[velocity_ind(joint_id)];

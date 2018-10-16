@@ -4,6 +4,7 @@
 [ ] Make a vehicle walk *like it is heavy*
 [ ] Plan for a rolling ball
 [ ] Make a plane fly like it's heavy
+[ ] How do we prohibit kinematically incompatible motion in a closed kinematic chain?
 
 
 # Simulation

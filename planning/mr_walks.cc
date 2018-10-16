@@ -58,19 +58,19 @@ void put_body(viewer::SimpleGeometry& geo,
 
     constexpr double JOINT_RADIUS_M = 0.1;
     if (body.parent_to_children().count(parent) == 0) {
-      geo.add_sphere(
-          {world_from_parent.translation(), JOINT_RADIUS_M, Vec4(1.0, 0.1, 0.1, 0.8)});
+      const Vec4 color(1.0, 0.1, 0.1, 0.8);
+      geo.add_sphere({world_from_parent.translation(), JOINT_RADIUS_M, color});
       continue;
     } else {
-      geo.add_sphere({world_from_parent.translation(), JOINT_RADIUS_M,
-                      Vec4(0.1, 1.0, parent == -1 ? 0.8 : 0.1, 0.8)});
+      const Vec4 color(0.1, 1.0, parent == -1 ? 0.8 : 0.1, 0.8);
+      geo.add_sphere({world_from_parent.translation(), JOINT_RADIUS_M, color});
     }
 
     for (const auto& child : body.parent_to_children().at(parent)) {
       const auto& joint = body.joints().at(child.joint);
 
-      const SE3 joint_place_from_joint =
-          SE3(SO3::exp(Vec3(0.0, 0.0, joint.angle)), Vec3::Zero());
+      const Vec3 log_joint = Vec3(0.0, 0.0, joint.angle);
+      const SE3 joint_place_from_joint = SE3(SO3::exp(log_joint), Vec3::Zero());
 
       world_from_joint[child.joint] =
           world_from_parent * child.parent_from_joint * joint_place_from_joint.inverse();
@@ -96,26 +96,23 @@ void walk() {
   const auto plan_geo = view->add_primitive<viewer::SimpleGeometry>();
   view->set_continue_time_ms(20);
 
-  constexpr double dt = 0.1;
   auto walker = make_walker();
 
-  // for (double t = 0.0; t < 100.0; t += dt) {
   for (int t = 0; t < 1500; ++t) {
     const geometry::shapes::Plane ground{Vec3::UnitZ(), 0.0};
     geo->add_plane({ground});
-    geo->add_plane({{Vec3::UnitX(), 0.0}, Vec4(1.0, 0.0, 0.0, 0.2)});
-    geo->add_plane({{Vec3::UnitY(), 0.0}, Vec4(0.0, 1.0, 0.0, 0.2)});
+    geo->add_plane({{Vec3::UnitX(), 0.0}, Vec4(1.0, 0.0, 0.0, 0.3)});
+    geo->add_plane({{Vec3::UnitY(), 0.0}, Vec4(0.0, 1.0, 0.0, 0.3)});
 
     put_body(*geo, walker);
-    // walker.coarse_simulate(dt);
 
     const JointPlanner planner(walker);
     const auto planning_problem = planner.generate_opt_funcs();
     const auto opt_problem = planner.build_optimization_problem(planning_problem);
     const VecX plan = planner.optimize(opt_problem);
 
-    //const int step_count = 7;
-    //for (int tt = 0; tt < step_count; ++tt) {
+    // const int step_count = 7;
+    // for (int tt = 0; tt < step_count; ++tt) {
     //  const auto planned_body = planner.form_body(plan, planning_problem.dynamics, tt);
     //  const Vec4 line_color(1.0, 0.0, 0.0, static_cast<double>(tt) / step_count);
     //  put_body(*plan_geo, planned_body, line_color);
