@@ -75,7 +75,7 @@ void OrbitCamera::apply_keys(const KeyMap& keys, double dt_sec) {
     }
   }
 
-  anchor_body_.positional_velocity -= delta_vel;
+  anchor_body_.vel -= delta_vel;
 }
 
 void OrbitCamera::apply_mouse(const WindowPoint& mouse_pos,
@@ -109,7 +109,7 @@ void OrbitCamera::apply_mouse(const WindowPoint& mouse_pos,
     const Vec3 motion_anchor_frame =
         camera_from_anchor().so3().inverse() * (motion_camera_frame * inv_zoom * 0.05);
 
-    anchor_body_.positional_velocity = 5.0 * motion_anchor_frame;
+    anchor_body_.vel = 5.0 * motion_anchor_frame;
   }
 }
 

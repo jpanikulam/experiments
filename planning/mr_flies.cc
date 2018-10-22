@@ -44,10 +44,15 @@ class Vehicle {
     thrusters_.push_back(thruster);
   }
 
-  void coarse_simulate(const double dt) {
+  struct Wrench {
+    Vec3 world_force;
+    Vec3 world_torque;
+  };
+
+  Wrench compute_wrench(const std::vector<Thruster>& thrusters) const {
     Vec3 net_body_force = Vec3::Zero();
     Vec3 net_body_torque = Vec3::Zero();
-    for (const auto& thruster : thrusters_) {
+    for (const auto& thruster : thrusters) {
       const double thrust = thruster.thrust_from_vel(thruster.velocity_mps);
       const Vec3 body_force =
           thruster.body_from_thruster.so3() * (Vec3::UnitZ() * thrust);
@@ -68,8 +73,12 @@ class Vehicle {
     const Vec3 wind(0.5, 0.0, 0.0);
     const Vec3 net_torque =
         (body_.body.body_from_world.so3().inverse() * net_body_torque);
+    return {net_force, net_torque};
+  }
 
-    body_ = lanczos::simulate(body_, net_force, net_torque, dt);
+  void coarse_simulate(const double dt) {
+    const Wrench wrench = compute_wrench(thrusters_);
+    body_ = lanczos::simulate(body_, wrench.world_force, wrench.world_torque, dt);
   }
 
   SE3 body_from_world() const {
@@ -86,8 +95,7 @@ void put_vehicle(viewer::SimpleGeometry& geo,
                  const Vec4& color = Vec4(1.0, 1.0, 1.0, 1.0)) {
   const SE3 world_from_body = vehicle.body_from_world().inverse();
   const geometry::shapes::Circle circle{world_from_body.translation(),
-                                        world_from_body.so3() * Vec3::UnitZ(),
-                                        0.3};
+                                        world_from_body.so3() * Vec3::UnitZ(), 0.3};
 
   geometry::visualization::put_circle(geo, circle);
 }
@@ -95,8 +103,7 @@ void put_vehicle(viewer::SimpleGeometry& geo,
 auto setup() {
   const auto view = viewer::get_window3d("Mr. Flies, flies");
   view->set_target_from_world(
-      SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)),
-          Eigen::Vector3d::Zero()));
+      SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)), Eigen::Vector3d::Zero()));
   view->set_continue_time_ms(20);
 
   const auto background = view->add_primitive<viewer::SimpleGeometry>();

@@ -11,8 +11,8 @@ using Vec3 = Eigen::Vector3d;
 struct RigidBody {
   // NOTE:
   // These properties are specified in the world frame
-  Vec3 positional_velocity = Vec3::Zero();
-  Vec3 angular_velocity = Vec3::Zero();
+  Vec3 vel = Vec3::Zero();
+  Vec3 ang_vel = Vec3::Zero();
   SE3 body_from_world;
 };
 
@@ -23,7 +23,7 @@ struct RigidBodySimulationConfig {
 
 RigidBody body_frame(const SE3& body_from_world,
                      const Vec3& body_frame_velocity,
-                     const Vec3& body_frame_angular_velocity);
+                     const Vec3& body_frame_ang_vel);
 
 RigidBody simulate(const RigidBody& in_body,
                    const RigidBodySimulationConfig& cfg,

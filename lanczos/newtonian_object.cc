@@ -3,9 +3,9 @@
 namespace lanczos {
 
 NewtonianObject simulate(const NewtonianObject& object,
-                         const Vec3& force,
-                         const Vec3& torque,
-                         const double dt) {
+                         const Vec3& world_force,
+                         const Vec3& world_torque,
+                         const double dt_sec) {
   //
   // Generate deltas
   //
@@ -21,14 +21,18 @@ NewtonianObject simulate(const NewtonianObject& object,
 
   NewtonianObject new_object = object;
 
-  new_object.body.angular_velocity += (dw_dt * dt);
-  new_object.body.positional_velocity += (dv_dt * dt);
+  new_object.body.vel += (dv_dt * dt_sec);
+  new_object.body.ang_vel += (dw_dt * dt_sec);
+
+  // new_object.
+  // body_from_world
+  const VecNd<6> lg_world2_from_world =
+      jcc::vstack(new_object.body.vel, new_object.body.ang_vel) * dt_sec;
+  const SE3 world2_from_world = SE3::exp(log_delta);
 
   //
   // Simulate (w/ orientation)
   //
-
-  new_object.body = simulate(new_object.body, object.rigid_body_cfg, dt);
 
   return new_object;
 }

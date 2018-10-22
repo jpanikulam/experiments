@@ -18,7 +18,7 @@ TEST(RigidBody, position_vel_translates) {
   //
 
   RigidBody init;
-  init.positional_velocity = Vec3(1.0, 0.0, 0.0);
+  init.vel = Vec3(1.0, 0.0, 0.0);
 
   //
   // Action
@@ -31,7 +31,7 @@ TEST(RigidBody, position_vel_translates) {
   // Verification
   //
 
-  const Vec3 expected_translation = init.positional_velocity;
+  const Vec3 expected_translation = init.vel;
   const Vec3 actual_translation = result.body_from_world.translation();
   const Vec3 error_translation = actual_translation - expected_translation;
 
@@ -48,7 +48,7 @@ TEST(RigidBody, rotational_vel_rotates) {
   //
 
   RigidBody init;
-  init.angular_velocity = Vec3(0.0, 0.0, 1.0);
+  init.ang_vel = Vec3(0.0, 0.0, 1.0);
 
   //
   // Action
@@ -63,7 +63,7 @@ TEST(RigidBody, rotational_vel_rotates) {
   const Vec3 translation_error = result.body_from_world.translation();
 
   const Vec3 error_rotation =
-      init.angular_velocity - result.body_from_world.so3().log();
+      init.ang_vel - result.body_from_world.so3().log();
 
   constexpr double EPS = 1e-6;
   EXPECT_LT(translation_error.norm(), EPS);
@@ -77,7 +77,7 @@ TEST(RigidBody, rotation_is_an_offset) {
 
   RigidBody init;
   init.body_from_world.translation() = Vec3(1.0, 0.0, 0.0);
-  init.angular_velocity = Vec3(0.0, 0.0, 1.0);
+  init.ang_vel = Vec3(0.0, 0.0, 1.0);
 
   //
   // Action
@@ -93,7 +93,7 @@ TEST(RigidBody, rotation_is_an_offset) {
       (result.body_from_world * init.body_from_world.inverse()).translation();
 
   const Vec3 error_rotation =
-      init.angular_velocity - result.body_from_world.so3().log();
+      init.ang_vel - result.body_from_world.so3().log();
 
   constexpr double EPS = 1e-6;
   EXPECT_LT(translation_error.norm(), EPS);
@@ -109,8 +109,8 @@ TEST(RigidBody, non_identity_start) {
   init.body_from_world.translation() = Vec3(1.0, 0.0, 0.0);
   init.body_from_world.so3() = SO3::exp(Vec3(0.3, 0.0, 0.25));
 
-  init.angular_velocity = Vec3(0.0, 0.0, 1.0);
-  init.positional_velocity = Vec3(0.0, 0.0, 0.7);
+  init.ang_vel = Vec3(0.0, 0.0, 1.0);
+  init.vel = Vec3(0.0, 0.0, 0.7);
 
   //
   // Action
@@ -123,11 +123,11 @@ TEST(RigidBody, non_identity_start) {
   //
 
   const Vec3 translation_error =
-      init.positional_velocity -
+      init.vel -
       (result.body_from_world * init.body_from_world.inverse()).translation();
 
   const Vec3 error_rotation =
-      init.angular_velocity -
+      init.ang_vel -
       (result.body_from_world.so3() * init.body_from_world.so3().inverse())
           .log();
 
