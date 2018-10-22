@@ -25,7 +25,6 @@ template <int cols>
 VecNd<cols + 1> augment(const VecNd<cols> &a, const double val) {
   VecNd<cols + 1> v;
   v << a, val;
-  // v(cols) = val;
   return v;
 }
 }

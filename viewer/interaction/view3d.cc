@@ -13,11 +13,11 @@ SE3 OrbitCamera::camera_from_anchor() const {
 }
 
 SE3 OrbitCamera::camera_from_world() const {
-  return camera_from_anchor_ * anchor_body_.body_from_world;
+  return camera_from_anchor_ * anchor_body_.from_world;
 }
 
 SE3 OrbitCamera::anchor_from_world() const {
-  return anchor_body_.body_from_world;
+  return anchor_body_.from_world;
 }
 
 double OrbitCamera::zoom() const {

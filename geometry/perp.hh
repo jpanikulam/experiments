@@ -2,8 +2,6 @@
 
 #include "eigen.hh"
 
-#include "Eigen/Dense"
-
 namespace geometry {
 
 template <int ROWS>
@@ -22,6 +20,8 @@ VecNd<ROWS> perp(const VecNd<ROWS>& vec) {
   const Vec unit = Vec::Unit(min_coeff_ind);
   return (unit - (vec_u * unit.dot(vec_u))).normalized();
 }
+
+Eigen::VectorXd perp(const Eigen::VectorXd& vec);
 
 template <int ROWS>
 bool is_perp(const VecNd<ROWS>& a, const VecNd<ROWS>& b, double max_abs_cos = 1e-9) {

@@ -30,7 +30,7 @@ class OrbitCamera {
   SE3 camera_from_anchor() const;
 
   void set_anchor_from_world(const SE3& anchor_from_world) {
-    anchor_body_.body_from_world = anchor_from_world;
+    anchor_body_.from_world = anchor_from_world;
   }
 
   double zoom() const;

@@ -8,7 +8,7 @@ RigidBody body_frame(const SE3& body_from_world,
                      const Vec3& body_frame_velocity,
                      const Vec3& body_frame_ang_vel) {
   RigidBody out_body;
-  out_body.body_from_world = body_from_world;
+  out_body.from_world = body_from_world;
 
   const VecNd<6> velocity_body_frame =
       jcc::vstack(body_frame_velocity, body_frame_ang_vel);
@@ -46,7 +46,7 @@ RigidBody simulate(const RigidBody& in_body,
   const VecNd<6> log_delta = jcc::vstack(in_body.vel, in_body.ang_vel) * dt_sec;
   const SE3 out_body_from_in_body = SE3::exp(log_delta);
 
-  out_body.body_from_world = out_body_from_in_body * in_body.body_from_world;
+  out_body.from_world = out_body_from_in_body * in_body.from_world;
 
   return out_body;
 }

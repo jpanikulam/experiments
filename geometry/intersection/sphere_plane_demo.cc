@@ -15,7 +15,7 @@ namespace intersection {
 using Vec3 = Eigen::Vector3d;
 
 void go() {
-  const auto view = viewer::get_window3d("Mr. Walks, walks");
+  const auto view = viewer::get_window3d("Sphere-Plane");
   view->set_target_from_world(
       SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)), Eigen::Vector3d::Zero()));
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();

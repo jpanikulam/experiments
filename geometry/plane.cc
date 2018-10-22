@@ -11,7 +11,7 @@ bool Plane::intersect(const Line& line, Out<Vec3> point) const {
   }
 
   const double d = (origin - line.point).dot(normal) / (line.direction.dot(normal));
-  *point         = line.point + (d * line.direction);
+  *point = line.point + (d * line.direction);
   return true;
 }
 

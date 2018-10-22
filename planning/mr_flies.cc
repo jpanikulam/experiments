@@ -33,6 +33,11 @@ struct Thruster {
   double min_thrust_N = -10.0;
 };
 
+struct Wrench {
+  Vec3 world_force;
+  Vec3 world_torque;
+};
+
 class Vehicle {
  public:
   Vehicle() {
@@ -43,11 +48,6 @@ class Vehicle {
   void add_thruster(const Thruster& thruster) {
     thrusters_.push_back(thruster);
   }
-
-  struct Wrench {
-    Vec3 world_force;
-    Vec3 world_torque;
-  };
 
   Wrench compute_wrench(const std::vector<Thruster>& thrusters) const {
     Vec3 net_body_force = Vec3::Zero();
@@ -68,11 +68,10 @@ class Vehicle {
     const double g_npkg = 1.0;
     const Vec3 gravity = Vec3::UnitZ() * -g_npkg;
     const Vec3 net_force =
-        (body_.body.body_from_world.so3().inverse() * net_body_force) + gravity;
+        (body_.body.from_world.so3().inverse() * net_body_force) + gravity;
 
     const Vec3 wind(0.5, 0.0, 0.0);
-    const Vec3 net_torque =
-        (body_.body.body_from_world.so3().inverse() * net_body_torque);
+    const Vec3 net_torque = (body_.body.from_world.so3().inverse() * net_body_torque);
     return {net_force, net_torque};
   }
 
@@ -81,8 +80,8 @@ class Vehicle {
     body_ = lanczos::simulate(body_, wrench.world_force, wrench.world_torque, dt);
   }
 
-  SE3 body_from_world() const {
-    return body_.body.body_from_world;
+  SE3 from_world() const {
+    return body_.body.from_world;
   }
 
  private:
@@ -93,7 +92,7 @@ class Vehicle {
 void put_vehicle(viewer::SimpleGeometry& geo,
                  const Vehicle& vehicle,
                  const Vec4& color = Vec4(1.0, 1.0, 1.0, 1.0)) {
-  const SE3 world_from_body = vehicle.body_from_world().inverse();
+  const SE3 world_from_body = vehicle.from_world().inverse();
   const geometry::shapes::Circle circle{world_from_body.translation(),
                                         world_from_body.so3() * Vec3::UnitZ(), 0.3};
 

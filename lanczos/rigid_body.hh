@@ -13,7 +13,7 @@ struct RigidBody {
   // These properties are specified in the world frame
   Vec3 vel = Vec3::Zero();
   Vec3 ang_vel = Vec3::Zero();
-  SE3 body_from_world;
+  SE3 from_world;
 };
 
 struct RigidBodySimulationConfig {
