@@ -62,6 +62,7 @@ struct Sphere {
   Vec3 center;
   double radius;
   Vec4 color = Vec4(0.0, 1.0, 0.0, 1.0);
+  SO3 world_from_sphere;
 };
 
 struct Plane {

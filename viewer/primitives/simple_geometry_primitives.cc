@@ -175,11 +175,11 @@ void draw_circle(const Vec3 &center,
 }
 
 void draw_sphere(const Sphere &sphere) {
-  draw_circle(sphere.center, Vec3::UnitX(), sphere.radius,
+  draw_circle(sphere.center, sphere.world_from_sphere * Vec3::UnitX(), sphere.radius,
               sphere.color);
-  draw_circle(sphere.center, Vec3::UnitY(), sphere.radius,
+  draw_circle(sphere.center, sphere.world_from_sphere * Vec3::UnitY(), sphere.radius,
               sphere.color);
-  draw_circle(sphere.center, Vec3::UnitZ(), sphere.radius,
+  draw_circle(sphere.center, sphere.world_from_sphere * Vec3::UnitZ(), sphere.radius,
               sphere.color);
 }
 

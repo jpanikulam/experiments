@@ -43,5 +43,5 @@ void go() {
 }  // namespace intersection
 }  // namespace geometry
 int main() {
-  geometry::go();
+  geometry::intersection::go();
 }
