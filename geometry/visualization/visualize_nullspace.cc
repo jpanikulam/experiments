@@ -75,13 +75,15 @@ void visualize_nullspace(viewer::SimpleGeometry& geo,
 
   const double step_size = 0.25;
 
-  viewer::Polygon poly;
-  poly.color = Eigen::Vector4d(0.0, 0.0, 0.0, 0.0);
-  poly.outline = true;
+  // viewer::Polygon poly;
+  // poly.color = Eigen::Vector4d(0.0, 0.0, 0.0, 0.0);
+  // poly.outline = true;
+
+  viewer::Points points;
 
   Eigen::VectorXd x = nss.project(x0);
   Eigen::VectorXd prev_dir = perp(nss.gradient(x));
-  for (int k = 0; k < 60; ++k) {
+  for (int k = 0; k < 120; ++k) {
     const Eigen::VectorXd projected = nss.project(x);
 
     const Eigen::VectorXd df_dx = nss.gradient(projected);
@@ -105,12 +107,14 @@ void visualize_nullspace(viewer::SimpleGeometry& geo,
       geo.flush();
       view->spin_until_step();
     }
-    poly.points.push_back(point);
+    // poly.points.push_back(point);
+    points.points.push_back(point);
 
     x = next_x;
   }
 
-  geo.add_polygon(poly);
+  // geo.add_polygon(poly);
+  geo.add_points(points);
 }
 }  // namespace visualization
 }  // namespace geometry

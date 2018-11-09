@@ -1,9 +1,6 @@
 from copy import deepcopy
 
 
-# def dependency_sort_targets(ad)
-
-
 def maybe_insert_deps(adj, key, data):
     if key in adj:
         if 'visited' in adj[key]:

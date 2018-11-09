@@ -19,20 +19,17 @@ void go() {
 
   const double level_set = 5.0;
   const auto func = [level_set](const Eigen::VectorXd& x) {
-    // Eigen::Matrix2d H = Eigen::Matrix2d::Identity();
-    // H(1, 1) = 2.0;
-    // return x.dot(H * x) - level_set;
-
+    Eigen::Matrix2d H = Eigen::Matrix2d::Identity();
+    H(1, 1) = 2.0;
+    return x.dot(H * x) - level_set;
     // return x.dot(Eigen::Vector2d(std::sin(x(0)), 0.0)) - 1.0;
-    return std::sin(x(0)) + (x(1) * x(1)) - 3.0;
-
+    // return std::sin(x(0)) + (x(1) * x(1)) - 3.0;
   };
 
   visualize_nullspace(*geo, func, Eigen::VectorXd::Ones(2));
 
   geo->flip();
   view->spin_until_step();
-
 }
 
 }  // namespace visualization

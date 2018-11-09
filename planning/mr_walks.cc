@@ -111,12 +111,16 @@ void walk() {
     const auto opt_problem = planner.build_optimization_problem(planning_problem);
     const VecX plan = planner.optimize(opt_problem);
 
-    // const int step_count = 7;
-    // for (int tt = 0; tt < step_count; ++tt) {
-    //  const auto planned_body = planner.form_body(plan, planning_problem.dynamics, tt);
-    //  const Vec4 line_color(1.0, 0.0, 0.0, static_cast<double>(tt) / step_count);
-    //  put_body(*plan_geo, planned_body, line_color);
-    //}
+    constexpr bool draw_plan = false;
+    if (draw_plan) {
+      const int step_count = 7;
+      for (int tt = 0; tt < step_count; ++tt) {
+        const auto planned_body = planner.form_body(plan, planning_problem.dynamics, tt);
+        const Vec4 line_color(1.0, 0.0, 0.0, static_cast<double>(tt) / step_count);
+        put_body(*plan_geo, planned_body, line_color);
+      }
+    }
+
     plan_geo->flip();
     walker = planner.form_body(plan, planning_problem.dynamics, 1);
 
