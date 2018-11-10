@@ -89,9 +89,9 @@ void Window3D::on_mouse_button(int button, int action, int mods) {
 void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
-  const bool left = left_mouse_held();
-  const bool right = right_mouse_held();
-
+  const bool shift = held_keys().count(GLFW_KEY_LEFT_SHIFT) == 1 ? held_keys().at(GLFW_KEY_LEFT_SHIFT) : false;
+  const bool left = left_mouse_held() && !shift;
+  const bool right = right_mouse_held() || (shift && left_mouse_held());
   view_.apply_mouse(mouse_pos, mouse_pos_last_click_, left, right);
 
   if (left || right) {
