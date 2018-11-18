@@ -1,3 +1,5 @@
+#pragma once
+
 #include "sophus.hh"
 #include "viewer/primitives/simple_geometry.hh"
 
