@@ -3,8 +3,11 @@
 #include "viewer/primitives/simple_geometry_primitives.hh"
 
 #include "geometry/ray.hh"
-#include "sophus.hh"
+#include "geometry/tri_mesh.hh"
+
 #include "viewer/primitives/primitive.hh"
+
+#include "sophus.hh"
 
 #include <mutex>
 #include <vector>
@@ -41,6 +44,8 @@ class SimpleGeometry final : public Primitive {
 
   void add_plane(const Plane &plane);
 
+  void add_triangle_mesh(const TriMesh &mesh);
+
   void clear();
 
   void flip();
@@ -58,6 +63,7 @@ class SimpleGeometry final : public Primitive {
     std::vector<Plane> planes;
     std::vector<Polygon> polygons;
     std::vector<ColoredPoints> colored_points;
+    std::vector<TriMesh> tri_meshes;
 
     void clear() {
       axes.clear();
@@ -69,6 +75,7 @@ class SimpleGeometry final : public Primitive {
       planes.clear();
       polygons.clear();
       colored_points.clear();
+      tri_meshes.clear();
     }
   };
 

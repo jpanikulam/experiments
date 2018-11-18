@@ -1,6 +1,7 @@
 #include "viewer/primitives/simple_geometry_primitives.hh"
 
 #include <GL/glew.h>
+#include "viewer/colors/material.hh"
 #include "viewer/gl_aliases.hh"
 
 #include "geometry/perp.hh"
@@ -235,4 +236,38 @@ void draw_point(const Point &point) {
   glPopAttrib();
 }
 
+void draw_trimesh(const TriMesh &trimesh) {
+  glPushAttrib(GL_CURRENT_BIT);
+
+  glColor3f(1.0, 1.0, 1.0);
+  if (trimesh.outline) {
+    glPushAttrib(GL_LINE_BIT);
+    glLineWidth(trimesh.outline_width);
+    glBegin(GL_LINES);
+    for (const auto &tri : trimesh.mesh.triangles) {
+      glVertex(tri.vertices[0]);
+      glVertex(tri.vertices[1]);
+      glVertex(tri.vertices[2]);
+    }
+    glEnd();
+    glPopAttrib();
+  }
+
+  glEnable(GL_LIGHTING);
+  const auto material = colors::get_plastic(trimesh.color);
+  colors::gl_material(material);
+  glColor(trimesh.color);
+  if (trimesh.filled) {
+    glBegin(GL_TRIANGLES);
+    for (const auto &tri : trimesh.mesh.triangles) {
+      glVertex(tri.vertices[0]);
+      glVertex(tri.vertices[1]);
+      glVertex(tri.vertices[2]);
+    }
+
+    glEnd();
+    glDisable(GL_LIGHTING);
+  }
+  glPopAttrib();
+}
 }  // namespace viewer

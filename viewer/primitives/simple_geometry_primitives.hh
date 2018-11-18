@@ -4,6 +4,7 @@
 #include "viewer/primitives/primitive.hh"
 
 #include "geometry/shapes/halfspace.hh"
+#include "geometry/tri_mesh.hh"
 
 #include <vector>
 
@@ -85,6 +86,14 @@ struct Polygon {
   bool outline = false;
 };
 
+struct TriMesh {
+  geometry::TriMesh mesh;
+  Vec3 color = Vec3(1.0, 0.0, 1.0);
+  bool filled = true;
+  double outline_width = 3.0;
+  bool outline = false;
+};
+
 void draw_axes(const Axes &axes);
 
 void draw_lines(const std::vector<Line> &lines);
@@ -102,5 +111,7 @@ void draw_sphere(const Sphere &sphere);
 void draw_point(const Point &point);
 
 void draw_polygon(const Polygon &polygon);
+
+void draw_trimesh(const TriMesh &trimesh);
 
 }  // namespace viewer

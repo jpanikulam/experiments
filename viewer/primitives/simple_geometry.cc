@@ -45,6 +45,11 @@ void SimpleGeometry::add_plane(const Plane &plane) {
   back_buffer_.planes.push_back(plane);
 }
 
+void SimpleGeometry::add_triangle_mesh(const TriMesh &mesh) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.tri_meshes.push_back(mesh);
+}
+
 void SimpleGeometry::clear() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   front_buffer_.clear();
@@ -70,6 +75,7 @@ void SimpleGeometry::flush() {
   insert(front_buffer_.planes, back_buffer_.planes);
   insert(front_buffer_.polygons, back_buffer_.polygons);
   insert(front_buffer_.colored_points, back_buffer_.colored_points);
+  insert(front_buffer_.tri_meshes, back_buffer_.tri_meshes);
 }
 
 void SimpleGeometry::add_ray(const geometry::Ray &ray,
@@ -188,6 +194,10 @@ void SimpleGeometry::draw() const {
 
   for (const auto &plane : front_buffer_.planes) {
     draw_plane_grid(plane);
+  }
+
+  for (const auto &tri_mesh : front_buffer_.tri_meshes) {
+    draw_trimesh(tri_mesh);
   }
 
   draw_lines(front_buffer_.lines);
