@@ -1,31 +1,9 @@
-#include "eigen.hh"
-#include "sophus.hh"
+#include "planning/jet/jet_dynamics.hh"
 
 namespace planning {
 namespace jet {
 
 namespace {
-double force_from_throttle(const double throttle, const double temperature, const jcc::Vec3 &vel) {
-  return throttle * 0.01;
-}
-}  // namespace
-
-struct Parameters {
-  double mass;
-  double temperature;
-  VecNd<3> unit_z;
-};
-struct Controls {
-  VecNd<3> q;
-  double throttle_dot;
-};
-struct State {
-  SO3 R_world_from_body;
-  double throttle_pct;
-  VecNd<3> x;
-  VecNd<3> w;
-  VecNd<3> v;
-};
 struct StateDot {
   VecNd<3> w;
   double throttle_dot;
@@ -33,6 +11,14 @@ struct StateDot {
   VecNd<3> q;
   VecNd<3> a;
 };
+
+double force_from_throttle(const double throttle,
+                           const double temperature,
+                           const jcc::Vec3 &vel) {
+  return throttle * 1.0;
+}
+}  // namespace
+
 StateDot compute_qdot(const State &Q, const Controls &U, const Parameters &Z) {
   const double mass = Z.mass;
   const double inv_mass = (1.0 / mass);
@@ -88,6 +74,3 @@ State rk4_integrate(const State &Q, const Controls &U, const Parameters &Z, doub
 
 }  // namespace jet
 }  // namespace planning
-
-int main() {
-}
