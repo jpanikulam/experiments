@@ -239,6 +239,8 @@ void draw_point(const Point &point) {
 void draw_trimesh(const TriMesh &trimesh) {
   glPushAttrib(GL_CURRENT_BIT);
 
+  glTransform(trimesh.world_from_mesh);
+
   glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
   if (trimesh.outline) {
     glPushAttrib(GL_LINE_BIT);
@@ -253,7 +255,7 @@ void draw_trimesh(const TriMesh &trimesh) {
     glPopAttrib();
   }
 
-  glEnable(GL_LIGHTING);
+  // glEnable(GL_LIGHTING);
   const auto material = colors::get_plastic(trimesh.color);
   colors::gl_material(material);
   glColor(trimesh.color);
@@ -266,8 +268,8 @@ void draw_trimesh(const TriMesh &trimesh) {
     }
 
     glEnd();
-    glDisable(GL_LIGHTING);
   }
+  // glDisable(GL_LIGHTING);
   glPopAttrib();
 }
 }  // namespace viewer
