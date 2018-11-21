@@ -50,6 +50,7 @@ Shape add_cube() {
   const std::string file_path =
       "/home/jacob/repos/experiments/data/sphere_cube_shape.stl";
   const auto tri = geometry::import::read_stl(file_path);
+  assert(tri);
 
   const Vec4 color(1.0, 1.0, 1.0, 0.6);
 
@@ -58,11 +59,11 @@ Shape add_cube() {
   const SE3 world_from_tri;
 
   Shape shape;
-  for (size_t k = 0; k < tri.triangles.size(); ++k) {
+  for (size_t k = 0; k < tri->triangles.size(); ++k) {
     Simplex simplex;
-    simplex.vertices.push_back(world_from_tri * tri.triangles[k].vertices[0]);
-    simplex.vertices.push_back(world_from_tri * tri.triangles[k].vertices[1]);
-    simplex.vertices.push_back(world_from_tri * tri.triangles[k].vertices[2]);
+    simplex.vertices.push_back(world_from_tri * tri->triangles[k].vertices[0]);
+    simplex.vertices.push_back(world_from_tri * tri->triangles[k].vertices[1]);
+    simplex.vertices.push_back(world_from_tri * tri->triangles[k].vertices[2]);
     shape.simplices.push_back(simplex);
 
     add_simplex(*geom, simplex, color);

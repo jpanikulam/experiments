@@ -33,18 +33,19 @@ TriMesh add_cube() {
   const std::string file_path =
       "/home/jacob/repos/experiments/data/sphere_cube_shape.stl";
   const auto tri = geometry::import::read_stl(file_path);
+  assert(tri);
 
   const Vec4 color(1.0, 1.0, 1.0, 0.6);
 
-  for (std::size_t k = 0; k < tri.triangles.size(); ++k) {
+  for (std::size_t k = 0; k < tri->triangles.size(); ++k) {
     add_triangle(*geom,
-                 tri.triangles[k].vertices[0],
-                 tri.triangles[k].vertices[1],
-                 tri.triangles[k].vertices[2],
+                 tri->triangles[k].vertices[0],
+                 tri->triangles[k].vertices[1],
+                 tri->triangles[k].vertices[2],
                  color);
   }
   geom->flip();
-  return tri;
+  return *tri;
 }
 
 void demo_sdf() {

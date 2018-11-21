@@ -120,7 +120,7 @@ void demo_intersection() {
   auto win = viewer::get_window3d("Window A");
 
   const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
-  const auto tri = geometry::import::read_stl(file_path);
+  const auto tri = *geometry::import::read_stl(file_path);
   auto scene_geometry = win->add_primitive<viewer::SimpleGeometry>();
   auto visitor_geometry = win->add_primitive<viewer::SimpleGeometry>();
 
@@ -195,7 +195,7 @@ void demo_bounding_volumes() {
   auto win = viewer::get_window3d("Window A");
 
   const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
-  const auto tri = geometry::import::read_stl(file_path);
+  const auto tri = *geometry::import::read_stl(file_path);
 
   auto scene_geometry = win->add_primitive<viewer::SimpleGeometry>();
   auto visitor_geometry = win->add_primitive<viewer::SimpleGeometry>();

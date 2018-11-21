@@ -9,9 +9,11 @@ namespace visualization {
 
 PutFunction create_put_stl(const std::string& path_to_stl) {
   const auto tri = geometry::import::read_stl(path_to_stl);
-  const auto put = [tri](viewer::SimpleGeometry& geo, const SE3& world_from_body) {
+  assert(tri);
+  const auto put = [mesh = *tri](viewer::SimpleGeometry& geo,
+                                 const SE3& world_from_body) {
     const jcc::Vec3 color(0.8, 0.8, 0.8);
-    geo.add_triangle_mesh({tri, world_from_body, color, true, 3.0, false});
+    geo.add_triangle_mesh({mesh, world_from_body, color, true, 3.0, false});
   };
   return put;
 }
