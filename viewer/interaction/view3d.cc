@@ -8,12 +8,11 @@ SE3 OrbitCamera::camera_from_anchor() const {
   const Eigen::Quaterniond q(elev_rot * az_rot);
   const SE3 instantaneous_rotation(SO3(q), Vec3::Zero());
   const SE3 offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0)));
-  // glTransform(view.camera_from_target.inverse() * instantaneous_rotation);
   return offset * instantaneous_rotation;
 }
 
 SE3 OrbitCamera::camera_from_world() const {
-  return camera_from_anchor_ * anchor_body_.from_world;
+  return camera_from_anchor() * anchor_body_.from_world;
 }
 
 SE3 OrbitCamera::anchor_from_world() const {

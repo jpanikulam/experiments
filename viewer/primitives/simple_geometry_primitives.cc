@@ -239,6 +239,7 @@ void draw_point(const Point &point) {
 void draw_trimesh(const TriMesh &trimesh) {
   glPushAttrib(GL_CURRENT_BIT);
 
+  glPushMatrix();
   glTransform(trimesh.world_from_mesh);
 
   glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -271,5 +272,6 @@ void draw_trimesh(const TriMesh &trimesh) {
   }
   // glDisable(GL_LIGHTING);
   glPopAttrib();
+  glPopMatrix();
 }
 }  // namespace viewer
