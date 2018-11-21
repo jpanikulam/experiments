@@ -31,15 +31,19 @@ void go() {
   const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
 
   State jet;
-  jet.throttle_pct = 0.01;
+  jet.R_world_from_body = SO3::exp(jcc::Vec3::UnitX());
+  jet.x = jcc::Vec3(1.0, 1.0, 0.0);
   jet.v = jcc::Vec3(0.2, 0.0, 0.0);
   jet.w = jcc::Vec3::UnitX() * 0.1;
 
   for (int j = 0; j < 1000; ++j) {
-    put_jet(*jet_geo, SE3(jet.R_world_from_body, jet.x));
+    const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
+    put_jet(*jet_geo, world_from_jet);
 
-    view->set_target_from_world(
-        SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)), -jet.x));
+    const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * -3.1415 * 0.5);
+    const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
+    view->set_target_from_world(world_from_target.inverse());
+    jet_geo->add_line({jcc::Vec3::Zero(), world_from_jet.translation()});
 
     jet_geo->flip();
     view->spin_until_step();
