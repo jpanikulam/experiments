@@ -18,3 +18,7 @@
 Nonsense inspiration:
 
 https://i.redditmedia.com/s9h8d5yW7LAu0hiiTF7Nob0JYuGAxu8EBQf__A-T7jw.jpg?s=6694c592045369da452cae85e86221e3
+
+
+# Assets
+wget -O data/jetcat_p160.stl https://drive.google.com/uc?export=download&id=1O8YYbUNPs4GPlPqMvQyPdNNP9DNt-5XH

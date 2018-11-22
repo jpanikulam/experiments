@@ -34,7 +34,6 @@ void go() {
   const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
 
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
-
   Parameters params;
   params.mass = 100.0;
   params.unit_z = jcc::Vec3::UnitZ();
