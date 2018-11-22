@@ -48,22 +48,21 @@ void go() {
   jet.throttle_pct = 0.2;
 
   for (int j = 0; j < 1000; ++j) {
-    const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
-    put_jet(*jet_geo, world_from_jet);
-
-    const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);
-    // const SO3 world_from_target_rot;
-
-    const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
-    view->set_target_from_world(world_from_target.inverse());
 
 
     const double dt = 0.01;
     const jcc::Vec3 prev = jet.x;
     jet = rk4_integrate(jet, {}, params, dt);
     accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
-    accum_geo->flush();
+
+    const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
+    put_jet(*jet_geo, world_from_jet);
+    const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);
+    const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
+    view->set_target_from_world(world_from_target.inverse());
+
     jet_geo->flip();
+    accum_geo->flush();
     view->spin_until_step();
   }
 }
