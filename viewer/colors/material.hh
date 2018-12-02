@@ -1,3 +1,5 @@
+#pragma once
+
 #include "eigen.hh"
 
 namespace viewer {
