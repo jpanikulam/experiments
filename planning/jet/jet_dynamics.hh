@@ -30,5 +30,6 @@ struct StateDot {
 };
 State rk4_integrate(const State &Q, const Controls &U, const Parameters &Z,
                     const double h);
+Controls from_vector(const VecNd<4> &in_vec);
 } // namespace jet
 } // namespace planning

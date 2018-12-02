@@ -4,6 +4,7 @@
 #include "geometry/visualization/put_stl.hh"
 
 #include "planning/jet/jet_dynamics.hh"
+#include "planning/jet/jet_planner.hh"
 
 #include "eigen.hh"
 #include "sophus.hh"
@@ -40,21 +41,28 @@ void go() {
   // params.external_force = jcc::Vec3::UnitZ() * -1.0;
 
   State jet;
-  // jet.R_world_from_body = SO3::exp(jcc::Vec3::UnitX());
-
   jet.x = jcc::Vec3(1.0, 1.0, 0.0);
-  jet.v = jcc::Vec3(0.01, 0.0, 0.0);
+  // jet.v = jcc::Vec3(0.0, 0.0, 0.1);
+
   jet.w = jcc::Vec3::UnitX() * 0.01;
-  jet.throttle_pct = 0.2;
+  // jet.throttle_pct = 0.2;
 
   for (int j = 0; j < 1000; ++j) {
-
-
-    const double dt = 0.01;
+    const double dt = 0.1;
     const jcc::Vec3 prev = jet.x;
-    jet = rk4_integrate(jet, {}, params, dt);
-    accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
 
+    const auto future_states = plan(jet);
+    std::cout << "Done optimizing" << std::endl;
+    jet = future_states[1];
+    std::cout << "x: " << jet.x.transpose() << std::endl;
+    std::cout << "w: " << jet.w.transpose() << std::endl;
+    std::cout << "v: " << jet.v.transpose() << std::endl;
+    std::cout << "t: " << jet.throttle_pct << std::endl;
+
+    // const State u = future_states.front();
+    // jet = rk4_integrate(jet, {}, params, dt);
+
+    accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
     put_jet(*jet_geo, world_from_jet);
     const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);

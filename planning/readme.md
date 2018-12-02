@@ -21,4 +21,4 @@ https://i.redditmedia.com/s9h8d5yW7LAu0hiiTF7Nob0JYuGAxu8EBQf__A-T7jw.jpg?s=6694
 
 
 # Assets
-wget -O data/jetcat_p160.stl https://drive.google.com/uc?export=download&id=1O8YYbUNPs4GPlPqMvQyPdNNP9DNt-5XH
+download https://drive.google.com/uc?export=download&id=1O8YYbUNPs4GPlPqMvQyPdNNP9DNt-5XH --> data/jetcat_p160.stl
