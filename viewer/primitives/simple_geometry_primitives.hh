@@ -89,7 +89,7 @@ struct Polygon {
 struct TriMesh {
   geometry::TriMesh mesh;
   SE3 world_from_mesh;
-  Vec3 color = Vec3(1.0, 0.0, 1.0);
+  Vec4 color = Vec4(1.0, 0.0, 1.0, 1.0);
   bool filled = true;
   double outline_width = 3.0;
   bool outline = false;

@@ -12,8 +12,9 @@ struct Material {
   double shine;
 };
 
-inline Material get_plastic(const jcc::Vec3& color) {
-  return Material{color, jcc::Vec3(0.55, 0.55, 0.55), jcc::Vec3(0.70, 0.70, 0.70), 0.25};
+inline Material get_plastic(const jcc::Vec4& color) {
+  const Eigen::Vector3d color3 = color.head<3>();
+  return Material{color3, jcc::Vec3(0.55, 0.55, 0.55), jcc::Vec3(0.70, 0.70, 0.70), 0.25};
 }
 
 // Material get_plastic(const jcc::Vec3& color);
