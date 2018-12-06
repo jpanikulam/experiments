@@ -41,19 +41,35 @@ void go() {
   // params.external_force = jcc::Vec3::UnitZ() * -1.0;
 
   State jet;
-  jet.x = jcc::Vec3(1.0, 1.0, 0.0);
+  jet.x = jcc::Vec3(1.0, 1.0, -0.5);
   // jet.v = jcc::Vec3(0.0, 0.0, 0.1);
 
-  jet.w = jcc::Vec3::UnitX() * 0.01;
-  // jet.throttle_pct = 0.2;
+  jet.w = jcc::Vec3::UnitX() * 0.00;
+  jet.throttle_pct = 0.2;
 
+  std::vector<Controls> prev_controls;
   for (int j = 0; j < 1000; ++j) {
     const double dt = 0.1;
     const jcc::Vec3 prev = jet.x;
 
-    const auto future_states = plan(jet);
+    const auto future_states = plan(jet, prev_controls);
+
+    {
+      prev_controls.clear();
+      for (const auto& xu : future_states) {
+        prev_controls.push_back(xu.control);
+      }
+    }
+    for (std::size_t k = 0; k < future_states.size(); ++k) {
+      const auto& state = future_states.at(k).state;
+      const SE3 world_from_state = SE3(state.R_world_from_body, state.x);
+      const double scale =
+          static_cast<double>(k) / static_cast<double>(future_states.size());
+      jet_geo->add_axes({world_from_state, scale});
+    }
+
     std::cout << "Done optimizing" << std::endl;
-    jet = future_states[1];
+    jet = future_states[1].state;
     std::cout << "x: " << jet.x.transpose() << std::endl;
     std::cout << "w: " << jet.w.transpose() << std::endl;
     std::cout << "v: " << jet.v.transpose() << std::endl;
@@ -65,6 +81,10 @@ void go() {
     accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
     put_jet(*jet_geo, world_from_jet);
+    jet_geo->add_line({world_from_jet.translation(),
+                       world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct,
+                       jcc::Vec4(1.0, 0.3, 0.3, 0.8), 5.0});
+
     const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);
     const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
     view->set_target_from_world(world_from_target.inverse());

@@ -10,8 +10,8 @@ StateDot compute_qdot(const State &Q, const Controls &U, const Parameters &Z) {
   const double mass = Z.mass;
   const double inv_mass = (1.0 / mass);
   const SO3 R_world_from_body = Q.R_world_from_body;
-  const double throttle_dot = U.throttle_dot;
-  const double thrust = throttle_dot;
+  const double throttle_pct = Q.throttle_pct;
+  const double thrust = force_from_throttle(throttle_pct);
   const VecNd<3> unit_z = Z.unit_z;
   const VecNd<3> body_force = thrust * unit_z;
   const VecNd<3> force_world = R_world_from_body * body_force;
@@ -19,29 +19,30 @@ StateDot compute_qdot(const State &Q, const Controls &U, const Parameters &Z) {
   const VecNd<3> net_force_world = force_world + external_force;
   const VecNd<3> a = inv_mass * net_force_world;
   const VecNd<3> q = U.q;
+  const double throttle_dot = U.throttle_dot;
   const VecNd<3> w = Q.w;
   const VecNd<3> v = Q.v;
   const StateDot Qdot = StateDot{w, throttle_dot, v, q, a};
   return Qdot;
 }
 StateDot operator*(const double half_h, const StateDot &K1) {
-  const StateDot anon_4fb242 =
+  const StateDot anon_8133d3 =
       StateDot{(half_h * (K1.w)), (half_h * (K1.throttle_dot)),
                (half_h * (K1.v)), (half_h * (K1.q)), (half_h * (K1.a))};
-  return anon_4fb242;
+  return anon_8133d3;
 }
-State operator+(const State &Q, const StateDot &anon_4fb242) {
-  const State Q2 = State{((SO3::exp((anon_4fb242.w))) * (Q.R_world_from_body)),
-                         ((Q.throttle_pct) + (anon_4fb242.throttle_dot)),
-                         ((Q.x) + (anon_4fb242.v)), ((Q.w) + (anon_4fb242.q)),
-                         ((Q.v) + (anon_4fb242.a))};
+State operator+(const State &Q, const StateDot &anon_8133d3) {
+  const State Q2 = State{((SO3::exp((anon_8133d3.w))) * (Q.R_world_from_body)),
+                         ((Q.throttle_pct) + (anon_8133d3.throttle_dot)),
+                         ((Q.x) + (anon_8133d3.v)), ((Q.w) + (anon_8133d3.q)),
+                         ((Q.v) + (anon_8133d3.a))};
   return Q2;
 }
 StateDot operator+(const StateDot &K1, const StateDot &K4) {
-  const StateDot anon_c8b9f2 =
+  const StateDot anon_181437 =
       StateDot{((K1.w) + (K4.w)), ((K1.throttle_dot) + (K4.throttle_dot)),
                ((K1.v) + (K4.v)), ((K1.q) + (K4.q)), ((K1.a) + (K4.a))};
-  return anon_c8b9f2;
+  return anon_181437;
 }
 State rk4_integrate(const State &Q, const Controls &U, const Parameters &Z,
                     const double h) {
@@ -60,9 +61,15 @@ State rk4_integrate(const State &Q, const Controls &U, const Parameters &Z,
   return Qn;
 }
 Controls from_vector(const VecNd<4> &in_vec) {
-  const VecNd<3> anon_cd7d6c =
+  const VecNd<3> anon_5514ed =
       (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const Controls out = Controls{anon_cd7d6c, (in_vec[3])};
+  const Controls out = Controls{anon_5514ed, (in_vec[3])};
+  return out;
+}
+VecNd<4> to_vector(const Controls &in_grp) {
+  const VecNd<4> out = (VecNd<4>() << ((in_grp.q)[0]), ((in_grp.q)[1]),
+                        ((in_grp.q)[2]), (in_grp.throttle_dot))
+                           .finished();
   return out;
 }
 } // namespace jet

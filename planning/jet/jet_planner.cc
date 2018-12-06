@@ -19,14 +19,15 @@ double jet_cost(const State& state, const VecNd<U_DIM>& u, int t) {
   }
   {
     const jcc::Vec3 attitude = state.R_world_from_body * jcc::Vec3::UnitZ();
-    if (t >= 4) {
+    if (t >= 13) {
       const double sin_error = attitude.cross(jcc::Vec3::UnitZ()).squaredNorm();
-      cost += 1.0 * sin_error * sin_error;
-      cost += 10.0 * state.x.squaredNorm();
-      // cost += state.x.z() * state.x.z();
-      cost += 1.0 * state.w.squaredNorm();
+      cost += 30.0 * sin_error * sin_error;
+      // cost += 10.0 * state.x.squaredNorm();
+      cost += 100.0 * state.x.z() * state.x.z();
+      cost += 150.0 * state.v.squaredNorm();
     }
-    cost += 1.0 * state.v.squaredNorm();
+    cost += 25.0 * state.v.squaredNorm();
+    cost += 1.0 * state.w.squaredNorm();
   }
   return cost;
 }
@@ -40,9 +41,22 @@ State dynamics(const State& state, const VecNd<U_DIM>& u, const double dt) {
   return rk4_integrate(state, from_vector(u), params, dt);
 }
 
-std::vector<State> plan(const State& x0) {
+std::vector<StateControl> plan(const State& x0,
+                               const std::vector<Controls>& initialization) {
   const GenericPlanner<State, U_DIM> planner(dynamics, jet_cost);
-  return planner.plan(x0);
+
+  std::vector<VecNd<U_DIM>> initialization_vec;
+  for (const auto& control : initialization) {
+    initialization_vec.push_back(to_vector(control));
+  }
+
+  const auto pre_result = planner.plan(x0, initialization_vec);
+  std::vector<StateControl> result;
+  for (const auto& pre : pre_result) {
+    result.push_back({pre.state, from_vector(pre.control)});
+  }
+
+  return result;
 }
 
 }  // namespace jet

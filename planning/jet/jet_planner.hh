@@ -7,7 +7,13 @@
 namespace planning {
 namespace jet {
 
-std::vector<State> plan(const State& x0);
+struct StateControl {
+  State state;
+  Controls control;
+};
+
+std::vector<StateControl> plan(const State& x0,
+                               const std::vector<Controls>& initialization = {});
 
 }  // namespace jet
 }  // namespace planning
