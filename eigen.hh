@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Eigen/StdVector>
 #include <Eigen/Dense>
+#include <Eigen/StdVector>
 
 template <int ROWS>
 using VecNd = Eigen::Matrix<double, ROWS, 1>;
@@ -11,7 +11,6 @@ using MatNd = Eigen::Matrix<double, ROWS, COLS>;
 
 template <int ROWS>
 using SquareMatNd = Eigen::Matrix<double, ROWS, ROWS>;
-
 
 namespace jcc {
 using Vec1 = VecNd<1>;
