@@ -9,7 +9,6 @@
 namespace planning {
 
 namespace {
-using Vec3 = Eigen::Vector3d;
 using VecX = Eigen::VectorXd;
 
 }  // namespace
@@ -30,8 +29,8 @@ class GenericPlanner {
       : dynamics_(dynamics), cost_(cost) {
   }
 
-  static constexpr int HORIZON = 15;
-  static constexpr double dt = 0.1;
+  static constexpr int HORIZON = 25;
+  static constexpr double dt = 0.25;
 
   //
   // Form the problem
@@ -81,7 +80,7 @@ class GenericPlanner {
 
   VecX optimize(const numerics::OptimizationProblem& problem,
                 const std::vector<ControlVec>& initialization) const {
-    VecX u_init = VecX::Zero(HORIZON * U_DIM);
+    VecX u_init = VecX::Ones(HORIZON * U_DIM);
     if (!initialization.empty()) {
       for (std::size_t t = 0; t < initialization.size(); ++t) {
         u_init.segment(t, U_DIM) = initialization.at(t);
