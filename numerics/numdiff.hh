@@ -28,7 +28,7 @@ Eigen::VectorXd dynamic_numerical_gradient(
     const std::function<double(const Eigen::VectorXd &)> &fcn) {
   using OutVec = Eigen::VectorXd;
   constexpr double FEPS = 1e-6;
-  constexpr double INV_2FEPS = 1.0 / (2.0 * 1e-6);
+  constexpr double INV_2FEPS = 1.0 / (2.0 * FEPS);
 
   OutVec jac = OutVec::Zero(x.rows());
   OutVec twiddle = OutVec::Zero(x.rows());
@@ -48,10 +48,11 @@ Eigen::Matrix<double, output_rows, input_rows> numerical_jacobian(
   static_assert(output_rows != Eigen::Dynamic, "No dynamic");
   static_assert(input_rows != Eigen::Dynamic, "No dynamic");
 
-  // df1/dx1    df1/dx2 ....
-  // df2/dx1    df2/dx2 ....
-  //    :          :
-  //    :          :
+  // df1/dx1    df1/dx2 .. ..    df1/dxm
+  // df2/dx1    df2/dx2 .. ..    df2/dxm
+  //    :          :     ..
+  //    :          :           ..
+  // dfn/dx1    dfn/dx2              ..
 
   using OutVec = Eigen::Matrix<double, input_rows, 1>;
   using Jacobian = Eigen::Matrix<double, output_rows, input_rows>;
