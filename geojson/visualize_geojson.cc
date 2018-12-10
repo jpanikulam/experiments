@@ -1,3 +1,5 @@
+//%ignore
+
 #include "geojson/fast_json.hh"
 
 #include "eigen_helpers.hh"
