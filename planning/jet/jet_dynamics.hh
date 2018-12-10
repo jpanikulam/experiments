@@ -5,6 +5,13 @@
 
 namespace planning {
 namespace jet {
+struct StateDelta {
+  VecNd<3> R_world_from_body_error_log = VecNd<3>::Zero();
+  double anon_4e2789 = 0.0;
+  VecNd<3> anon_8310eb = VecNd<3>::Zero();
+  VecNd<3> anon_858406 = VecNd<3>::Zero();
+  VecNd<3> anon_1e0f7c = VecNd<3>::Zero();
+};
 struct Parameters {
   VecNd<3> unit_z = VecNd<3>::Zero();
   double mass = 0.0;
@@ -28,8 +35,12 @@ struct StateDot {
   VecNd<3> q = VecNd<3>::Zero();
   VecNd<3> a = VecNd<3>::Zero();
 };
+StateDelta from_vector(const VecNd<13> &in_vec);
+State apply_delta(const State &a, const VecNd<13> &delta);
 State rk4_integrate(const State &Q, const Controls &U, const Parameters &Z,
                     const double h);
+VecNd<13> to_vector(const StateDelta &in_grp);
+VecNd<13> delta_vec(const State &a, const State &b);
 Controls from_vector(const VecNd<4> &in_vec);
 VecNd<4> to_vector(const Controls &in_grp);
 } // namespace jet
