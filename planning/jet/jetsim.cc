@@ -44,7 +44,7 @@ void go() {
   jet.x = jcc::Vec3(1.0, 1.0, -0.5);
   // jet.v = jcc::Vec3(0.0, 0.0, 0.1);
 
-  jet.w = jcc::Vec3::UnitX() * 0.00;
+  jet.w = jcc::Vec3::UnitX() * 0.10;
   jet.throttle_pct = 0.2;
 
   std::vector<Controls> prev_controls;
@@ -56,8 +56,9 @@ void go() {
 
     {
       prev_controls.clear();
-      for (const auto& xu : future_states) {
-        prev_controls.push_back(xu.control);
+      for (std::size_t xu_ind = 1u; xu_ind < future_states.size(); ++xu_ind) {
+        const auto& xu = future_states.at(xu_ind);
+        // prev_controls.push_back(xu.control);
       }
     }
     for (std::size_t k = 0; k < future_states.size(); ++k) {
@@ -70,6 +71,7 @@ void go() {
 
     std::cout << "Done optimizing" << std::endl;
     jet = future_states[1].state;
+    std::cout << "q: " << future_states[1].control.q.transpose() << std::endl;
     std::cout << "x: " << jet.x.transpose() << std::endl;
     std::cout << "w: " << jet.w.transpose() << std::endl;
     std::cout << "v: " << jet.v.transpose() << std::endl;
@@ -82,7 +84,8 @@ void go() {
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
     put_jet(*jet_geo, world_from_jet);
     jet_geo->add_line({world_from_jet.translation(),
-                       world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct,
+                       world_from_jet.translation() +
+                           (world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct),
                        jcc::Vec4(1.0, 0.3, 0.3, 0.8), 5.0});
 
     const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);
