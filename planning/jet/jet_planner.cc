@@ -24,20 +24,27 @@ double jet_cost(const State& state, const VecNd<U_DIM>& u, int t) {
   double cost = 0.0;
 
   {
-    cost += control.q.squaredNorm();
+    cost += 25.0 * control.q.squaredNorm();
     cost += control.throttle_dot * control.throttle_dot;
   }
   {
-    const jcc::Vec3 attitude = state.R_world_from_body * jcc::Vec3::UnitZ();
-    if (t >= 13) {
-      const double sin_error = attitude.cross(jcc::Vec3::UnitZ()).squaredNorm();
-      // cost += 30.0 * sin_error * sin_error;
-      // cost += 10.0 * state.x.squaredNorm();
-      cost += 100.0 * state.x.z() * state.x.z();
+    if (t >= 14) {
+      // const jcc::Vec3 attitude = state.R_world_from_body * jcc::Vec3::UnitZ();
+      // const double sin_error = attitude.cross(jcc::Vec3::UnitZ()).squaredNorm();
+      // cost += 14.0 * sin_error * sin_error;
+
+      const jcc::Vec3 target_pos(0.0, 0.0, 3.0);
+      const jcc::Vec3 error = state.x - target_pos;
+
+      cost += 10.0 * error.squaredNorm();
+      cost += 100.0 * error.z() * error.z();
       // cost += 150.0 * state.v.squaredNorm();
     }
     cost += 25.0 * state.v.squaredNorm();
     cost += 10.0 * state.w.squaredNorm();
+    cost += state.throttle_pct * state.throttle_pct;
+    cost += 25.0 * std::pow(std::max(state.throttle_pct, 10.0), 2);
+    cost += 100.0 * std::pow(std::min(state.throttle_pct, 0.0), 2);
   }
   return cost;
 }
@@ -46,7 +53,7 @@ State dynamics(const State& state, const VecNd<U_DIM>& u, const double dt) {
   Parameters params;
   params.mass = 100.0;
   params.unit_z = jcc::Vec3::UnitZ();
-  params.external_force = -jcc::Vec3::UnitZ() * 1.0;
+  params.external_force = -jcc::Vec3::UnitZ() * 5.0;
 
   return rk4_integrate(state, from_vector(u), params, dt);
 }
