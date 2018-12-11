@@ -58,7 +58,7 @@ execute_process(
     COMMAND python ${CMAKE_SOURCE_DIR}/cppmv/cppmv.py -v success -p ${CMAKE_SOURCE_DIR}
 )
 
-set(CMAKE_CXX_COMPILER "g++-5")
+set(CMAKE_CXX_COMPILER "g++-7")
 set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
 
 
