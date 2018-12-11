@@ -7,10 +7,10 @@ namespace planning {
 namespace jet {
 struct StateDelta {
   VecNd<3> R_world_from_body_error_log = VecNd<3>::Zero();
-  double anon_4e2789 = 0.0;
-  VecNd<3> anon_8310eb = VecNd<3>::Zero();
-  VecNd<3> anon_858406 = VecNd<3>::Zero();
-  VecNd<3> anon_1e0f7c = VecNd<3>::Zero();
+  double throttle_pct_error = 0.0;
+  VecNd<3> x_error = VecNd<3>::Zero();
+  VecNd<3> w_error = VecNd<3>::Zero();
+  VecNd<3> v_error = VecNd<3>::Zero();
 };
 struct Parameters {
   VecNd<3> unit_z = VecNd<3>::Zero();

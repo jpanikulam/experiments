@@ -5,21 +5,22 @@ namespace jet {
 State operator+(const State &a, const StateDelta &grp_b) {
   const State out = State{
       ((SO3::exp((grp_b.R_world_from_body_error_log))) * (a.R_world_from_body)),
-      ((a.throttle_pct) + (grp_b.anon_4e2789)), ((a.x) + (grp_b.anon_8310eb)),
-      ((a.w) + (grp_b.anon_858406)), ((a.v) + (grp_b.anon_1e0f7c))};
+      ((a.throttle_pct) + (grp_b.throttle_pct_error)),
+      ((a.x) + (grp_b.x_error)), ((a.w) + (grp_b.w_error)),
+      ((a.v) + (grp_b.v_error))};
   return out;
 }
 StateDelta from_vector(const VecNd<13> &in_vec) {
-  const VecNd<3> anon_8d1930 =
-      (VecNd<3>() << (in_vec[7]), (in_vec[8]), (in_vec[9])).finished();
-  const VecNd<3> anon_e3faed =
-      (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const VecNd<3> anon_4da5db =
+  const VecNd<3> anon_e0479b =
       (VecNd<3>() << (in_vec[4]), (in_vec[5]), (in_vec[6])).finished();
-  const VecNd<3> anon_25298e =
+  const VecNd<3> anon_d9fa5b =
+      (VecNd<3>() << (in_vec[7]), (in_vec[8]), (in_vec[9])).finished();
+  const VecNd<3> anon_aa1f5d =
+      (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
+  const VecNd<3> anon_12cb64 =
       (VecNd<3>() << (in_vec[10]), (in_vec[11]), (in_vec[12])).finished();
-  const StateDelta out = StateDelta{anon_e3faed, (in_vec[3]), anon_4da5db,
-                                    anon_8d1930, anon_25298e};
+  const StateDelta out = StateDelta{anon_aa1f5d, (in_vec[3]), anon_e0479b,
+                                    anon_d9fa5b, anon_12cb64};
   return out;
 }
 State apply_delta(const State &a, const VecNd<13> &delta) {
@@ -51,23 +52,23 @@ StateDot compute_qdot(const State &Q, const Controls &U, const Parameters &Z) {
   return Qdot;
 }
 StateDot operator*(const double half_h, const StateDot &K1) {
-  const StateDot anon_49245a =
+  const StateDot anon_de02d8 =
       StateDot{(half_h * (K1.w)), (half_h * (K1.throttle_dot)),
                (half_h * (K1.v)), (half_h * (K1.q)), (half_h * (K1.a))};
-  return anon_49245a;
+  return anon_de02d8;
 }
-State operator+(const State &Q, const StateDot &anon_49245a) {
-  const State Q2 = State{((SO3::exp((anon_49245a.w))) * (Q.R_world_from_body)),
-                         ((Q.throttle_pct) + (anon_49245a.throttle_dot)),
-                         ((Q.x) + (anon_49245a.v)), ((Q.w) + (anon_49245a.q)),
-                         ((Q.v) + (anon_49245a.a))};
+State operator+(const State &Q, const StateDot &anon_de02d8) {
+  const State Q2 = State{((SO3::exp((anon_de02d8.w))) * (Q.R_world_from_body)),
+                         ((Q.throttle_pct) + (anon_de02d8.throttle_dot)),
+                         ((Q.x) + (anon_de02d8.v)), ((Q.w) + (anon_de02d8.q)),
+                         ((Q.v) + (anon_de02d8.a))};
   return Q2;
 }
 StateDot operator+(const StateDot &K1, const StateDot &K4) {
-  const StateDot anon_90d698 =
+  const StateDot anon_428547 =
       StateDot{((K1.w) + (K4.w)), ((K1.throttle_dot) + (K4.throttle_dot)),
                ((K1.v) + (K4.v)), ((K1.q) + (K4.q)), ((K1.a) + (K4.a))};
-  return anon_90d698;
+  return anon_428547;
 }
 State rk4_integrate(const State &Q, const Controls &U, const Parameters &Z,
                     const double h) {
@@ -89,12 +90,10 @@ VecNd<13> to_vector(const StateDelta &in_grp) {
   const VecNd<13> out =
       (VecNd<13>() << ((in_grp.R_world_from_body_error_log)[0]),
        ((in_grp.R_world_from_body_error_log)[1]),
-       ((in_grp.R_world_from_body_error_log)[2]), (in_grp.anon_4e2789),
-       ((in_grp.anon_8310eb)[0]), ((in_grp.anon_8310eb)[1]),
-       ((in_grp.anon_8310eb)[2]), ((in_grp.anon_858406)[0]),
-       ((in_grp.anon_858406)[1]), ((in_grp.anon_858406)[2]),
-       ((in_grp.anon_1e0f7c)[0]), ((in_grp.anon_1e0f7c)[1]),
-       ((in_grp.anon_1e0f7c)[2]))
+       ((in_grp.R_world_from_body_error_log)[2]), (in_grp.throttle_pct_error),
+       ((in_grp.x_error)[0]), ((in_grp.x_error)[1]), ((in_grp.x_error)[2]),
+       ((in_grp.w_error)[0]), ((in_grp.w_error)[1]), ((in_grp.w_error)[2]),
+       ((in_grp.v_error)[0]), ((in_grp.v_error)[1]), ((in_grp.v_error)[2]))
           .finished();
   return out;
 }
@@ -110,16 +109,20 @@ VecNd<13> delta_vec(const State &a, const State &b) {
   const SO3 R_world_from_body_error = difference.R_world_from_body;
   const VecNd<3> R_world_from_body_error_log =
       SO3::log(R_world_from_body_error);
+  const double throttle_pct_error = difference.throttle_pct;
+  const VecNd<3> x_error = difference.x;
+  const VecNd<3> w_error = difference.w;
+  const VecNd<3> v_error = difference.v;
   const StateDelta delta =
-      StateDelta{R_world_from_body_error_log, (difference.throttle_pct),
-                 (difference.x), (difference.w), (difference.v)};
+      StateDelta{R_world_from_body_error_log, throttle_pct_error, x_error,
+                 w_error, v_error};
   const VecNd<13> out_vec = to_vector(delta);
   return out_vec;
 }
 Controls from_vector(const VecNd<4> &in_vec) {
-  const VecNd<3> anon_f68c10 =
+  const VecNd<3> anon_e3ca52 =
       (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const Controls out = Controls{anon_f68c10, (in_vec[3])};
+  const Controls out = Controls{anon_e3ca52, (in_vec[3])};
   return out;
 }
 VecNd<4> to_vector(const Controls &in_grp) {
