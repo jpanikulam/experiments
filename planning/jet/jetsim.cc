@@ -41,16 +41,15 @@ void go() {
   // params.external_force = jcc::Vec3::UnitZ() * -1.0;
 
   State jet;
-  jet.x = jcc::Vec3(-3.0, -3.0, -5.0);
+  jet.x = jcc::Vec3(-3.0, -3.0, 3.0);
 
-  jet.v = jcc::Vec3(0.3, 0.1, -0.6);
-  jet.w = jcc::Vec3::UnitX() * 0.2;
+  // jet.v = jcc::Vec3(0.3, 0.1, -0.6);
+  // jet.w = jcc::Vec3::UnitX() * 0.2;
 
   // jet.R_world_from_body = SO3::exp(jcc::Vec3(0.1, 3.5, 0.2));
   // jet.w = jcc::Vec3::UnitX() * 0.01;
   // jet.v = jcc::Vec3(0.0, 0.1, 0.1);
-
-  jet.throttle_pct = 0.2;
+  jet.throttle_pct = 0.0;
 
   std::vector<Controls> prev_controls;
   for (int j = 0; j < 1000; ++j) {
