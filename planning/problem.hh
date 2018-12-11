@@ -61,7 +61,7 @@ class Problem {
         dt_(dt) {
   }
 
-  double cost(const State& x, const ControlVec& u, int t) const {
+  double cost(const State& x, const ControlVec& u, const int t) const {
     return cost_(x, u, t);
   }
 
