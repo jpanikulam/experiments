@@ -59,12 +59,12 @@ double XlqrProblem<_Prob>::shoot(const typename XlqrProblem<_Prob>::Solution& so
 
     // TEMP: HACK
     ControlVec optimized_u;
-    if (alpha != -1.0) {
+    if (alpha == -1.0) {
+      optimized_u = ControlVec::Zero();
+    } else {
       const ControlVec feedback_u = lqr_soln.at(t).K * error;
       const ControlVec feedforward_u = alpha * lqr_soln[t].k;
       optimized_u = feedback_u + feedforward_u;
-    } else {
-      optimized_u = ControlVec::Zero();
     }
     const ControlVec executed_u = soln.u[t] + optimized_u;
     cost += prob_.cost(x, executed_u, t);
@@ -105,7 +105,6 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::line_search(
 
   Solution out_soln;
   shoot(soln, lqr_soln, best_alpha, &out_soln);
-
   return out_soln;
 }
 
@@ -119,13 +118,13 @@ typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
   using ControlHess = MatNd<Prob::U_DIM, Prob::U_DIM>;
   using StateControlHessBlock = MatNd<Prob::U_DIM, Prob::X_DIM>;
 
-  Derivatives final_derivatives =
+  const Derivatives final_derivatives =
       cost_diffs_(soln.x.back(), ControlVec::Zero(), prob_.horizon());
   StateHess Vxx = final_derivatives.Q;
   VecNd<Prob::X_DIM> Vx = final_derivatives.g_x;
 
-  const int last_ctrl_ind = static_cast<int>(soln.u.size());
-  for (int k = last_ctrl_ind - 1; k >= 0; --k) {
+  const int ctrl_size = static_cast<int>(soln.u.size());
+  for (int k = ctrl_size - 1; k >= 0; --k) {
     const State& x = soln.x.at(k);
     const ControlVec& u = soln.u.at(k);
     const Derivatives diffs = cost_diffs_(x, u, k);
