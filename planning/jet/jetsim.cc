@@ -81,7 +81,8 @@ void go() {
 
     std::cout << "Done optimizing" << std::endl;
     jet = future_states[1].state;
-    std::cout << "\tq     : " << future_states[1].control.q.transpose() << std::endl;
+    const auto ctrl = future_states[1].control;
+    std::cout << "\tq     : " << ctrl.q.transpose() << std::endl;
     std::cout << "\tx     : " << jet.x.transpose() << std::endl;
     std::cout << "\tw     : " << jet.w.transpose() << std::endl;
     std::cout << "\tv     : " << jet.v.transpose() << std::endl;
@@ -100,13 +101,14 @@ void go() {
              (world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct * 0.1),
          jcc::Vec4(0.1, 0.9, 0.1, 0.8), 9.0});
 
-    if (false) {
+    if (true) {
       const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);
       const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
       view->set_target_from_world(world_from_target.inverse());
+    } else {
+      view->set_target_from_world(world_from_jet.inverse());
     }
 
-    view->set_target_from_world(world_from_jet.inverse());
 
     jet_geo->flip();
     accum_geo->flush();

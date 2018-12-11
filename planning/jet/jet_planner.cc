@@ -1,23 +1,11 @@
 #include "planning/jet/jet_planner.hh"
 
-#include "numerics/optimize.hh"
-#include "numerics/wrap_optimizer.hh"
-
 #include "planning/differentiation.hh"
-#include "planning/problem.hh"
-
-#include "planning/xlqr_problem.hh"
-#include "planning/xlqr_problem_impl.hh"
-
 #include "planning/generic_planner.hh"
+#include "planning/jet/jet_xlqr.hh"
 
 namespace planning {
 namespace jet {
-constexpr int X_DIM = 13;
-constexpr int U_DIM = 4;
-
-constexpr double DT = 0.1;
-constexpr int HORIZON = 15;
 
 double huber(double x, double k) {
   constexpr double half = 0.5;
@@ -72,8 +60,6 @@ State dynamics(const State& state, const VecNd<U_DIM>& u, const double dt) {
   return rk4_integrate(state, from_vector(u), params, dt);
 }
 
-using JetDim = Dimensions<X_DIM, U_DIM>;
-
 GenericDerivatives<JetDim> generate_derivatives(const State& state,
                                                 const VecNd<U_DIM>& u,
                                                 int t) {
@@ -96,38 +82,13 @@ GenericDerivatives<JetDim> generate_derivatives(const State& state,
   return derivatives;
 }
 
-std::vector<StateControl> plan_generic(const State& x0,
-                                       const std::vector<Controls>& initialization) {
-  const GenericPlanner<State, U_DIM> planner(dynamics, jet_cost);
-
-  std::vector<VecNd<U_DIM>> initialization_vec;
-  for (const auto& control : initialization) {
-    initialization_vec.push_back(to_vector(control));
-  }
-
-  const auto pre_result = planner.plan(x0, initialization_vec);
-  std::vector<StateControl> result;
-  for (const auto& pre : pre_result) {
-    result.push_back({pre.state, from_vector(pre.control)});
-  }
-
-  return result;
-}
-
 std::vector<StateControl> plan(const State& x0,
                                const std::vector<Controls>& initialization) {
-  using JetProblem = Problem<JetDim, State>;
   const JetProblem prob(jet_cost, dynamics, delta_vec, apply_delta, HORIZON, DT);
-  const XlqrProblem<JetProblem> planner(prob, generate_derivatives);
-
-  // std::vector<VecNd<U_DIM>> initialization_vec;
-  // for (const auto& control : initialization) {
-  //   initialization_vec.push_back(to_vector(control));
-  // }
+  const JetXlqr planner(prob, generate_derivatives);
 
   const auto pre = planner.solve(x0);
   std::vector<StateControl> result;
-  // for (const auto& pre : pre_result) {
   for (int k = 0; k < HORIZON; ++k) {
     result.push_back({pre.x[k], from_vector(pre.u[k])});
   }
