@@ -41,15 +41,14 @@ void go() {
   // params.external_force = jcc::Vec3::UnitZ() * -1.0;
 
   State jet;
-  jet.x = jcc::Vec3(-5.0, -5.0, -4.5);
+  jet.x = jcc::Vec3(-3.0, -3.0, -5.0);
 
-  // jet.v = jcc::Vec3(0.0, 0.1, 0.1);
-  // jet.w = jcc::Vec3::UnitX() * 1.3;
+  jet.v = jcc::Vec3(0.3, 0.1, -0.6);
+  jet.w = jcc::Vec3::UnitX() * 0.2;
 
   // jet.R_world_from_body = SO3::exp(jcc::Vec3(0.1, 3.5, 0.2));
-  jet.v = jcc::Vec3(0.0, 0.1, 0.1);
-  jet.w = jcc::Vec3::UnitX() * 0.01;
-
+  // jet.w = jcc::Vec3::UnitX() * 0.01;
+  // jet.v = jcc::Vec3(0.0, 0.1, 0.1);
 
   jet.throttle_pct = 0.2;
 
@@ -72,8 +71,7 @@ void go() {
       const SE3 world_from_state = SE3(state.R_world_from_body, state.x);
       const double scale =
           static_cast<double>(k) / static_cast<double>(future_states.size());
-      // jet_geo->add_axes({world_from_state, scale});
-
+      jet_geo->add_axes({world_from_state, 1.0 - scale});
 
       if (k > 1) {
         jet_geo->add_line({future_states.at(k).state.x, future_states.at(k - 1).state.x,
@@ -93,16 +91,22 @@ void go() {
     // jet = rk4_integrate(jet, {}, params, dt);
 
     accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
+
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
     put_jet(*jet_geo, world_from_jet);
-    jet_geo->add_line({world_from_jet.translation(),
-                       world_from_jet.translation() +
-                           (world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct),
-                       jcc::Vec4(0.1, 0.9, 0.1, 0.8), 9.0});
+    jet_geo->add_line(
+        {world_from_jet.translation(),
+         world_from_jet.translation() +
+             (world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct * 0.1),
+         jcc::Vec4(0.1, 0.9, 0.1, 0.8), 9.0});
 
-    const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);
-    const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
-    view->set_target_from_world(world_from_target.inverse());
+    if (false) {
+      const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);
+      const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
+      view->set_target_from_world(world_from_target.inverse());
+    }
+
+    view->set_target_from_world(world_from_jet.inverse());
 
     jet_geo->flip();
     accum_geo->flush();
