@@ -1,6 +1,9 @@
+#pragma once
+
 #include "planning/jet/jet_dynamics.hh"
 #include "planning/problem.hh"
 #include "planning/xlqr_problem.hh"
+#include "planning/differentiation.hh"
 
 namespace planning {
 namespace jet {

@@ -31,6 +31,10 @@ double jet_cost(const State& state, const VecNd<U_DIM>& u, int t) {
       // const double sin_error = attitude.cross(jcc::Vec3::UnitZ()).squaredNorm();
       // cost += 14.0 * sin_error * sin_error;
 
+      // const SO3 world_from_target = SO3::exp(jcc::Vec3(1.0, 0.2, 0.2));
+      // const jcc::Vec3 rot_error = (state.R_world_from_body * world_from_target.inverse()).log();
+      // cost += 15.0 * rot_error.squaredNorm();
+
       const jcc::Vec3 target_pos(0.0, 0.0, 3.0);
       const jcc::Vec3 error = state.x - target_pos;
 
@@ -42,7 +46,8 @@ double jet_cost(const State& state, const VecNd<U_DIM>& u, int t) {
 
     cost += 25.0 * state.v.squaredNorm();
     cost += 35.0 * state.w.squaredNorm();
-    cost += state.throttle_pct * state.throttle_pct;
+    // cost += state.throttle_pct * state.throttle_pct;
+    // cost += std::exp(state.throttle_pct);
     cost += 25.0 * std::pow(std::max(state.throttle_pct, 8.0), 2);
     cost += 100.0 * std::pow(std::min(state.throttle_pct, 0.0), 2);
   }
