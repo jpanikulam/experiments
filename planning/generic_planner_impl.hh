@@ -1,3 +1,4 @@
+#pragma once
 #include "numerics/wrap_optimizer.hh"
 
 namespace planning {
