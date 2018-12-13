@@ -19,11 +19,8 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::solve(
     traj0.x[0] = x0;
     traj0.u.resize(prob_.horizon() - 1, ControlVec::Zero());
   } else {
-    if (initialization.x.size() != prob_.horizon() ||
-        (initialization.u.size() != prob_.horizon() - 1)) {
-      std::cout << "Inputs inconsistent" << std::endl;
-      std::abort();
-    }
+    assert(initialization.x.size() == prob_.horizon() &&
+           (initialization.u.size() == prob_.horizon() - 1));
     traj0 = initialization;
   }
 
@@ -98,10 +95,7 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::line_search(
     }
   }
 
-  if (best_alpha <= 0.0) {
-    std::cout << "WOOPS ALPHA" << std::endl;
-    std::abort();
-  }
+  assert(best_alpha > 0.0);
 
   Solution out_soln;
   shoot(soln, lqr_soln, best_alpha, &out_soln);
@@ -140,7 +134,7 @@ typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
     const Eigen::LLT<ControlHess> llt(Quu);
     if (llt.info() != Eigen::Success) {
       std::cout << "LLT solve was degenerate at state " << k << std::endl;
-      std::abort();
+      assert(false);
     }
 
     // Control policy is trivial
