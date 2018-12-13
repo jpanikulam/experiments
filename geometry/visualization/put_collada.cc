@@ -16,15 +16,17 @@ void put_collada(viewer::SimpleGeometry& geo,
 
   const auto& adj = model.adjacency();
   const auto& meshes = model.meshes();
+  const auto& colors = model.colors();
 
   while (!to_visit.empty()) {
     const auto key = to_visit.top();
     to_visit.pop();
 
-    // geo.add_triangle_mesh({mesh, world_from_node[key], color, true, 3.0, false});
     const auto& mesh = meshes.at(key);
-    const jcc::Vec4 color(0.7, 0.7, 0.7, 0.7);
-    geo.add_triangle_mesh({mesh, world_from_node.at(key), color, true, 3.0, false});
+    if (colors.count(key)) {
+      const jcc::Vec4 color = colors.at(key);
+      geo.add_triangle_mesh({mesh, world_from_node.at(key), color, true, 3.0, false});
+    }
 
     if (adj.count(key) == 0) {
       continue;

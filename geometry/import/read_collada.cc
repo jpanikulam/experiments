@@ -64,7 +64,8 @@ TriMesh assimp_mesh_to_trimesh(aiScene const* const scene, aiNode const* const n
 void form(aiScene const* const scene,
           aiNode const* const root_node,
           Out<std::map<std::string, std::vector<ColladaModel::Edge>>> adjacency,
-          Out<std::map<std::string, TriMesh>> meshes) {
+          Out<std::map<std::string, TriMesh>> meshes,
+          Out<std::map<std::string, jcc::Vec4>> colors) {
   std::stack<aiNode const*> nodes;
   nodes.push(root_node);
 
@@ -74,11 +75,20 @@ void form(aiScene const* const scene,
     const std::string this_node_name = node->mName.C_Str();
 
     if (meshes->count(this_node_name) > 0u) {
-      // std::cout << "Skipping an mesh addition: " << this_node_name << std::endl;
-      // continue;
     }
 
     (*meshes)[this_node_name] = assimp_mesh_to_trimesh(scene, node);
+
+    if (node->mNumMeshes){
+      const std::size_t material_ind = scene->mMeshes[node->mMeshes[0]]->mMaterialIndex;
+      const aiMaterial* material = scene->mMaterials[material_ind];
+      // const aiColor3D color_diff = material->Get(COLOR_DIFFUSE);
+      aiColor3D color_diff (0.f,0.f,0.f);
+      material->Get(AI_MATKEY_COLOR_DIFFUSE, color_diff);
+
+      (*colors)[this_node_name] =
+          jcc::Vec4(color_diff[0], color_diff[1], color_diff[2], 0.7);
+    }
 
     const int n_children = node->mNumChildren;
     for (int k = 0; k < n_children; ++k) {
@@ -91,9 +101,6 @@ void form(aiScene const* const scene,
       edge.child_name = child->mName.C_Str();
 
       if (adjacency->count(edge.child_name) > 0u) {
-        // std::cout << "(Ought to) Skip an adjacency addition: " << edge.child_name
-        //           << std::endl;
-        // continue;
       }
 
       (*adjacency)[this_node_name].push_back(edge);
@@ -118,7 +125,7 @@ void ColladaModel::allocate(const std::string& path) {
 
   root_ = scene->mRootNode->mName.C_Str();
 
-  form(scene, scene->mRootNode, out(adjacency_), out(meshes_));
+  form(scene, scene->mRootNode, out(adjacency_), out(meshes_), out(colors_));
 
   std::cout << "Count: " << meshes_.count("Frame") << std::endl;
 

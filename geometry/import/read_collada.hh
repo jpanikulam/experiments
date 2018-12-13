@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "eigen.hh"
 #include "geometry/tri_mesh.hh"
 #include "sophus.hh"
 
@@ -28,6 +29,10 @@ class ColladaModel {
     return meshes_;
   }
 
+  const std::map<std::string, jcc::Vec4>& colors() const {
+    return colors_;
+  }
+
   const std::string& root() const {
     return root_;
   }
@@ -39,6 +44,7 @@ class ColladaModel {
 
   std::map<std::string, std::vector<Edge>> adjacency_;
   std::map<std::string, TriMesh> meshes_;
+  std::map<std::string, jcc::Vec4> colors_;
 };
 
 }  // namespace import
