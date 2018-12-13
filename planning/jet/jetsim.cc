@@ -57,7 +57,7 @@ void go() {
   jet.throttle_pct = 0.0;
 
   std::vector<Controls> prev_controls;
-  for (int j = 0; j < 1000; ++j) {
+  for (int j = 0; j < 1000 && !view->should_close(); ++j) {
     const double dt = 0.01;
     const jcc::Vec3 prev = jet.x;
 
