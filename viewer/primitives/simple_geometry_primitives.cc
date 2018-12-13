@@ -271,7 +271,9 @@ void draw_trimesh(const TriMesh &trimesh) {
     glEnd();
   }
   // glDisable(GL_LIGHTING);
-  glPopAttrib();
   glPopMatrix();
+
+  glPopAttrib();
+  // draw the display list
 }
 }  // namespace viewer

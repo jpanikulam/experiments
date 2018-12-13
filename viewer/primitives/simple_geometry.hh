@@ -1,5 +1,7 @@
 #pragma once
 
+#include <GL/glew.h>
+
 #include "viewer/primitives/simple_geometry_primitives.hh"
 
 #include "geometry/ray.hh"
@@ -9,6 +11,7 @@
 
 #include "sophus.hh"
 
+#include <map>
 #include <mutex>
 #include <vector>
 
@@ -78,6 +81,10 @@ class SimpleGeometry final : public Primitive {
       tri_meshes.clear();
     }
   };
+
+  // This is not great
+  // TODO: Add a universal UUID -> displaylist map
+  mutable std::map<std::size_t, int> mesh_displaylists_;
 
   Primitives back_buffer_;
   Primitives front_buffer_;

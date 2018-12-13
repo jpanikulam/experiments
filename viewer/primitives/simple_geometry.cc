@@ -196,8 +196,16 @@ void SimpleGeometry::draw() const {
     draw_plane_grid(plane);
   }
 
-  for (const auto &tri_mesh : front_buffer_.tri_meshes) {
-    draw_trimesh(tri_mesh);
+  for (std::size_t i = 0; i < front_buffer_.tri_meshes.size(); ++i) {
+    if (mesh_displaylists_.count(i) == 0) {
+      const auto &tri_mesh = front_buffer_.tri_meshes[i];
+      const GLuint index = glGenLists(1);
+      mesh_displaylists_[i] = index;
+      glNewList(index, GL_COMPILE);
+      draw_trimesh(tri_mesh);
+      glEndList();
+    }
+    glCallList(mesh_displaylists_.at(i));
   }
 
   draw_lines(front_buffer_.lines);
