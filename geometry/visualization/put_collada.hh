@@ -7,7 +7,9 @@
 namespace geometry {
 namespace visualization {
 
-void put_collada(viewer::SimpleGeometry& geo, const geometry::import::ColladaModel& model);
+void put_collada(viewer::SimpleGeometry& geo,
+                 const geometry::import::ColladaModel& model,
+                 const SE3 world_from_root);
 
 }  // namespace visualization
 }  // namespace geometry

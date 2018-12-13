@@ -6,9 +6,8 @@ namespace geometry {
 namespace visualization {
 
 void put_collada(viewer::SimpleGeometry& geo,
-                 const geometry::import::ColladaModel& model) {
-  const SE3 world_from_root;
-
+                 const geometry::import::ColladaModel& model,
+                 const SE3 world_from_root) {
   std::map<std::string, SE3> world_from_node;
   world_from_node[model.root()] = world_from_root;
 

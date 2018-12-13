@@ -79,7 +79,6 @@ void form(aiScene const* const scene,
     }
 
     (*meshes)[this_node_name] = assimp_mesh_to_trimesh(scene, node);
-    std::cout << "Adding mesh: " << this_node_name << std::endl;
 
     const int n_children = node->mNumChildren;
     for (int k = 0; k < n_children; ++k) {
