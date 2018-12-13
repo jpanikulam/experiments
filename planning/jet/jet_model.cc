@@ -4,15 +4,10 @@
 
 namespace planning {
 namespace jet {
-// const std::string path = "/home/jacob/repos/experiments/data/Hover-Jet Vehicle.dae";
 
-// JetModel::JetModel() {
-
-  // model_ = geometry::import::ColladaModel model(path);
-// }
-
-void JetModel::put(viewer::SimpleGeometry& geo) {
+void JetModel::put(viewer::SimpleGeometry& geo) const {
   geometry::visualization::put_collada(geo, model_);
+  model.put(*accum_geo);
 }
 
 }  // namespace jet

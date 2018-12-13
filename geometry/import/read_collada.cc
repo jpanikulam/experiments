@@ -74,7 +74,7 @@ void form(aiScene const* const scene,
     const std::string this_node_name = node->mName.C_Str();
 
     if (meshes->count(this_node_name) > 0u) {
-      std::cout << "Skipping an mesh addition: " << this_node_name << std::endl;
+      // std::cout << "Skipping an mesh addition: " << this_node_name << std::endl;
       // continue;
     }
 
@@ -92,8 +92,8 @@ void form(aiScene const* const scene,
       edge.child_name = child->mName.C_Str();
 
       if (adjacency->count(edge.child_name) > 0u) {
-        std::cout << "(Ought to) Skip an adjacency addition: " << edge.child_name
-                  << std::endl;
+        // std::cout << "(Ought to) Skip an adjacency addition: " << edge.child_name
+        //           << std::endl;
         // continue;
       }
 

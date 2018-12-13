@@ -38,8 +38,7 @@ void go() {
 
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
 
-  JetModel model;
-  model.put(*accum_geo);
+  const JetModel model;
 
   Parameters params;
   params.mass = 100.0;
