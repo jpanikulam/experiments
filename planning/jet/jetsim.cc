@@ -98,7 +98,9 @@ void go() {
     accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
 
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
-    put_jet(*jet_geo, world_from_jet);
+    // put_jet(*jet_geo, world_from_jet);
+    model.put(*jet_geo, jet);
+
     jet_geo->add_line(
         {world_from_jet.translation(),
          world_from_jet.translation() +
