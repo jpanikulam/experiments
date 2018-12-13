@@ -6,6 +6,8 @@
 #include "planning/jet/jet_dynamics.hh"
 #include "planning/jet/jet_planner.hh"
 
+#include "planning/jet/jet_model.hh"
+
 #include "eigen.hh"
 #include "sophus.hh"
 
@@ -35,6 +37,10 @@ void go() {
   const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
 
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
+
+  JetModel model;
+  model.put(*accum_geo);
+
   Parameters params;
   params.mass = 100.0;
   params.unit_z = jcc::Vec3::UnitZ();
@@ -107,7 +113,6 @@ void go() {
     } else {
       view->set_target_from_world(world_from_jet.inverse());
     }
-
 
     jet_geo->flip();
     accum_geo->flush();
