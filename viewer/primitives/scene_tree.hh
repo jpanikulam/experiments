@@ -28,13 +28,10 @@ class FrameTree {
     SE3 parent_from_child;
   };
 
-  // TODO: Ensure that it's a tree; everything must be attached
-  // to something already existing
-  // void add(const KeyType& key, const ElementType& element) {
-  // elements[key] = element;
-  // }
-
   void add_child(const KeyType& key, const Edge& edge, const ElementType& child) {
+    // TODO: Come up with a better way to support multiple references to the same mesh
+    // Right now, we pass through the same submesh many times
+
     // assert(adjacency_.count(edge.child_key) == 0);
     adjacency_.at(key).push_back(edge);
     elements_[edge.child_key] = child;

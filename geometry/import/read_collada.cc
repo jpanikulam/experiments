@@ -79,11 +79,10 @@ void form(aiScene const* const scene,
 
     (*meshes)[this_node_name] = assimp_mesh_to_trimesh(scene, node);
 
-    if (node->mNumMeshes){
+    if (node->mNumMeshes) {
       const std::size_t material_ind = scene->mMeshes[node->mMeshes[0]]->mMaterialIndex;
       const aiMaterial* material = scene->mMaterials[material_ind];
-      // const aiColor3D color_diff = material->Get(COLOR_DIFFUSE);
-      aiColor3D color_diff (0.f,0.f,0.f);
+      aiColor3D color_diff(0.f, 0.f, 0.f);
       material->Get(AI_MATKEY_COLOR_DIFFUSE, color_diff);
 
       (*colors)[this_node_name] =
@@ -100,10 +99,10 @@ void form(aiScene const* const scene,
       edge.child_from_parent = SE3(mat).inverse();
       edge.child_name = child->mName.C_Str();
 
-
       nodes.push(child);
       if (adjacency->count(edge.child_name) == 0u) {
-        // Don't allow repetitions -- this seems to be a bug in the OnShape Collada exporter?
+        // Don't allow repetitions -- this seems to be a bug in the OnShape Collada
+        // exporter?
         (*adjacency)[this_node_name].push_back(edge);
       }
     }
