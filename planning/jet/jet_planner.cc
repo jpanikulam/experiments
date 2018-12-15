@@ -17,6 +17,14 @@ double huber(double x, double k) {
   }
 }
 
+const double square(double x) {
+  return x * x;
+}
+
+double quad_hinge(double x, double k) {
+  return square(std::max(x - k, 0.0));
+}
+
 auto make_jet_cost(const Desires& desires) {
   return [desires](const State& state, const VecNd<U_DIM>& u, int t) {
     const auto control = from_vector(u);
@@ -49,8 +57,8 @@ auto make_jet_cost(const Desires& desires) {
       cost += desires.supp_v_weight * state.v.squaredNorm();
 
       cost += 35.0 * state.w.squaredNorm();
-      cost += 25.0 * std::pow(std::max(state.throttle_pct, 8.0), 2);
-      cost += 100.0 * std::pow(std::min(state.throttle_pct, 0.0), 2);
+      cost += 25.0 * quad_hinge(state.throttle_pct, 8.0);
+      cost += 100.0 * quad_hinge(-state.throttle_pct, 0.0);
     }
     return cost;
   };
