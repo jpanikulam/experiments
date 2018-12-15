@@ -81,6 +81,9 @@ void SimpleGeometry::flush() {
   insert(front_buffer_.tri_meshes, back_buffer_.tri_meshes);
 
   back_buffer_.clear();
+
+  // TODO: Why do we have to invalidate the whole cache?
+  mesh_displaylists_.clear();
 }
 
 void SimpleGeometry::add_ray(const geometry::Ray &ray,
@@ -201,12 +204,13 @@ void SimpleGeometry::draw() const {
     draw_plane_grid(plane);
   }
 
-  constexpr bool USE_CACHE = false;
+  constexpr bool USE_CACHE = true;
   for (std::size_t i = 0; i < front_buffer_.tri_meshes.size(); ++i) {
     if (USE_CACHE) {
       if (mesh_displaylists_.count(i) == 0) {
         const auto &tri_mesh = front_buffer_.tri_meshes[i];
         const GLuint index = glGenLists(1);
+        assert(index > 0);
         mesh_displaylists_[i] = index;
         glNewList(index, GL_COMPILE);
         draw_trimesh(tri_mesh);
