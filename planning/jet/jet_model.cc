@@ -28,7 +28,6 @@ void JetModel::insert(viewer::SceneTree& tree) const {
   while (!to_visit.empty()) {
     const auto key = to_visit.top();
     to_visit.pop();
-    std::cout << "Visiting: " << key << std::endl;
 
     if (adj.count(key) == 0) {
       continue;
