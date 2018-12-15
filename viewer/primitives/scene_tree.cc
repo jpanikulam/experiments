@@ -1,7 +1,7 @@
 #include <GL/glew.h>
 
-#include "viewer/primitives/scene_tree.hh"
 #include "viewer/gl_aliases.hh"
+#include "viewer/primitives/scene_tree.hh"
 
 namespace viewer {
 
@@ -22,7 +22,11 @@ void SceneTree::traverse(const SceneTree::KeyType& key) const {
 
 void SceneTree::draw() const {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
+
+  glPushMatrix();
+  glTransform(world_from_root_);
   traverse("root");
+  glPopMatrix();
 }
 
 }  // namespace viewer

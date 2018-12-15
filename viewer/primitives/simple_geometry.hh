@@ -17,6 +17,9 @@ namespace viewer {
 
 class SimpleGeometry final : public Primitive {
  public:
+
+  SimpleGeometry() = default;
+
   void draw() const override;
 
   void add_axes(const Axes &axes);
