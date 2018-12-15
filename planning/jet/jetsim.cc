@@ -49,7 +49,7 @@ void go() {
   // params.external_force = jcc::Vec3::UnitZ() * -1.0;
 
   State jet;
-  jet.x = jcc::Vec3(-3.0, -3.0, 3.0);
+  jet.x = jcc::Vec3(-2.0, -2.0, 3.0);
 
   // jet.v = jcc::Vec3(0.3, 0.1, -0.6);
   // jet.w = jcc::Vec3::UnitX() * 0.2;
@@ -59,12 +59,27 @@ void go() {
   // jet.v = jcc::Vec3(0.0, 0.1, 0.1);
   jet.throttle_pct = 0.0;
 
+  bool target_achieved = false;
+  const jcc::Vec3 final_target(0.0, 0.0, 0.32);
+  const jcc::Vec3 intermediate_target(0.0, 0.0, 1.0);
+
   std::vector<Controls> prev_controls;
   for (int j = 0; j < 1000 && !view->should_close(); ++j) {
     const double dt = 0.01;
     const jcc::Vec3 prev = jet.x;
 
-    const auto future_states = plan(jet, prev_controls);
+    if ((jet.x - intermediate_target).norm() < 0.25) {
+      target_achieved = true;
+    }
+
+    const jcc::Vec3 target = target_achieved ? final_target : intermediate_target;
+    Desires desire;
+    if (target_achieved) {
+      desire.supp_v_weight = 600.0;
+    }
+    desire.target = target;
+
+    const auto future_states = plan(jet, desire, prev_controls);
 
     {
       prev_controls.clear();
@@ -78,7 +93,7 @@ void go() {
       const SE3 world_from_state = SE3(state.R_world_from_body, state.x);
       const double scale =
           static_cast<double>(k) / static_cast<double>(future_states.size());
-      jet_geo->add_axes({world_from_state, 1.0 - scale});
+      // jet_geo->add_axes({world_from_state, 1.0 - scale});
 
       if (k > 1) {
         jet_geo->add_line({future_states.at(k).state.x, future_states.at(k - 1).state.x,
