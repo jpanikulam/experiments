@@ -20,8 +20,6 @@ class ColladaModel {
 
   ColladaModel(const std::string& path);
 
-  ~ColladaModel() = default;
-
   const std::map<std::string, std::vector<Edge>>& adjacency() const {
     return adjacency_;
   }

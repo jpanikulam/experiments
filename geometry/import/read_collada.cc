@@ -100,11 +100,12 @@ void form(aiScene const* const scene,
       edge.child_from_parent = SE3(mat).inverse();
       edge.child_name = child->mName.C_Str();
 
-      if (adjacency->count(edge.child_name) > 0u) {
-      }
 
-      (*adjacency)[this_node_name].push_back(edge);
       nodes.push(child);
+      if (adjacency->count(edge.child_name) == 0u) {
+        // Don't allow repetitions -- this seems to be a bug in the OnShape Collada exporter?
+        (*adjacency)[this_node_name].push_back(edge);
+      }
     }
   }
 }
@@ -119,16 +120,11 @@ void ColladaModel::allocate(const std::string& path) {
       importer.ReadFile(path,
                         aiProcess_CalcTangentSpace | aiProcess_Triangulate |
                             aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
-  if (!scene) {
-    std::cout << "Failed to load" << std::endl;
-  }
+  assert(scene);
 
   root_ = scene->mRootNode->mName.C_Str();
 
   form(scene, scene->mRootNode, out(adjacency_), out(meshes_), out(colors_));
-
-  std::cout << "Count: " << meshes_.count("Frame") << std::endl;
-
 }
 
 }  // namespace import
