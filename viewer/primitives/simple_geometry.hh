@@ -1,7 +1,5 @@
 #pragma once
 
-#include <GL/glew.h>
-
 #include "viewer/primitives/simple_geometry_primitives.hh"
 
 #include "geometry/ray.hh"

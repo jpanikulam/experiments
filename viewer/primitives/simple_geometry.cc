@@ -3,6 +3,8 @@
 #include "viewer/colors/viridis.hh"
 #include "viewer/primitives/simple_geometry.hh"
 
+#include <GL/glew.h>
+
 namespace viewer {
 
 void SimpleGeometry::add_axes(const Axes &axes) {
@@ -58,6 +60,7 @@ void SimpleGeometry::clear() {
 void SimpleGeometry::flip() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   front_buffer_ = std::move(back_buffer_);
+  mesh_displaylists_.clear();
 }
 
 void SimpleGeometry::flush() {
@@ -76,6 +79,8 @@ void SimpleGeometry::flush() {
   insert(front_buffer_.polygons, back_buffer_.polygons);
   insert(front_buffer_.colored_points, back_buffer_.colored_points);
   insert(front_buffer_.tri_meshes, back_buffer_.tri_meshes);
+
+  back_buffer_.clear();
 }
 
 void SimpleGeometry::add_ray(const geometry::Ray &ray,
@@ -196,16 +201,22 @@ void SimpleGeometry::draw() const {
     draw_plane_grid(plane);
   }
 
+  constexpr bool USE_CACHE = false;
   for (std::size_t i = 0; i < front_buffer_.tri_meshes.size(); ++i) {
-    if (mesh_displaylists_.count(i) == 0) {
+    if (USE_CACHE) {
+      if (mesh_displaylists_.count(i) == 0) {
+        const auto &tri_mesh = front_buffer_.tri_meshes[i];
+        const GLuint index = glGenLists(1);
+        mesh_displaylists_[i] = index;
+        glNewList(index, GL_COMPILE);
+        draw_trimesh(tri_mesh);
+        glEndList();
+      }
+      glCallList(mesh_displaylists_.at(i));
+    } else {
       const auto &tri_mesh = front_buffer_.tri_meshes[i];
-      const GLuint index = glGenLists(1);
-      mesh_displaylists_[i] = index;
-      glNewList(index, GL_COMPILE);
       draw_trimesh(tri_mesh);
-      glEndList();
     }
-    glCallList(mesh_displaylists_.at(i));
   }
 
   draw_lines(front_buffer_.lines);

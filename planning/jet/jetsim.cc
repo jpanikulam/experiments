@@ -34,11 +34,14 @@ void go() {
 
   const std::string jet_path = "/home/jacob/repos/experiments/data/jetcat_p160.stl";
   const auto put_jet = geometry::visualization::create_put_stl(jet_path);
-  const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
 
+  const auto jet_tree = view->add_primitive<viewer::SceneTree>();
+
+  const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
 
   const JetModel model;
+  model.insert(*jet_tree);
 
   Parameters params;
   params.mass = 100.0;
@@ -99,7 +102,7 @@ void go() {
 
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
     // put_jet(*jet_geo, world_from_jet);
-    model.put(*jet_geo, jet);
+    // model.put(*jet_geo, jet);
 
     jet_geo->add_line(
         {world_from_jet.translation(),

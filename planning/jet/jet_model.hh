@@ -2,7 +2,8 @@
 
 #include "geometry/import/read_collada.hh"
 #include "planning/jet/jet_dynamics.hh"
-#include "viewer/primitives/simple_geometry.hh"
+
+#include "viewer/primitives/scene_tree.hh"
 
 namespace planning {
 namespace jet {
@@ -13,7 +14,9 @@ class JetModel {
                "/home/jacob/repos/experiments/data/Hover-Jet Vehicle.dae")
       : model_(path) {
   }
-  void put(viewer::SimpleGeometry& geo, const State& jet) const;
+
+  void insert(viewer::SceneTree& tree) const;
+  // const State& jet
 
  private:
   geometry::import::ColladaModel model_;

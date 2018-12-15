@@ -33,6 +33,13 @@ target_link_libraries(
     ${OPENGL_LIBRARIES}
 )
 
+add_library(scene_tree scene_tree.cc)
+target_link_libraries(
+    scene_tree
+
+    ${OPENGL_LIBRARIES}
+)
+
 add_library(plot plot.cc)
 target_link_libraries(
     plot
