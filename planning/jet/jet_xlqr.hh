@@ -7,8 +7,8 @@
 
 namespace planning {
 namespace jet {
-constexpr int X_DIM = 13;
-constexpr int U_DIM = 4;
+constexpr int X_DIM = State::DIM;
+constexpr int U_DIM = Controls::DIM;
 
 constexpr double DT = 0.1;
 constexpr int HORIZON = 15;
