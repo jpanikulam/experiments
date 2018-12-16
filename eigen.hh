@@ -20,5 +20,7 @@ using Vec1 = VecNd<1>;
 using Vec2 = Eigen::Vector2d;
 using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
+using Vec5 = VecNd<5>;
+using Vec6 = VecNd<6>;
 
 }  // namespace jcc
