@@ -97,7 +97,7 @@ std::vector<StateControl> plan(const State& x0,
                                const Desires& desires,
                                const std::vector<Controls>& initialization) {
   const JetProblem prob(
-      make_jet_cost(desires), dynamics, delta_vec, apply_delta, HORIZON, DT);
+      make_jet_cost(desires), dynamics, compute_delta, apply_delta, HORIZON, DT);
   const JetXlqr planner(prob, make_generate_derivatives(prob));
 
   const auto pre = planner.solve(x0);

@@ -14,7 +14,6 @@ constexpr double DT = 0.1;
 constexpr int HORIZON = 15;
 
 using JetDim = Dimensions<X_DIM, U_DIM>;
-
 using JetProblem = Problem<JetDim, State>;
 using JetXlqr = XlqrProblem<JetProblem>;
 }  // namespace jet

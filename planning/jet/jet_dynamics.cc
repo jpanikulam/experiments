@@ -2,31 +2,38 @@
 
 namespace planning {
 namespace jet {
-State operator+(const State &a, const StateDelta &grp_b) {
-  const State out = State{
-      ((SO3::exp((grp_b.R_world_from_body_error_log))) * (a.R_world_from_body)),
-      ((a.throttle_pct) + (grp_b.throttle_pct_error)),
-      ((a.x) + (grp_b.x_error)), ((a.w) + (grp_b.w_error)),
-      ((a.v) + (grp_b.v_error))};
+VecNd<13> to_vector(const StateDelta &in_grp) {
+  const VecNd<13> out =
+      (VecNd<13>() << ((in_grp.R_world_from_body_error_log)[0]),
+       ((in_grp.R_world_from_body_error_log)[1]),
+       ((in_grp.R_world_from_body_error_log)[2]), (in_grp.throttle_pct_error),
+       ((in_grp.x_error)[0]), ((in_grp.x_error)[1]), ((in_grp.x_error)[2]),
+       ((in_grp.w_error)[0]), ((in_grp.w_error)[1]), ((in_grp.w_error)[2]),
+       ((in_grp.v_error)[0]), ((in_grp.v_error)[1]), ((in_grp.v_error)[2]))
+          .finished();
   return out;
 }
-StateDelta from_vector(const VecNd<13> &in_vec) {
-  const VecNd<3> anon_2e3a7d =
-      (VecNd<3>() << (in_vec[10]), (in_vec[11]), (in_vec[12])).finished();
-  const VecNd<3> anon_6fbdea =
-      (VecNd<3>() << (in_vec[7]), (in_vec[8]), (in_vec[9])).finished();
-  const VecNd<3> anon_4eaca6 =
-      (VecNd<3>() << (in_vec[4]), (in_vec[5]), (in_vec[6])).finished();
-  const VecNd<3> anon_f7d0ed =
-      (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const StateDelta out = StateDelta{anon_f7d0ed, (in_vec[3]), anon_4eaca6,
-                                    anon_6fbdea, anon_2e3a7d};
-  return out;
+State operator-(const State &a, const State &b) {
+  const State difference =
+      State{((a.R_world_from_body) * ((b.R_world_from_body).inverse())),
+            ((a.throttle_pct) - (b.throttle_pct)), ((a.x) - (b.x)),
+            ((a.w) - (b.w)), ((a.v) - (b.v))};
+  return difference;
 }
-State apply_delta(const State &a, const VecNd<13> &delta) {
-  const StateDelta grp_b = from_vector(delta);
-  const State out = a + grp_b;
-  return out;
+VecNd<13> compute_delta(const State &a, const State &b) {
+  const State difference = a - b;
+  const SO3 R_world_from_body_error = difference.R_world_from_body;
+  const VecNd<3> R_world_from_body_error_log =
+      SO3::log(R_world_from_body_error);
+  const double throttle_pct_error = difference.throttle_pct;
+  const VecNd<3> x_error = difference.x;
+  const VecNd<3> w_error = difference.w;
+  const VecNd<3> v_error = difference.v;
+  const StateDelta delta =
+      StateDelta{R_world_from_body_error_log, throttle_pct_error, x_error,
+                 w_error, v_error};
+  const VecNd<13> out_vec = to_vector(delta);
+  return out_vec;
 }
 double force_from_throttle(const double throttle) {
   const double out = throttle;
@@ -52,23 +59,23 @@ StateDot compute_qdot(const State &Q, const Controls &U, const Parameters &Z) {
   return Qdot;
 }
 StateDot operator*(const double half_h, const StateDot &K1) {
-  const StateDot anon_7b85dc =
+  const StateDot anon_7bc3e8 =
       StateDot{(half_h * (K1.w)), (half_h * (K1.throttle_dot)),
                (half_h * (K1.v)), (half_h * (K1.q)), (half_h * (K1.a))};
-  return anon_7b85dc;
+  return anon_7bc3e8;
 }
-State operator+(const State &Q, const StateDot &anon_7b85dc) {
-  const State Q2 = State{((SO3::exp((anon_7b85dc.w))) * (Q.R_world_from_body)),
-                         ((Q.throttle_pct) + (anon_7b85dc.throttle_dot)),
-                         ((Q.x) + (anon_7b85dc.v)), ((Q.w) + (anon_7b85dc.q)),
-                         ((Q.v) + (anon_7b85dc.a))};
+State operator+(const State &Q, const StateDot &anon_7bc3e8) {
+  const State Q2 = State{((SO3::exp((anon_7bc3e8.w))) * (Q.R_world_from_body)),
+                         ((Q.throttle_pct) + (anon_7bc3e8.throttle_dot)),
+                         ((Q.x) + (anon_7bc3e8.v)), ((Q.w) + (anon_7bc3e8.q)),
+                         ((Q.v) + (anon_7bc3e8.a))};
   return Q2;
 }
 StateDot operator+(const StateDot &K1, const StateDot &K4) {
-  const StateDot anon_8683b4 =
+  const StateDot anon_f9c9bd =
       StateDot{((K1.w) + (K4.w)), ((K1.throttle_dot) + (K4.throttle_dot)),
                ((K1.v) + (K4.v)), ((K1.q) + (K4.q)), ((K1.a) + (K4.a))};
-  return anon_8683b4;
+  return anon_f9c9bd;
 }
 State rk4_integrate(const State &Q, const Controls &U, const Parameters &Z,
                     const double h) {
@@ -86,43 +93,36 @@ State rk4_integrate(const State &Q, const Controls &U, const Parameters &Z,
   const State Qn = Q + (sixth * ((K1 + K4) + (two * (K2 + K3))));
   return Qn;
 }
-VecNd<13> to_vector(const StateDelta &in_grp) {
-  const VecNd<13> out =
-      (VecNd<13>() << ((in_grp.R_world_from_body_error_log)[0]),
-       ((in_grp.R_world_from_body_error_log)[1]),
-       ((in_grp.R_world_from_body_error_log)[2]), (in_grp.throttle_pct_error),
-       ((in_grp.x_error)[0]), ((in_grp.x_error)[1]), ((in_grp.x_error)[2]),
-       ((in_grp.w_error)[0]), ((in_grp.w_error)[1]), ((in_grp.w_error)[2]),
-       ((in_grp.v_error)[0]), ((in_grp.v_error)[1]), ((in_grp.v_error)[2]))
-          .finished();
+State operator+(const State &a, const StateDelta &grp_b) {
+  const State out = State{
+      ((SO3::exp((grp_b.R_world_from_body_error_log))) * (a.R_world_from_body)),
+      ((a.throttle_pct) + (grp_b.throttle_pct_error)),
+      ((a.x) + (grp_b.x_error)), ((a.w) + (grp_b.w_error)),
+      ((a.v) + (grp_b.v_error))};
   return out;
 }
-State operator-(const State &a, const State &b) {
-  const State difference =
-      State{((a.R_world_from_body) * ((b.R_world_from_body).inverse())),
-            ((a.throttle_pct) - (b.throttle_pct)), ((a.x) - (b.x)),
-            ((a.w) - (b.w)), ((a.v) - (b.v))};
-  return difference;
+StateDelta from_vector(const VecNd<13> &in_vec) {
+  const VecNd<3> anon_f8f656 =
+      (VecNd<3>() << (in_vec[7]), (in_vec[8]), (in_vec[9])).finished();
+  const VecNd<3> anon_eccb36 =
+      (VecNd<3>() << (in_vec[4]), (in_vec[5]), (in_vec[6])).finished();
+  const VecNd<3> anon_076a41 =
+      (VecNd<3>() << (in_vec[10]), (in_vec[11]), (in_vec[12])).finished();
+  const VecNd<3> anon_69c8cf =
+      (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
+  const StateDelta out = StateDelta{anon_69c8cf, (in_vec[3]), anon_eccb36,
+                                    anon_f8f656, anon_076a41};
+  return out;
 }
-VecNd<13> delta_vec(const State &a, const State &b) {
-  const State difference = a - b;
-  const SO3 R_world_from_body_error = difference.R_world_from_body;
-  const VecNd<3> R_world_from_body_error_log =
-      SO3::log(R_world_from_body_error);
-  const double throttle_pct_error = difference.throttle_pct;
-  const VecNd<3> x_error = difference.x;
-  const VecNd<3> w_error = difference.w;
-  const VecNd<3> v_error = difference.v;
-  const StateDelta delta =
-      StateDelta{R_world_from_body_error_log, throttle_pct_error, x_error,
-                 w_error, v_error};
-  const VecNd<13> out_vec = to_vector(delta);
-  return out_vec;
+State apply_delta(const State &a, const VecNd<13> &delta) {
+  const StateDelta grp_b = from_vector(delta);
+  const State out = a + grp_b;
+  return out;
 }
 Controls from_vector(const VecNd<4> &in_vec) {
-  const VecNd<3> anon_d4f100 =
+  const VecNd<3> anon_94a35a =
       (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const Controls out = Controls{anon_d4f100, (in_vec[3])};
+  const Controls out = Controls{anon_94a35a, (in_vec[3])};
   return out;
 }
 VecNd<4> to_vector(const Controls &in_grp) {
