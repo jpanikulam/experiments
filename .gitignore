@@ -92,3 +92,7 @@ bin/
 tmp/
 
 *.sublime-workspace
+
+
+*.dae
+*.stl
