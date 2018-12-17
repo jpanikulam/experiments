@@ -106,8 +106,4 @@ class Ekf {
   TimePoint last_time_serviced_;
 };
 
-void filter() {
-  ekf_.update()
-}
-
 }  // namespace estimation

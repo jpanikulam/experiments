@@ -23,7 +23,12 @@ class ObservationModel {
       : error_model_(error_model), log_likelihood_(log_likelihood) {
   }
 
-  StateVec generate_update(const ObsVec& innovation) {
+  // This return z [-] h(x)
+  ObsVec error(const State& x, const Observation& z) {
+    return error_model_(x, z);
+  }
+
+  FilterUpdate generate_update(const ObsVec& innovation) {
     using MatNd<Observation::DIM, Observation::DIM> ObservationInformation;
     const ObservationInformation R = ObservationInformation::Identity();
 
@@ -46,12 +51,11 @@ class ObservationModel {
     return FilterUpdate{update, P_new};
   }
 
- private:
-  // This return z [-] h(x)
-  ObsVec error(const State& x, const Observation& z) {
-    return error_model_(x, z);
+  FilterUpdate operator()(const State& x, const std::any& z) {
+    return generate_update(x, std::any_cast<Observation>(z));
   }
 
+ private:
   ErrorModel error_model_;
   LogLikelihood log_likelihood_;
 };
