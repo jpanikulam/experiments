@@ -60,7 +60,6 @@ std::shared_ptr<GlobalState> maybe_create_global_state() {
     }
 
     glewExperimental = GL_TRUE;
-    glewInit();
 
     global_state = std::make_shared<GlobalState>();
 
@@ -87,6 +86,9 @@ void WindowManager::register_window(
   GLFWwindow *window = glfwCreateWindow(
       size.height, size.width, window_name.c_str(), nullptr, nullptr);
   simple_window->set_title(window_name);
+
+  glfwMakeContextCurrent(window);
+  glewInit();
 
   if (!window) {
     glfwTerminate();
