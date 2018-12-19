@@ -1,3 +1,5 @@
+//%deps(ASSIMP)
+
 #include "geometry/import/read_collada.hh"
 
 #include "out.hh"
@@ -6,7 +8,6 @@
 #include <iostream>
 #include <stack>
 
-//%deps(${ASSIMP_LIBRARIES})
 #include <assimp/postprocess.h>  // Post processing flags
 #include <assimp/scene.h>        // Output data structure
 #include <assimp/Importer.hpp>   // C++ importer interface

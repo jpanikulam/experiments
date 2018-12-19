@@ -13,13 +13,24 @@ def get_src_path(file, src):
 
 
 def what_libs(file, elements, all_tree, known_libs):
+    external_libs_remapping = {
+        'assimp': '${ASSIMP_LIBRARIES}',
+        'opencv': '${OpenCV_LIBS}',
+        'glfw': '${GLFW_LIBRARIES}',
+        'glew': '${GLEW_LIBRARIES}',
+        'opengl': '${OPENGL_LIBRARIES}',
+    }
+
     required_libs = []
     # Obviated dependencies
     for dep in elements['deps']:
-        if dep not in known_libs:
-            Log.warn("  no lib: {}".format(dep))
-
-    required_libs.extend(elements['deps'])
+        if dep in known_libs:
+            required_libs.append(dep)
+        elif dep.lower() in external_libs_remapping.keys():
+            required_libs.append(external_libs_remapping[dep.lower()])
+        else:
+            Log.warn("  no lib: {}, still attempting to use".format(dep))
+            required_libs.append(dep)
 
     for lib in elements['lib']:
         for src in lib['srcs']:
@@ -113,7 +124,7 @@ def build_dependency_table(all_tree):
             continue
 
         if should_ignore(elements):
-            Log.warn("ignore flag: {}".format(file))
+            Log.info("Ignoring: {}".format(file))
             continue
 
         Log.debug("In: {}".format(file))
@@ -175,7 +186,7 @@ def main():
     else:
         path = args.path
 
-    print "Parsing: ", path
+    Log.info("Parsing: ", path)
     files = []
     if os.path.isfile(path):
         files.append(path)
