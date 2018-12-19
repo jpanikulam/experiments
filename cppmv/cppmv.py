@@ -101,12 +101,11 @@ def discover_unlabelled_libs(tree):
 
                 if has_annotations(elements):
                     Log.warn("Header pair has annotations: {}".format(raw_name))
-                else:
-                    src_file = name + '.cc'
-                    elements['lib'].append({
-                        'target': name,
-                        'srcs': [src_file]
-                    })
+                src_file = name + '.cc'
+                elements['lib'].append({
+                    'target': name,
+                    'srcs': [src_file]
+                })
 
 
 def build_dependency_table(all_tree):
