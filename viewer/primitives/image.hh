@@ -15,8 +15,8 @@ namespace viewer {
 
 class Image final : public Primitive {
  public:
-  Image(const cv::Mat& image, double scale = 1.0, double alpha = 0.7);
-  Image(const Eigen::MatrixXd& image, double scale = 1.0, double alpha = 0.7);
+  Image(const cv::Mat& image, double width_m = 1.0, double alpha = 0.7);
+  Image(const Eigen::MatrixXd& image, double width_m = 1.0, double alpha = 0.7);
 
   void update_image(const cv::Mat& image);
   void update_image(const Eigen::MatrixXd& image);
@@ -27,7 +27,7 @@ class Image final : public Primitive {
   void update_gl() const;
 
   cv::Mat image_;
-  double  scale_ = 1.0;
+  double width_m_ = 1.0;
   double  alpha_ = 0.7;
 
   mutable unsigned int      texture_id_;

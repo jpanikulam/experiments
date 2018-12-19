@@ -19,7 +19,6 @@ namespace viewer {
 
 class SimpleGeometry final : public Primitive {
  public:
-
   SimpleGeometry() = default;
 
   void draw() const override;
@@ -31,8 +30,8 @@ class SimpleGeometry final : public Primitive {
   void add_ray(const Ray &ray);
 
   void add_ray(const geometry::Ray &ray,
-               const double length,
-               const Eigen::Vector4d &color);
+               const double length = 1.0,
+               const Eigen::Vector4d &color = Eigen::Vector4d(1.0, 1.0, 1.0, 1.0));
 
   void add_polygon(const Polygon &polygon);
 
