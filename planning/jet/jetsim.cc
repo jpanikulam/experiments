@@ -8,6 +8,9 @@
 
 #include "planning/jet/jet_model.hh"
 
+// TODO CLEANUP
+#include "viewer/primitives/camera.hh"
+
 #include "eigen.hh"
 #include "sophus.hh"
 
@@ -32,13 +35,25 @@ void go() {
   setup();
   const auto view = viewer::get_window3d("Mr. Jet, jets");
 
+  std::cout << "First" << std::endl;
+
   const std::string jet_path = "/home/jacob/repos/experiments/data/jetcat_p160.stl";
   const auto put_jet = geometry::visualization::create_put_stl(jet_path);
 
+  std::cout << "Second" << std::endl;
   const auto jet_tree = view->add_primitive<viewer::SceneTree>();
 
   const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
+
+  for (int k = 0; k < 10000; ++k) {
+    accum_geo->add_point({jcc::Vec3::Random()});
+  }
+
+
+  std::cout << "Creating camera" << std::endl;
+  const auto camera = std::make_shared<viewer::Camera>();
+  view->add_camera(camera);
 
   const JetModel model;
   model.insert(*jet_tree);
@@ -78,6 +93,13 @@ void go() {
       desire.supp_v_weight = 600.0;
     }
     desire.target = target;
+
+    if (camera->have_image()){
+      std::cout << "Extracting" << std::endl;
+      const cv::Mat image = camera->extract_image();
+      cv::imshow("bababooie", image);
+      cv::waitKey(10);
+    }
 
     const auto future_states = plan(jet, desire, prev_controls);
 
@@ -120,23 +142,26 @@ void go() {
 
     jet_tree->set_world_from_root(world_from_jet);
 
+
     jet_geo->add_line(
         {world_from_jet.translation(),
          world_from_jet.translation() +
              (world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct * 0.1),
          jcc::Vec4(0.1, 0.9, 0.1, 0.8), 9.0});
 
+
     if (true) {
       const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);
       const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
       view->set_target_from_world(world_from_target.inverse());
+      // camera->set_world_from_camera(SE3(SO3(), jcc::Vec3(1.0, 1.0, 1.0)));
     } else {
       view->set_target_from_world(world_from_jet.inverse());
     }
 
     jet_geo->flip();
     accum_geo->flush();
-    view->spin_until_step();
+    // view->spin_until_step();
   }
 }
 
