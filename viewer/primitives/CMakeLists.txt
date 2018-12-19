@@ -7,7 +7,6 @@ target_link_libraries(
 )
 
 add_library(image image.cc)
-
 target_link_libraries(
     image
 
@@ -15,6 +14,15 @@ target_link_libraries(
     ${OpenCV_LIBS}
 )
 
+add_library(camera camera.cc)
+target_link_libraries(
+    camera
+
+    gl_renderable_buffer
+
+    ${OPENGL_LIBRARIES}
+    ${OpenCV_LIBS}
+)
 
 add_library(simple_geometry_primitives simple_geometry_primitives.cc)
 target_link_libraries(

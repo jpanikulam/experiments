@@ -35,6 +35,15 @@ target_link_libraries(window_2d
     ${GLFW_LIBRARIES}
 )
 
+add_library(gl_renderable_buffer gl_renderable_buffer.cc)
+target_link_libraries(gl_renderable_buffer
+    projection
+
+    ${OPENGL_LIBRARIES}
+    ${GLFW_LIBRARIES}
+    ${GLEW_LIBRARIES}
+)
+
 add_library(window_3d window_3d.cc)
 target_link_libraries(
     window_3d
