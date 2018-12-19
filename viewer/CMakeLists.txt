@@ -52,6 +52,8 @@ target_link_libraries(
     projection
     window_manager
 
+    camera
+
     ${OPENGL_LIBRARIES}
     ${GLFW_LIBRARIES}
 )
