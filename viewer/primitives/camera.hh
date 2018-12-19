@@ -11,7 +11,7 @@ namespace viewer {
 
 class Camera final {
  public:
-  Camera() : back_buffer_(GlSize(640, 640)) {
+  Camera(const GlSize& size = GlSize(640, 640)) : back_buffer_(size), size_(size) {
   }
 
   void draw();
@@ -22,7 +22,6 @@ class Camera final {
   }
 
   cv::Mat extract_image() const {
-    // TODO: block until an image is created
     while (!have_image()) {
     }
     const std::lock_guard<std::mutex> lk(draw_mutex_);
@@ -38,9 +37,11 @@ class Camera final {
 
  private:
   mutable GlRenderableBuffer back_buffer_;
-
   mutable std::mutex draw_mutex_;
+
   cv::Mat capture_framebuffer() const;
+
+  GlSize size_;
 
   SE3 world_from_camera_;
   bool have_image_ = false;

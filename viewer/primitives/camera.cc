@@ -32,26 +32,26 @@ cv::Mat Camera::capture_framebuffer() const {
 }
 
 void Camera::prepare_view() const {
-  back_buffer_.bind();
+  // back_buffer_.bind();
+  glViewport(0, 0, size_.width, size_.height);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  const double aspect_ratio =
+      (static_cast<double>(size_.width) / static_cast<double>(size_.height));
+  constexpr double NEAR_CLIP = 0.001;
+  constexpr double FAR_CLIP = 1000.0;
+  constexpr double FOV = 60.0;
+  gluPerspective(FOV, aspect_ratio, NEAR_CLIP, FAR_CLIP);
 
   glMatrixMode(GL_MODELVIEW);
-  // glPushMatrix();
   glLoadIdentity();
-
   glTransform(world_from_camera_);
-  // glScaled(0.1, 0.1, 0.1);
-  // draw_axes({SE3(), 0.5});
 }
 
 void Camera::draw() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
-
-  std::cout << "Capturing" << std::endl;
-
   image_ = capture_framebuffer();
   have_image_ = true;
-
-  // glPopMatrix();
 }
 
 }  // namespace viewer
