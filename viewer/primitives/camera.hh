@@ -1,4 +1,5 @@
 #pragma once
+//%deps(opencv, opengl)
 
 #include "viewer/gl_renderable_buffer.hh"
 

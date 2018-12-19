@@ -5,7 +5,6 @@ cmake_minimum_required(VERSION 2.8)
 #
 
 add_subdirectory(interaction)
-add_subdirectory(primitives)
 add_subdirectory(colors)
 
 add_library(simple_window simple_window.cc)

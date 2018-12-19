@@ -1,5 +1,7 @@
 #pragma once
 
+//%deps(opengl)
+
 #include "viewer/primitives/frame.hh"
 
 namespace viewer {

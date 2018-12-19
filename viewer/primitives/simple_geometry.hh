@@ -1,5 +1,7 @@
 #pragma once
 
+//%deps(opengl)
+
 #include "viewer/primitives/simple_geometry_primitives.hh"
 
 #include "geometry/ray.hh"

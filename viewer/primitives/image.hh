@@ -1,5 +1,7 @@
 #pragma once
 
+//%deps(opengl, opencv)
+
 #include <atomic>
 #include <mutex>
 

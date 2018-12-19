@@ -1,5 +1,7 @@
 #pragma once
 
+//%deps(opengl)
+
 #include "sophus.hh"
 #include "viewer/primitives/primitive.hh"
 
