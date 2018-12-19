@@ -48,28 +48,25 @@ void GlRenderableBuffer::initialize() {
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size_.width, size_.height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
                             depth_buffer);
-
   glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+  //
+  // Complete the framebuffer
+  //
 
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                             depth_buffer);
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  // GLenum draw_buffers[1] = {GL_COLOR_ATTACHMENT0};
-  // glDrawBuffers(1, draw_buffers);
-
   assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 }
 
 void GlRenderableBuffer::bind() {
   if (!initialized()) {
-    std::cout << "Initializing" << std::endl;
     initialize();
   }
 
   glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_id_);
-  std::cout << "Binding" << std::endl;
-
   glViewport(0, 0, size_.width, size_.height);
   // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
   // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

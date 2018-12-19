@@ -3,6 +3,11 @@
 #include "viewer/gl_size.hh"
 
 namespace viewer {
+//
+// WARNING:
+// I have not gotten this to work as a useful offscreen buffer.
+//
+
 class GlRenderableBuffer {
  public:
   GlRenderableBuffer(const GlSize& size);
