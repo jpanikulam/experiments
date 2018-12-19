@@ -173,11 +173,10 @@ void go() {
     camera->set_world_from_camera(world_from_jet * jet_from_camera);
     accum_geo->flush();
 
-    jet_geo->clear();
     put_camera_projection(*jet_geo, *camera);
     if (SHOW_CAMERA) {
       const cv::Mat image = camera->extract_image();
-      cv::imshow("bababooie", image);
+      cv::imshow("Localization Camera", image);
       cv::waitKey(10);
     }
     jet_geo->flip();
