@@ -10,12 +10,18 @@
 
 // TODO CLEANUP
 #include "viewer/primitives/camera.hh"
+#include "viewer/primitives/image.hh"
 
 #include "eigen.hh"
 #include "sophus.hh"
 
 namespace planning {
 namespace jet {
+
+constexpr bool SHOW_CAMERA = true;
+constexpr bool PRINT_STATE = false;
+constexpr bool TRACK_VEHICLE = false;
+constexpr bool VISUALIZE_TRAJECTORY = false;
 
 namespace {
 void setup() {
@@ -29,11 +35,38 @@ void setup() {
   background->add_plane({ground});
   background->flip();
 }
+
+void put_camera_projection(viewer::SimpleGeometry& geo, const viewer::Camera& cam) {
+  const auto proj = cam.get_projection();
+
+  using VPoint = viewer::ViewportPoint;
+  const auto bottom_left_ray = proj.unproject(VPoint(jcc::Vec2(-1.0, -1.0)));
+  const auto top_left_ray = proj.unproject(VPoint(jcc::Vec2(1.0, -1.0)));
+  const auto top_right_ray = proj.unproject(VPoint(jcc::Vec2(1.0, 1.0)));
+  const auto bottom_right_ray = proj.unproject(VPoint(jcc::Vec2(-1.0, 1.0)));
+
+  const jcc::Vec4 red(1.0, 0.1, 0.1, 0.8);
+  constexpr double length = 5.0;
+  const jcc::Vec3 origin = bottom_right_ray(0.0);
+  geo.add_line({origin, bottom_left_ray(length), red});
+  geo.add_line({origin, top_left_ray(length), red});
+  geo.add_line({origin, top_right_ray(length), red});
+  geo.add_line({origin, bottom_right_ray(length), red});
+
+  geo.add_line({bottom_left_ray(length), top_left_ray(length), red});
+  geo.add_line({top_left_ray(length), top_right_ray(length), red});
+  geo.add_line({top_right_ray(length), bottom_right_ray(length), red});
+  geo.add_line({bottom_right_ray(length), bottom_left_ray(length), red});
+}
+
 }  // namespace
 
 void go() {
   setup();
   const auto view = viewer::get_window3d("Mr. Jet, jets");
+
+  const std::string april_path = "/home/jacob/repos/experiments/data/april.png";
+  const cv::Mat april_tag = cv::imread(april_path);
 
   const std::string jet_path = "/home/jacob/repos/experiments/data/jetcat_p160.stl";
   const auto put_jet = geometry::visualization::create_put_stl(jet_path);
@@ -41,12 +74,13 @@ void go() {
   const auto jet_tree = view->add_primitive<viewer::SceneTree>();
 
   const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
+  const auto cam_geo = view->add_primitive<viewer::SimpleGeometry>();
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
 
+  const auto image = std::make_shared<viewer::Image>(april_tag);
+  view->add_primitive(image);
   const auto camera = std::make_shared<viewer::Camera>();
   view->add_camera(camera);
-  camera->set_world_from_camera(
-      SE3(SO3::exp(jcc::Vec3(3.0, 0.0, 0.0)), jcc::Vec3(0.0, 0.0, -2.0)));
 
   const JetModel model;
   model.insert(*jet_tree);
@@ -57,17 +91,20 @@ void go() {
   jet.throttle_pct = 0.0;
 
   bool target_achieved = false;
-  const jcc::Vec3 final_target(0.0, 0.0, 0.32);
-  const jcc::Vec3 intermediate_target(0.0, 0.0, 1.0);
+  const jcc::Vec3 final_target(0.5, 0.5, 0.32);
+  const jcc::Vec3 intermediate_target = final_target + jcc::Vec3(0.0, 0.0, 1.0);
 
   std::vector<Controls> prev_controls;
   for (int j = 0; j < 1000 && !view->should_close(); ++j) {
     const jcc::Vec3 prev = jet.x;
 
+    //
+    // Planning state
+    //
+
     if ((jet.x - intermediate_target).norm() < 0.25) {
       target_achieved = true;
     }
-
     const jcc::Vec3 target = target_achieved ? final_target : intermediate_target;
     Desires desire;
     if (target_achieved) {
@@ -75,29 +112,18 @@ void go() {
     }
     desire.target = target;
 
-    if (camera->have_image()) {
-      const cv::Mat image = camera->extract_image();
-      cv::imshow("bababooie", image);
-      cv::waitKey(10);
-    }
+    //
+    // Execute planning
+    //
 
     const auto future_states = plan(jet, desire, prev_controls);
-    for (std::size_t k = 0; k < future_states.size(); ++k) {
-      const auto& state = future_states.at(k).state;
-      const SE3 world_from_state = SE3(state.R_world_from_body, state.x);
-      const double scale =
-          static_cast<double>(k) / static_cast<double>(future_states.size());
-      jet_geo->add_axes({world_from_state, 1.0 - scale});
-
-      if (k > 1) {
-        jet_geo->add_line({future_states.at(k).state.x, future_states.at(k - 1).state.x,
-                           jcc::Vec4(0.8, 0.8, 0.1, 0.8), 5.0});
-      }
-    }
-
     jet = future_states[1].state;
+
+    //
+    // Print out first state
+    //
+
     const auto ctrl = future_states[1].control;
-    constexpr bool PRINT_STATE = false;
     if constexpr (PRINT_STATE) {
       std::cout << "\tq     : " << ctrl.q.transpose() << std::endl;
       std::cout << "\tx     : " << jet.x.transpose() << std::endl;
@@ -106,35 +132,56 @@ void go() {
       std::cout << "\tthrust: " << jet.throttle_pct << std::endl;
     }
 
-    accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
+    //
+    // Visualize
+    //
 
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
-
     const SE3 jet_from_camera =
-        SE3(SO3::exp(jcc::Vec3(0.0, 0.0, 0.0)), jcc::Vec3(0.0, -0.1, -0.0));
+        SE3(SO3::exp(jcc::Vec3(0.1, -0.1, 0.0)), jcc::Vec3(0.1, 0.05, 0.1));
 
-    camera->set_world_from_camera(world_from_jet * jet_from_camera);
+    if constexpr (VISUALIZE_TRAJECTORY) {
+      for (std::size_t k = 0; k < future_states.size(); ++k) {
+        const auto& state = future_states.at(k).state;
+        const SE3 world_from_state = SE3(state.R_world_from_body, state.x);
+        const double scale =
+            static_cast<double>(k) / static_cast<double>(future_states.size());
+        jet_geo->add_axes({world_from_state, 1.0 - scale});
 
-    // put_jet(*jet_geo, world_from_jet);
+        if (k > 1) {
+          jet_geo->add_line({future_states.at(k).state.x, future_states.at(k - 1).state.x,
+                             jcc::Vec4(0.8, 0.8, 0.1, 0.8), 5.0});
+        }
+      }
+      jet_geo->add_line(
+          {world_from_jet.translation(),
+           world_from_jet.translation() +
+               (world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct * 0.1),
+           jcc::Vec4(0.1, 0.9, 0.1, 0.8), 9.0});
+      accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
+    }
 
-    jet_geo->add_line(
-        {world_from_jet.translation(),
-         world_from_jet.translation() +
-             (world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct * 0.1),
-         jcc::Vec4(0.1, 0.9, 0.1, 0.8), 9.0});
-
-    if (true) {
+    if constexpr (TRACK_VEHICLE) {
       const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * 3.1415 * 0.5);
       const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
       view->set_target_from_world(world_from_target.inverse());
-      // camera->set_world_from_camera(SE3(SO3(), jcc::Vec3(1.0, 1.0, 1.0)));
     } else {
-      view->set_target_from_world(world_from_jet.inverse());
+      // view->set_target_from_world(world_from_jet.inverse());
     }
 
     jet_tree->set_world_from_root(world_from_jet);
-    jet_geo->flip();
+    camera->set_world_from_camera(world_from_jet * jet_from_camera);
     accum_geo->flush();
+
+    jet_geo->clear();
+    put_camera_projection(*jet_geo, *camera);
+    if (SHOW_CAMERA) {
+      const cv::Mat image = camera->extract_image();
+      cv::imshow("bababooie", image);
+      cv::waitKey(10);
+    }
+    jet_geo->flip();
+
     view->spin_until_step();
   }
 }
