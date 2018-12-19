@@ -28,7 +28,7 @@ void apply_view(const OrbitCamera &view) {
   draw_axes({SE3(), 1.5});
 }
 
-void pre_render() {
+void prepare_to_render() {
   //
   // Flag soup
   //
@@ -51,6 +51,19 @@ void pre_render() {
 
   glEnable(GL_MULTISAMPLE);
 }
+
+void set_perspective(const GlSize &gl_size) {
+  glViewport(0, 0, gl_size.width, gl_size.height);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  const double aspect_ratio =
+      (static_cast<double>(gl_size.width) / static_cast<double>(gl_size.height));
+  constexpr double NEAR_CLIP = 0.001;
+  constexpr double FAR_CLIP = 1000.0;
+  constexpr double FOV = 60.0;
+  gluPerspective(FOV, aspect_ratio, NEAR_CLIP, FAR_CLIP);
+}
+
 }  // namespace
 
 void Window3D::spin_until_step() {
@@ -89,7 +102,9 @@ void Window3D::on_mouse_button(int button, int action, int mods) {
 void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
-  const bool shift = held_keys().count(GLFW_KEY_LEFT_SHIFT) == 1 ? held_keys().at(GLFW_KEY_LEFT_SHIFT) : false;
+  const bool shift = held_keys().count(GLFW_KEY_LEFT_SHIFT) == 1
+                         ? held_keys().at(GLFW_KEY_LEFT_SHIFT)
+                         : false;
   const bool left = left_mouse_held() && !shift;
   const bool right = right_mouse_held() || (shift && left_mouse_held());
   view_.apply_mouse(mouse_pos, mouse_pos_last_click_, left, right);
@@ -111,26 +126,31 @@ void Window3D::resize(const GlSize &gl_size) {
   gl_size_ = gl_size;
 }
 
-void Window3D::render() {
-  const std::lock_guard<std::mutex> lk(behavior_mutex_);
-  pre_render();
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  const double aspect_ratio =
-      (static_cast<double>(gl_size_.width) / static_cast<double>(gl_size_.height));
-  constexpr double NEAR_CLIP = 0.001;
-  constexpr double FAR_CLIP = 1000.0;
-  constexpr double FOV = 60.0;
-  gluPerspective(FOV, aspect_ratio, NEAR_CLIP, FAR_CLIP);
-
-  apply_view(view_);
-
-  // Update projection
-  projection_ = Projection::get_from_current();
-
+void Window3D::draw_all_primitives() const {
   for (const auto &primitive : primitives_) {
     primitive->draw();
+  }
+}
+
+void Window3D::render() {
+  const std::lock_guard<std::mutex> lk(behavior_mutex_);
+
+  //
+  // Render cameras
+  //
+  for (const auto &camera : cameras_) {
+    prepare_to_render();
+    camera->prepare_view();
+    draw_all_primitives();
+    camera->draw();
+  }
+
+  {  // Render main scene
+    set_perspective(gl_size_);
+    prepare_to_render();
+    apply_view(view_);
+    projection_ = Projection::get_from_current();
+    draw_all_primitives();
   }
 
   const double t_now = glfwGetTime();
@@ -143,7 +163,7 @@ void Window3D::render() {
   last_update_time_ = t_now;
 
   glFinish();
-}
+}  // namespace viewer
 
 struct Window3DGlobalState {
   std::map<std::string, std::shared_ptr<Window3D>> windows;

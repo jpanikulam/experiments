@@ -7,6 +7,7 @@
 
 #include "sophus.hh"
 #include "viewer/primitives/primitive.hh"
+#include "viewer/primitives/camera.hh"
 
 #include <Eigen/Dense>
 
@@ -58,6 +59,10 @@ class Window3D final : public SimpleWindow {
     return ptr;
   }
 
+  void add_camera(const std::shared_ptr<Camera> &camera) {
+    cameras_.push_back(camera);
+  }
+
   void clear() {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
     primitives_.clear();
@@ -68,12 +73,16 @@ class Window3D final : public SimpleWindow {
   }
 
  private:
+  void draw_all_primitives() const;
+
   //
   // Rendering properties
   //
 
   Projection projection_;
   std::vector<std::shared_ptr<Primitive>> primitives_;
+  std::vector<std::shared_ptr<Camera>> cameras_;
+
   GlSize gl_size_ = GlSize(640, 640);
 
   //
