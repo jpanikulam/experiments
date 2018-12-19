@@ -45,7 +45,6 @@ void go() {
 
   const auto camera = std::make_shared<viewer::Camera>();
   view->add_camera(camera);
-
   camera->set_world_from_camera(
       SE3(SO3::exp(jcc::Vec3(3.0, 0.0, 0.0)), jcc::Vec3(0.0, 0.0, -2.0)));
 
@@ -63,7 +62,6 @@ void go() {
 
   std::vector<Controls> prev_controls;
   for (int j = 0; j < 1000 && !view->should_close(); ++j) {
-    const double dt = 0.01;
     const jcc::Vec3 prev = jet.x;
 
     if ((jet.x - intermediate_target).norm() < 0.25) {
@@ -97,18 +95,26 @@ void go() {
       }
     }
 
-    std::cout << "Done optimizing" << std::endl;
     jet = future_states[1].state;
     const auto ctrl = future_states[1].control;
-    std::cout << "\tq     : " << ctrl.q.transpose() << std::endl;
-    std::cout << "\tx     : " << jet.x.transpose() << std::endl;
-    std::cout << "\tw     : " << jet.w.transpose() << std::endl;
-    std::cout << "\tv     : " << jet.v.transpose() << std::endl;
-    std::cout << "\tthrust: " << jet.throttle_pct << std::endl;
+    constexpr bool PRINT_STATE = false;
+    if constexpr (PRINT_STATE) {
+      std::cout << "\tq     : " << ctrl.q.transpose() << std::endl;
+      std::cout << "\tx     : " << jet.x.transpose() << std::endl;
+      std::cout << "\tw     : " << jet.w.transpose() << std::endl;
+      std::cout << "\tv     : " << jet.v.transpose() << std::endl;
+      std::cout << "\tthrust: " << jet.throttle_pct << std::endl;
+    }
 
     accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
 
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
+
+    const SE3 jet_from_camera =
+        SE3(SO3::exp(jcc::Vec3(0.0, 0.0, 0.0)), jcc::Vec3(0.0, -0.1, -0.0));
+
+    camera->set_world_from_camera(world_from_jet * jet_from_camera);
+
     // put_jet(*jet_geo, world_from_jet);
 
     jet_geo->add_line(

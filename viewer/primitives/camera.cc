@@ -45,7 +45,7 @@ void Camera::prepare_view() const {
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glTransform(world_from_camera_);
+  glTransform(world_from_camera_.inverse());
 }
 
 void Camera::draw() {
