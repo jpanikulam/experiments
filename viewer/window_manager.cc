@@ -87,9 +87,6 @@ void WindowManager::register_window(
       size.height, size.width, window_name.c_str(), nullptr, nullptr);
   simple_window->set_title(window_name);
 
-  glfwMakeContextCurrent(window);
-  glewInit();
-
   if (!window) {
     glfwTerminate();
     std::cerr << "\nFailed to create new window" << std::endl;
@@ -117,6 +114,7 @@ void WindowManager::render() {
     auto &window = it->second;
 
     glfwMakeContextCurrent(glfw_win);
+    glewInit();
 
     if (!glfwWindowShouldClose(glfw_win)) {
       window->render();
