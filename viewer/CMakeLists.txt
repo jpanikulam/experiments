@@ -4,9 +4,6 @@ cmake_minimum_required(VERSION 2.8)
 # Life is what you cmake of it
 #
 
-add_subdirectory(interaction)
-add_subdirectory(colors)
-
 add_library(simple_window simple_window.cc)
 target_link_libraries(simple_window ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES})
 
