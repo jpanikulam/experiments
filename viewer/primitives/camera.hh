@@ -1,9 +1,10 @@
 #pragma once
-//%deps(opencv, opengl)
+//%deps(opencv, opengl, projection)
 
 #include "viewer/gl_renderable_buffer.hh"
 
 #include "sophus.hh"
+#include "viewer/projection.hh"
 
 #include <mutex>
 #include <opencv2/opencv.hpp>
@@ -12,7 +13,7 @@ namespace viewer {
 
 class Camera final {
  public:
-  Camera(const GlSize& size = GlSize(640, 640)) : back_buffer_(size), size_(size) {
+  Camera(const GlSize& size = GlSize(640, 640)) : size_(size) {
   }
 
   void draw();
@@ -20,6 +21,17 @@ class Camera final {
   void set_world_from_camera(const SE3& world_from_camera) {
     const std::lock_guard<std::mutex> lk(draw_mutex_);
     world_from_camera_ = world_from_camera;
+    have_image_ = false;
+  }
+
+  GlSize size() const {
+    return size_;
+  }
+
+  Projection get_projection() const {
+    while (!have_image()) {
+    }
+    return proj_;
   }
 
   cv::Mat extract_image() const {
@@ -37,11 +49,11 @@ class Camera final {
   void prepare_view() const;
 
  private:
-  mutable GlRenderableBuffer back_buffer_;
   mutable std::mutex draw_mutex_;
 
   cv::Mat capture_framebuffer() const;
 
+  Projection proj_;
   GlSize size_;
 
   SE3 world_from_camera_;
