@@ -18,6 +18,12 @@ make
 
 Note, you'll have to re-run cmake any time you add/remove headers or otherwise change dependencies, because this repo uses an implicit dependency management system, which infers dependencies from header chains. Any folder without a CMakeLists.txt is generating libraries in this way.
 
+# Compiling Jetsim
+```
+cd experiments/bin
+cmake .. && make jetsim &&  ./run/jetsim
+```
+
 
 # What's Jake Doing Next?
 [ ] Add bombela to cppmv
