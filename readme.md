@@ -2,7 +2,7 @@
 # Dependencies
 
 ```shell
-sudo pip install colorama
+bash ./setup.sh  # This script is small, but dispatches to sudo; read it before you run it.
 ```
 
 The C++ dependencies can be found [here](https://github.com/jpanikulam/jpanikulam.github.io/blob/master/bash/setup.sh). If you find yourself using this package, please send me an email, and I'll make this more convenient.
