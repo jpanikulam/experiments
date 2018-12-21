@@ -20,7 +20,7 @@ fi
 
 sudo apt-get install libopencv-dev python-opencv -y
 sudo apt-get install libxmu-dev libxi-dev -y
-sudo apt install libassimp-dev
+sudo apt-get install libassimp-dev -y
 
 #
 # Tools
