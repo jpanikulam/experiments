@@ -1,7 +1,7 @@
 #include "testing/gtest.hh"
 
 #include <limits>
-#include "sign.hh"
+#include "util/sign.hh"
 
 namespace jcc {
 

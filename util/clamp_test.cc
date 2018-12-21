@@ -1,6 +1,6 @@
 #include "testing/gtest.hh"
 
-#include "clamp.hh"
+#include "util/clamp.hh"
 
 namespace jcc {
 TEST(Clamp, works) {

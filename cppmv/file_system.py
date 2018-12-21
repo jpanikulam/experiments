@@ -35,7 +35,15 @@ def resolve_include_TODO(file_path, include_path, available_include_paths):
 
 
 def resolve_include(file_path, include_path, available_include_paths=None):
-    return os.path.join('/home/jacob/repos/experiments', include_path)
+    # return os.path.join('/home/jacob/repos/experiments', include_path)
+    directory, _ = os.path.split(file_path)
+    extended_available_incl_paths = available_include_paths + [directory]
+    for path in extended_available_incl_paths:
+        potential_path = os.path.join(path, include_path)
+        if os.path.exists(potential_path):
+            return potential_path
+    else:
+        raise ValueError("Unknown include: {} in {}".format(include_path, file_path))
 
 
 def parse_ignore(path):
@@ -62,17 +70,18 @@ def get_files(path, ignores_path=None, ignores=None):
         allow_by_extension = any(map(file.endswith, valid_extensions))
         allow_by_ignores = not any(map(re_partial, ignores))
 
+        directory, _ = os.path.split(file)
         requires = [
             allow_by_ignores,
             allow_by_extension,
-            allow_by_is_file
+            allow_by_is_file,
         ]
 
         return all(requires)
 
     def want_dir(dirname):
-        _, final_dirname = os.path.split(dirname)
-        re_partial = partial(re.match, string=final_dirname + '/')
+        directory, filename = os.path.split(dirname)
+        re_partial = partial(re.match, string=filename + '/')
         allow_by_ignores = not any(map(re_partial, ignores))
         return allow_by_ignores and os.path.isdir(dirname)
 
@@ -82,6 +91,9 @@ def get_files(path, ignores_path=None, ignores=None):
 
     for subdir in dirs_here:
         subdir_path = os.path.join(path, subdir)
+        if 'CMakeLists.txt' in os.listdir(subdir_path):
+            continue
+
         files_there = get_files(subdir_path, ignores=ignores)
         files_here.extend(files_there)
     return files_here

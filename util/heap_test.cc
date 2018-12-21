@@ -1,6 +1,6 @@
 #include "testing/gtest.hh"
 
-#include "heap.hh"
+#include "util/heap.hh"
 
 namespace jcc {
 TEST(Heap, pushpop) {

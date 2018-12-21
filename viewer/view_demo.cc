@@ -1,6 +1,6 @@
 #include "viewer/window.hh"
 
-#include "primitives/plot.hh"
+#include "viewer/primitives/plot.hh"
 
 #include <iostream>
 #include <memory>

@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 
-#include "ray.hh"
+#include "geometry/ray.hh"
 
 namespace geometry {
 struct IntersectionParameters {

@@ -1,4 +1,4 @@
-#include "ray.hh"
+#include "geometry/ray.hh"
 
 namespace geometry {
 

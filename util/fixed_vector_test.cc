@@ -1,4 +1,4 @@
-#include "fixed_vector.hh"
+#include "util/fixed_vector.hh"
 
 #include "testing/gtest.hh"
 

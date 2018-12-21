@@ -5,12 +5,11 @@
 //%deps(opengl, glfw)
 
 #include "viewer/gl_aliases.hh"
+#include "viewer/primitives/simple_geometry_primitives.hh"
 #include "viewer/window_3d.hh"
 #include "viewer/window_manager.hh"
 
 #include "eigen_helpers.hh"
-
-#include "primitives/simple_geometry_primitives.hh"
 
 #include <map>
 #include <thread>

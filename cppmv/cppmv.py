@@ -12,7 +12,7 @@ def get_src_path(file, src):
     return os.path.join(fpath, src)
 
 
-def what_libs(file, elements, all_tree, known_libs):
+def what_libs(file, elements, all_tree, known_libs, repo_path):
     external_libs_remapping = {
         'assimp': '${ASSIMP_LIBRARIES}',
         'opencv': '${OpenCV_LIBS}',
@@ -36,7 +36,7 @@ def what_libs(file, elements, all_tree, known_libs):
     for lib in elements['lib']:
         for src in lib['srcs']:
             resolved = get_src_path(file, src)
-            src_libs = set(what_libs(resolved, all_tree[resolved], all_tree, known_libs))
+            src_libs = set(what_libs(resolved, all_tree[resolved], all_tree, known_libs, repo_path))
 
             # HACK: Don't depend on self
             src_libs = src_libs.difference({lib['target']})
@@ -45,7 +45,7 @@ def what_libs(file, elements, all_tree, known_libs):
     # Inferred dependencies
     for include in elements['include']:
         if include['type'] != 'system':
-            resolved = resolve_include(file, include['given_path'])
+            resolved = resolve_include(file, include['given_path'], available_include_paths=[repo_path])
             available = resolved in all_tree.keys()
 
             if available:
@@ -109,7 +109,7 @@ def discover_unlabelled_libs(tree):
                 })
 
 
-def build_dependency_table(all_tree):
+def build_dependency_table(all_tree, repo_path):
     discover_unlabelled_bins(all_tree)
     discover_unlabelled_libs(all_tree)
 
@@ -128,7 +128,7 @@ def build_dependency_table(all_tree):
             continue
 
         Log.debug("In: {}".format(file))
-        required_libs = what_libs(file, elements, all_tree, libs)
+        required_libs = what_libs(file, elements, all_tree, libs, repo_path)
         if len(required_libs):
             Log.debug('  needs: {}'.format(required_libs))
 
@@ -197,7 +197,7 @@ def main():
     results = {}
     for file in files:
         results.update(parse_file(file))
-    to_build = build_dependency_table(results)
+    to_build = build_dependency_table(results, path)
     build_cmakes(to_build, path)
 
 
