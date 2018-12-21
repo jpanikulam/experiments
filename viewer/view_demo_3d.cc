@@ -122,6 +122,6 @@ void run() {
 }  // namespace viewer
 }  // namespace viewer
 
-int main(void) {
+int main() {
   viewer::run();
 }

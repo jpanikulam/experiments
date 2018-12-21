@@ -1,5 +1,7 @@
 #include "viewer/window_manager.hh"
 
+//%deps(OPENGL, GLFW, GLEW, pthread)
+
 #include <atomic>
 #include <chrono>
 #include <iostream>

@@ -2,6 +2,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+//%deps(opengl, glfw)
+
 #include "viewer/gl_aliases.hh"
 #include "viewer/window_3d.hh"
 #include "viewer/window_manager.hh"

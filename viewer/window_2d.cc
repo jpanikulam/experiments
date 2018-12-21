@@ -2,6 +2,8 @@
 // All members of the collective may share in its bounty
 //
 
+//%deps(opengl, glfw)
+
 #include "viewer/window_2d.hh"
 
 // inc order weird for these guys

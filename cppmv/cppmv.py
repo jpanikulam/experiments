@@ -19,6 +19,7 @@ def what_libs(file, elements, all_tree, known_libs):
         'glfw': '${GLFW_LIBRARIES}',
         'glew': '${GLEW_LIBRARIES}',
         'opengl': '${OPENGL_LIBRARIES}',
+        'pthread': 'pthread',
     }
 
     required_libs = []

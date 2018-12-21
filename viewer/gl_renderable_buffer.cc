@@ -1,5 +1,7 @@
 #include "viewer/gl_renderable_buffer.hh"
 
+//%deps(opengl, glfw, glew)
+
 #include <GL/glew.h>
 #include <cassert>
 

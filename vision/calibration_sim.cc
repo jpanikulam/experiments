@@ -52,10 +52,11 @@ std::vector<Vec32i> compute_orb_features(const cv::Mat& image, Out<std::vector<c
   constexpr int   N_LEVELS       = 8;
   constexpr int   EDGE_THRESHOLD = 12;
   constexpr int   FIRST_LEVEL    = 0;
-  const cv::ORB   orb_detector(N_FEATURES, SCALE_FACTOR, N_LEVELS, EDGE_THRESHOLD, FIRST_LEVEL);
+  // const cv::ORB   orb_detector(N_FEATURES, SCALE_FACTOR, N_LEVELS, EDGE_THRESHOLD, FIRST_LEVEL);
+  const auto detector = cv::ORB::create(N_FEATURES, SCALE_FACTOR, N_LEVELS, EDGE_THRESHOLD, FIRST_LEVEL);
 
   cv::Mat descriptors;
-  orb_detector(image, cv::Mat(), is_out(*key_points), is_out(descriptors));
+  detector->compute(image, is_out(*key_points), is_out(descriptors));
   return eigenize_descriptors(descriptors);
 }
 

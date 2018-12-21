@@ -45,6 +45,6 @@ void run() {
 }
 }
 
-int main(void) {
+int main() {
   viewer::run();
 }

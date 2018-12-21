@@ -67,6 +67,6 @@ set(CMAKE_CXX_COMPILER "g++-7")
 set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
 
 
-add_subdirectory(viewer)
+# add_subdirectory(viewer)
 add_subdirectory(tmp)
 add_subdirectory(vision)
