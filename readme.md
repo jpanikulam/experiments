@@ -1,12 +1,13 @@
+Jake's C++ Library (jcc)
+=======================
+
+If you find yourself using this package, please send me an email, and I'll make this more convenient.
 
 # Dependencies
 
 ```shell
 bash ./setup.sh  # This script is small, but dispatches to sudo; read it before you run it.
 ```
-
-The C++ dependencies can be found [here](https://github.com/jpanikulam/jpanikulam.github.io/blob/master/bash/setup.sh). If you find yourself using this package, please send me an email, and I'll make this more convenient.
-
 
 # Compile
 ```shell
@@ -19,7 +20,9 @@ make
 Note, you'll have to re-run cmake any time you add/remove headers or otherwise change dependencies, because this repo uses an implicit dependency management system, which infers dependencies from header chains. Any folder without a CMakeLists.txt is generating libraries in this way.
 
 # Compiling Jetsim
-```
+
+#### Just jetsim
+```shell
 cd experiments/bin
 cmake .. && make jetsim &&  ./run/jetsim
 ```
