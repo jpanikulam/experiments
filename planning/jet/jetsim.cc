@@ -19,7 +19,7 @@ namespace planning {
 namespace jet {
 
 constexpr bool SHOW_CAMERA = true;
-constexpr bool WRITE_IMAGES = false;
+constexpr bool WRITE_IMAGES = true;
 constexpr bool PRINT_STATE = false;
 constexpr bool TRACK_VEHICLE = false;
 constexpr bool VISUALIZE_TRAJECTORY = false;
@@ -66,20 +66,21 @@ void go() {
   setup();
   const auto view = viewer::get_window3d("Mr. Jet, jets");
 
-  const std::string april_path = "/home/jacob/repos/experiments/data/april.png";
-  const cv::Mat april_tag = cv::imread(april_path);
 
   const std::string jet_path = "/home/jacob/repos/experiments/data/jetcat_p160.stl";
   const auto put_jet = geometry::visualization::create_put_stl(jet_path);
 
   const auto jet_tree = view->add_primitive<viewer::SceneTree>();
-
   const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
-  const auto cam_geo = view->add_primitive<viewer::SimpleGeometry>();
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
 
-  const auto image = std::make_shared<viewer::Image>(april_tag);
-  view->add_primitive(image);
+  {
+    const std::string fiducial_path = "/home/jacob/repos/experiments/data/fiducial.jpg";
+    const cv::Mat fiducial_tag = cv::imread(fiducial_path);
+    const auto image = std::make_shared<viewer::Image>(fiducial_tag);
+    view->add_primitive(image);
+  }
+
   const auto camera = std::make_shared<viewer::Camera>();
   view->add_camera(camera);
 
@@ -175,26 +176,29 @@ void go() {
     accum_geo->flush();
 
     put_camera_projection(*jet_geo, *camera);
+    const cv::Mat image = camera->extract_image();
     if (SHOW_CAMERA) {
-      const cv::Mat image = camera->extract_image();
-
       cv::imshow("Localization Camera", image);
-      cv::waitKey(10);
-
-      if (WRITE_IMAGES && j == 0) {
+      cv::waitKey(1);
+    }
+    if (WRITE_IMAGES) {
+      if (j == 0) {
         std::cout << "Projection: " << std::endl;
         std::cout << camera->get_projection().projection_mat() << std::endl;
       }
-      if (WRITE_IMAGES && j % 5 == 0) {
+      if (j % 5 == 0) {
         std::cout << "-----" << j << std::endl;
         std::cout << camera->get_projection().modelview_mat() << std::endl;
         cv::imwrite("jet_image_" + std::to_string(j) + ".jpg", image);
       }
     }
+
     jet_geo->flip();
 
     view->spin_until_step();
   }
+
+  cv::destroyAllWindows();
 }
 
 }  // namespace jet
