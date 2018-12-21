@@ -1,6 +1,6 @@
 #pragma once
 
-#include "eigen.hh"
+#include <Eigen/Dense>
 #include <Eigen/StdVector>
 
 template <int ROWS>

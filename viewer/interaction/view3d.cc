@@ -3,10 +3,11 @@
 namespace viewer {
 
 SE3 OrbitCamera::camera_from_anchor() const {
-  const Eigen::AngleAxisd az_rot(azimuth_, Vec3::UnitY());
-  const Eigen::AngleAxisd elev_rot(elevation_, Vec3::UnitX());
-  const Eigen::Quaterniond q(elev_rot * az_rot);
-  const SE3 instantaneous_rotation(SO3(q), Vec3::Zero());
+  const SO3 az_rot = SO3::exp(Vec3::UnitY() * azimuth_);
+  const SO3 elev_rot = SO3::exp(Vec3::UnitX() * elevation_);
+  const SO3 elev_az = elev_rot * az_rot;
+
+  const SE3 instantaneous_rotation(SO3(elev_az), Vec3::Zero());
   const SE3 offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0)));
   return offset * instantaneous_rotation;
 }

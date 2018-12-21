@@ -18,8 +18,8 @@
 namespace planning {
 namespace jet {
 
-constexpr bool SHOW_CAMERA = true;
-constexpr bool WRITE_IMAGES = true;
+constexpr bool SHOW_CAMERA = false;
+constexpr bool WRITE_IMAGES = false;
 constexpr bool PRINT_STATE = false;
 constexpr bool TRACK_VEHICLE = false;
 constexpr bool VISUALIZE_TRAJECTORY = false;
