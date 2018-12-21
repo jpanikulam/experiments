@@ -52,11 +52,11 @@ class Projection {
   //
   ViewportPoint project(const Vec3& world_point) const;
 
-  const Mat4& projection_mat() {
+  const Mat4& projection_mat() const {
     return projection_mat_;
   }
 
-  const Mat4& modelview_mat() {
+  const Mat4& modelview_mat() const {
     return modelview_mat_;
   }
 

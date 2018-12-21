@@ -19,6 +19,7 @@ namespace planning {
 namespace jet {
 
 constexpr bool SHOW_CAMERA = true;
+constexpr bool WRITE_IMAGES = false;
 constexpr bool PRINT_STATE = false;
 constexpr bool TRACK_VEHICLE = false;
 constexpr bool VISUALIZE_TRAJECTORY = false;
@@ -176,8 +177,19 @@ void go() {
     put_camera_projection(*jet_geo, *camera);
     if (SHOW_CAMERA) {
       const cv::Mat image = camera->extract_image();
+
       cv::imshow("Localization Camera", image);
       cv::waitKey(10);
+
+      if (WRITE_IMAGES && j == 0) {
+        std::cout << "Projection: " << std::endl;
+        std::cout << camera->get_projection().projection_mat() << std::endl;
+      }
+      if (WRITE_IMAGES && j % 5 == 0) {
+        std::cout << "-----" << j << std::endl;
+        std::cout << camera->get_projection().modelview_mat() << std::endl;
+        cv::imwrite("jet_image_" + std::to_string(j) + ".jpg", image);
+      }
     }
     jet_geo->flip();
 
