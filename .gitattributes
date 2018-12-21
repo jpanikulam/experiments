@@ -2,3 +2,5 @@
 *.stl binary
 *.pgm binary
 *.ppm binary
+*.dae binary
+*.jpg binary
