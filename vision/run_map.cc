@@ -7,7 +7,7 @@
 
 #include "util/clamp.hh"
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 #include <iostream>
 #include <opencv2/opencv.hpp>
 

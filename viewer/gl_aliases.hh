@@ -4,7 +4,7 @@
 // You must have already included glfw
 //
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 #include <sophus/se2.hpp>
 #include <sophus/se3.hpp>
 

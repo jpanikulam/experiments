@@ -1,7 +1,7 @@
 #include "raytracing/ransac.hh"
 #include "testing/gtest.hh"
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 
 // TODO
 #include "viewer/window_2d.hh"

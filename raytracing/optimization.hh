@@ -3,7 +3,7 @@
 #include "out.hh"
 #include "types.hh"
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 #include <sophus/se2.hpp>

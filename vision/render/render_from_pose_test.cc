@@ -7,7 +7,7 @@
 
 #include "vision/camera_model.hh"
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 #include <opencv2/opencv.hpp>
 
 namespace slam {

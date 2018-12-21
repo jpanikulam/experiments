@@ -3,7 +3,7 @@
 #include "viewer/gl_types.hh"
 #include "geometry/ray.hh"
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 
 #include <stdexcept>
 

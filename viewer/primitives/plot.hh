@@ -4,7 +4,7 @@
 
 #include "viewer/primitives/primitive.hh"
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 
 #include <vector>
 

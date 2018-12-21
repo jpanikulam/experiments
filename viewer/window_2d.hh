@@ -7,7 +7,7 @@
 #include "viewer/primitives/primitive.hh"
 #include "viewer/primitives/primitive_types.hh"
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 #include <sophus/se2.hpp>
 
 #include <memory>

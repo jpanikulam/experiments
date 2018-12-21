@@ -4,7 +4,7 @@
 
 #include "out.hh"
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 #include <map>
 
 namespace clustering {

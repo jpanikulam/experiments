@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 
 #include "out.hh"
 #include "sophus.hh"

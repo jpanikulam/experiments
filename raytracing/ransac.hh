@@ -3,7 +3,7 @@
 #include "out.hh"
 #include "raytracing/geometry.hh"
 
-#include <Eigen/Dense>
+#include "eigen.hh"
 
 #include <vector>
 
