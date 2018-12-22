@@ -27,14 +27,29 @@ class FilterUpdater {
 
 template <typename State>
 class Ekf {
- public:
+ private:
+  struct Measurement {
+    int type = -1;
+    std::any observation;
+    TimePoint time_of_validity;
+  };
   struct Comparator {
     bool operator()(const Measurement& a, const Measurement& b) const {
       return a.time_of_validity > b.time_of_validity;
     }
   };
 
-  using ObservationModel = std::function<StateVec(const State&, const std::any& obs)>;
+  using ObservationModel =
+      std::function<StateVec(const FilterState&, const std::any& obs)>;
+
+  // Returns the index of the added model
+  int add_model(const ObservationModel& model) {
+    const int i = static_cast<int>(observation_models_.size());
+    observation_models_[i] = model;
+    return i;
+  }
+
+ public:
   using MinQueue = std::priority_queue<Observation, std::vector, Comparator>;
 
   Ekf(const TimePoint& start_time, const FilterState& initial_state) {
@@ -42,12 +57,15 @@ class Ekf {
     filter_state_ = initial_state;
   }
 
-  // Returns the index of the added model
-  int add_model(const ObservationModel& model) {
-    const int i = static_cast<int>(observation_models_.size());
-    observation_models_[i] = (model);
-    return i;
+  template <typename MeasurementType>
+  int add_model(const std::function<StateVec(const FilterState&,
+                                             const MeasurementType& meas)>& fnc) {
+    const auto type_erased_fnc = [](const FilterState& x, const std::any& obs) {
+      return fnc(x, std::any_cast<MeasurementType>(obs));
+    };
+    return add_model(type_erased_fnc);
   }
+
 
   void measure(const Measurement& measurement) {
     measurements_.push(measurement);

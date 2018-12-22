@@ -13,10 +13,4 @@ struct FilterState {
   // When this state was the estimate for the true state
   TimePoint time_of_validity;
 };
-
-struct Measurement {
-  int type = -1;
-  std::any observation;
-  TimePoint time_of_validity;
-};
 }  // namespace estimation
