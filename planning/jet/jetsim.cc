@@ -24,7 +24,7 @@ constexpr bool SHOW_CAMERA = true;
 constexpr bool SHOW_CAMERA_PROJECTION = false;
 constexpr bool WRITE_IMAGES = true;
 constexpr bool PRINT_STATE = false;
-constexpr bool DRAW_VEHICLE = true;
+constexpr bool DRAW_VEHICLE = false;
 constexpr bool TRACK_VEHICLE = false;
 constexpr bool VISUALIZE_TRAJECTORY = false;
 
@@ -78,10 +78,16 @@ void go() {
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
 
   {
+    const auto image_tree = view->add_primitive<viewer::SceneTree>();
     const std::string fiducial_path = jcc::Environment::asset_path() + "fiducial.jpg";
     const cv::Mat fiducial_tag = cv::imread(fiducial_path);
     const auto image = std::make_shared<viewer::Image>(fiducial_tag);
-    view->add_primitive(image);
+    // view->add_primitive(image);
+    image_tree->add_primitive("root", SE3(), "fiducial_1", image);
+
+    image_tree->add_primitive(
+        "root", SE3(SO3::exp(jcc::Vec3(1.0, 0.0, 0.0)), jcc::Vec3(-1.0, 0.0, 0.0)),
+        "fiducial_2", image);
   }
 
   const auto camera = std::make_shared<viewer::Camera>();
@@ -194,7 +200,7 @@ void go() {
         std::cout << "Projection: " << std::endl;
         std::cout << camera->get_projection().projection_mat() << std::endl;
       }
-      if (j % 5 == 0) {
+      if (j % 1 == 0) {
         std::cout << "-----" << j << std::endl;
         std::cout << camera->get_projection().modelview_mat() << std::endl;
         cv::imwrite("jet_image_" + std::to_string(j) + ".jpg", image);
