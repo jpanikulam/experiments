@@ -21,12 +21,12 @@ namespace planning {
 namespace jet {
 
 constexpr bool SHOW_CAMERA = true;
-constexpr bool SHOW_CAMERA_PROJECTION = false;
-constexpr bool WRITE_IMAGES = true;
+constexpr bool SHOW_CAMERA_PROJECTION = true;
+constexpr bool WRITE_IMAGES = false;
 constexpr bool PRINT_STATE = false;
-constexpr bool DRAW_VEHICLE = false;
+constexpr bool DRAW_VEHICLE = true;
 constexpr bool TRACK_VEHICLE = false;
-constexpr bool VISUALIZE_TRAJECTORY = false;
+constexpr bool VISUALIZE_TRAJECTORY = true;
 
 namespace {
 void setup() {
