@@ -27,6 +27,16 @@ cd experiments/bin
 cmake .. && make jetsim &&  ./run/jetsim
 ```
 
+# PyMake
+
+####
+```shell
+cd experiments/pymake
+sudo python setup.py install
+
+pymake
+```
+
 
 # What's Jake Doing Next?
 [ ] Add bombela to pymake

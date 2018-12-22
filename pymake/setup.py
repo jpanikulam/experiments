@@ -1,4 +1,4 @@
-"""cppmake auto-generates python code
+"""cppmake auto-generates a big CMake file from C++ headers
 """
 import setuptools
 
@@ -15,5 +15,6 @@ setuptools.setup(
     description=description,
     keywords="cmake make stupid",
     platforms='any',
-    zip_safe=True
+    zip_safe=True,
+    scripts=['pymake']
 )
