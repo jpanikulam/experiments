@@ -79,11 +79,6 @@ void go() {
 
   {
     const std::string fiducial_path = jcc::Environment::asset_path() + "fiducial.jpg";
-    // const std::string fiducial_path = jcc::Environment::asset_path() +
-    // "chessboard.png";
-    // const std::string fiducial_path = jcc::Environment::asset_path() +
-    // "chessboard.jpg";
-
     const cv::Mat fiducial_tag = cv::imread(fiducial_path);
     const auto image = std::make_shared<viewer::Image>(fiducial_tag);
     view->add_primitive(image);
