@@ -2,6 +2,8 @@
 
 #include <GL/glew.h>
 
+#include <cassert>
+
 namespace viewer {
 
 Image::Image(const cv::Mat& image, const double scale, double alpha) {
@@ -33,8 +35,10 @@ void Image::update_image(const cv::Mat& image) {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   if (image.channels() == 1) {
     cv::cvtColor(image, image_, cv::COLOR_GRAY2BGR);
-  } else {
+  } else if (image.channels() == 3) {
     image.copyTo(image_);
+  } else {
+    assert(false);
   }
   to_update_ = true;
 }
@@ -70,19 +74,6 @@ void Image::draw() const {
 
   glColor4d(1.0, 1.0, 1.0, alpha_);
   glBegin(GL_QUADS);
-
-  /*  glTexCoord2d(0, 0);
-    glVertex3d(0, 0, 0);
-
-    glTexCoord2d(0, 1);
-    glVertex3d(0, image_.rows * width_m_, 0);
-
-    glTexCoord2d(1, 1);
-    glVertex3d(image_.cols * width_m_, image_.rows * width_m_, 0);
-
-    glTexCoord2d(1, 0);
-    glVertex3d(image_.cols * width_m_, 0, 0);
-  */
 
   const double aspect_ratio = image_.cols / static_cast<double>(image_.rows);
 
