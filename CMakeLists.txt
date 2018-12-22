@@ -7,7 +7,6 @@ include_directories("${BASEPATH}")
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-
 #########################
 # GTest
 #
@@ -70,3 +69,4 @@ set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wno-depre
 # add_subdirectory(viewer)
 add_subdirectory(tmp)
 add_subdirectory(vision)
+target_compile_definitions(environment PRIVATE ASSET_PATH="${BASEPATH}/data")
