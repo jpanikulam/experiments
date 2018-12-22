@@ -57,6 +57,9 @@ auto make_jet_cost(const Desires& desires) {
       cost += desires.supp_v_weight * state.v.squaredNorm();
 
       cost += 35.0 * state.w.squaredNorm();
+      // const jcc::Vec3 target_w(0.01, 0.0, 0.05);
+      // cost += 35.0 * (target_w - state.w).squaredNorm();
+
       cost += 25.0 * quad_hinge(state.throttle_pct, 8.0);
       cost += 100.0 * quad_hinge(-state.throttle_pct, 0.0);
     }

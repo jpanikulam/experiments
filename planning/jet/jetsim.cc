@@ -12,15 +12,19 @@
 #include "viewer/primitives/camera.hh"
 #include "viewer/primitives/image.hh"
 
+#include "util/environment.hh"
+
 #include "eigen.hh"
 #include "sophus.hh"
 
 namespace planning {
 namespace jet {
 
-constexpr bool SHOW_CAMERA = false;
-constexpr bool WRITE_IMAGES = false;
+constexpr bool SHOW_CAMERA = true;
+constexpr bool SHOW_CAMERA_PROJECTION = false;
+constexpr bool WRITE_IMAGES = true;
 constexpr bool PRINT_STATE = false;
+constexpr bool DRAW_VEHICLE = true;
 constexpr bool TRACK_VEHICLE = false;
 constexpr bool VISUALIZE_TRAJECTORY = false;
 
@@ -66,8 +70,7 @@ void go() {
   setup();
   const auto view = viewer::get_window3d("Mr. Jet, jets");
 
-
-  const std::string jet_path = "/home/jacob/repos/experiments/data/jetcat_p160.stl";
+  const std::string jet_path = jcc::Environment::asset_path() + "jetcat_p160.stl";
   const auto put_jet = geometry::visualization::create_put_stl(jet_path);
 
   const auto jet_tree = view->add_primitive<viewer::SceneTree>();
@@ -75,7 +78,12 @@ void go() {
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
 
   {
-    const std::string fiducial_path = "/home/jacob/repos/experiments/data/fiducial.jpg";
+    const std::string fiducial_path = jcc::Environment::asset_path() + "fiducial.jpg";
+    // const std::string fiducial_path = jcc::Environment::asset_path() +
+    // "chessboard.png";
+    // const std::string fiducial_path = jcc::Environment::asset_path() +
+    // "chessboard.jpg";
+
     const cv::Mat fiducial_tag = cv::imread(fiducial_path);
     const auto image = std::make_shared<viewer::Image>(fiducial_tag);
     view->add_primitive(image);
@@ -85,15 +93,18 @@ void go() {
   view->add_camera(camera);
 
   const JetModel model;
-  model.insert(*jet_tree);
+  if constexpr (DRAW_VEHICLE) {
+    model.insert(*jet_tree);
+  }
 
   State jet;
   jet.x = jcc::Vec3(-2.0, -2.0, 3.0);
+  jet.w = jcc::Vec3(0.3, -0.4, 1.0);
 
   jet.throttle_pct = 0.0;
 
   bool target_achieved = false;
-  const jcc::Vec3 final_target(0.5, 0.5, 0.32);
+  const jcc::Vec3 final_target(0.5, 0.5, 0.9);
   const jcc::Vec3 intermediate_target = final_target + jcc::Vec3(0.0, 0.0, 1.0);
 
   std::vector<Controls> prev_controls;
@@ -175,7 +186,9 @@ void go() {
     camera->set_world_from_camera(world_from_jet * jet_from_camera);
     accum_geo->flush();
 
-    put_camera_projection(*jet_geo, *camera);
+    if constexpr (SHOW_CAMERA_PROJECTION) {
+      put_camera_projection(*jet_geo, *camera);
+    }
     const cv::Mat image = camera->extract_image();
     if (SHOW_CAMERA) {
       cv::imshow("Localization Camera", image);
