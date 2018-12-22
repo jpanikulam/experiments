@@ -29,7 +29,7 @@ cmake .. && make jetsim &&  ./run/jetsim
 
 
 # What's Jake Doing Next?
-[ ] Add bombela to cppmv
+[ ] Add bombela to pymake
 [ ] Make Gandi refer to github
 * Figure out how to make my github.io display images (Wowee!)
 * pdfs on control

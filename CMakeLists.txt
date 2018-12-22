@@ -59,7 +59,7 @@ endmacro(add_test)
 
 # TODO: Make this run whenever make is run
 execute_process(
-    COMMAND python ${CMAKE_SOURCE_DIR}/cppmv/cppmv.py -v success -p ${CMAKE_SOURCE_DIR}
+    COMMAND python ${CMAKE_SOURCE_DIR}/pymake/pymake.py -v success -p ${CMAKE_SOURCE_DIR}
 )
 
 set(CMAKE_CXX_COMPILER "g++-7")

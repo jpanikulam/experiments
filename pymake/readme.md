@@ -1,15 +1,15 @@
 # Usage
 
-Run cppmv on your repo, and it will generate a single CMakeLists.txt file containing all of the targets it can find. Here's the common case:
+Run pymake on your repo, and it will generate a single CMakeLists.txt file containing all of the targets it can find. Here's the common case:
 
-* cppmv will create a library if `xyz.hh` and `xyz.cc` exist in the same folder
-* cppmv will create a *test* if `xyz_test.cc` exists and includes `gtest.hh`
-* cppmv will create a binary if it finds a `main()` function in a `.cc` file
-* cppmv will follow header includes to figure out dependencies. If it includes a header that corresponds to a library, it will link to that library
-* If cppmv doesn't support your a use case, just write a CMakeLists.txt in the sub-folder, and cppmv won't create anything with that subfolder. As long as the headers in that subfolder have the same name as the libraries they belong to, `cppmv` will correctly link to them.
+* pymake will create a library if `xyz.hh` and `xyz.cc` exist in the same folder
+* pymake will create a *test* if `xyz_test.cc` exists and includes `gtest.hh`
+* pymake will create a binary if it finds a `main()` function in a `.cc` file
+* pymake will follow header includes to figure out dependencies. If it includes a header that corresponds to a library, it will link to that library
+* If pymake doesn't support your a use case, just write a CMakeLists.txt in the sub-folder, and pymake won't create anything with that subfolder. As long as the headers in that subfolder have the same name as the libraries they belong to, `pymake` will correctly link to them.
 
 ```shell
-python cppmv.py --path my_repo/
+python pymake.py --path my_repo/
 ```
 
 Example folder structure

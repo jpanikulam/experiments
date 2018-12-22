@@ -7,7 +7,7 @@ valid_extensions = ['cc', 'hh']
 
 
 def parse_cfg(path, base):
-    with open(os.path.join(path, 'cfg.cppmv')) as f:
+    with open(os.path.join(path, 'cfg.pymake')) as f:
         text = f.read()
 
     include_paths = []
