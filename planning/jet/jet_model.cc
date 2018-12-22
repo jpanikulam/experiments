@@ -3,9 +3,6 @@
 #include "geometry/visualization/put_collada.hh"
 #include "viewer/primitives/simple_geometry.hh"
 
-// TODO
-#include <set>
-
 namespace planning {
 namespace jet {
 

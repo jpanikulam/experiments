@@ -5,14 +5,14 @@
 
 #include "viewer/primitives/scene_tree.hh"
 
+#include "util/environment.hh"
+
 namespace planning {
 namespace jet {
 
 class JetModel {
  public:
-  JetModel(const std::string& path =
-               "/home/jacob/repos/experiments/data/Hover-Jet Vehicle.dae")
-      : model_(path) {
+  JetModel() : model_(jcc::Environment::asset_path() + "Hover-Jet Vehicle.dae") {
   }
 
   void insert(viewer::SceneTree& tree) const;
