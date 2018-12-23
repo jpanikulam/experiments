@@ -1,14 +1,7 @@
 #include "estimation/jet/jet_filter.hh"
 
-//%ignore
-
 namespace estimation {
 namespace jet_filter {
-
-enum class MeasurementId : uint8_t {
-  IMU = 0,      //
-  FIDUCIAL = 1  //
-};
 
 class JetFilter() {
   void measure_imu(const ImuMeasurement& meas) {

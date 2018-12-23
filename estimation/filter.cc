@@ -35,7 +35,7 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
 template <typename State>
 FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
                                               const TimePoint& t) const {
-  constexpr double MAX_DT = 0.1;
+  constexpr TimeDuration MAX_DT = to_duration(0.1);
 
   FilterState<State> x = x0;
   TimePoint time_simulated = x0.time_of_validity;
@@ -48,7 +48,7 @@ FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
 }
 
 template <typename State>
-FilterState<State> Ekf<typename State>::service_all_measurements(
+FilterState<State> Ekf<State>::service_all_measurements(
     const FilterState<State>& x_hat0) const {
   FilterState<State> x_hat = x_hat0;
   while (!measurements_.empty()) {
