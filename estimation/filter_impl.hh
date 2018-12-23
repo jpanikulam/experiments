@@ -1,8 +1,8 @@
 #include "estimation/filter.hh"
 #include "estimation/time_point.hh"
 
-#include "numerics/numdiff.hh"
 #include "numerics/group_diff.hh"
+#include "numerics/numdiff.hh"
 
 namespace estimation {
 
