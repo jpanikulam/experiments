@@ -103,7 +103,7 @@ def discover_unlabelled_libs(tree):
                 pairs.append((file, raw_name + '.cc'))
 
                 if has_annotations(elements):
-                    Log.warn("Header pair has annotations: {}".format(raw_name))
+                    Log.debug("Header pair has annotations: {}".format(raw_name))
                 src_file = name + '.cc'
                 elements['lib'].append({
                     'target': name,
