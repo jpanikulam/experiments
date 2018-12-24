@@ -15,8 +15,11 @@ using ComputeDelta = std::function<VecNd<X::DIM>(const X&, const X&)>;
 template <typename X, typename Y>
 using GroupFnc = std::function<Y(const X&)>;
 
+template <typename X, int ROWS>
+using GroupToDelta = std::function<VecNd<ROWS>(const X&)>;
+
 template <typename X, typename Y>
-MatNd<Y::DIM, X::DIM> group_jacobian(const VecNd<X::DIM>& x,
+MatNd<Y::DIM, X::DIM> group_jacobian(const X& x,
                                      const GroupFnc<X, Y>& fnc,
                                      const ComputeDelta<Y>& compute_delta,
                                      const ApplyDelta<X>& apply_delta) {
@@ -24,16 +27,25 @@ MatNd<Y::DIM, X::DIM> group_jacobian(const VecNd<X::DIM>& x,
     const X xplus_dx = apply_delta(x, dx);
     return compute_delta(fnc(xplus_dx), fnc(x));
   };
-  return numerical_jacobian<Y::DIM>(X::Zero().eval(), f_x);
+  return numerical_jacobian<Y::DIM>(VecNd<X::DIM>::Zero().eval(), f_x);
 }
 
 template <typename X, typename Y>
-MatNd<Y::DIM, X::DIM> group_jacobian(const VecNd<X::DIM>& x, const GroupFnc<X, Y>& fnc) {
+MatNd<Y::DIM, X::DIM> group_jacobian(const X& x, const GroupFnc<X, Y>& fnc) {
   const auto f_x = [&fnc, &x](const VecNd<X::DIM>& dx) {
     const X xplus_dx = apply_delta(x, dx);
     return compute_delta(fnc(xplus_dx), fnc(x));
   };
-  return numerical_jacobian<Y::DIM>(X::Zero().eval(), f_x);
+  return numerical_jacobian<Y::DIM>(VecNd<X::DIM>::Zero().eval(), f_x);
+}
+
+template <int N_ROWS, typename X>
+MatNd<N_ROWS, X::DIM> group_jacobian(const X& x, const GroupToDelta<X, N_ROWS>& fnc) {
+  const auto f_x = [&fnc, &x](const VecNd<X::DIM>& dx) {
+    const X xplus_dx = apply_delta(x, dx);
+    return fnc(xplus_dx) - fnc(x);
+  };
+  return numerical_jacobian<N_ROWS>(VecNd<X::DIM>::Zero().eval(), f_x);
 }
 
 }  // namespace numerics
