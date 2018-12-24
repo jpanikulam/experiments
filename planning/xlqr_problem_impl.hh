@@ -25,13 +25,12 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::solve(
   }
 
   Solution current_soln;
-  prev_cost = shoot(traj0, {}, -1.0, &current_soln);
+  shoot(traj0, {}, -1.0, &current_soln);
 
-  constexpr int MAX_ITERS = 15;
+  constexpr int MAX_ITERS = 7;
   for (int iter = 0; iter < MAX_ITERS; ++iter) {
     const auto lqr_soln = ricatti(current_soln);
     current_soln = line_search(current_soln, lqr_soln);
-    // prev_cost = shoot(current_soln, lqr_soln, -1.0);
   }
   return current_soln;
 }
@@ -134,7 +133,7 @@ typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
     const Eigen::LLT<ControlHess> llt(Quu);
     if (llt.info() != Eigen::Success) {
       std::cout << "LLT solve was degenerate at state " << k << std::endl;
-      assert(false);
+      assert((llt.info() == Eigen::Success));
     }
 
     // Control policy is trivial

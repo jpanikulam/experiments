@@ -31,11 +31,11 @@ auto make_jet_cost(const Desires& desires) {
     double cost = 0.0;
 
     {
-      cost += 25.0 * control.q.squaredNorm();
-      cost += 3.0 * control.throttle_dot * control.throttle_dot;
+      cost += 3.0 * control.q.squaredNorm();
+      cost += 0.03 * control.throttle_dot * control.throttle_dot;
     }
     {
-      if (t >= 14) {
+      if (t >= HORIZON - 1) {
         // const jcc::Vec3 attitude = state.R_world_from_body * jcc::Vec3::UnitZ();
         // const double sin_error = attitude.cross(jcc::Vec3::UnitZ()).squaredNorm();
         // cost += 14.0 * sin_error * sin_error;
@@ -46,17 +46,17 @@ auto make_jet_cost(const Desires& desires) {
 
         const jcc::Vec3 error = state.x - desires.target;
 
-        cost += 10.0 * huber(error.norm(), 5.0);
-        cost += 100.0 * huber(error.z(), 5.0);
+        cost += 100.0 * huber(error.norm(), 5.0);
+        cost += 200.0 * huber(error.z(), 5.0);
 
         cost += 150.0 * state.v.squaredNorm();
       }
 
-      cost += 120.0 * state.v.squaredNorm();
-
+      const jcc::Vec3 velocity_weights(25.0, 25.0, 25.0);
+      cost += state.v.dot(velocity_weights.asDiagonal() * state.v);
       cost += desires.supp_v_weight * state.v.squaredNorm();
 
-      cost += 35.0 * state.w.squaredNorm();
+      cost += 10.0 * state.w.squaredNorm();
       // const jcc::Vec3 target_w(0.01, 0.0, 0.05);
       // cost += 35.0 * (target_w - state.w).squaredNorm();
 

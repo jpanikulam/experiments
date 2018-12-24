@@ -11,7 +11,7 @@ constexpr int X_DIM = State::DIM;
 constexpr int U_DIM = Controls::DIM;
 
 constexpr double DT = 0.1;
-constexpr int HORIZON = 15;
+constexpr int HORIZON = 30;
 
 using JetDim = Dimensions<X_DIM, U_DIM>;
 using JetProblem = Problem<JetDim, State>;

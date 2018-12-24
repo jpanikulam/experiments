@@ -58,39 +58,42 @@ StateDot compute_qdot(const State &Q, const Controls &U, const Parameters &Z) {
   const StateDot Qdot = StateDot{w, throttle_dot, v, q, a};
   return Qdot;
 }
-StateDot operator*(const double half_h, const StateDot &K1) {
-  const StateDot anon_7bc3e8 =
-      StateDot{(half_h * (K1.w)), (half_h * (K1.throttle_dot)),
-               (half_h * (K1.v)), (half_h * (K1.q)), (half_h * (K1.a))};
-  return anon_7bc3e8;
+StateDot operator*(const double h, const StateDot &K1) {
+  const StateDot anon_c5ec58 =
+      StateDot{(h * (K1.w)), (h * (K1.throttle_dot)), (h * (K1.v)),
+               (h * (K1.q)), (h * (K1.a))};
+  return anon_c5ec58;
 }
-State operator+(const State &Q, const StateDot &anon_7bc3e8) {
-  const State Q2 = State{((SO3::exp((anon_7bc3e8.w))) * (Q.R_world_from_body)),
-                         ((Q.throttle_pct) + (anon_7bc3e8.throttle_dot)),
-                         ((Q.x) + (anon_7bc3e8.v)), ((Q.w) + (anon_7bc3e8.q)),
-                         ((Q.v) + (anon_7bc3e8.a))};
+State operator+(const State &Q, const StateDot &anon_763fee) {
+  const State Q2 = State{((SO3::exp((anon_763fee.w))) * (Q.R_world_from_body)),
+                         ((Q.throttle_pct) + (anon_763fee.throttle_dot)),
+                         ((Q.x) + (anon_763fee.v)), ((Q.w) + (anon_763fee.q)),
+                         ((Q.v) + (anon_763fee.a))};
   return Q2;
 }
-StateDot operator+(const StateDot &K1, const StateDot &K4) {
-  const StateDot anon_f9c9bd =
-      StateDot{((K1.w) + (K4.w)), ((K1.throttle_dot) + (K4.throttle_dot)),
-               ((K1.v) + (K4.v)), ((K1.q) + (K4.q)), ((K1.a) + (K4.a))};
-  return anon_f9c9bd;
+StateDot operator+(const StateDot &anon_c5ec58, const StateDot &anon_dd9cdd) {
+  const StateDot anon_38882d = StateDot{
+      ((anon_c5ec58.w) + (anon_dd9cdd.w)),
+      ((anon_c5ec58.throttle_dot) + (anon_dd9cdd.throttle_dot)),
+      ((anon_c5ec58.v) + (anon_dd9cdd.v)), ((anon_c5ec58.q) + (anon_dd9cdd.q)),
+      ((anon_c5ec58.a) + (anon_dd9cdd.a))};
+  return anon_38882d;
 }
 State rk4_integrate(const State &Q, const Controls &U, const Parameters &Z,
                     const double h) {
   const double half = 0.5;
   const double half_h = h * half;
   const StateDot K1 = compute_qdot(Q, U, Z);
-  const State Q2 = Q + (half_h * K1);
+  const State Q2 = Q + (half_h * (h * K1));
   const StateDot K2 = compute_qdot(Q2, U, Z);
-  const State Q3 = Q + (half_h * K2);
+  const State Q3 = Q + (half_h * (h * K2));
   const StateDot K3 = compute_qdot(Q3, U, Z);
-  const State Q4 = Q + (h * K3);
+  const State Q4 = Q + (h * (h * K3));
   const StateDot K4 = compute_qdot(Q4, U, Z);
   const double two = 2.0;
   const double sixth = 0.166666666667;
-  const State Qn = Q + (sixth * ((K1 + K4) + (two * (K2 + K3))));
+  const State Qn =
+      Q + (sixth * (((h * K1) + (h * K4)) + (two * ((h * K2) + (h * K3)))));
   return Qn;
 }
 State operator+(const State &a, const StateDelta &grp_b) {
@@ -102,16 +105,16 @@ State operator+(const State &a, const StateDelta &grp_b) {
   return out;
 }
 StateDelta from_vector(const VecNd<13> &in_vec) {
-  const VecNd<3> anon_f8f656 =
-      (VecNd<3>() << (in_vec[7]), (in_vec[8]), (in_vec[9])).finished();
-  const VecNd<3> anon_eccb36 =
-      (VecNd<3>() << (in_vec[4]), (in_vec[5]), (in_vec[6])).finished();
-  const VecNd<3> anon_076a41 =
-      (VecNd<3>() << (in_vec[10]), (in_vec[11]), (in_vec[12])).finished();
-  const VecNd<3> anon_69c8cf =
+  const VecNd<3> anon_aa324e =
       (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const StateDelta out = StateDelta{anon_69c8cf, (in_vec[3]), anon_eccb36,
-                                    anon_f8f656, anon_076a41};
+  const VecNd<3> anon_5ea7ce =
+      (VecNd<3>() << (in_vec[10]), (in_vec[11]), (in_vec[12])).finished();
+  const VecNd<3> anon_32f58b =
+      (VecNd<3>() << (in_vec[4]), (in_vec[5]), (in_vec[6])).finished();
+  const VecNd<3> anon_8cd6c7 =
+      (VecNd<3>() << (in_vec[7]), (in_vec[8]), (in_vec[9])).finished();
+  const StateDelta out = StateDelta{anon_aa324e, (in_vec[3]), anon_32f58b,
+                                    anon_8cd6c7, anon_5ea7ce};
   return out;
 }
 State apply_delta(const State &a, const VecNd<13> &delta) {
@@ -120,9 +123,9 @@ State apply_delta(const State &a, const VecNd<13> &delta) {
   return out;
 }
 Controls from_vector(const VecNd<4> &in_vec) {
-  const VecNd<3> anon_94a35a =
+  const VecNd<3> anon_6245a5 =
       (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const Controls out = Controls{anon_94a35a, (in_vec[3])};
+  const Controls out = Controls{anon_6245a5, (in_vec[3])};
   return out;
 }
 VecNd<4> to_vector(const Controls &in_grp) {
