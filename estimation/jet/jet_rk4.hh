@@ -43,8 +43,10 @@ struct AccelMeasurementDelta {
   VecNd<3> observed_acceleration_error = VecNd<3>::Zero();
   static constexpr int DIM = 3;
 };
-VecNd<3> observe_accel(const SE3 &T_world_from_sensor, const VecNd<6> &eps_dot,
-                       const VecNd<6> &eps_ddot, const VecNd<3> &gravity_mpss);
+VecNd<3> observe_accel(const SE3 &T_world_from_vehicle, const VecNd<6> &eps_dot,
+                       const VecNd<6> &eps_ddot,
+                       const SE3 &T_vehicle_from_sensor,
+                       const VecNd<3> &gravity_mpss);
 VecNd<24> compute_delta(const State &a, const State &b);
 VecNd<3> compute_delta(const AccelMeasurement &a, const AccelMeasurement &b);
 State rk4_integrate(const State &Q, const Parameters &Z, const double h);
