@@ -24,6 +24,12 @@ def what_libs(file, elements, all_tree, known_libs, repo_path):
         'pthread': 'pthread',
     }
 
+    # TODO: How to detect that opengl must be linked to?
+    "GL/glew.h"
+    "opencv2/opencv.hpp"
+    "GLFW/glfw3.h"
+    "assimp/"
+
     required_libs = []
     # Obviated dependencies
     for dep in elements['deps']:
