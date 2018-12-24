@@ -1,62 +1,71 @@
 #pragma once
 
-//
+#include "eigen.hh"
+#include "estimation/filter_state.hh"
+
+#include "numerics/group_diff.hh"
+
 // TODO
-// - [] Bootstrap optimizer
-//
+#include <iostream>
 
 namespace estimation {
-struct FilterUpdate {
-  StateVec dx;
-  StateInfo P_new;
-};
 
 template <typename State, typename Observation>
 class ObservationModel {
+ public:
   using StateVec = VecNd<State::DIM>;
   using ObsVec = VecNd<Observation::DIM>;
 
   using ErrorModel = std::function<ObsVec(const State&, const Observation&)>;
   using LogLikelihood = std::function<double(const State&, const Observation& z)>;
 
-  ObservationModel(const ErrorModel& error_model, const LogLikelihood& log_likelihood)
-      : error_model_(error_model), log_likelihood_(log_likelihood) {
+  ObservationModel(const ErrorModel& error_model) : error_model_(error_model) {
   }
 
   // This return z [-] h(x)
-  ObsVec error(const State& x, const Observation& z) {
+  ObsVec error(const State& x, const Observation& z) const {
     return error_model_(x, z);
   }
 
-  FilterUpdate generate_update(const ObsVec& innovation) {
-    using MatNd<Observation::DIM, Observation::DIM> ObservationInformation;
+  FilterStateUpdate<State> generate_update(const FilterState<State>& xp,
+                                           const Observation& z) const {
+    using ObservationInformation = MatNd<Observation::DIM, Observation::DIM>;
+
     const ObservationInformation R = ObservationInformation::Identity();
+    const ObsVec innovation = error_model_(xp.x, z);
 
-    const MatNd<Observation::Dim, State::Dim> H = diff_.obs_diff(x);
-    const MatNd<Observation::Dim, Observation::Dim> R = diff_.likelihood_cov(x);
+    const auto held_error_model = [this, &z](const State& x) -> ObsVec {
+      const ObsVec y = error_model_(x, z);
+      return y;
+    };
 
-    const ObservationInformation S = (H.transpose() * P * H) + R;
+    const MatNd<Observation::DIM, State::DIM> H =
+        numerics::group_jacobian<Observation::DIM, State>(xp.x, held_error_model);
+    // const MatNd<Observation::Dim, Observation::Dim> R = diff_.likelihood_cov(x);
+
+    const ObservationInformation S = (H * xp.P * H.transpose()) + R;
 
     const Eigen::LLT<ObservationInformation> S_llt(S);
-    if (llt.info() != Eigen::Success) {
+    if (S_llt.info() != Eigen::Success) {
       std::cout << "LLT solve was degenerate" << std::endl;
       assert(false);
     }
 
-    const MatNd<State::DIM, Observation::DIM> PHt = P * H.transpose();
+    const MatNd<State::DIM, Observation::DIM> PHt = xp.P * H.transpose();
     const StateVec update = PHt * S_llt.solve(innovation);
-    using MatNd<State::DIM, State::DIM> StateInfo;
-    const StateInfo P_new = (StateInfo::Identity() - (PHt * S_llt.solve(H))) * P;
+    using StateInfo = MatNd<State::DIM, State::DIM>;
+    const StateInfo P_new = (StateInfo::Identity() - (PHt * S_llt.solve(H))) * xp.P;
 
-    return FilterUpdate{update, P_new};
+    return FilterStateUpdate<State>{update, P_new};
   }
 
-  FilterUpdate operator()(const State& x, const std::any& z) {
-    return generate_update(x, std::any_cast<Observation>(z));
+  FilterStateUpdate<State> operator()(const FilterState<State>& xp,
+                                      const Observation& z) const {
+    return generate_update(xp, z);
   }
 
  private:
-  ErrorModel error_model_;
+  const ErrorModel error_model_;
   LogLikelihood log_likelihood_;
 };
 
