@@ -17,7 +17,7 @@ setuptools.setup(
     keywords="cmake make stupid",
     platforms='any',
     zip_safe=True,
-    scripts=['pymake'],
+    scripts=['scripts/pymake'],
     install_requires=[
         'colorama==0.3.9',
     ],

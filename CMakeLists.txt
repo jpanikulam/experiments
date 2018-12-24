@@ -59,7 +59,8 @@ endmacro(add_test)
 
 # TODO: Make this run whenever make is run
 execute_process(
-    COMMAND python ${CMAKE_SOURCE_DIR}/pymake/pymake -v success -p ${CMAKE_SOURCE_DIR}
+    # COMMAND python ${CMAKE_SOURCE_DIR}/pymake/pymake -v success -p ${CMAKE_SOURCE_DIR}
+    COMMAND pymake -v success -p ${CMAKE_SOURCE_DIR}
 )
 if(ret EQUAL "1")
     message(FATAL_ERROR "Could not run pymake")

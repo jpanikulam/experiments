@@ -47,10 +47,17 @@ def resolve_include(file_path, include_path, available_include_paths=None):
 
 
 def parse_ignore(path):
-    assert '.ignore' in os.listdir(path)
-    with open(os.path.join(path, '.ignore')) as f:
-        text = f.read()
-    ignores = text.split('\n')
+    if '.ignore' not in os.listdir(path):
+        ignores = [
+            ".git",
+            "bin/",
+            "third_party/",
+            "common/",
+        ]
+    else:
+        with open(os.path.join(path, '.ignore')) as f:
+            text = f.read()
+        ignores = text.split('\n')
     return list(map(re.compile, ignores))
 
 
