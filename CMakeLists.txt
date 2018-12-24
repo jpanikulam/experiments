@@ -61,6 +61,9 @@ endmacro(add_test)
 execute_process(
     COMMAND python ${CMAKE_SOURCE_DIR}/pymake/pymake -v success -p ${CMAKE_SOURCE_DIR}
 )
+if(ret EQUAL "1")
+    message(FATAL_ERROR "Could not run pymake")
+endif()
 
 set(CMAKE_CXX_COMPILER "g++-7")
 set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
