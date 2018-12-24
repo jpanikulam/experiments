@@ -12,6 +12,8 @@
 #include "viewer/primitives/camera.hh"
 #include "viewer/primitives/image.hh"
 
+#include "estimation/vision/fiducial_pose.hh"
+
 #include "util/environment.hh"
 
 #include "eigen.hh"
@@ -21,12 +23,12 @@ namespace planning {
 namespace jet {
 
 constexpr bool SHOW_CAMERA = true;
-constexpr bool SHOW_CAMERA_PROJECTION = true;
+constexpr bool SHOW_CAMERA_PROJECTION = false;
 constexpr bool WRITE_IMAGES = false;
 constexpr bool PRINT_STATE = false;
 constexpr bool DRAW_VEHICLE = true;
 constexpr bool TRACK_VEHICLE = false;
-constexpr bool VISUALIZE_TRAJECTORY = true;
+constexpr bool VISUALIZE_TRAJECTORY = false;
 
 namespace {
 void setup() {
@@ -81,12 +83,12 @@ void go() {
     const auto image_tree = view->add_primitive<viewer::SceneTree>();
     const std::string fiducial_path = jcc::Environment::asset_path() + "fiducial.jpg";
     const cv::Mat fiducial_tag = cv::imread(fiducial_path);
-    const auto image = std::make_shared<viewer::Image>(fiducial_tag);
+    const auto image = std::make_shared<viewer::Image>(fiducial_tag, 1, 1);
     // view->add_primitive(image);
     image_tree->add_primitive("root", SE3(), "fiducial_1", image);
 
     image_tree->add_primitive(
-        "root", SE3(SO3::exp(jcc::Vec3(1.0, 0.0, 0.0)), jcc::Vec3(-1.0, 0.0, 0.0)),
+        "root", SE3(SO3::exp(jcc::Vec3(1.0, 0.0, 0.0)), jcc::Vec3(0.0, 3.0, 0.0)),
         "fiducial_2", image);
   }
 
@@ -99,31 +101,24 @@ void go() {
   }
 
   State jet;
-  jet.x = jcc::Vec3(-2.0, -2.0, 3.0);
-  jet.w = jcc::Vec3(0.1, -0.1, 0.1);
+  jet.x = jcc::Vec3(-1.0, -2.0, 2.0);
+  jet.w = jcc::Vec3(0.1, -1.1, 0.1);
 
   jet.throttle_pct = 0.0;
 
-  bool target_achieved = false;
   const jcc::Vec3 final_target(0.5, 0.5, 0.9);
-  const jcc::Vec3 intermediate_target = final_target + jcc::Vec3(0.0, 0.0, 1.0);
 
   std::vector<Controls> prev_controls;
   for (int j = 0; j < 1000 && !view->should_close(); ++j) {
+
     const jcc::Vec3 prev = jet.x;
 
     //
     // Planning state
     //
 
-    if ((jet.x - intermediate_target).norm() < 0.25) {
-      target_achieved = true;
-    }
-    const jcc::Vec3 target = target_achieved ? final_target : intermediate_target;
+    const jcc::Vec3 target = final_target;
     Desires desire;
-    if (target_achieved) {
-      desire.supp_v_weight = 600.0;
-    }
     desire.target = target;
 
     //
@@ -151,8 +146,10 @@ void go() {
     //
 
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
+    const SO3 camera_sideways_from_camera_down = 
+        SO3::exp(jcc::Vec3(-3.14/2, 0.0, 0.0)) * SO3::exp(jcc::Vec3(0.0, 3.14, 0.0));
     const SE3 jet_from_camera =
-        SE3(SO3::exp(jcc::Vec3(0.1, -0.1, 0.0)), jcc::Vec3(0.1, 0.05, 0.1));
+        SE3(camera_sideways_from_camera_down, jcc::Vec3(0.1, 0.05, 0.1));
 
     if constexpr (VISUALIZE_TRAJECTORY) {
       for (std::size_t k = 0; k < future_states.size(); ++k) {
@@ -190,11 +187,12 @@ void go() {
     if constexpr (SHOW_CAMERA_PROJECTION) {
       put_camera_projection(*jet_geo, *camera);
     }
-    const cv::Mat image = camera->extract_image();
+    const cv::Mat localization_camera_image = camera->extract_image();
     if (SHOW_CAMERA) {
-      cv::imshow("Localization Camera", image);
+      cv::imshow("Localization Camera", localization_camera_image);
       cv::waitKey(1);
     }
+    fiducials::detect_markers(localization_camera_image);
     if (WRITE_IMAGES) {
       if (j == 0) {
         std::cout << "Projection: " << std::endl;
@@ -203,7 +201,7 @@ void go() {
       if (j % 1 == 0) {
         std::cout << "-----" << j << std::endl;
         std::cout << camera->get_projection().modelview_mat() << std::endl;
-        cv::imwrite("jet_image_" + std::to_string(j) + ".jpg", image);
+        cv::imwrite("jet_image_" + std::to_string(j) + ".jpg", localization_camera_image);
       }
     }
 
