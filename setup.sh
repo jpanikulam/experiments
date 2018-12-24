@@ -29,6 +29,7 @@ sudo apt-get install libassimp-dev -y
 sudo apt-get install python-pip ipython -y
 sudo pip install matplotlib -y
 sudo pip install colorama -y
+sudo pip install generate-cmake -y
 sudo apt-get install python-tk -y
 
 #
