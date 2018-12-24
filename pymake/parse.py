@@ -1,4 +1,4 @@
-from log import Log
+from generate_cmake.log import Log
 
 
 def splitstrip(text, delim=','):

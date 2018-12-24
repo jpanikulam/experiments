@@ -1,7 +1,7 @@
 import os
 import re
 
-from parse import between
+from generate_cmake.parse import between
 
 valid_extensions = ['cc', 'hh']
 

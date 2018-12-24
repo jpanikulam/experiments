@@ -6,7 +6,7 @@ description = "Python Super CMake"
 
 setuptools.setup(
     name='generate_cmake',
-    version='1.0',
+    version='1.1.1',
     license='MIT',
     long_description=__doc__,
     url='https://github.com/jpanikulam/experiments/tree/master/pymake',

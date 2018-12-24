@@ -3,10 +3,10 @@
 import argparse
 import os
 
-from log import Log
-from file_system import get_files, resolve_include
-from parse import parse_text, has_annotations, should_ignore
-from cmake import build_cmakes
+from generate_cmake.log import Log
+from generate_cmake.file_system import get_files, resolve_include
+from generate_cmake.parse import parse_text, has_annotations, should_ignore
+from generate_cmake.cmake import build_cmakes
 
 
 def get_src_path(file, src):

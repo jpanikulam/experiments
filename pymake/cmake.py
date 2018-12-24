@@ -1,7 +1,7 @@
 import os
 from functools import partial
 
-from log import Log
+from generate_cmake.log import Log
 
 
 def _reduce_srcs(sources, base_directory, prejoin="${PROJECT_SOURCE_DIR}"):
