@@ -1,10 +1,5 @@
-// #include "estimation/jet/jet_filter.hh"
-
+#include "estimation/jet/jet_ekf.hh"
 #include "estimation/jet/jet_rk4.hh"
-
-#include "estimation/filter.hh"
-#include "estimation/filter_impl.hh"
-#include "estimation/observation_model.hh"
 
 #include "sophus.hh"
 
@@ -29,14 +24,15 @@ class JetFilter {
   JetFilter() : ekf_(dynamics) {
     const auto error_model = [](const State& x, const AccelMeasurement& z) -> jcc::Vec3 {
       const jcc::Vec3 g(0.0, 0.0, -9.81);
+      const SE3 vehicle_from_sensor;
 
-      const jcc::Vec3 expected_a_mpss =
-          observe_accel(x.T_world_from_body, x.eps_dot, x.eps_ddot, g);
+      const jcc::Vec3 expected_a_mpss = observe_accel(x.T_world_from_body, x.eps_dot,
+                                                      x.eps_ddot, vehicle_from_sensor, g);
       const jcc::Vec3 error = expected_a_mpss - z.observed_acceleration;
 
       return error;
     };
-    const ObservationModel<State, AccelMeasurement> accel_model(error_model);
+    const ImuModel accel_model(error_model);
     // using ObservationFunction =
     // std::function<Update(const JetFilterState&, const AccelMeasurement&)>;
     imu_id_ = ekf_.add_model(accel_model);
@@ -76,7 +72,7 @@ class JetFilter {
   // }
 
  private:
-  Ekf<State> ekf_;
+  JetEkf ekf_;
 
   JetFilterState xp_;
 
@@ -85,8 +81,24 @@ class JetFilter {
 };
 
 void go() {
-  const auto res = observe_accel(x.T_world_from_body, x.eps_dot, x.eps_ddot, g);
-  std::cout << res.observe_accel.transpose() << std::endl;
+  const jcc::Vec3 g(0.0, 0.0, 0.0);
+  const SO3 r_vehicle_from_sensor;
+  const jcc::Vec3 t_vehicle_from_sensor = jcc::Vec3(0.0, 0.0, 1.0);
+  const SE3 vehicle_from_sensor = SE3(r_vehicle_from_sensor, t_vehicle_from_sensor);
+
+  State x;
+  // x.eps_dot = VecNd<6>::Ones();
+  x.eps_dot[0] = 1.0;
+  x.eps_dot[3] = 0.0;
+  x.eps_dot[4] = 1.0;
+  x.eps_dot[5] = 0.0;
+
+  x.eps_ddot[2] = 0.0;
+  x.eps_ddot[5] = 0.0;
+
+  const auto res =
+      observe_accel(x.T_world_from_body, x.eps_dot, x.eps_ddot, vehicle_from_sensor, g);
+  std::cout << res.transpose() << std::endl;
   // JetFilter jf;
   //   AccelMeasurement meas;
   //   TimePoint start_time = {};
