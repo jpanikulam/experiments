@@ -9,7 +9,7 @@ setuptools.setup(
     version='1.0',
     license='MIT',
     long_description=__doc__,
-    url='panikul.am',
+    url='https://github.com/jpanikulam/experiments/tree/master/pymake',
     author_email='jpanikul@gmail.com',
     packages=setuptools.find_packages(),
     description=description,
