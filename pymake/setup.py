@@ -5,7 +5,7 @@ import setuptools
 description = "Python Super CMake"
 
 setuptools.setup(
-    name='pymake',
+    name='pycmake',
     version='1.0',
     license='MIT',
     long_description=__doc__,
