@@ -90,8 +90,8 @@ void go() {
   // x.eps_dot = VecNd<6>::Ones();
   x.eps_dot[0] = 1.0;
   x.eps_dot[3] = 0.0;
-  x.eps_dot[4] = 1.0;
-  x.eps_dot[5] = 0.0;
+  x.eps_dot[4] = 0.0;
+  x.eps_dot[5] = 1.0;
 
   x.eps_ddot[2] = 0.0;
   x.eps_ddot[5] = 0.0;

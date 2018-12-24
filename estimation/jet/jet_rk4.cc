@@ -4,24 +4,23 @@
 
 namespace estimation {
 namespace jet_filter {
-VecNd<3> observe_accel(const SE3 &T_world_from_vehicle,
-                       const VecNd<6> &eps_dot,
+VecNd<3> observe_accel(const SE3 &T_world_from_vehicle, const VecNd<6> &eps_dot,
                        const VecNd<6> &eps_ddot,
                        const SE3 &T_vehicle_from_sensor,
                        const VecNd<3> &gravity_mpss) {
   const SO3 R_vehicle_from_sensor = T_vehicle_from_sensor.so3();
   const VecNd<3> v = eps_dot.block<3, 1>(0, 0);
-  const MatNd<3, 3> Rvx = SO3::hat((R_vehicle_from_sensor * v));
   const VecNd<3> w = eps_dot.block<3, 1>(3, 0);
-  const SO3 R_world_from_sensor =
-      (T_world_from_vehicle * T_vehicle_from_sensor).so3();
-  const VecNd<3> coriolis = (Rvx * w) + (v.cross((R_vehicle_from_sensor * w)));
+  const MatNd<3, 3> Rvx = SO3::hat((R_vehicle_from_sensor * v));
+  const VecNd<3> coriolis = (v.cross((R_vehicle_from_sensor * w))) - (Rvx * w);
   const VecNd<3> centrifugal =
       (T_vehicle_from_sensor.translation()).cross((Rvx * w));
   const MatNd<6, 6> adj = T_vehicle_from_sensor.Adj();
   const VecNd<6> ad_times_inertial_and_euler = adj * eps_ddot;
   const VecNd<3> inertial_and_euler =
       ad_times_inertial_and_euler.block<3, 1>(0, 0);
+  const SO3 R_world_from_sensor =
+      (T_world_from_vehicle * T_vehicle_from_sensor).so3();
   const VecNd<3> g_imu_mpss = (R_world_from_sensor.inverse()) * gravity_mpss;
   const VecNd<3> observed_acceleration =
       ((coriolis + centrifugal) + inertial_and_euler) + g_imu_mpss;
@@ -102,36 +101,36 @@ StateDot compute_qdot(const State &Q, const Parameters &Z) {
   return Qdot;
 }
 StateDot operator*(const double half_h, const StateDot &K1) {
-  const StateDot anon_646c75 =
+  const StateDot anon_43aff7 =
       StateDot{(half_h * (K1.eps_ddot)), (half_h * (K1.dgyro_bias)),
                (half_h * (K1.eps_dddot)), (half_h * (K1.eps_dot)),
                (half_h * (K1.daccel_bias))};
-  return anon_646c75;
+  return anon_43aff7;
 }
-State operator+(const State &Q, const StateDot &anon_646c75) {
+State operator+(const State &Q, const StateDot &anon_43aff7) {
   const State Q2 =
-      State{((Q.eps_dot) + (anon_646c75.eps_ddot)),
-            ((Q.gyro_bias) + (anon_646c75.dgyro_bias)),
-            ((Q.eps_ddot) + (anon_646c75.eps_dddot)),
-            ((SE3::exp((anon_646c75.eps_dot))) * (Q.T_world_from_body)),
-            ((Q.accel_bias) + (anon_646c75.daccel_bias))};
+      State{((Q.eps_dot) + (anon_43aff7.eps_ddot)),
+            ((Q.gyro_bias) + (anon_43aff7.dgyro_bias)),
+            ((Q.eps_ddot) + (anon_43aff7.eps_dddot)),
+            ((SE3::exp((anon_43aff7.eps_dot))) * (Q.T_world_from_body)),
+            ((Q.accel_bias) + (anon_43aff7.daccel_bias))};
   return Q2;
 }
 StateDot operator+(const StateDot &K1, const StateDot &K4) {
-  const StateDot anon_1b4151 = StateDot{
+  const StateDot anon_1c6730 = StateDot{
       ((K1.eps_ddot) + (K4.eps_ddot)), ((K1.dgyro_bias) + (K4.dgyro_bias)),
       ((K1.eps_dddot) + (K4.eps_dddot)), ((K1.eps_dot) + (K4.eps_dot)),
       ((K1.daccel_bias) + (K4.daccel_bias))};
-  return anon_1b4151;
+  return anon_1c6730;
 }
 State rk4_integrate(const State &Q, const Parameters &Z, const double h) {
-  const double sixth = 0.166666666667;
-  const StateDot K1 = compute_qdot(Q, Z);
   const double half = 0.5;
   const double half_h = h * half;
+  const StateDot K1 = compute_qdot(Q, Z);
   const State Q2 = Q + (half_h * K1);
   const StateDot K2 = compute_qdot(Q2, Z);
   const State Q3 = Q + (half_h * K2);
+  const double sixth = 0.166666666667;
   const StateDot K3 = compute_qdot(Q3, Z);
   const State Q4 = Q + (h * K3);
   const StateDot K4 = compute_qdot(Q4, Z);
@@ -149,24 +148,24 @@ State operator+(const State &a, const StateDelta &grp_b) {
   return out;
 }
 StateDelta from_vector(const VecNd<24> &in_vec) {
-  const VecNd<6> anon_379f4a =
-      (VecNd<6>() << (in_vec[15]), (in_vec[16]), (in_vec[17]), (in_vec[18]),
-       (in_vec[19]), (in_vec[20]))
-          .finished();
-  const VecNd<6> anon_a8f690 =
+  const VecNd<6> anon_8259e4 =
       (VecNd<6>() << (in_vec[0]), (in_vec[1]), (in_vec[2]), (in_vec[3]),
        (in_vec[4]), (in_vec[5]))
           .finished();
-  const VecNd<3> anon_f090ba =
+  const VecNd<3> anon_2f7710 =
       (VecNd<3>() << (in_vec[6]), (in_vec[7]), (in_vec[8])).finished();
-  const VecNd<6> anon_d60078 =
+  const VecNd<6> anon_a8af61 =
       (VecNd<6>() << (in_vec[9]), (in_vec[10]), (in_vec[11]), (in_vec[12]),
        (in_vec[13]), (in_vec[14]))
           .finished();
-  const VecNd<3> anon_a56156 =
+  const VecNd<6> anon_0b42d9 =
+      (VecNd<6>() << (in_vec[15]), (in_vec[16]), (in_vec[17]), (in_vec[18]),
+       (in_vec[19]), (in_vec[20]))
+          .finished();
+  const VecNd<3> anon_37b608 =
       (VecNd<3>() << (in_vec[21]), (in_vec[22]), (in_vec[23])).finished();
-  const StateDelta out = StateDelta{anon_a8f690, anon_f090ba, anon_d60078,
-                                    anon_379f4a, anon_a56156};
+  const StateDelta out = StateDelta{anon_8259e4, anon_2f7710, anon_a8af61,
+                                    anon_0b42d9, anon_37b608};
   return out;
 }
 State apply_delta(const State &a, const VecNd<24> &delta) {
@@ -181,9 +180,9 @@ AccelMeasurement operator+(const AccelMeasurement &a,
   return out;
 }
 AccelMeasurementDelta from_vector(const VecNd<3> &in_vec) {
-  const VecNd<3> anon_75d562 =
+  const VecNd<3> anon_7bc78e =
       (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const AccelMeasurementDelta out = AccelMeasurementDelta{anon_75d562};
+  const AccelMeasurementDelta out = AccelMeasurementDelta{anon_7bc78e};
   return out;
 }
 AccelMeasurement apply_delta(const AccelMeasurement &a, const VecNd<3> &delta) {
