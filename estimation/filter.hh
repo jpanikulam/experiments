@@ -1,10 +1,14 @@
 #pragma once
 
 #include "estimation/filter_state.hh"
+#include "estimation/observation_model.hh"
 
 #include <any>
 #include <map>
 #include <queue>
+
+// TODO
+#include <stack>
 
 namespace estimation {
 
@@ -19,42 +23,41 @@ class Ekf {
     TimePoint time_of_validity;
   };
 
-  using ObservationModel =
-      std::function<StateVec(const FilterState<State>&, const std::any& obs)>;
+  using AnyObservationModel = std::function<FilterStateUpdate<State>(
+      const FilterState<State>&, const std::any& obs)>;
 
   // Returns the index of the added model
-  int add_model(const ObservationModel& model);
+  int add_model_pr(const AnyObservationModel& model);
 
  public:
   using Dynamics = std::function<State(const State& x, double dt)>;
 
-  Ekf(const FilterState<State>& initial_state, const Dynamics& dynamics)
-      : filter_state_(initial_state), dynamics_(dynamics) {
+  Ekf(const Dynamics& dynamics) : dynamics_(dynamics) {
   }
 
   FilterState<State> update_state(const FilterState<State>& xp,
                                   const TimeDuration& dt) const;
 
   template <typename MeasurementType>
-  int add_model(const std::function<StateVec(const FilterState<State>&,
-                                             const MeasurementType& meas)>& fnc) {
+  int add_model(const ObservationModel<State, MeasurementType>& fnc) {
     const auto type_erased_fnc = [fnc](const FilterState<State>& x, const std::any& obs) {
-      return fnc(x, std::any_cast<MeasurementType>(obs));
+      return fnc.generate_update(x, std::any_cast<MeasurementType>(obs));
     };
-    return add_model(type_erased_fnc);
+    return add_model_pr(type_erased_fnc);
   }
 
   template <typename MeasurementType>
   void measure(const MeasurementType& observation,
                const TimePoint& time_of_validity,
                int measurement_id) {
-    measurements_.push({measurement_id, std::any_cast(observation), time_of_validity});
+    const std::any z = observation;
+    measurements_.push({measurement_id, z, time_of_validity});
   }
 
   FilterState<State> dynamics_until(const FilterState<State>& x0,
                                     const TimePoint& t) const;
 
-  FilterState<State> service_all_measurements(const FilterState<State>& x_hat0) const;
+  FilterState<State> service_all_measurements(const FilterState<State>& x_hat0);
 
  private:
   struct Comparator {
@@ -62,12 +65,11 @@ class Ekf {
       return a.time_of_validity > b.time_of_validity;
     }
   };
-  using MinQueue = std::priority_queue<Measurement, std::vector<Measurement>, Comparator>;
-  MinQueue measurements_;
+  // using MinQueue = std::priority_queue<Measurement, std::vector<Measurement>, Comparator>;
+  // MinQueue measurements_;
+  std::stack<Measurement> measurements_;
 
-  std::map<int, ObservationModel> observation_models_;
-
-  FilterState<State> filter_state_;
+  std::map<int, AnyObservationModel> observation_models_;
 
   const Dynamics dynamics_;
 };

@@ -11,7 +11,7 @@ struct FilterState {
   State x;
 
   // State-covariance
-  MatNd<State::X_DIM, State::X_DIM> P;
+  MatNd<State::DIM, State::DIM> P;
 
   // When this state was the estimate for the true state
   TimePoint time_of_validity;
@@ -23,7 +23,7 @@ struct FilterStateUpdate {
   VecNd<State::DIM> dx;
 
   // State-covariance
-  MatNd<State::X_DIM, State::X_DIM> P_new;
+  MatNd<State::DIM, State::DIM> P_new;
 };
 
 }  // namespace estimation
