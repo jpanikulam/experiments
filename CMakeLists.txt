@@ -59,12 +59,14 @@ endmacro(add_test)
 
 # TODO: Make this run whenever make is run
 execute_process(
-    COMMAND python ${CMAKE_SOURCE_DIR}/pymake/pymake.py -v success -p ${CMAKE_SOURCE_DIR}
+    COMMAND python ${CMAKE_SOURCE_DIR}/pymake/pymake -v success -p ${CMAKE_SOURCE_DIR}
 )
 
 set(CMAKE_CXX_COMPILER "g++-7")
-set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wextra -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
 
 add_subdirectory(tmp)
 add_subdirectory(vision)
 target_compile_definitions(environment PRIVATE ASSET_PATH="${BASEPATH}/data")
+add_definitions(-DEIGEN_MAX_ALIGN_BYTES=0)
+add_definitions(-DEIGEN_MAX_STATIC_ALIGN_BYTES=0)
