@@ -100,7 +100,7 @@ void go() {
 
   State jet;
   jet.x = jcc::Vec3(-2.0, -2.0, 3.0);
-  jet.w = jcc::Vec3(0.3, -0.4, 1.0);
+  jet.w = jcc::Vec3(0.1, -0.1, 0.1);
 
   jet.throttle_pct = 0.0;
 
