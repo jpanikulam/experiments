@@ -23,7 +23,7 @@ namespace jet {
 constexpr bool SHOW_CAMERA = false;
 constexpr bool SHOW_CAMERA_PROJECTION = true;
 constexpr bool WRITE_IMAGES = false;
-constexpr bool PRINT_STATE = false;
+constexpr bool PRINT_STATE = true;
 constexpr bool DRAW_VEHICLE = true;
 constexpr bool TRACK_VEHICLE = false;
 constexpr bool VISUALIZE_TRAJECTORY = true;
@@ -82,7 +82,6 @@ void go() {
     const std::string fiducial_path = jcc::Environment::asset_path() + "fiducial.jpg";
     const cv::Mat fiducial_tag = cv::imread(fiducial_path);
     const auto image = std::make_shared<viewer::Image>(fiducial_tag);
-    // view->add_primitive(image);
     image_tree->add_primitive("root", SE3(), "fiducial_1", image);
 
     image_tree->add_primitive(
@@ -92,10 +91,24 @@ void go() {
 
   const auto camera = std::make_shared<viewer::Camera>();
   view->add_camera(camera);
+  camera->set_world_from_camera(SE3());
 
   const JetModel model;
   if constexpr (DRAW_VEHICLE) {
     model.insert(*jet_tree);
+  }
+
+  //
+  // Add camera projection to the scene tree
+  //
+
+  const SE3 jet_from_camera =
+      SE3(SO3::exp(jcc::Vec3(0.1, -0.1, 0.0)), jcc::Vec3(0.1, 0.05, 0.1));
+  if (SHOW_CAMERA_PROJECTION) {
+    const auto camera_geo = std::make_shared<viewer::SimpleGeometry>();
+    put_camera_projection(*camera_geo, *camera);
+    camera_geo->flush();
+    jet_tree->add_primitive("root", jet_from_camera, "camera", camera_geo);
   }
 
   State jet;
@@ -139,6 +152,7 @@ void go() {
 
     const auto ctrl = future_states[1].control;
     if constexpr (PRINT_STATE) {
+      std::cout << j << "..." << std::endl;
       std::cout << "\tq     : " << ctrl.q.transpose() << std::endl;
       std::cout << "\tx     : " << jet.x.transpose() << std::endl;
       std::cout << "\tw     : " << jet.w.transpose() << std::endl;
@@ -151,8 +165,8 @@ void go() {
     //
 
     const SE3 world_from_jet = SE3(jet.R_world_from_body, jet.x);
-    const SE3 jet_from_camera =
-        SE3(SO3::exp(jcc::Vec3(0.1, -0.1, 0.0)), jcc::Vec3(0.1, 0.05, 0.1));
+
+    // put_jet(*jet_geo, world_from_jet);
 
     if constexpr (VISUALIZE_TRAJECTORY) {
       for (std::size_t k = 0; k < future_states.size(); ++k) {
@@ -187,9 +201,6 @@ void go() {
     camera->set_world_from_camera(world_from_jet * jet_from_camera);
     accum_geo->flush();
 
-    if constexpr (SHOW_CAMERA_PROJECTION) {
-      put_camera_projection(*jet_geo, *camera);
-    }
     const cv::Mat image = camera->extract_image();
     if (SHOW_CAMERA) {
       cv::imshow("Localization Camera", image);
