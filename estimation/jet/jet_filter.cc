@@ -26,7 +26,7 @@ class JetFilter {
       const jcc::Vec3 g(0.0, 0.0, -9.81);
       const SE3 vehicle_from_sensor;
 
-      const jcc::Vec3 expected_a_mpss = observe_accel(x.T_world_from_body, x.eps_dot,
+      const jcc::Vec3 expected_a_mpss = observe_accel(x.T_body_from_world, x.eps_dot,
                                                       x.eps_ddot, vehicle_from_sensor, g);
       const jcc::Vec3 error = expected_a_mpss - z.observed_acceleration;
 
@@ -97,7 +97,7 @@ void go() {
   x.eps_ddot[5] = 0.0;
 
   const auto res =
-      observe_accel(x.T_world_from_body, x.eps_dot, x.eps_ddot, vehicle_from_sensor, g);
+      observe_accel(x.T_body_from_world, x.eps_dot, x.eps_ddot, vehicle_from_sensor, g);
   std::cout << res.transpose() << std::endl;
   // JetFilter jf;
   //   AccelMeasurement meas;
