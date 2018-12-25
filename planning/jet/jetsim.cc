@@ -90,6 +90,9 @@ void go() {
     image_tree->add_primitive(
         "root", SE3(SO3::exp(jcc::Vec3(1.0, 0.0, 0.0)), jcc::Vec3(0.0, 3.0, 0.0)),
         "fiducial_2", image);
+    // image_tree->add_primitive(
+    //   "root", SE3(SO3::exp(jcc::Vec3(3.14/2, 0.0, 0.5)), jcc::Vec3(3.0, 9.0, 1.0)),
+    //   "fiducial_3", image);
   }
 
   const auto camera = std::make_shared<viewer::Camera>();
@@ -188,11 +191,23 @@ void go() {
       put_camera_projection(*jet_geo, *camera);
     }
     const cv::Mat localization_camera_image = camera->extract_image();
+    cv::Mat localization_camera_image_rgb;
+    cv::cvtColor(localization_camera_image, localization_camera_image_rgb, cv::COLOR_GRAY2BGR);
+    auto marker_detections = fiducials::detect_markers(localization_camera_image_rgb);
+    
+    for (auto const& detection : marker_detections) {
+      auto trans = (world_from_jet.inverse()  * jet_from_camera.inverse() * detection.camera_to_marker_center).translation();
+      std::cout << trans[0] << "\n";
+
+        //SE3(SO3::exp(jet.w), jet.x)).translation();
+      // auto up = SE3(SO3::exp(Eigen::Vector3d(0,0,0)), Eigen::Vector3d(0,0,1));
+      jet_geo->add_line({world_from_jet.translation(), trans, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
+    }
+
     if (SHOW_CAMERA) {
-      cv::imshow("Localization Camera", localization_camera_image);
+      cv::imshow("Localization Camera", localization_camera_image_rgb);
       cv::waitKey(1);
     }
-    fiducials::detect_markers(localization_camera_image);
     if (WRITE_IMAGES) {
       if (j == 0) {
         std::cout << "Projection: " << std::endl;
