@@ -7,9 +7,6 @@
 #include <map>
 #include <queue>
 
-// TODO
-#include <stack>
-
 namespace estimation {
 
 template <typename State>
@@ -65,9 +62,8 @@ class Ekf {
       return a.time_of_validity > b.time_of_validity;
     }
   };
-  // using MinQueue = std::priority_queue<Measurement, std::vector<Measurement>, Comparator>;
-  // MinQueue measurements_;
-  std::stack<Measurement> measurements_;
+  using MinQueue = std::priority_queue<Measurement, std::vector<Measurement>, Comparator>;
+  MinQueue measurements_;
 
   std::map<int, AnyObservationModel> observation_models_;
 
