@@ -11,9 +11,24 @@ struct FiducialMeasurement {
   SE3 fiducial_pose;
 };
 
+Parameters get_parameters() {
+  const jcc::Vec3 g(0.0, 0.0, 0.0);
+  const SE3 vehicle_from_sensor;
+  Parameters p;
+  p.T_sensor_from_body = vehicle_from_sensor;
+  return p;
+}
+
 State dynamics(const State& x, const double h) {
-  const Parameters z = {};
-  return rk4_integrate(x, z, h);
+  const Parameters p = get_parameters();
+  return rk4_integrate(x, p, h);
+}
+
+jcc::Vec3 accel_error_model(const State& x, const AccelMeasurement& z) {
+  const Parameters p = get_parameters();
+  const jcc::Vec3 expected_a_mpss = observe_accel(x, p);
+  const jcc::Vec3 error = z.observed_acceleration - expected_a_mpss;
+  return error;
 }
 
 class JetFilter {
@@ -21,20 +36,8 @@ class JetFilter {
   using JetFilterState = FilterState<State>;
 
  public:
-  JetFilter() : ekf_(dynamics) {
-    const auto error_model = [](const State& x, const AccelMeasurement& z) -> jcc::Vec3 {
-      const jcc::Vec3 g(0.0, 0.0, -9.81);
-      const SE3 vehicle_from_sensor;
-
-      const jcc::Vec3 expected_a_mpss = observe_accel(x.T_body_from_world, x.eps_dot,
-                                                      x.eps_ddot, vehicle_from_sensor, g);
-      const jcc::Vec3 error = expected_a_mpss - z.observed_acceleration;
-
-      return error;
-    };
-    const ImuModel accel_model(error_model);
-    // using ObservationFunction =
-    // std::function<Update(const JetFilterState&, const AccelMeasurement&)>;
+  JetFilter(const JetFilterState& xp0) : xp_(xp0), ekf_(dynamics) {
+    const ImuModel accel_model(accel_error_model);
     imu_id_ = ekf_.add_model(accel_model);
 
     // fiducial_id_ = ekf_.add_model(fiducial_model);
@@ -49,64 +52,58 @@ class JetFilter {
   // }
 
   void free_run() {
-    xp_.P.setZero();
     xp_ = ekf_.service_all_measurements(xp_);
+  }
+
+  const JetFilterState& state() const {
+    return xp_;
   }
 
  private:
   void observe_imu() const;
   void observe_fiducial() const;
 
-  // void handle(int i) {
-  //   switch (i) {
-  //     case 0:
-  //       const FilterStateUpdate update = observe_imu(x, imu_measurements_.top());
-  //       imu_measurements_.pop();
-  //       break;
-  //     case 1:
-  //       const FilterStateUpdate update =
-  //           observe_fiducial(x, fiducial_measurements_.top());
-  //       fiducial_measurements_.pop();
-  //       break;
-  //   }
-  // }
-
  private:
-  JetEkf ekf_;
-
   JetFilterState xp_;
+  JetEkf ekf_;
 
   int imu_id_ = -1;
   int fiducial_id_ = -1;
 };
 
 void go() {
-  const jcc::Vec3 g(0.0, 0.0, 0.0);
-  const SO3 r_vehicle_from_sensor;
-  const jcc::Vec3 t_vehicle_from_sensor = jcc::Vec3(0.0, 0.0, 1.0);
-  const SE3 vehicle_from_sensor = SE3(r_vehicle_from_sensor, t_vehicle_from_sensor);
+  // const Parameters p = get_parameters();
+  // const SO3 r_vehicle_from_sensor;
+  // const jcc::Vec3 t_vehicle_from_sensor = jcc::Vec3(0.0, 0.0, 1.0);
+  // const SE3 vehicle_from_sensor = SE3(r_vehicle_from_sensor, t_vehicle_from_sensor);
 
-  State x;
-  // x.eps_dot = VecNd<6>::Ones();
-  x.eps_dot[0] = 1.0;
-  x.eps_dot[3] = 0.0;
-  x.eps_dot[4] = 0.0;
-  x.eps_dot[5] = 1.0;
+  // State x;
+  // x.eps_ddot[1] = 1.0;
+  //
 
-  x.eps_ddot[2] = 0.0;
-  x.eps_ddot[5] = 0.0;
+  FilterState<State> xp0;
+  xp0.P.setIdentity();
+  xp0.x.eps_ddot[0] = -0.9;
 
-  const auto res =
-      observe_accel(x.T_body_from_world, x.eps_dot, x.eps_ddot, vehicle_from_sensor, g);
-  std::cout << res.transpose() << std::endl;
-  // JetFilter jf;
-  //   AccelMeasurement meas;
-  //   TimePoint start_time = {};
-  //   for (int k = 0; k < 10; ++k) {
-  //     const TimePoint obs_time = to_duration(k * 0.1) + start_time;
-  //     jf.measure_imu(meas, obs_time);
-  //   }
-  //   jf.free_run();
+  JetFilter jf(xp0);
+  AccelMeasurement meas;
+  meas.observed_acceleration[0] = 2.0;
+
+  // return;
+
+  TimePoint start_time = {};
+  for (int k = 0; k < 10; ++k) {
+    const TimePoint obs_time = to_duration(k * 0.5) + start_time;
+    jf.measure_imu(meas, obs_time);
+    jf.free_run();
+
+    const auto xp = jf.state();
+
+    std::cout << "Modelled Error: " << accel_error_model(xp.x, meas).transpose()
+              << std::endl;
+    const auto res = observe_accel(xp.x, get_parameters());
+    std::cout << "Expected Accel: " << res.transpose() << std::endl;
+  }
 }
 
 }  // namespace jet_filter
