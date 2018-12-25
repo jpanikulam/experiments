@@ -135,8 +135,9 @@ inline void glTranslate(const Eigen::Vector3d &vec) {
   glTranslated(vec.x(), vec.y(), vec.z());
 }
 
-inline void glTransform(const se3 &T) {
-  const Eigen::Matrix4d transposed = T.matrix();
+// In the case of application to an unadjusted scene, this is camera_from_world
+inline void glTransform(const se3 &new_camera_from_old_camera) {
+  const Eigen::Matrix4d transposed = new_camera_from_old_camera.matrix();
   glMultMatrixd(transposed.data());
 }
 
