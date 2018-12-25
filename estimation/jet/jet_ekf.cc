@@ -1,5 +1,7 @@
 #include "estimation/jet/jet_ekf.hh"
+
 #include "estimation/filter_impl.hh"
+#include "estimation/observation_model_impl.hh"
 
 namespace estimation {
 
