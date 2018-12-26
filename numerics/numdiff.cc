@@ -27,7 +27,7 @@ Eigen::MatrixXd dynamic_numerical_jacobian(
 
   MatXd jac = MatXd::Zero(output_rows, input_rows);
 
-  VecXd zero = VecXd::Zero(output_rows);
+  VecXd zero = VecXd::Zero(input_rows);
   for (int k = 0; k < input_rows; ++k) {
     zero(k) = feps;
     jac.col(k) = (fcn(x + zero) - fcn(x - zero)) / (2 * feps);
