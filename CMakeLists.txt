@@ -60,6 +60,7 @@ endmacro(add_test)
 # TODO: Make this run whenever make is run
 execute_process(
     COMMAND pymake -v success -p "${CMAKE_CURRENT_SOURCE_DIR}"
+    RESULT_VARIABLE ret
 )
 if(ret EQUAL "1")
     message(FATAL_ERROR "Could not run pymake; run sudo pip install generate-cmake")
