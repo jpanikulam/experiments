@@ -9,6 +9,9 @@ using VecNd = Eigen::Matrix<double, ROWS, 1>;
 template <int ROWS, int COLS>
 using MatNd = Eigen::Matrix<double, ROWS, COLS>;
 
+using VecXd = Eigen::VectorXd;
+using MatXd = Eigen::MatrixXd;
+
 template <int ROWS>
 using SquareMatNd = Eigen::Matrix<double, ROWS, ROWS>;
 
