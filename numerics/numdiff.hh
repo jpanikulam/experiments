@@ -26,6 +26,11 @@ Eigen::Matrix<double, rows, 1> numerical_gradient(
 Eigen::VectorXd dynamic_numerical_gradient(
     const Eigen::VectorXd &x, const std::function<double(const Eigen::VectorXd &)> &fcn);
 
+Eigen::MatrixXd dynamic_numerical_jacobian(
+    const Eigen::VectorXd &x,
+    const std::function<Eigen::VectorXd(const Eigen::VectorXd &)>,
+    const double feps = 1e-6);
+
 template <int output_rows, int input_rows, typename Callable>
 Eigen::Matrix<double, output_rows, input_rows> numerical_jacobian(
     const Eigen::Matrix<double, input_rows, 1> &x,

@@ -18,4 +18,22 @@ Eigen::VectorXd dynamic_numerical_gradient(
   return jac;
 }
 
-} // namespace numerics
+Eigen::MatrixXd dynamic_numerical_jacobian(
+    const Eigen::VectorXd &x,
+    const std::function<Eigen::VectorXd(const Eigen::VectorXd &)> fcn,
+    const double feps) {
+  const int input_rows = x.rows();
+  const int output_rows = fcn(x).rows();
+
+  MatXd jac = MatXd::Zero(output_rows, input_rows);
+
+  VecXd zero = VecXd::Zero(output_rows);
+  for (int k = 0; k < input_rows; ++k) {
+    zero(k) = feps;
+    jac.col(k) = (fcn(x + zero) - fcn(x - zero)) / (2 * feps);
+    zero(k) = 0.0;
+  }
+  return jac;
+}
+
+}  // namespace numerics

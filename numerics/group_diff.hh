@@ -41,11 +41,21 @@ MatNd<Y::DIM, X::DIM> group_jacobian(const X& x, const GroupFnc<X, Y>& fnc) {
 
 template <int N_ROWS, typename X>
 MatNd<N_ROWS, X::DIM> group_jacobian(const X& x, const GroupToDelta<X, N_ROWS>& fnc) {
-  const auto f_x = [&fnc, &x](const VecNd<X::DIM>& dx) {
+  const auto f_x = [&fnc, &x](const VecNd<X::DIM>& dx) -> VecNd<N_ROWS> {
     const X xplus_dx = apply_delta(x, dx);
     return fnc(xplus_dx) - fnc(x);
   };
   return numerical_jacobian<N_ROWS>(VecNd<X::DIM>::Zero().eval(), f_x);
+}
+
+template <typename X>
+Eigen::MatrixXd dynamic_group_jacobian(const X& x,
+                                       const GroupToDelta<X, Eigen::Dynamic>& fnc) {
+  const auto f_x = [&fnc, &x](const VecNd<X::DIM>& dx) -> VecXd {
+    const X xplus_dx = apply_delta(x, dx);
+    return fnc(xplus_dx) - fnc(x);
+  };
+  return dynamic_numerical_jacobian(VecNd<X::DIM>::Zero().eval(), f_x);
 }
 
 }  // namespace numerics
