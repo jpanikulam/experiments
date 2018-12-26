@@ -13,9 +13,9 @@ void BlockSparseMatrix::set(int row, int col, const Eigen::MatrixXd& mat) {
   // Assert in col/row bounds
   //
 
-  assert(row > 0);
+  assert(row >= 0);
+  assert(col >= 0);
   assert(row < static_cast<int>(rows_.size()));
-  assert(col > 0);
   assert(col < static_cast<int>(n_cols_.size()));
 
   //
@@ -49,8 +49,8 @@ const Eigen::MatrixXd& BlockSparseMatrix::get(int row, int col) const {
   //
   // Enforce row, col bounds
   //
-  assert(row > 0);
-  assert(col > 0);
+  assert(row >= 0);
+  assert(col >= 0);
   assert(row < static_cast<int>(rows_.size()));
   assert(col < static_cast<int>(n_cols_.size()));
 
@@ -58,6 +58,30 @@ const Eigen::MatrixXd& BlockSparseMatrix::get(int row, int col) const {
   const auto& block_row = rows_.at(row);
   assert(block_row.cols.count(col));
   return block_row.cols.at(col).block;
+}
+
+int BlockSparseMatrix::real_rows() const {
+  int total = 0;
+  for (const auto& row : rows_) {
+    assert(row.n_rows != -1);
+    total += row.n_rows;
+  }
+
+  return total;
+}
+
+int BlockSparseMatrix::real_cols() const {
+  int total = 0;
+  for (const auto& n : n_cols_) {
+    total += n;
+  }
+  return total;
+}
+
+BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
+  SpMat mat;
+  assert(false);
+  return mat;
 }
 
 }  // namespace optimization

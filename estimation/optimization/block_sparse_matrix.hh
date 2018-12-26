@@ -2,6 +2,8 @@
 
 #include <map>
 
+#include <Eigen/Sparse>
+
 #include "eigen.hh"
 
 namespace estimation {
@@ -9,11 +11,19 @@ namespace optimization {
 
 // BSR Matrix
 class BlockSparseMatrix {
+  using SpMat = Eigen::SparseMatrix<double>;
+  using SpVec = Eigen::SparseVector<double>;
+
  public:
   BlockSparseMatrix(const int n_block_rows, const int n_block_cols);
 
   void set(int row, int col, const Eigen::MatrixXd& mat);
   const Eigen::MatrixXd& get(int row, int col) const;
+
+  int real_rows() const;
+  int real_cols() const;
+
+  SpMat to_eigen_sparse() const;
 
  private:
   struct Block {
