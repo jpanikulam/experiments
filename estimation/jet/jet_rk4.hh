@@ -14,10 +14,13 @@ struct StateDelta {
   static constexpr int DIM = 24;
 };
 struct Parameters {
-  VecNd<3> dgyro_bias = VecNd<3>::Zero();
-  VecNd<3> daccel_bias = VecNd<3>::Zero();
   VecNd<6> eps_dddot = VecNd<6>::Zero();
-  static constexpr int DIM = 12;
+  VecNd<3> g_world = VecNd<3>::Zero();
+  VecNd<3> daccel_bias = VecNd<3>::Zero();
+  SE3 T_sensor_from_body = SE3();
+  VecNd<3> dgyro_bias = VecNd<3>::Zero();
+  SE3 T_camera_from_body = SE3();
+  static constexpr int DIM = 27;
 };
 struct State {
   VecNd<6> eps_dot = VecNd<6>::Zero();
@@ -39,18 +42,26 @@ struct StateDot {
   VecNd<3> daccel_bias = VecNd<3>::Zero();
   static constexpr int DIM = 24;
 };
+struct ParametersDelta {
+  VecNd<6> eps_dddot_error = VecNd<6>::Zero();
+  VecNd<3> g_world_error = VecNd<3>::Zero();
+  VecNd<3> daccel_bias_error = VecNd<3>::Zero();
+  VecNd<6> T_sensor_from_body_error_log = VecNd<6>::Zero();
+  VecNd<3> dgyro_bias_error = VecNd<3>::Zero();
+  VecNd<6> T_camera_from_body_error_log = VecNd<6>::Zero();
+  static constexpr int DIM = 27;
+};
 struct AccelMeasurementDelta {
   VecNd<3> observed_acceleration_error = VecNd<3>::Zero();
   static constexpr int DIM = 3;
 };
-VecNd<3> observe_accel(const SE3 &T_vehicle_from_world, const VecNd<6> &eps_dot,
-                       const VecNd<6> &eps_ddot,
-                       const SE3 &T_sensor_from_vehicle,
-                       const VecNd<3> &gravity_mpss);
+VecNd<3> observe_accel(const State &state, const Parameters &parameters);
 VecNd<24> compute_delta(const State &a, const State &b);
+VecNd<27> compute_delta(const Parameters &a, const Parameters &b);
 VecNd<3> compute_delta(const AccelMeasurement &a, const AccelMeasurement &b);
 State rk4_integrate(const State &Q, const Parameters &Z, const double h);
 State apply_delta(const State &a, const VecNd<24> &delta);
+Parameters apply_delta(const Parameters &a, const VecNd<27> &delta);
 AccelMeasurement apply_delta(const AccelMeasurement &a, const VecNd<3> &delta);
 VecNd<3> observe_gyro(const VecNd<6> &eps_dot, const SE3 &T_world_from_sensor);
 } // namespace jet_filter
