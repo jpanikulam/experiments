@@ -2,22 +2,24 @@
 
 #include "out.hh"
 
-#include <functional>
 #include <algorithm>
+#include <functional>
 #include <vector>
 
 // Max heap
 template <typename T>
 class Heap {
-public:
+ public:
   using CompareFunction = std::function<bool(const T &a, const T &b)>;
 
-  Heap(const CompareFunction &cmp = [](const T &a, const T &b) { return std::less<T>()(a, b); })
-      : cmp_(cmp) {}
+  Heap(const CompareFunction &cmp = [](const T &a,
+                                       const T &b) { return std::less<T>()(a, b); })
+      : cmp_(cmp) {
+  }
   Heap(const std::vector<T> &vector,
-       const CompareFunction &cmp = [](const T &a, const T &b) { return std::less<T>()(a, b); })
-      : cmp_(cmp)
-      , vector_(vector) {
+       const CompareFunction &cmp = [](const T &a,
+                                       const T &b) { return std::less<T>()(a, b); })
+      : cmp_(cmp), vector_(vector) {
     std::make_heap(vector_, cmp_);
   }
 
@@ -54,7 +56,11 @@ public:
     return vector_.empty();
   }
 
-private:
+  const std::vector<T> &backing() const {
+    return vector_;
+  }
+
+ private:
   CompareFunction cmp_;
   std::vector<T> vector_;
 };
