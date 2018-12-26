@@ -27,7 +27,7 @@ class CalibrationManager{
         return all_camera_images.size();
     }
 
-    void calibrate(){
+    std::pair<cv::Mat, cv::Mat> calibrate(){
         //based on https://github.com/sourishg/stereo-calibration/blob/master/calib_intrinsic.cpp
         assert(all_camera_images.size() > 0);
         int BOARD_WIDTH = 9;
@@ -68,34 +68,10 @@ class CalibrationManager{
         flag |= CV_CALIB_FIX_K4;
         flag |= CV_CALIB_FIX_K5;
         cv::calibrateCamera(object_points, image_points, all_camera_images[0].size(), K, D, rvecs, tvecs, flag);
-        /*
 
-        for fname in images:
-            img = cv2.imread(fname)
-            print img.shape
-        #     break
-            gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-
-            # Find the chess board corners
-            ret, corners = cv2.findChessboardCorners(gray, (7,6),None)
-
-            # If found, add object points, image points (after refining them)
-            if ret == True:
-                objpoints.append(objp)
-
-                corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
-                imgpoints.append(corners2)
-
-                # Draw and display the corners
-                img = cv2.drawChessboardCorners(img, (7,6), corners2,ret)
-        #         cv2.imshow('img',img)
-        #         cv2.waitKey(500)
-
-        ret, mtx, distortion, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
-        dist = distortion
-        print distortion
-        print mtx
-        */
+        std::cout << "K" << K;
+        std::cout << "D" << D;
+        return std::make_pair(K, D);
     }
 };
 

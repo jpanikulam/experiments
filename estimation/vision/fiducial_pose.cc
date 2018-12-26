@@ -12,9 +12,13 @@ std::vector< MarkerDetection > detect_markers(cv::Mat inputImage) {
     cv::aruco::detectMarkers(inputImage, dictionary, corners, ids);
     // cv::aruco::drawDetectedMarkers(inputImage, corners, ids);
     std::vector< cv::Vec3d > rvecs, tvecs;
-    cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 509.55744588, 0, 331.84201483,
-                                               0, 512.03515271, 250.87030742,
-                                               0, 0, 1);
+    cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 377.367456855614, 0, 320.1724183170601,
+                                            0, 293.3999961050595, 338.7169980319798,
+                                            0, 0, 1);
+    //webcam
+    // cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 509.55744588, 0, 331.84201483,
+    //                                            0, 512.03515271, 250.87030742,
+    //                                            0, 0, 1);
     cv::Mat distortionCoefficients = (cv::Mat1d(1, 8) << 0, 0, 0, 0, 0, 0, 0, 0);
 
     cv::aruco::estimatePoseSingleMarkers(corners, 0.5, cameraMatrix, distortionCoefficients, rvecs, tvecs);

@@ -83,7 +83,7 @@ void go() {
 
   {
     const auto image_tree = view->add_primitive<viewer::SceneTree>();
-    const std::string fiducial_path = jcc::Environment::asset_path() + "chessboard.jpg";
+    const std::string fiducial_path = jcc::Environment::asset_path() + "fiducial.jpg";
     const cv::Mat fiducial_tag = cv::imread(fiducial_path);
     const auto board_texture_image = std::make_shared<viewer::Image>(fiducial_tag, 1, 1);
     // view->add_primitive(board_texture_image);
@@ -193,9 +193,17 @@ void go() {
       put_camera_projection(*jet_geo, *camera);
     }
     const cv::Mat localization_camera_image = camera->extract_image();
-    calibration_manager.add_camera_image(localization_camera_image);
     cv::Mat localization_camera_image_rgb;
     cv::cvtColor(localization_camera_image, localization_camera_image_rgb, cv::COLOR_GRAY2BGR);
+
+    // calibration stuff
+    // calibration_manager.add_camera_image(localization_camera_image_rgb);
+    // if(calibration_manager.num_images_collected()>30){
+    //   calibration_manager.calibrate();
+    // }
+
+
+
     auto marker_detections = fiducials::detect_markers(localization_camera_image_rgb);
     
     for (auto const& detection : marker_detections) {
