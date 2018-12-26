@@ -78,21 +78,23 @@ void go() {
   const auto jet_tree = view->add_primitive<viewer::SceneTree>();
   const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
+  auto fiducial_location = SE3(SO3::exp(jcc::Vec3(1.0, 0.0, 0.0)), jcc::Vec3(0.0, 3.0, 0.0));
+  fiducials::CalibrationManager calibration_manager;
 
   {
     const auto image_tree = view->add_primitive<viewer::SceneTree>();
-    const std::string fiducial_path = jcc::Environment::asset_path() + "fiducial.jpg";
+    const std::string fiducial_path = jcc::Environment::asset_path() + "chessboard.jpg";
     const cv::Mat fiducial_tag = cv::imread(fiducial_path);
-    const auto image = std::make_shared<viewer::Image>(fiducial_tag, 1, 1);
-    // view->add_primitive(image);
-    image_tree->add_primitive("root", SE3(), "fiducial_1", image);
+    const auto board_texture_image = std::make_shared<viewer::Image>(fiducial_tag, 1, 1);
+    // view->add_primitive(board_texture_image);
+    image_tree->add_primitive("root", SE3(), "fiducial_1", board_texture_image);
 
     image_tree->add_primitive(
-        "root", SE3(SO3::exp(jcc::Vec3(1.0, 0.0, 0.0)), jcc::Vec3(0.0, 3.0, 0.0)),
-        "fiducial_2", image);
+        "root", fiducial_location,
+        "fiducial_2", board_texture_image);
     // image_tree->add_primitive(
     //   "root", SE3(SO3::exp(jcc::Vec3(3.14/2, 0.0, 0.5)), jcc::Vec3(3.0, 9.0, 1.0)),
-    //   "fiducial_3", image);
+    //   "fiducial_3", board_texture_image);
   }
 
   const auto camera = std::make_shared<viewer::Camera>();
@@ -191,17 +193,18 @@ void go() {
       put_camera_projection(*jet_geo, *camera);
     }
     const cv::Mat localization_camera_image = camera->extract_image();
+    calibration_manager.add_camera_image(localization_camera_image);
     cv::Mat localization_camera_image_rgb;
     cv::cvtColor(localization_camera_image, localization_camera_image_rgb, cv::COLOR_GRAY2BGR);
     auto marker_detections = fiducials::detect_markers(localization_camera_image_rgb);
     
     for (auto const& detection : marker_detections) {
-      auto trans = (world_from_jet.inverse()  * jet_from_camera.inverse() * detection.camera_to_marker_center).translation();
-      std::cout << trans[0] << "\n";
+      // SE3 known_camera_to_marker = fiducial_location * world_from_jet.inverse();//* SE3(SO3::exp(jcc::Vec3::UnitX()), jet.x).inverse();
+      auto opengl_camera_from_opencv_camera = SE3(SO3::exp(Eigen::Vector3d(0,0,3.1415)), Eigen::Vector3d(0,0,0)) * SE3(SO3::exp(Eigen::Vector3d(3.1415,0,0)), Eigen::Vector3d(0,0,0));
+      auto world_from_camera = world_from_jet * jet_from_camera;
+      auto marker_loc = (world_from_camera * detection.camera_to_marker_center * opengl_camera_from_opencv_camera).translation();
+      jet_geo->add_line({world_from_jet.translation(), marker_loc, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
 
-        //SE3(SO3::exp(jet.w), jet.x)).translation();
-      // auto up = SE3(SO3::exp(Eigen::Vector3d(0,0,0)), Eigen::Vector3d(0,0,1));
-      jet_geo->add_line({world_from_jet.translation(), trans, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
     }
 
     if (SHOW_CAMERA) {
