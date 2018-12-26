@@ -23,5 +23,7 @@ std::vector<StateControl> plan(const State& x0,
                                const Desires& desires,
                                const std::vector<Controls>& initialization = {});
 
+Parameters get_parameters();
+
 }  // namespace jet
 }  // namespace planning

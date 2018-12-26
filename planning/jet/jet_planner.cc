@@ -63,12 +63,16 @@ auto make_jet_cost(const Desires& desires) {
   };
 }
 
-State dynamics(const State& state, const VecNd<U_DIM>& u, const double dt) {
+Parameters get_parameters() {
   Parameters params;
   params.mass = 100.0;
   params.unit_z = jcc::Vec3::UnitZ();
   params.external_force = -jcc::Vec3::UnitZ() * 5.0;
+  return params;
+}
 
+State dynamics(const State& state, const VecNd<U_DIM>& u, const double dt) {
+  const Parameters params = get_parameters();
   return rk4_integrate(state, from_vector(u), params, dt);
 }
 
