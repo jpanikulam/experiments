@@ -1,14 +1,14 @@
 #pragma once
 
+#include <any>
 #include <map>
 #include <vector>
-#include <any>
 
 #include "estimation/optimization/block_sparse_matrix.hh"
 #include "estimation/time_point.hh"
 
-#include "util/heap.hh"
 #include "out.hh"
+#include "util/heap.hh"
 
 namespace estimation {
 namespace optimization {
@@ -64,30 +64,31 @@ class AcausalOptimizer {
   }
 
   template <typename Observation>
-  void add_measurement(int block_type,
-                       const Observation& obs,
-                       const TimePoint& time_of_validity) {
+  void add_measurement(const Observation& obs,
+                       const TimePoint& time_of_validity,
+                       int block_type) {
     const std::any z = obs;
     heap_.push({block_type, z, time_of_validity});
   }
 
-  void add_observation_residual(const State& x,
-                                const Measurement& z,
-                                const Parameters& p,
-                                int x_ind,
-                                int residual_ind,
-                                int param_ind,
-                                Out<BlockSparseMatrix> bsm);
+  VecXd add_observation_residual(const State& x,
+                                 const Measurement& z,
+                                 const Parameters& p,
+                                 int x_ind,
+                                 int residual_ind,
+                                 int param_ind,
+                                 Out<BlockSparseMatrix> bsm);
 
-  void add_dynamics_residual(const State& x_0,
-                             const State& x_1,
-                             const Parameters& p,
-                             double dt,
-                             int x_ind,
-                             int residual_ind,
-                             int param_ind,
-                             Out<BlockSparseMatrix> bsm);
+  VecXd add_dynamics_residual(const State& x_0,
+                              const State& x_1,
+                              const Parameters& p,
+                              double dt,
+                              int x_ind,
+                              int residual_ind,
+                              int param_ind,
+                              Out<BlockSparseMatrix> bsm);
 
+  BlockSparseMatrix populate(const Solution& soln, Out<std::vector<VecXd>> v);
   Solution solve(const Solution& initialization);
 
  private:

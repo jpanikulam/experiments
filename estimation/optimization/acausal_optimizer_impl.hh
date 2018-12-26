@@ -7,13 +7,13 @@ namespace estimation {
 namespace optimization {
 
 template <typename Prob>
-void AcausalOptimizer<Prob>::add_observation_residual(const State& x,
-                                                      const Measurement& z,
-                                                      const Parameters& p,
-                                                      int x_ind,
-                                                      int residual_ind,
-                                                      int param_ind,
-                                                      Out<BlockSparseMatrix> bsm) {
+VecXd AcausalOptimizer<Prob>::add_observation_residual(const State& x,
+                                                       const Measurement& z,
+                                                       const Parameters& p,
+                                                       int x_ind,
+                                                       int residual_ind,
+                                                       int param_ind,
+                                                       Out<BlockSparseMatrix> bsm) {
   // y = (z[t] - h(x[t]; p))
   // J[obs_ind,  state_ind] = dy/dx[t] = -H
   // J[obs_ind, params_ind] = dy/dp    = -C
@@ -21,28 +21,30 @@ void AcausalOptimizer<Prob>::add_observation_residual(const State& x,
   const auto& model = models_.at(z.type);
   const auto y_of_x = [&model, &z, &p](const State& x) {
     // Hold p
-    return model(x, z, p);
+    return model(x, z.observation, p);
   };
   const auto y_of_p = [&model, &z, &x](const Parameters& p) {
     // Hold x
-    return model(x, z, p);
+    return model(x, z.observation, p);
   };
 
   const MatXd dy_dx = numerics::dynamic_group_jacobian<State>(x, y_of_x);
   const MatXd dy_dp = numerics::dynamic_group_jacobian<Parameters>(p, y_of_p);
   bsm->set(residual_ind, x_ind, dy_dx);
   bsm->set(residual_ind, param_ind, dy_dp);
+
+  return model(x, z.observation, p);
 }
 
 template <typename Prob>
-void AcausalOptimizer<Prob>::add_dynamics_residual(const State& x_0,
-                                                   const State& x_1,
-                                                   const Parameters& p,
-                                                   double dt,
-                                                   int x_ind,
-                                                   int residual_ind,
-                                                   int param_ind,
-                                                   Out<BlockSparseMatrix> bsm) {
+VecXd AcausalOptimizer<Prob>::add_dynamics_residual(const State& x_0,
+                                                    const State& x_1,
+                                                    const Parameters& p,
+                                                    double dt,
+                                                    int x_ind,
+                                                    int residual_ind,
+                                                    int param_ind,
+                                                    Out<BlockSparseMatrix> bsm) {
   // y = (x[t+1] - f(x[t]; p)
   // J[obs_ind,          t] = dy/dx[t]   = -A
   // J[obs_ind, params_ind] = dy/dp      = -G
@@ -68,19 +70,24 @@ void AcausalOptimizer<Prob>::add_dynamics_residual(const State& x_0,
   bsm->set(residual_ind, x_ind, dy_dx);
   bsm->set(residual_ind, x_ind + 1, I);
   bsm->set(residual_ind, param_ind, dy_dp);
+
+  return compute_delta(x_1, model(x_0, p, dt));
 }
 
 template <typename Prob>
-typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
-    const Solution& initialization) {
-  assert(initialization.x.size() == heap_.size());
-  Solution soln = initialization;
+BlockSparseMatrix AcausalOptimizer<Prob>::populate(const Solution& soln,
+                                                   Out<std::vector<VecXd>> v) {
+  assert(soln.x.size() == heap_.size());
 
   constexpr int n_params = 1;
   const int n_measurements = static_cast<int>(heap_.size());
-  const int n_states = static_cast<int>(initialization.x.size());
+  const int n_states = static_cast<int>(soln.x.size());
+  const int n_residuals = n_states + n_measurements;
 
-  BlockSparseMatrix J(n_states + n_measurements, n_states + n_params);
+  BlockSparseMatrix J(n_residuals, n_states + n_params);
+
+  v->clear();
+  v->resize(n_residuals);
 
   // Immediately after the states
   const int p_ind = n_states;
@@ -98,15 +105,44 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
     const int x_ind = t;
     const int z_ind = 2 * t;
     const State& x_t = soln.x.at(t);
-    add_observation_residual(x_t, z_t, p, x_ind, z_ind, p_ind, out(J));
+    const VecXd y_obs =
+        add_observation_residual(x_t, z_t, p, x_ind, z_ind, p_ind, out(J));
+    (*v)[z_ind] = y_obs;
 
     const State& x_t1 = soln.x.at(t + 1);
-    add_dynamics_residual(x_t, x_t1, p, dt, x_ind, z_ind + 1, p_ind, out(J));
+    const VecXd y_dyn =
+        add_dynamics_residual(x_t, x_t1, p, dt, x_ind, z_ind + 1, p_ind, out(J));
+    (*v)[z_ind + 1] = y_dyn;
   }
 
+  return J;
+}
+
+template <typename Prob>
+typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
+    const Solution& initialization) {
+  assert(initialization.x.size() == heap_.size());
+  Solution soln = initialization;
+
+  // Generate our jacobian
+  std::vector<VecXd> v;
+  const BlockSparseMatrix J_bsm = populate(soln, out(v));
+
   // JtJ;
+  using SpMat = Eigen::SparseMatrix<double>;
+  // using SpVec = Eigen::SparseVector<double>;
+
+  const SpMat J = J_bsm.to_eigen_sparse();
+
+  // const SpMat JtJ = (J.transpose() * J);
+
+  // const Eigen::SimplicialCholesky<SpMat> chol(JtJ);
+  // const SpVec v = to_sparse(v);
+
+  // const SpVec delta = chol.solve(J.transpose() * v);
 
   // Jtv;
+  assert(false);
 }
 
 }  // namespace optimization
