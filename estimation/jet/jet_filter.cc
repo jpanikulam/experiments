@@ -22,6 +22,17 @@ State dynamics(const State& x, const double h) {
   return rk4_integrate(x, p, h);
 }
 
+template <typename Meas>
+std::function<VecNd<Meas::DIM>(const State&, const Meas&)> bind_parameters(
+    const std::function<VecNd<Meas::DIM>(const State&, const Meas&, const Parameters&)>&
+        fnc,
+    const Parameters& p) {
+  const auto bound_fnc = [fnc, p](const State& x, const Meas& z) { return fnc(x, z, p); };
+  return bound_fnc;
+}
+
+}  // namespace
+
 jcc::Vec3 accel_error_model(const State& x,
                             const AccelMeasurement& z,
                             const Parameters& p) {
@@ -47,17 +58,6 @@ VecNd<6> fiducial_error_model(const State& x,
   return SE3::log(error);
 }
 
-template <typename Meas>
-std::function<VecNd<Meas::DIM>(const State&, const Meas&)> bind_parameters(
-    const std::function<VecNd<Meas::DIM>(const State&, const Meas&, const Parameters&)>&
-        fnc,
-    const Parameters& p) {
-  const auto bound_fnc = [fnc, p](const State& x, const Meas& z) { return fnc(x, z, p); };
-  return bound_fnc;
-}
-
-}  // namespace
-
 JetFilter::JetFilter(const JetFilterState& xp0) : xp_(xp0), ekf_(dynamics) {
   const Parameters p = get_parameters();
   imu_id_ = ekf_.add_model(bind_parameters<AccelMeasurement>(accel_error_model, p));
@@ -77,51 +77,5 @@ void JetFilter::free_run() {
   xp_ = ekf_.service_all_measurements(xp_);
 }
 
-void go() {
-  const Parameters p = get_parameters();
-  // const SO3 r_vehicle_from_sensor;
-  // const jcc::Vec3 t_vehicle_from_sensor = jcc::Vec3(0.0, 0.0, 1.0);
-  // const SE3 vehicle_from_sensor = SE3(r_vehicle_from_sensor, t_vehicle_from_sensor);
-
-  // State x;
-  // x.eps_ddot[1] = 1.0;
-  //
-
-  FilterState<State> xp0;
-  xp0.P.setIdentity();
-  xp0.x.eps_ddot[0] = 0.0;
-
-  JetFilter jf(xp0);
-  AccelMeasurement imu_meas;
-  imu_meas.observed_acceleration[0] = 2.0;
-
-  FiducialMeasurement fiducial_meas;
-
-  TimePoint start_time = {};
-  for (int k = 0; k < 50; ++k) {
-    const TimePoint obs_time = to_duration(k * 0.5) + start_time;
-    jf.measure_imu(imu_meas, obs_time);
-
-    jf.measure_fiducial(fiducial_meas, obs_time);
-
-    jf.free_run();
-
-    const auto xp = jf.state();
-    std::cout << "eps_dot   : " << xp.x.eps_dot.transpose() << std::endl;
-    std::cout << "eps_ddot  : " << xp.x.eps_ddot.transpose() << std::endl;
-    std::cout << "accel_bias: " << xp.x.accel_bias.transpose() << std::endl;
-    std::cout << "gyro_bias : " << xp.x.gyro_bias.transpose() << std::endl;
-
-    std::cout << "Modelled Error: " << accel_error_model(xp.x, imu_meas, p).transpose()
-              << std::endl;
-    const auto res = observe_accel(xp.x, get_parameters());
-    std::cout << "Expected Accel: " << res.transpose() << std::endl;
-  }
-}
-
 }  // namespace jet_filter
 }  // namespace estimation
-
-// int main() {
-//   estimation::jet_filter::go();
-// }

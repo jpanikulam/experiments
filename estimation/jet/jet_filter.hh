@@ -5,6 +5,16 @@
 namespace estimation {
 namespace jet_filter {
 
+// TODO: generate this
+jcc::Vec3 accel_error_model(const State& x,
+                            const AccelMeasurement& z,
+                            const Parameters& p);
+
+// TODO: generate this
+VecNd<6> fiducial_error_model(const State& x,
+                              const FiducialMeasurement& z,
+                              const Parameters& p);
+
 class JetFilter {
   using Update = FilterStateUpdate<State>;
   using JetFilterState = FilterState<State>;
