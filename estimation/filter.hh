@@ -36,9 +36,15 @@ class Ekf {
                                   const TimeDuration& dt) const;
 
   template <typename MeasurementType>
-  int add_model(const ObservationModel<State, MeasurementType>& fnc) {
-    const auto type_erased_fnc = [fnc](const FilterState<State>& x, const std::any& obs) {
-      return fnc.generate_update(x, std::any_cast<MeasurementType>(obs));
+  using ErrorModel =
+      std::function<VecNd<MeasurementType::DIM>(const State&, const MeasurementType&)>;
+
+  template <typename MeasurementType>
+  int add_model(const ErrorModel<MeasurementType>& fnc) {
+    const ObservationModel<State, MeasurementType> model(fnc);
+    const auto type_erased_fnc = [model](const FilterState<State>& x,
+                                         const std::any& obs) {
+      return model.generate_update(x, std::any_cast<MeasurementType>(obs));
     };
     return add_model_pr(type_erased_fnc);
   }
