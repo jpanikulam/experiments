@@ -17,7 +17,7 @@ void draw_axes(const Axes &axes) {
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
-  glTransform(axes.axes_from_world);
+  glTransform(axes.world_from_axes);
   glScaled(axes.scale, axes.scale, axes.scale);
   glBegin(GL_LINES);
 
