@@ -139,7 +139,7 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   const VecXd delta = J_bsm.solve_lst_sq(v);
   std::cout << delta.rows() << std::endl;
   std::cout << "----" << std::endl;
-  for (int t = 0; static_cast<int>(soln.x.size()); ++t) {
+  for (int t = 0; static_cast<int>(soln.x.size() - 1); ++t) {
     std::cout << t * State::DIM << std::endl;
     const VecNd<State::DIM> sub_delta = delta.segment(t * State::DIM, State::DIM);
     apply_delta(soln.x[t], sub_delta);
