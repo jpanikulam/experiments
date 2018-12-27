@@ -20,7 +20,10 @@ cv::Mat Camera::capture_framebuffer() const {
   glReadPixels(ORIGIN_X, ORIGIN_Y, WIDTH, HEIGHT, FORMAT, TYPE, out_data);
 
   constexpr int IM_CV_TYPE = CV_8UC1;
-  return cv::Mat(HEIGHT, WIDTH, IM_CV_TYPE, out_data);
+  const cv::Mat image(HEIGHT, WIDTH, IM_CV_TYPE, out_data);
+  cv::Mat flipped;
+  cv::flip(image, flipped, 0);
+  return flipped;
 }
 
 void Camera::prepare_view() const {
