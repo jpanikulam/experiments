@@ -1,7 +1,65 @@
 #include "estimation/optimization/block_sparse_matrix.hh"
 
+#include "out.hh"
+
 namespace estimation {
 namespace optimization {
+
+namespace {
+/*
+VecXd to_dynamic(const std::vector<VecXd> v) {
+int numel = 0;
+for (const auto& sub_v : v) {
+  numel += sub_v.rows();
+}
+
+VecXd vec(numel);
+int elements_so_far = 0;
+for (const auto& sub_v : v) {
+  for (int sub_row = 0; sub_row < sub_v.rows(); ++sub_row) {
+    // triplets.emplace_back(elements_so_far + sub_row, sub_v[sub_row]);
+    vec[elements_so_far + sub_row] = sub_v[sub_row];
+  }
+  elements_so_far += sub_v.rows();
+}
+return vec;
+}
+*/
+
+void insert_into_triplets(const Eigen::MatrixXd& mat,
+                          int offset_row,
+                          int offset_col,
+                          Out<std::vector<Eigen::Triplet<double>>> triplets) {
+  // triplets.reserve(mat.rows() * mat.cols());
+
+  for (int row = 0; row < mat.rows(); ++row) {
+    for (int col = 0; col < mat.cols(); ++col) {
+      const double& val = mat(row, col);
+      if (std::abs(val) < 1e-6) {
+        triplets->emplace_back(row + offset_row, col + offset_col, val);
+      }
+    }
+  }
+}
+
+Eigen::SparseVector<double> to_sparse(const std::vector<VecXd> v) {
+  int numel = 0;
+  for (const auto& sub_v : v) {
+    numel += sub_v.rows();
+  }
+
+  Eigen::SparseVector<double> sp_vec(numel);
+  for (const auto& sub_v : v) {
+    for (int sub_row = 0; sub_row < sub_v.rows(); ++sub_row) {
+      // sp_vec.insertBack(numel + sub_row)
+      sp_vec.insertBack(sub_v[sub_row]);
+    }
+  }
+
+  return sp_vec;
+}
+
+}  // namespace
 
 BlockSparseMatrix::BlockSparseMatrix(const int n_block_rows, const int n_block_cols) {
   rows_.resize(n_block_rows);
@@ -93,13 +151,12 @@ int BlockSparseMatrix::real_rows_above_block(int block_row) const {
 }
 
 int BlockSparseMatrix::real_cols_left_of_block(int block_col) const {
-  assert(block_row >= 0);
-  assert(block_row < static_cast<int>(rows_.size()));
+  assert(block_col >= 0);
+  assert(block_col < static_cast<int>(n_cols_.size()));
 
   int total = 0;
-  // for (const auto& n : n_cols_) {
   for (int i = 0; i < block_col; ++i) {
-    total += n;
+    total += n_cols_[i];
   }
   return total;
 }
@@ -109,18 +166,44 @@ BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
   const int cols = real_cols();
   SpMat mat(rows, cols);
 
-  // (This is knowable)
-  // Eigen::VectorXi nnz_cols;
+  std::vector<Eigen::Triplet<double>> triplets;
 
-  for (const auto& row : rows_) {
-    for (const auto& col : row.cols) {
-      const MatXd submat = col.block;
+  // (This is knowable)
+  // Eigen::VectorXi nnz_cols(cols);
+
+  const int num_rows = static_cast<int>(rows_.size());
+  for (int block_row_ind = 0; block_row_ind < num_rows; ++block_row_ind) {
+    const int true_row_num = real_rows_above_block(block_row_ind);
+    const auto& row = rows_.at(block_row_ind);
+
+    for (const auto& col_block : row.cols) {
+      // const auto& col = row.cols.at(block_col);
+      const int block_col_ind = col_block.first;
+      const auto& col = col_block.second;
+      const int true_col_num = real_cols_left_of_block(block_col_ind);
+
+      const MatXd& submat = col.block;
+      insert_into_triplets(submat, true_row_num, true_col_num, out(triplets));
     }
   }
 
-  // mat.setFromTriplets(triplets);
+  mat.setFromTriplets(triplets.begin(), triplets.end());
 
   return mat;
+}
+
+VecXd BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& residuals) const {
+  const SpMat J = to_eigen_sparse();
+  const SpMat JtJ = (J.transpose() * J);
+
+  const Eigen::SimplicialCholesky<SpMat> chol(JtJ);
+
+  const SpVec v = to_sparse(residuals);
+
+  // Jtv
+  const SpMat Jtv = J.transpose() * v;
+  const VecXd delta = chol.solve(Jtv);
+  return delta;
 }
 
 }  // namespace optimization

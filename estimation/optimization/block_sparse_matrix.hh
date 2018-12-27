@@ -28,6 +28,8 @@ class BlockSparseMatrix {
 
   SpMat to_eigen_sparse() const;
 
+  VecXd solve_lst_sq(const std::vector<VecXd>& residuals) const;
+
  private:
   struct Block {
     Eigen::MatrixXd block;
