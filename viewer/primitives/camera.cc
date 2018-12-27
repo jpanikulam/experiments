@@ -18,9 +18,11 @@ cv::Mat Camera::capture_framebuffer() const {
 
   uint8_t* out_data = new uint8_t[WIDTH * HEIGHT];
   glReadPixels(ORIGIN_X, ORIGIN_Y, WIDTH, HEIGHT, FORMAT, TYPE, out_data);
-
   constexpr int IM_CV_TYPE = CV_8UC1;
-  return cv::Mat(HEIGHT, WIDTH, IM_CV_TYPE, out_data);
+  const cv::Mat image(HEIGHT, WIDTH, IM_CV_TYPE, out_data);
+  cv::Mat flipped;
+  cv::flip(image, flipped, 0);
+  return flipped;
 }
 
 void Camera::prepare_view() const {
@@ -31,7 +33,7 @@ void Camera::prepare_view() const {
       (static_cast<double>(size_.width) / static_cast<double>(size_.height));
   constexpr double NEAR_CLIP = 0.001;
   constexpr double FAR_CLIP = 1000.0;
-  constexpr double FOV = 60.0;
+  constexpr double FOV = 90.0;
   gluPerspective(FOV, aspect_ratio, NEAR_CLIP, FAR_CLIP);
 
   glMatrixMode(GL_MODELVIEW);

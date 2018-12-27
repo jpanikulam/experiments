@@ -8,7 +8,7 @@
 
 namespace fiducials {
 struct MarkerDetection{
-    SE3 camera_to_marker_center;
+    SE3 marker_center_from_camera;
     int id;
 };
 std::vector< MarkerDetection > detect_markers(cv::Mat mat);
@@ -32,7 +32,7 @@ class CalibrationManager{
         assert(all_camera_images.size() > 0);
         int BOARD_WIDTH = 9;
         int BOARD_HEIGHT = 6;
-        float SQUARE_SIZE = 1;
+        float SQUARE_SIZE = 1.0/10;
         auto board_size = cv::Size(BOARD_WIDTH, BOARD_HEIGHT);
         auto criteria = (cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, 30, 0.001);
 
