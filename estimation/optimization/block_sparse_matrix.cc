@@ -78,9 +78,48 @@ int BlockSparseMatrix::real_cols() const {
   return total;
 }
 
+int BlockSparseMatrix::real_rows_above_block(int block_row) const {
+  assert(block_row >= 0);
+  assert(block_row < static_cast<int>(rows_.size()));
+
+  int total = 0;
+  for (int i = 0; i < block_row; ++i) {
+    const auto& row = rows_[i];
+    assert(row.n_rows != -1);
+    total += row.n_rows;
+  }
+
+  return total;
+}
+
+int BlockSparseMatrix::real_cols_left_of_block(int block_col) const {
+  assert(block_row >= 0);
+  assert(block_row < static_cast<int>(rows_.size()));
+
+  int total = 0;
+  // for (const auto& n : n_cols_) {
+  for (int i = 0; i < block_col; ++i) {
+    total += n;
+  }
+  return total;
+}
+
 BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
-  SpMat mat;
-  assert(false);
+  const int rows = real_rows();
+  const int cols = real_cols();
+  SpMat mat(rows, cols);
+
+  // (This is knowable)
+  // Eigen::VectorXi nnz_cols;
+
+  for (const auto& row : rows_) {
+    for (const auto& col : row.cols) {
+      const MatXd submat = col.block;
+    }
+  }
+
+  // mat.setFromTriplets(triplets);
+
   return mat;
 }
 

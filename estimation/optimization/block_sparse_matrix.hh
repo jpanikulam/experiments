@@ -23,6 +23,9 @@ class BlockSparseMatrix {
   int real_rows() const;
   int real_cols() const;
 
+  int real_rows_above_block(int block_row) const;
+  int real_cols_left_of_block(int block_col) const;
+
   SpMat to_eigen_sparse() const;
 
  private:
