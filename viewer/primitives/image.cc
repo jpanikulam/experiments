@@ -34,9 +34,11 @@ void Image::update_image(const Eigen::MatrixXd& image) {
 void Image::update_image(const cv::Mat& image) {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   if (image.channels() == 1) {
-    cv::cvtColor(image, image_, cv::COLOR_GRAY2BGR);
+    cv::Mat not_yet_flipped;
+    cv::cvtColor(image, not_yet_flipped, cv::COLOR_GRAY2BGR);
+    cv::flip(not_yet_flipped, image_, 0);
   } else if (image.channels() == 3) {
-    image.copyTo(image_);
+    cv::flip(image, image_, 0);
   } else {
     assert(false);
   }
