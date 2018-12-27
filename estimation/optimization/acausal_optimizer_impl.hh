@@ -82,7 +82,7 @@ BlockSparseMatrix AcausalOptimizer<Prob>::populate(const Solution& soln,
   constexpr int n_params = 1;
   const int n_measurements = static_cast<int>(heap_.size());
   const int n_states = static_cast<int>(soln.x.size());
-  const int n_residuals = n_states + n_measurements;
+  const int n_residuals = (n_states - 1) + n_measurements;
 
   BlockSparseMatrix J(n_residuals, n_states + n_params);
 
@@ -94,7 +94,7 @@ BlockSparseMatrix AcausalOptimizer<Prob>::populate(const Solution& soln,
 
   const auto& p = soln.p;
   const auto& measurements = heap_.backing();
-  for (int t = 0; t < static_cast<int>(measurements.size()) - 1; ++t) {
+  for (int t = 0; t < static_cast<int>(measurements.size()); ++t) {
     const auto& z_t = measurements[t];
 
     const double dt =
@@ -109,10 +109,12 @@ BlockSparseMatrix AcausalOptimizer<Prob>::populate(const Solution& soln,
         add_observation_residual(x_t, z_t, p, x_ind, z_ind, p_ind, out(J));
     (*v)[z_ind] = y_obs;
 
-    const State& x_t1 = soln.x.at(t + 1);
-    const VecXd y_dyn =
-        add_dynamics_residual(x_t, x_t1, p, dt, x_ind, z_ind + 1, p_ind, out(J));
-    (*v)[z_ind + 1] = y_dyn;
+    if (t < static_cast<int>(soln.x.size()) - 1) {
+      const State& x_t1 = soln.x.at(t + 1);
+      const VecXd y_dyn =
+          add_dynamics_residual(x_t, x_t1, p, dt, x_ind, z_ind + 1, p_ind, out(J));
+      (*v)[z_ind + 1] = y_dyn;
+    }
   }
 
   return J;
@@ -124,25 +126,30 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   assert(initialization.x.size() == heap_.size());
   Solution soln = initialization;
 
+  ///////////////////////////////////////////
+  constexpr int n_params = 1;
+  const int n_measurements = static_cast<int>(heap_.size());
+  const int n_states = static_cast<int>(soln.x.size());
+  const int n_residuals = (n_states - 1) + n_measurements;
+  ///////////////////////////////////////////
+
   // Generate our jacobian
   std::vector<VecXd> v;
   const BlockSparseMatrix J_bsm = populate(soln, out(v));
+  const VecXd delta = J_bsm.solve_lst_sq(v);
+  std::cout << delta.rows() << std::endl;
+  std::cout << "----" << std::endl;
+  for (int t = 0; static_cast<int>(soln.x.size()); ++t) {
+    std::cout << t * State::DIM << std::endl;
+    const VecNd<State::DIM> sub_delta = delta.segment(t * State::DIM, State::DIM);
+    apply_delta(soln.x[t], sub_delta);
+  }
 
-  // JtJ;
-  using SpMat = Eigen::SparseMatrix<double>;
-  // using SpVec = Eigen::SparseVector<double>;
+  const VecNd<Parameters::DIM> p_delta =
+      delta.segment((soln.x.size() - 1) * State::DIM, Parameters::DIM);
+  apply_delta(soln.p, p_delta);
 
-  const SpMat J = J_bsm.to_eigen_sparse();
-
-  // const SpMat JtJ = (J.transpose() * J);
-
-  // const Eigen::SimplicialCholesky<SpMat> chol(JtJ);
-  // const SpVec v = to_sparse(v);
-
-  // const SpVec delta = chol.solve(J.transpose() * v);
-
-  // Jtv;
-  assert(false);
+  // assert(false);
 }
 
 }  // namespace optimization
