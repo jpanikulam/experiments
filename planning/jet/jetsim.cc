@@ -23,7 +23,7 @@ namespace planning {
 namespace jet {
 
 constexpr bool SHOW_CAMERA = true;
-constexpr bool SHOW_CAMERA_PROJECTION = true;
+constexpr bool SHOW_CAMERA_PROJECTION = false;
 constexpr bool WRITE_IMAGES = false;
 constexpr bool PRINT_STATE = false;
 constexpr bool DRAW_VEHICLE = true;
@@ -79,7 +79,7 @@ void go() {
   const auto jet_geo = view->add_primitive<viewer::SimpleGeometry>();
   const auto accum_geo = view->add_primitive<viewer::SimpleGeometry>();
   auto world_from_fiducial = SE3(SO3::exp(jcc::Vec3(M_PI/5, 0.5, 0.0)), jcc::Vec3(0.0, 3.0, 0.0));
-  fiducials::CalibrationManager calibration_manager;
+  estimation::vision::CalibrationManager calibration_manager;
 
   const auto image_tree = view->add_primitive<viewer::SceneTree>();
   {
@@ -114,7 +114,7 @@ void go() {
   const jcc::Vec3 final_target(0.5, 0.5, 0.9);
 
   std::vector<Controls> prev_controls;
-  for (int j = 0; j < 100000 && !view->should_close(); ++j) {
+  for (int j = 0; j < 1000 && !view->should_close(); ++j) {
     // image_tree->set_world_from_root(SE3(SO3::exp(jcc::Vec3::Random()*1), jcc::Vec3::Random()*-2));
 
     const jcc::Vec3 prev = jet.x;
@@ -233,22 +233,13 @@ void go() {
     //   std::cout << std::endl;
     // }
 
+    auto world_from_opengl_camera = world_from_jet * jet_from_camera;
+    auto world_from_markers = estimation::vision::get_world_from_marker_centers(localization_camera_image, world_from_opengl_camera);
 
-
-    auto marker_detections = fiducials::detect_markers(localization_camera_image_rgb);
-    
-    for (auto const& detection : marker_detections) {
-      auto opengl_camera_from_opencv_camera = SE3(SO3::exp(Eigen::Vector3d(M_PI,0,0)), Eigen::Vector3d(0,0,0)) *
-                                              SE3(SO3::exp(Eigen::Vector3d(0,0,M_PI/2*0)), Eigen::Vector3d(0,0,0));
-      auto world_from_opengl_camera = world_from_jet * jet_from_camera; //world_from_jet * jet_from_camera;
-
-      auto marker_center_from_opencv_camera = detection.marker_center_from_camera;
-      auto opencv_camera_from_marker_center = marker_center_from_opencv_camera.inverse();
-      auto marker_loc_world_frame = (world_from_opengl_camera * opengl_camera_from_opencv_camera * opencv_camera_from_marker_center).translation();
-      jet_geo->add_line({(world_from_jet * jet_from_camera).translation(), marker_loc_world_frame, jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
-      
-
+    for(auto const& marker_detection_world_space: world_from_markers) {
+      jet_geo->add_line({(world_from_jet * jet_from_camera).translation(), marker_detection_world_space.world_from_marker.translation(), jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
     }
+
 
     if (SHOW_CAMERA) {
       cv::imshow("Localization Camera", localization_camera_image_rgb);
@@ -273,6 +264,8 @@ void go() {
 
   cv::destroyAllWindows();
 }
+
+
 
 }  // namespace jet
 }  // namespace planning
