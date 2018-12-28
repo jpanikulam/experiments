@@ -12,6 +12,7 @@
 #include "viewer/primitives/camera.hh"
 #include "viewer/primitives/image.hh"
 
+#include "estimation/vision/calibration.hh"
 #include "estimation/vision/fiducial_pose.hh"
 
 #include "util/environment.hh"
@@ -65,6 +66,24 @@ void put_camera_projection(viewer::SimpleGeometry& geo, const viewer::Camera& ca
   geo.add_line({top_right_ray(length), bottom_right_ray(length), red});
   geo.add_line({bottom_right_ray(length), bottom_left_ray(length), red});
 }
+
+void draw_fidudical_detections(cv::Mat localization_camera_image_rgb,
+                               const SE3 world_from_opengl_camera,
+                               std::shared_ptr<viewer::SimpleGeometry> geo) {
+  const auto opengl_camera_from_opencv_camera =
+      SE3(SO3::exp(Eigen::Vector3d(M_PI, 0, 0)), Eigen::Vector3d(0, 0, 0)) *
+      SE3(SO3::exp(Eigen::Vector3d(0, 0, M_PI / 2 * 0)), Eigen::Vector3d(0, 0, 0));
+  const auto world_from_camera =
+      world_from_opengl_camera * opengl_camera_from_opencv_camera;
+  auto world_from_markers = estimation::vision::get_world_from_marker_centers(
+      localization_camera_image_rgb, world_from_camera);
+
+  for (auto const& marker_detection_world_space : world_from_markers) {
+    std::cout << "HEELLLOOO" << std::endl;
+    geo->add_line({world_from_opengl_camera.translation(),
+                   marker_detection_world_space.world_from_marker.translation(),
+                   jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
+  }
 
 }  // namespace
 
@@ -226,26 +245,27 @@ void go() {
     camera->set_world_from_camera(world_from_jet * jet_from_camera);
     accum_geo->flush();
 
-    const cv::Mat image = camera->extract_image();
+    const cv::Mat camera_image_rgb = camera->extract_image();
 
-    {
-      const cv::Mat localization_camera_image = camera->extract_image();
-      cv::Mat localization_camera_image_rgb;
-      cv::cvtColor(localization_camera_image, localization_camera_image_rgb,
-                   cv::COLOR_GRAY2BGR);
-      auto world_from_opengl_camera = world_from_jet * jet_from_camera;
-      auto world_from_markers = estimation::vision::get_world_from_marker_centers(
-          localization_camera_image_rgb, world_from_opengl_camera);
+    draw_fidudical_detections(camera_image_rgb, world_from_jet * jet_from_camera,
+                              jet_geo);
 
-      for (auto const& marker_detection_world_space : world_from_markers) {
-        jet_geo->add_line({(world_from_jet * jet_from_camera).translation(),
-                           marker_detection_world_space.world_from_marker.translation(),
-                           jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
-      }
-      if (SHOW_CAMERA) {
-        cv::imshow("Localization Camera", localization_camera_image_rgb);
-        cv::waitKey(1);
-      }
+    jet_geo->add_line(
+        {jcc::Vec3(1, 1, -1), jcc::Vec3(1, 5, -10), jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
+
+    if (SHOW_CAMERA) {
+      cv::imshow("Localization Camera", camera_image_rgb);
+      cv::waitKey(1);
+    }
+
+    estimation::vision::CalibrationManager calibration_manager;
+
+    if (j % 10 == 0) {
+      calibration_manager.add_camera_image(camera_image_rgb);
+    }
+    if (calibration_manager.num_images_collected() % (200 / 15) == 0 &&
+        calibration_manager.num_images_collected() > 0) {
+      calibration_manager.calibrate();
     }
 
     if (WRITE_IMAGES) {
@@ -256,17 +276,17 @@ void go() {
       if (j % 1 == 0) {
         std::cout << "-----" << j << std::endl;
         std::cout << camera->get_projection().modelview_mat() << std::endl;
-        cv::imwrite("jet_image_" + std::to_string(j) + ".jpg", image);
+        cv::imwrite("jet_image_" + std::to_string(j) + ".jpg", camera_image_rgb);
       }
     }
-
     jet_geo->flip();
-
-    view->spin_until_step();
   }
 
+  view->spin_until_step();
   cv::destroyAllWindows();
 }
+
+}  // namespace
 
 }  // namespace jet
 }  // namespace planning
