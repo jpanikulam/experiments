@@ -144,8 +144,7 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   for (int t = 0; t < static_cast<int>(soln.x.size()); ++t) {
     std::cout << t << " : " << t * State::DIM << " -> " << (t * State::DIM) + State::DIM
               << std::endl;
-    const VecXd poopy = delta.segment(t * State::DIM, State::DIM);
-    const VecNd<State::DIM> sub_delta = poopy;
+    const VecNd<State::DIM> sub_delta = delta.segment(t * State::DIM, State::DIM);
     apply_delta(soln.x[t], sub_delta);
   }
 
