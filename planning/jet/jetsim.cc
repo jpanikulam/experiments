@@ -26,7 +26,7 @@ constexpr bool SHOW_CAMERA = true;
 constexpr bool SHOW_CAMERA_PROJECTION = true;
 constexpr bool WRITE_IMAGES = false;
 constexpr bool PRINT_STATE = false;
-constexpr bool DRAW_VEHICLE = false;
+constexpr bool DRAW_VEHICLE = true;
 constexpr bool TRACK_VEHICLE = false;
 constexpr bool VISUALIZE_TRAJECTORY = false;
 
@@ -92,9 +92,9 @@ void go() {
     image_tree->add_primitive(
         "root", world_from_fiducial,
         "fiducial_2", board_texture_image);
-    // image_tree->add_primitive(
-    //   "root", SE3(SO3::exp(jcc::Vec3(3.14/2, 0.0, 0.5)), jcc::Vec3(1.0, 3.0, 1.0)),
-    //   "fiducial_3", board_texture_image);
+    image_tree->add_primitive(
+      "root", SE3(SO3::exp(jcc::Vec3(3.14/2, 0.0, 0.5)), jcc::Vec3(1.0, 3.0, 1.0)),
+      "fiducial_3", board_texture_image);
   }
 
   const auto camera = std::make_shared<viewer::Camera>();
@@ -204,11 +204,9 @@ void go() {
       // view->set_target_from_world(world_from_jet.inverse());
     }
 
-    // const SE3 jet_from_camera = SE3(SO3::exp(jcc::Vec3(-3.1415/2, 0, 0.0)) * SO3::exp(jcc::Vec3(0, 3.1415, 0.0)), jcc::Vec3(0.5, .5, 0.5));
     jet_tree->set_world_from_root(world_from_jet);
     auto world_from_camera_debug = SE3(SO3::exp(jcc::Vec3(-M_PI/2, 1, 0.0)) * SO3::exp(jcc::Vec3(0, M_PI, 0.0)) * SO3::exp(jcc::Vec3(0, 0.0, M_PI)), jcc::Vec3(1, -3, 1));
-    camera->set_world_from_camera(world_from_camera_debug);
-    // camera->set_world_from_camera(jet_from_camera);
+    camera->set_world_from_camera(world_from_jet * jet_from_camera);
     // std::cout << camera->get_projection().projection_mat() <<std::endl<<std::endl;
 
 
@@ -240,29 +238,14 @@ void go() {
     auto marker_detections = fiducials::detect_markers(localization_camera_image_rgb);
     
     for (auto const& detection : marker_detections) {
-      // SE3 known_camera_to_marker = world_from_fiducial * world_from_jet.inverse();//* SE3(SO3::exp(jcc::Vec3::UnitX()), jet.x).inverse();
-      // auto world_from_gt_fiducial = SE3(SO3::exp(jcc::Vec3(0*M_PI/2, 0.0, 0)), jcc::Vec3(0.5, 3.0, 0.5));
-
-      auto opengl_camera_from_opencv_camera = //SE3(SO3::exp(Eigen::Vector3d(0,0,0)), Eigen::Vector3d(0,0,0));
-                                              // SE3(SO3::exp(Eigen::Vector3d(M_PI,0,0)), Eigen::Vector3d(0,0,0));
-                                              // * 
-                                              // SE3(SO3::exp(Eigen::Vector3d(0,0, -M_PI)), Eigen::Vector3d(0,0,0)) * 
-                                              SE3(SO3::exp(Eigen::Vector3d(M_PI,0,0)), Eigen::Vector3d(0,0,0)) *
-                                              SE3(SO3::exp(Eigen::Vector3d(0,0,M_PI/2*0)), Eigen::Vector3d(0,0,0))
-                                              ;
-      
-
-      auto world_from_opengl_camera = world_from_camera_debug; //world_from_jet * jet_from_camera;
-      // auto fiducial_center_location_from_camera = world_from_gt_fiducial.inverse() * world_from_opengl_camera * opengl_camera_from_opencv_camera;
-      // std::cout << "fake point in camera " << fiducial_center_location_from_camera.translation().transpose() << std::endl;
+      auto opengl_camera_from_opencv_camera = SE3(SO3::exp(Eigen::Vector3d(M_PI,0,0)), Eigen::Vector3d(0,0,0)) *
+                                              SE3(SO3::exp(Eigen::Vector3d(0,0,M_PI/2*0)), Eigen::Vector3d(0,0,0));
+      auto world_from_opengl_camera = world_from_jet * jet_from_camera; //world_from_jet * jet_from_camera;
 
       auto marker_center_from_opencv_camera = detection.marker_center_from_camera;
       auto opencv_camera_from_marker_center = marker_center_from_opencv_camera.inverse();
       auto marker_loc_world_frame = (world_from_opengl_camera * opengl_camera_from_opencv_camera * opencv_camera_from_marker_center).translation();
-      // jet_geo->add_line({world_from_opengl_camera.translation(), marker_loc_world_frame, jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
-      jet_geo->add_line({world_from_camera_debug.translation(), marker_loc_world_frame, jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
-      // jet_geo->add_axes({world_from_gt_fiducial, 5.0});
-      // jet_geo->add_axes({world_from_opengl_camera * opengl_camera_from_opencv_camera * marker_center_from_opencv_camera.inverse(), 5.0});
+      jet_geo->add_line({(world_from_jet * jet_from_camera).translation(), marker_loc_world_frame, jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
       
 
     }
