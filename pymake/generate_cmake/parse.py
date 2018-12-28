@@ -57,7 +57,7 @@ def grab_bin(line):
     args = between(line, '(', ')')
     arg_tokens = splitstrip(args)
     Log.debug('    bin: {}'.format(arg_tokens))
-    assert len(arg_tokens) == 1, "Wrong number of arguments"
+    assert len(arg_tokens) in (0, 1), "Wrong number of arguments"
     return {'bin': {'target': arg_tokens[0]}}
 
 
@@ -93,8 +93,8 @@ tokens = {
     '//%deps': grab_dependencies,
     '//%lib': grab_lib,
     '#include': grab_include,
-    'int main()': make_flagger('has_main'),
-    'void main()': make_flagger('has_main'),
+    'int main(': make_flagger('has_main'),
+    'void main(': make_flagger('has_main'),
     '//%ignore': make_flagger('ignore'),
     '#include "testing/gtest.hh"': make_flagger('is_test'),
     # '//%hdrlib': grab_hdr_lib,
@@ -112,6 +112,13 @@ def incremental_update(d, new_d):
             d[key].append(item)
 
 
+def strip_spaces_after_comment(dirty_line):
+    if dirty_line.startswith('//'):
+        return '//' + dirty_line[2:].lstrip()
+    else:
+        return dirty_line
+
+
 def parse_text(text):
     elements = {
         'bin': [],
@@ -122,7 +129,8 @@ def parse_text(text):
     }
 
     lines = text.split('\n')
-    for line in lines:
+    for dirty_line in lines:
+        line = strip_spaces_after_comment(dirty_line)
         for token, action in tokens.items():
             if line.startswith(token):
                 update = action(line)
@@ -140,3 +148,13 @@ def has_annotations(elements):
 
 def should_ignore(elements):
     return 'ignore' in elements['flags']
+
+
+def main():
+    text = "// %deps(a, b, c)\n//    %deps(ogop)\n//%deps(abs)\n%deps(adq)"
+    parsed = parse_text(text)
+    assert set(parsed['deps']) == {'a', 'b', 'c', 'ogop', 'abs'}
+
+
+if __name__ == '__main__':
+    main()

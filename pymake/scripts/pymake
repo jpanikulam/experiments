@@ -76,7 +76,7 @@ def discover_unlabelled_bins(tree):
                 Log.debug("Inferring bin (existence of main): {} ".format(name))
 
                 if has_annotations(elements):
-                    Log.warn("Inferred binary has annotations: {}".format(raw_name))
+                    Log.debug("Inferred binary has annotations: {}".format(raw_name))
 
                 if len(elements['bin']) == 0:
                     src_file = name + '.cc'
@@ -115,6 +115,8 @@ def discover_unlabelled_libs(tree):
                     'target': name,
                     'srcs': [src_file]
                 })
+            else:
+                Log.warn("Pure-header library found: {}; You may have to manually manage deps".format(raw_name))
 
 
 def build_dependency_table(all_tree, repo_path):
