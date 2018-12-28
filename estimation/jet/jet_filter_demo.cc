@@ -101,8 +101,8 @@ class JetOptimizer {
     pose_opt_.add_measurement(meas, t, fiducial_id_);
   }
 
-  void solve(const std::vector<State> x) {
-    pose_opt_.solve({x, mock_parameters()});
+  JetPoseOptimizer::Solution solve(const std::vector<State> x) {
+    return pose_opt_.solve({x, mock_parameters()});
   }
 
  private:
@@ -131,17 +131,17 @@ void run_filter() {
   std::vector<State> est_states;
 
   TimePoint start_time = {};
-  for (int k = 0; k < 50; ++k) {
+  for (int k = 0; k < 10; ++k) {
     const TimePoint obs_time = to_duration(k * 0.5) + start_time;
     jf.measure_imu(imu_meas, obs_time);
+    jet_opt.measure_imu(imu_meas, obs_time);
     jf.free_run();
     est_states.push_back(jf.state().x);
 
     jf.measure_fiducial(fiducial_meas, obs_time + to_duration(0.1));
+    jet_opt.measure_fiducial(fiducial_meas, obs_time + to_duration(0.1));
+    jf.free_run();
     est_states.push_back(jf.state().x);
-
-    jet_opt.measure_imu(imu_meas, obs_time);
-    jet_opt.measure_fiducial(fiducial_meas, obs_time);
 
     /*
     const auto xp = jf.state();
@@ -159,7 +159,7 @@ void run_filter() {
 
   // Do the optimization
 
-  jet_opt.solve(est_states);
+  const auto solazn = jet_opt.solve(est_states);
 }
 
 }  // namespace jet_filter

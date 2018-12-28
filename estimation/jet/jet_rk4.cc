@@ -152,28 +152,28 @@ StateDot compute_qdot(const State &Q, const Parameters &Z) {
   return Qdot;
 }
 StateDot operator*(const double h, const StateDot &K1) {
-  const StateDot anon_271683 =
+  const StateDot anon_c62aeb =
       StateDot{(h * (K1.eps_ddot)), (h * (K1.eps_dot)), (h * (K1.eps_dddot)),
                (h * (K1.dgyro_bias)), (h * (K1.daccel_bias))};
-  return anon_271683;
+  return anon_c62aeb;
 }
-State operator+(const State &Q, const StateDot &anon_6b57cd) {
+State operator+(const State &Q, const StateDot &anon_cc31e3) {
   const State Q2 =
-      State{((Q.eps_dot) + (anon_6b57cd.eps_ddot)),
-            ((SE3::exp((anon_6b57cd.eps_dot))) * (Q.T_body_from_world)),
-            ((Q.eps_ddot) + (anon_6b57cd.eps_dddot)),
-            ((Q.gyro_bias) + (anon_6b57cd.dgyro_bias)),
-            ((Q.accel_bias) + (anon_6b57cd.daccel_bias))};
+      State{((Q.eps_dot) + (anon_cc31e3.eps_ddot)),
+            ((SE3::exp((anon_cc31e3.eps_dot))) * (Q.T_body_from_world)),
+            ((Q.eps_ddot) + (anon_cc31e3.eps_dddot)),
+            ((Q.gyro_bias) + (anon_cc31e3.dgyro_bias)),
+            ((Q.accel_bias) + (anon_cc31e3.daccel_bias))};
   return Q2;
 }
-StateDot operator+(const StateDot &anon_271683, const StateDot &anon_35fffa) {
-  const StateDot anon_73470e =
-      StateDot{((anon_271683.eps_ddot) + (anon_35fffa.eps_ddot)),
-               ((anon_271683.eps_dot) + (anon_35fffa.eps_dot)),
-               ((anon_271683.eps_dddot) + (anon_35fffa.eps_dddot)),
-               ((anon_271683.dgyro_bias) + (anon_35fffa.dgyro_bias)),
-               ((anon_271683.daccel_bias) + (anon_35fffa.daccel_bias))};
-  return anon_73470e;
+StateDot operator+(const StateDot &anon_c62aeb, const StateDot &anon_ebb5e4) {
+  const StateDot anon_f4c7b2 =
+      StateDot{((anon_c62aeb.eps_ddot) + (anon_ebb5e4.eps_ddot)),
+               ((anon_c62aeb.eps_dot) + (anon_ebb5e4.eps_dot)),
+               ((anon_c62aeb.eps_dddot) + (anon_ebb5e4.eps_dddot)),
+               ((anon_c62aeb.dgyro_bias) + (anon_ebb5e4.dgyro_bias)),
+               ((anon_c62aeb.daccel_bias) + (anon_ebb5e4.daccel_bias))};
+  return anon_f4c7b2;
 }
 State rk4_integrate(const State &Q, const Parameters &Z, const double h) {
   const double half = 0.5;
@@ -201,24 +201,24 @@ State operator+(const State &a, const StateDelta &grp_b) {
   return out;
 }
 StateDelta from_vector(const VecNd<24> &in_vec) {
-  const VecNd<3> anon_54bf63 =
+  const VecNd<3> anon_e4979d =
       (VecNd<3>() << (in_vec[21]), (in_vec[22]), (in_vec[23])).finished();
-  const VecNd<6> anon_20055f =
-      (VecNd<6>() << (in_vec[12]), (in_vec[13]), (in_vec[14]), (in_vec[15]),
-       (in_vec[16]), (in_vec[17]))
-          .finished();
-  const VecNd<6> anon_f26658 =
+  const VecNd<6> anon_1ee84d =
       (VecNd<6>() << (in_vec[0]), (in_vec[1]), (in_vec[2]), (in_vec[3]),
        (in_vec[4]), (in_vec[5]))
           .finished();
-  const VecNd<6> anon_3c46ff =
+  const VecNd<3> anon_67b210 =
+      (VecNd<3>() << (in_vec[18]), (in_vec[19]), (in_vec[20])).finished();
+  const VecNd<6> anon_bdaf6d =
+      (VecNd<6>() << (in_vec[12]), (in_vec[13]), (in_vec[14]), (in_vec[15]),
+       (in_vec[16]), (in_vec[17]))
+          .finished();
+  const VecNd<6> anon_75f1be =
       (VecNd<6>() << (in_vec[6]), (in_vec[7]), (in_vec[8]), (in_vec[9]),
        (in_vec[10]), (in_vec[11]))
           .finished();
-  const VecNd<3> anon_5aca41 =
-      (VecNd<3>() << (in_vec[18]), (in_vec[19]), (in_vec[20])).finished();
-  const StateDelta out = StateDelta{anon_f26658, anon_3c46ff, anon_20055f,
-                                    anon_5aca41, anon_54bf63};
+  const StateDelta out = StateDelta{anon_1ee84d, anon_75f1be, anon_bdaf6d,
+                                    anon_67b210, anon_e4979d};
   return out;
 }
 State apply_delta(const State &a, const VecNd<24> &delta) {
@@ -239,27 +239,27 @@ Parameters operator+(const Parameters &a, const ParametersDelta &grp_b) {
   return out;
 }
 ParametersDelta from_vector(const VecNd<27> &in_vec) {
-  const VecNd<6> anon_12da31 =
+  const VecNd<3> anon_5eb84f =
+      (VecNd<3>() << (in_vec[9]), (in_vec[10]), (in_vec[11])).finished();
+  const VecNd<6> anon_4ec112 =
       (VecNd<6>() << (in_vec[0]), (in_vec[1]), (in_vec[2]), (in_vec[3]),
        (in_vec[4]), (in_vec[5]))
           .finished();
-  const VecNd<3> anon_776225 =
+  const VecNd<3> anon_de973c =
       (VecNd<3>() << (in_vec[6]), (in_vec[7]), (in_vec[8])).finished();
-  const VecNd<3> anon_2c8a5b =
-      (VecNd<3>() << (in_vec[9]), (in_vec[10]), (in_vec[11])).finished();
-  const VecNd<6> anon_275c10 =
+  const VecNd<6> anon_b97d61 =
       (VecNd<6>() << (in_vec[12]), (in_vec[13]), (in_vec[14]), (in_vec[15]),
        (in_vec[16]), (in_vec[17]))
           .finished();
-  const VecNd<3> anon_c0a0c5 =
+  const VecNd<3> anon_3e76d2 =
       (VecNd<3>() << (in_vec[18]), (in_vec[19]), (in_vec[20])).finished();
-  const VecNd<6> anon_e9f9c9 =
+  const VecNd<6> anon_699a8c =
       (VecNd<6>() << (in_vec[21]), (in_vec[22]), (in_vec[23]), (in_vec[24]),
        (in_vec[25]), (in_vec[26]))
           .finished();
   const ParametersDelta out =
-      ParametersDelta{anon_12da31, anon_776225, anon_2c8a5b,
-                      anon_275c10, anon_c0a0c5, anon_e9f9c9};
+      ParametersDelta{anon_4ec112, anon_de973c, anon_5eb84f,
+                      anon_b97d61, anon_3e76d2, anon_699a8c};
   return out;
 }
 Parameters apply_delta(const Parameters &a, const VecNd<27> &delta) {
@@ -274,9 +274,9 @@ AccelMeasurement operator+(const AccelMeasurement &a,
   return out;
 }
 AccelMeasurementDelta from_vector(const VecNd<3> &in_vec) {
-  const VecNd<3> anon_9b1757 =
+  const VecNd<3> anon_431961 =
       (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const AccelMeasurementDelta out = AccelMeasurementDelta{anon_9b1757};
+  const AccelMeasurementDelta out = AccelMeasurementDelta{anon_431961};
   return out;
 }
 AccelMeasurement apply_delta(const AccelMeasurement &a, const VecNd<3> &delta) {

@@ -138,18 +138,24 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   const BlockSparseMatrix J_bsm = populate(soln, out(v));
   const VecXd delta = J_bsm.solve_lst_sq(v);
   std::cout << delta.rows() << std::endl;
+  std::cout << soln.x.size() << ": " << soln.x.size() * State::DIM << std::endl;
+
   std::cout << "----" << std::endl;
-  for (int t = 0; static_cast<int>(soln.x.size() - 1); ++t) {
-    std::cout << t * State::DIM << std::endl;
-    const VecNd<State::DIM> sub_delta = delta.segment(t * State::DIM, State::DIM);
+  for (int t = 0; t < static_cast<int>(soln.x.size()); ++t) {
+    std::cout << t << " : " << t * State::DIM << " -> " << (t * State::DIM) + State::DIM
+              << std::endl;
+    const VecXd poopy = delta.segment(t * State::DIM, State::DIM);
+    const VecNd<State::DIM> sub_delta = poopy;
     apply_delta(soln.x[t], sub_delta);
   }
 
+  std::cout << "Final: " << (soln.x.size() * State::DIM) << " -> "
+            << (soln.x.size() * State::DIM) + Parameters::DIM << std::endl;
   const VecNd<Parameters::DIM> p_delta =
-      delta.segment((soln.x.size() - 1) * State::DIM, Parameters::DIM);
+      delta.segment(soln.x.size() * State::DIM, Parameters::DIM);
   apply_delta(soln.p, p_delta);
 
-  // assert(false);
+  return soln;
 }
 
 }  // namespace optimization

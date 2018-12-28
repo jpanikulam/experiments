@@ -27,11 +27,10 @@ struct OptimizerSolution {
 
 template <typename Prob>
 class AcausalOptimizer {
+ public:
   using State = typename Prob::State;
   using Parameters = typename Prob::Parameters;
   using Solution = OptimizerSolution<Prob>;
-
- public:
   using Dynamics = std::function<State(const State&, const Parameters&, double dt)>;
 
   template <typename Observation>
@@ -71,6 +70,9 @@ class AcausalOptimizer {
     heap_.push({block_type, z, time_of_validity});
   }
 
+  Solution solve(const Solution& initialization);
+
+ private:
   VecXd add_observation_residual(const State& x,
                                  const Measurement& z,
                                  const Parameters& p,
@@ -89,9 +91,6 @@ class AcausalOptimizer {
                               Out<BlockSparseMatrix> bsm);
 
   BlockSparseMatrix populate(const Solution& soln, Out<std::vector<VecXd>> v);
-  Solution solve(const Solution& initialization);
-
- private:
   Dynamics dynamics_;
   std::map<int, TypelessErrorModel> models_;
 
