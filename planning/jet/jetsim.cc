@@ -102,10 +102,9 @@ void go() {
   view->add_camera(camera);
 
   const JetModel model;
-  if
-    constexpr(DRAW_VEHICLE) {
-      model.insert(*jet_tree);
-    }
+  if constexpr (DRAW_VEHICLE) {
+    model.insert(*jet_tree);
+  }
 
   //
   // Add camera projection to the scene tree
@@ -171,15 +170,14 @@ void go() {
     //
 
     const auto ctrl = future_states[1].control;
-    if
-      constexpr(PRINT_STATE) {
-        std::cout << j << "..." << std::endl;
-        std::cout << "\tq     : " << ctrl.q.transpose() << std::endl;
-        std::cout << "\tx     : " << jet.x.transpose() << std::endl;
-        std::cout << "\tw     : " << jet.w.transpose() << std::endl;
-        std::cout << "\tv     : " << jet.v.transpose() << std::endl;
-        std::cout << "\tthrust: " << jet.throttle_pct << std::endl;
-      }
+    if constexpr (PRINT_STATE) {
+      std::cout << j << "..." << std::endl;
+      std::cout << "\tq     : " << ctrl.q.transpose() << std::endl;
+      std::cout << "\tx     : " << jet.x.transpose() << std::endl;
+      std::cout << "\tw     : " << jet.w.transpose() << std::endl;
+      std::cout << "\tv     : " << jet.v.transpose() << std::endl;
+      std::cout << "\tthrust: " << jet.throttle_pct << std::endl;
+    }
 
     //
     // Visualize
@@ -190,41 +188,37 @@ void go() {
     // put_jet(*jet_geo, world_from_jet);
 
     // const SO3 camera_sideways_from_camera_down =
-    //     SO3::exp(jcc::Vec3(-M_PI / 2, 0.0, 0.0)) * SO3::exp(jcc::Vec3(0.0, M_PI, 0.0)) *
-    //     SO3::exp(jcc::Vec3(0.0, 0, M_PI));
+    //     SO3::exp(jcc::Vec3(-M_PI / 2, 0.0, 0.0)) * SO3::exp(jcc::Vec3(0.0, M_PI, 0.0))
+    //     * SO3::exp(jcc::Vec3(0.0, 0, M_PI));
     // const SE3 jet_from_camera =
     //     SE3(camera_sideways_from_camera_down, jcc::Vec3(0.1, 0.05, 0.1));
 
-    if
-      constexpr(VISUALIZE_TRAJECTORY) {
-        for (std::size_t k = 0; k < future_states.size(); ++k) {
-          const auto& state = future_states.at(k).state;
-          const SE3 world_from_state = SE3(state.R_world_from_body, state.x);
-          const double scale =
-              static_cast<double>(k) / static_cast<double>(future_states.size());
-          jet_geo->add_axes({world_from_state, 1.0 - scale});
+    if constexpr (VISUALIZE_TRAJECTORY) {
+      for (std::size_t k = 0; k < future_states.size(); ++k) {
+        const auto& state = future_states.at(k).state;
+        const SE3 world_from_state = SE3(state.R_world_from_body, state.x);
+        const double scale =
+            static_cast<double>(k) / static_cast<double>(future_states.size());
+        jet_geo->add_axes({world_from_state, 1.0 - scale});
 
-          if (k > 1) {
-            jet_geo->add_line({future_states.at(k).state.x,
-                               future_states.at(k - 1).state.x,
-                               jcc::Vec4(0.8, 0.8, 0.1, 0.8), 5.0});
-          }
+        if (k > 1) {
+          jet_geo->add_line({future_states.at(k).state.x, future_states.at(k - 1).state.x,
+                             jcc::Vec4(0.8, 0.8, 0.1, 0.8), 5.0});
         }
-        jet_geo->add_line(
-            {world_from_jet.translation(),
-             world_from_jet.translation() +
-                 (world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct * 0.1),
-             jcc::Vec4(0.1, 0.9, 0.1, 0.8), 9.0});
-        accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
       }
+      jet_geo->add_line(
+          {world_from_jet.translation(),
+           world_from_jet.translation() +
+               (world_from_jet.so3() * jcc::Vec3::UnitZ() * jet.throttle_pct * 0.1),
+           jcc::Vec4(0.1, 0.9, 0.1, 0.8), 9.0});
+      accum_geo->add_line({prev, jet.x, jcc::Vec4(1.0, 0.7, 0.7, 0.7), 5.0});
+    }
 
-    if
-      constexpr(TRACK_VEHICLE) {
-        const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * M_PI * 0.5);
-        const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
-        view->set_target_from_world(world_from_target.inverse());
-      }
-    else {
+    if constexpr (TRACK_VEHICLE) {
+      const SO3 world_from_target_rot = SO3::exp(jcc::Vec3::UnitX() * M_PI * 0.5);
+      const SE3 world_from_target(world_from_target_rot, world_from_jet.translation());
+      view->set_target_from_world(world_from_target.inverse());
+    } else {
       // view->set_target_from_world(world_from_jet.inverse());
     }
 
