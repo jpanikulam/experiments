@@ -5,6 +5,7 @@
 
 #include "numerics/group_diff.hh"
 #include "numerics/numdiff.hh"
+#include "numerics/symmetrize.hh"
 
 namespace estimation {
 
@@ -63,7 +64,7 @@ FilterState<State> Ekf<State>::service_all_measurements(
     const FilterStateUpdate<State> update = observer(x_hat, meas.observation);
 
     x_hat.x = apply_delta(x_hat.x, update.dx);
-    x_hat.P = (update.P_new + update.P_new.transpose()) * 0.5;
+    x_hat.P = numerics::symmetrize(update.P_new);
 
     measurements_.pop();
   }
