@@ -2,6 +2,9 @@
 
 #include "out.hh"
 
+// TODO
+#include <iostream>
+
 namespace estimation {
 namespace optimization {
 
@@ -35,7 +38,7 @@ void insert_into_triplets(const Eigen::MatrixXd& mat,
   for (int row = 0; row < mat.rows(); ++row) {
     for (int col = 0; col < mat.cols(); ++col) {
       const double& val = mat(row, col);
-      if (std::abs(val) < 1e-6) {
+      if (std::abs(val) > 1e-12) {
         triplets->emplace_back(row + offset_row, col + offset_col, val);
       }
     }
@@ -48,12 +51,13 @@ Eigen::SparseVector<double> to_sparse(const std::vector<VecXd> v) {
     numel += sub_v.rows();
   }
 
+  int count_so_far = 0;
   Eigen::SparseVector<double> sp_vec(numel);
   for (const auto& sub_v : v) {
     for (int sub_row = 0; sub_row < sub_v.rows(); ++sub_row) {
-      // sp_vec.insertBack(numel + sub_row)
-      sp_vec.insertBack(sub_v[sub_row]);
+      sp_vec.coeffRef(count_so_far + sub_row) = sub_v[sub_row];
     }
+    count_so_far += sub_v.rows();
   }
 
   return sp_vec;
@@ -177,7 +181,6 @@ BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
     const auto& row = rows_.at(block_row_ind);
 
     for (const auto& col_block : row.cols) {
-      // const auto& col = row.cols.at(block_col);
       const int block_col_ind = col_block.first;
       const auto& col = col_block.second;
       const int true_col_num = real_cols_left_of_block(block_col_ind);

@@ -90,7 +90,11 @@ class AcausalOptimizer {
                               int param_ind,
                               Out<BlockSparseMatrix> bsm);
 
+  Solution update_solution(const Solution& soln, const VecXd& delta);
   BlockSparseMatrix populate(const Solution& soln, Out<std::vector<VecXd>> v);
+
+  double cost(const std::vector<VecXd>& residuals);
+
   Dynamics dynamics_;
   std::map<int, TypelessErrorModel> models_;
 
