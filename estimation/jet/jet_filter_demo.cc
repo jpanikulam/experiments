@@ -66,10 +66,11 @@ void go() {
 */
 
 Parameters mock_parameters() {
-  const jcc::Vec3 g(0.0, 0.0, 0.0);
+  const jcc::Vec3 g(0.0, 0.0, 0.1);
   const SE3 vehicle_from_sensor;
   Parameters p;
   p.T_sensor_from_body = vehicle_from_sensor;
+  p.g_world = g;
   return p;
 }
 
@@ -101,8 +102,8 @@ class JetOptimizer {
     pose_opt_.add_measurement(meas, t, fiducial_id_);
   }
 
-  JetPoseOptimizer::Solution solve(const std::vector<State> x) {
-    return pose_opt_.solve({x, mock_parameters()});
+  JetPoseOptimizer::Solution solve(const std::vector<State> x, const Parameters& p) {
+    return pose_opt_.solve({x, p});
   }
 
  private:
@@ -113,7 +114,7 @@ class JetOptimizer {
 };  // namespace jet_filter
 
 void run_filter() {
-  const Parameters p = mock_parameters();
+  const Parameters true_params = mock_parameters();
 
   JetOptimizer jet_opt;
 
@@ -121,18 +122,24 @@ void run_filter() {
   xp0.P.setIdentity();
   xp0.x.eps_ddot[0] = 0.0;
 
+  const State true_x = xp0.x;
+
   JetFilter jf(xp0);
 
-  AccelMeasurement imu_meas;
-  imu_meas.observed_acceleration[0] = 2.0;
-
-  FiducialMeasurement fiducial_meas;
+  // AccelMeasurement imu_meas;
+  // imu_meas.observed_acceleration[0] = 2.0;
 
   std::vector<State> est_states;
 
   TimePoint start_time = {};
-  for (int k = 0; k < 10; ++k) {
+  constexpr int NUM_SIM_STEPS = 100;
+  for (int k = 0; k < NUM_SIM_STEPS; ++k) {
     const TimePoint obs_time = to_duration(k * 0.5) + start_time;
+    const AccelMeasurement imu_meas = {observe_accel(true_x, true_params)};
+    const FiducialMeasurement fiducial_meas = observe_fiducial(true_x, true_params);
+
+    std::cout << "Accel: " << imu_meas.observed_acceleration.transpose() << std::endl;
+
     jf.measure_imu(imu_meas, obs_time);
     jet_opt.measure_imu(imu_meas, obs_time);
     jf.free_run();
@@ -143,23 +150,25 @@ void run_filter() {
     jf.free_run();
     est_states.push_back(jf.state().x);
 
-    /*
     const auto xp = jf.state();
-    std::cout << "eps_dot   : " << xp.x.eps_dot.transpose() << std::endl;
-    std::cout << "eps_ddot  : " << xp.x.eps_ddot.transpose() << std::endl;
-    std::cout << "accel_bias: " << xp.x.accel_bias.transpose() << std::endl;
-    std::cout << "gyro_bias : " << xp.x.gyro_bias.transpose() << std::endl;
+    std::cout << "k: " << k << std::endl;
+    std::cout << "\teps_dot   : " << xp.x.eps_dot.transpose() << std::endl;
+    std::cout << "\teps_ddot  : " << xp.x.eps_ddot.transpose() << std::endl;
+    std::cout << "\taccel_bias: " << xp.x.accel_bias.transpose() << std::endl;
+    std::cout << "\tgyro_bias : " << xp.x.gyro_bias.transpose() << std::endl;
 
-    std::cout << "Modelled Error: " << accel_error_model(xp.x, imu_meas, p).transpose()
-              << std::endl;
+    std::cout << "\tModelled Error: "
+              << accel_error_model(xp.x, imu_meas, true_params).transpose() << std::endl;
     const auto res = observe_accel(xp.x, mock_parameters());
-    std::cout << "Expected Accel: " << res.transpose() << std::endl;
-    */
+    std::cout << "\tExpected Measurement: " << res.transpose() << std::endl;
   }
 
   // Do the optimization
 
-  const auto solazn = jet_opt.solve(est_states);
+  std::vector<State> init(NUM_SIM_STEPS, xp0.x);
+  // const auto solution = jet_opt.solve(est_states, {});
+  const auto solution = jet_opt.solve(init, {});
+  std::cout << "Optimized g: " << solution.p.g_world.transpose() << std::endl;
 }
 
 }  // namespace jet_filter
