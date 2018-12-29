@@ -9,115 +9,88 @@ VecNd<3> observe_accel(const State &state, const Parameters &parameters) {
   const MatNd<6, 6> adj = sensor_from_vehicle.Adj();
   const VecNd<6> eps_ddot = state.eps_ddot;
   const VecNd<3> a = (adj * eps_ddot).block<3, 1>(0, 0);
-  const VecNd<6> eps_dot = state.eps_dot;
-  const VecNd<3> w = (adj * eps_dot).block<3, 1>(3, 0);
-  const VecNd<3> v = (adj * eps_dot).block<3, 1>(0, 0);
   const SE3 vehicle_from_world = state.T_body_from_world;
   const SO3 R_sensor_from_world =
       (sensor_from_vehicle * vehicle_from_world).so3();
   const VecNd<3> g_world = parameters.g_world;
   const VecNd<3> g_imu = R_sensor_from_world * g_world;
-  const VecNd<3> accel_bias = state.accel_bias;
+  const VecNd<6> eps_dot = state.eps_dot;
+  const VecNd<3> w = (adj * eps_dot).block<3, 1>(3, 0);
+  const VecNd<3> v = (adj * eps_dot).block<3, 1>(0, 0);
   const VecNd<3> clean = (w.cross(v)) - a;
+  const VecNd<3> accel_bias = state.accel_bias;
   const VecNd<3> observed_acceleration = (clean + g_imu) + accel_bias;
   return observed_acceleration;
 }
 VecNd<24> to_vector(const StateDelta &in_grp) {
   const VecNd<24> out =
-      (VecNd<24>() << ((in_grp.eps_dot_error)[0]), ((in_grp.eps_dot_error)[1]),
+      (VecNd<24>() << ((in_grp.accel_bias_error)[0]),
+       ((in_grp.accel_bias_error)[1]), ((in_grp.accel_bias_error)[2]),
+       ((in_grp.eps_ddot_error)[0]), ((in_grp.eps_ddot_error)[1]),
+       ((in_grp.eps_ddot_error)[2]), ((in_grp.eps_ddot_error)[3]),
+       ((in_grp.eps_ddot_error)[4]), ((in_grp.eps_ddot_error)[5]),
+       ((in_grp.eps_dot_error)[0]), ((in_grp.eps_dot_error)[1]),
        ((in_grp.eps_dot_error)[2]), ((in_grp.eps_dot_error)[3]),
        ((in_grp.eps_dot_error)[4]), ((in_grp.eps_dot_error)[5]),
-       ((in_grp.T_body_from_world_error_log)[0]),
+       ((in_grp.gyro_bias_error)[0]), ((in_grp.gyro_bias_error)[1]),
+       ((in_grp.gyro_bias_error)[2]), ((in_grp.T_body_from_world_error_log)[0]),
        ((in_grp.T_body_from_world_error_log)[1]),
        ((in_grp.T_body_from_world_error_log)[2]),
        ((in_grp.T_body_from_world_error_log)[3]),
        ((in_grp.T_body_from_world_error_log)[4]),
-       ((in_grp.T_body_from_world_error_log)[5]), ((in_grp.eps_ddot_error)[0]),
-       ((in_grp.eps_ddot_error)[1]), ((in_grp.eps_ddot_error)[2]),
-       ((in_grp.eps_ddot_error)[3]), ((in_grp.eps_ddot_error)[4]),
-       ((in_grp.eps_ddot_error)[5]), ((in_grp.gyro_bias_error)[0]),
-       ((in_grp.gyro_bias_error)[1]), ((in_grp.gyro_bias_error)[2]),
-       ((in_grp.accel_bias_error)[0]), ((in_grp.accel_bias_error)[1]),
-       ((in_grp.accel_bias_error)[2]))
+       ((in_grp.T_body_from_world_error_log)[5]))
           .finished();
   return out;
 }
 State operator-(const State &a, const State &b) {
   const State difference =
-      State{((a.eps_dot) - (b.eps_dot)),
-            ((a.T_body_from_world) * ((b.T_body_from_world).inverse())),
-            ((a.eps_ddot) - (b.eps_ddot)), ((a.gyro_bias) - (b.gyro_bias)),
-            ((a.accel_bias) - (b.accel_bias))};
+      State{((a.accel_bias) - (b.accel_bias)), ((a.eps_ddot) - (b.eps_ddot)),
+            ((a.eps_dot) - (b.eps_dot)), ((a.gyro_bias) - (b.gyro_bias)),
+            ((a.T_body_from_world) * ((b.T_body_from_world).inverse()))};
   return difference;
 }
 VecNd<24> compute_delta(const State &a, const State &b) {
   const State difference = a - b;
+  const VecNd<3> accel_bias_error = difference.accel_bias;
+  const VecNd<6> eps_ddot_error = difference.eps_ddot;
   const VecNd<6> eps_dot_error = difference.eps_dot;
+  const VecNd<3> gyro_bias_error = difference.gyro_bias;
   const SE3 T_body_from_world_error = difference.T_body_from_world;
   const VecNd<6> T_body_from_world_error_log =
       SE3::log(T_body_from_world_error);
-  const VecNd<6> eps_ddot_error = difference.eps_ddot;
-  const VecNd<3> gyro_bias_error = difference.gyro_bias;
-  const VecNd<3> accel_bias_error = difference.accel_bias;
   const StateDelta delta =
-      StateDelta{eps_dot_error, T_body_from_world_error_log, eps_ddot_error,
-                 gyro_bias_error, accel_bias_error};
+      StateDelta{accel_bias_error, eps_ddot_error, eps_dot_error,
+                 gyro_bias_error, T_body_from_world_error_log};
   const VecNd<24> out_vec = to_vector(delta);
   return out_vec;
 }
-VecNd<27> to_vector(const ParametersDelta &in_grp) {
-  const VecNd<27> out =
-      (VecNd<27>() << ((in_grp.eps_dddot_error)[0]),
-       ((in_grp.eps_dddot_error)[1]), ((in_grp.eps_dddot_error)[2]),
-       ((in_grp.eps_dddot_error)[3]), ((in_grp.eps_dddot_error)[4]),
-       ((in_grp.eps_dddot_error)[5]), ((in_grp.g_world_error)[0]),
-       ((in_grp.g_world_error)[1]), ((in_grp.g_world_error)[2]),
-       ((in_grp.daccel_bias_error)[0]), ((in_grp.daccel_bias_error)[1]),
-       ((in_grp.daccel_bias_error)[2]),
-       ((in_grp.T_sensor_from_body_error_log)[0]),
+VecNd<9> to_vector(const ParametersDelta &in_grp) {
+  const VecNd<9> out =
+      (VecNd<9>() << ((in_grp.g_world_error)[0]), ((in_grp.g_world_error)[1]),
+       ((in_grp.g_world_error)[2]), ((in_grp.T_sensor_from_body_error_log)[0]),
        ((in_grp.T_sensor_from_body_error_log)[1]),
        ((in_grp.T_sensor_from_body_error_log)[2]),
        ((in_grp.T_sensor_from_body_error_log)[3]),
        ((in_grp.T_sensor_from_body_error_log)[4]),
-       ((in_grp.T_sensor_from_body_error_log)[5]),
-       ((in_grp.dgyro_bias_error)[0]), ((in_grp.dgyro_bias_error)[1]),
-       ((in_grp.dgyro_bias_error)[2]),
-       ((in_grp.T_camera_from_body_error_log)[0]),
-       ((in_grp.T_camera_from_body_error_log)[1]),
-       ((in_grp.T_camera_from_body_error_log)[2]),
-       ((in_grp.T_camera_from_body_error_log)[3]),
-       ((in_grp.T_camera_from_body_error_log)[4]),
-       ((in_grp.T_camera_from_body_error_log)[5]))
+       ((in_grp.T_sensor_from_body_error_log)[5]))
           .finished();
   return out;
 }
 Parameters operator-(const Parameters &a, const Parameters &b) {
   const Parameters difference =
-      Parameters{((a.eps_dddot) - (b.eps_dddot)),
-                 ((a.g_world) - (b.g_world)),
-                 ((a.daccel_bias) - (b.daccel_bias)),
-                 ((a.T_sensor_from_body) * ((b.T_sensor_from_body).inverse())),
-                 ((a.dgyro_bias) - (b.dgyro_bias)),
-                 ((a.T_camera_from_body) * ((b.T_camera_from_body).inverse()))};
+      Parameters{((a.g_world) - (b.g_world)),
+                 ((a.T_sensor_from_body) * ((b.T_sensor_from_body).inverse()))};
   return difference;
 }
-VecNd<27> compute_delta(const Parameters &a, const Parameters &b) {
+VecNd<9> compute_delta(const Parameters &a, const Parameters &b) {
   const Parameters difference = a - b;
   const VecNd<3> g_world_error = difference.g_world;
-  const VecNd<6> eps_dddot_error = difference.eps_dddot;
-  const VecNd<3> daccel_bias_error = difference.daccel_bias;
   const SE3 T_sensor_from_body_error = difference.T_sensor_from_body;
   const VecNd<6> T_sensor_from_body_error_log =
       SE3::log(T_sensor_from_body_error);
-  const VecNd<3> dgyro_bias_error = difference.dgyro_bias;
-  const SE3 T_camera_from_body_error = difference.T_camera_from_body;
-  const VecNd<6> T_camera_from_body_error_log =
-      SE3::log(T_camera_from_body_error);
   const ParametersDelta delta =
-      ParametersDelta{eps_dddot_error,   g_world_error,
-                      daccel_bias_error, T_sensor_from_body_error_log,
-                      dgyro_bias_error,  T_camera_from_body_error_log};
-  const VecNd<27> out_vec = to_vector(delta);
+      ParametersDelta{g_world_error, T_sensor_from_body_error_log};
+  const VecNd<9> out_vec = to_vector(delta);
   return out_vec;
 }
 VecNd<3> to_vector(const AccelMeasurementDelta &in_grp) {
@@ -142,38 +115,38 @@ VecNd<3> compute_delta(const AccelMeasurement &a, const AccelMeasurement &b) {
   return out_vec;
 }
 StateDot compute_qdot(const State &Q, const Parameters &Z) {
-  const VecNd<6> eps_dddot = Z.eps_dddot;
+  const VecNd<3> gyro_bias_dot = VecNd<3>::Zero();
   const VecNd<6> eps_dot = Q.eps_dot;
   const VecNd<6> eps_ddot = Q.eps_ddot;
-  const VecNd<3> dgyro_bias = Z.dgyro_bias;
-  const VecNd<3> daccel_bias = Z.daccel_bias;
+  const VecNd<3> accel_bias_dot = VecNd<3>::Zero();
+  const VecNd<6> eps_ddot_dot = VecNd<6>::Zero();
   const StateDot Qdot =
-      StateDot{eps_ddot, eps_dot, eps_dddot, dgyro_bias, daccel_bias};
+      StateDot{accel_bias_dot, eps_ddot_dot, eps_ddot, gyro_bias_dot, eps_dot};
   return Qdot;
 }
 StateDot operator*(const double h, const StateDot &K1) {
-  const StateDot anon_c62aeb =
-      StateDot{(h * (K1.eps_ddot)), (h * (K1.eps_dot)), (h * (K1.eps_dddot)),
-               (h * (K1.dgyro_bias)), (h * (K1.daccel_bias))};
-  return anon_c62aeb;
+  const StateDot anon_9d3cbc = StateDot{
+      (h * (K1.accel_bias_dot)), (h * (K1.eps_ddot_dot)), (h * (K1.eps_ddot)),
+      (h * (K1.gyro_bias_dot)), (h * (K1.eps_dot))};
+  return anon_9d3cbc;
 }
-State operator+(const State &Q, const StateDot &anon_cc31e3) {
+State operator+(const State &Q, const StateDot &anon_69aa5a) {
   const State Q2 =
-      State{((Q.eps_dot) + (anon_cc31e3.eps_ddot)),
-            ((SE3::exp((anon_cc31e3.eps_dot))) * (Q.T_body_from_world)),
-            ((Q.eps_ddot) + (anon_cc31e3.eps_dddot)),
-            ((Q.gyro_bias) + (anon_cc31e3.dgyro_bias)),
-            ((Q.accel_bias) + (anon_cc31e3.daccel_bias))};
+      State{((Q.accel_bias) + (anon_69aa5a.accel_bias_dot)),
+            ((Q.eps_ddot) + (anon_69aa5a.eps_ddot_dot)),
+            ((Q.eps_dot) + (anon_69aa5a.eps_ddot)),
+            ((Q.gyro_bias) + (anon_69aa5a.gyro_bias_dot)),
+            ((SE3::exp((anon_69aa5a.eps_dot))) * (Q.T_body_from_world))};
   return Q2;
 }
-StateDot operator+(const StateDot &anon_c62aeb, const StateDot &anon_ebb5e4) {
-  const StateDot anon_f4c7b2 =
-      StateDot{((anon_c62aeb.eps_ddot) + (anon_ebb5e4.eps_ddot)),
-               ((anon_c62aeb.eps_dot) + (anon_ebb5e4.eps_dot)),
-               ((anon_c62aeb.eps_dddot) + (anon_ebb5e4.eps_dddot)),
-               ((anon_c62aeb.dgyro_bias) + (anon_ebb5e4.dgyro_bias)),
-               ((anon_c62aeb.daccel_bias) + (anon_ebb5e4.daccel_bias))};
-  return anon_f4c7b2;
+StateDot operator+(const StateDot &anon_9d3cbc, const StateDot &anon_e44211) {
+  const StateDot anon_e8e727 =
+      StateDot{((anon_9d3cbc.accel_bias_dot) + (anon_e44211.accel_bias_dot)),
+               ((anon_9d3cbc.eps_ddot_dot) + (anon_e44211.eps_ddot_dot)),
+               ((anon_9d3cbc.eps_ddot) + (anon_e44211.eps_ddot)),
+               ((anon_9d3cbc.gyro_bias_dot) + (anon_e44211.gyro_bias_dot)),
+               ((anon_9d3cbc.eps_dot) + (anon_e44211.eps_dot))};
+  return anon_e8e727;
 }
 State rk4_integrate(const State &Q, const Parameters &Z, const double h) {
   const double half = 0.5;
@@ -192,33 +165,33 @@ State rk4_integrate(const State &Q, const Parameters &Z, const double h) {
   return Qn;
 }
 State operator+(const State &a, const StateDelta &grp_b) {
-  const State out = State{
-      ((a.eps_dot) + (grp_b.eps_dot_error)),
-      ((SE3::exp((grp_b.T_body_from_world_error_log))) * (a.T_body_from_world)),
-      ((a.eps_ddot) + (grp_b.eps_ddot_error)),
-      ((a.gyro_bias) + (grp_b.gyro_bias_error)),
-      ((a.accel_bias) + (grp_b.accel_bias_error))};
+  const State out = State{((a.accel_bias) + (grp_b.accel_bias_error)),
+                          ((a.eps_ddot) + (grp_b.eps_ddot_error)),
+                          ((a.eps_dot) + (grp_b.eps_dot_error)),
+                          ((a.gyro_bias) + (grp_b.gyro_bias_error)),
+                          ((SE3::exp((grp_b.T_body_from_world_error_log))) *
+                           (a.T_body_from_world))};
   return out;
 }
 StateDelta from_vector(const VecNd<24> &in_vec) {
-  const VecNd<3> anon_e4979d =
-      (VecNd<3>() << (in_vec[21]), (in_vec[22]), (in_vec[23])).finished();
-  const VecNd<6> anon_1ee84d =
-      (VecNd<6>() << (in_vec[0]), (in_vec[1]), (in_vec[2]), (in_vec[3]),
-       (in_vec[4]), (in_vec[5]))
+  const VecNd<3> anon_076207 =
+      (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
+  const VecNd<6> anon_003187 =
+      (VecNd<6>() << (in_vec[3]), (in_vec[4]), (in_vec[5]), (in_vec[6]),
+       (in_vec[7]), (in_vec[8]))
           .finished();
-  const VecNd<3> anon_67b210 =
-      (VecNd<3>() << (in_vec[18]), (in_vec[19]), (in_vec[20])).finished();
-  const VecNd<6> anon_bdaf6d =
-      (VecNd<6>() << (in_vec[12]), (in_vec[13]), (in_vec[14]), (in_vec[15]),
-       (in_vec[16]), (in_vec[17]))
+  const VecNd<6> anon_db4c99 =
+      (VecNd<6>() << (in_vec[9]), (in_vec[10]), (in_vec[11]), (in_vec[12]),
+       (in_vec[13]), (in_vec[14]))
           .finished();
-  const VecNd<6> anon_75f1be =
-      (VecNd<6>() << (in_vec[6]), (in_vec[7]), (in_vec[8]), (in_vec[9]),
-       (in_vec[10]), (in_vec[11]))
+  const VecNd<3> anon_b72896 =
+      (VecNd<3>() << (in_vec[15]), (in_vec[16]), (in_vec[17])).finished();
+  const VecNd<6> anon_4344f6 =
+      (VecNd<6>() << (in_vec[18]), (in_vec[19]), (in_vec[20]), (in_vec[21]),
+       (in_vec[22]), (in_vec[23]))
           .finished();
-  const StateDelta out = StateDelta{anon_1ee84d, anon_75f1be, anon_bdaf6d,
-                                    anon_67b210, anon_e4979d};
+  const StateDelta out = StateDelta{anon_076207, anon_003187, anon_db4c99,
+                                    anon_b72896, anon_4344f6};
   return out;
 }
 State apply_delta(const State &a, const VecNd<24> &delta) {
@@ -228,41 +201,22 @@ State apply_delta(const State &a, const VecNd<24> &delta) {
 }
 Parameters operator+(const Parameters &a, const ParametersDelta &grp_b) {
   const Parameters out =
-      Parameters{((a.eps_dddot) + (grp_b.eps_dddot_error)),
-                 ((a.g_world) + (grp_b.g_world_error)),
-                 ((a.daccel_bias) + (grp_b.daccel_bias_error)),
+      Parameters{((a.g_world) + (grp_b.g_world_error)),
                  ((SE3::exp((grp_b.T_sensor_from_body_error_log))) *
-                  (a.T_sensor_from_body)),
-                 ((a.dgyro_bias) + (grp_b.dgyro_bias_error)),
-                 ((SE3::exp((grp_b.T_camera_from_body_error_log))) *
-                  (a.T_camera_from_body))};
+                  (a.T_sensor_from_body))};
   return out;
 }
-ParametersDelta from_vector(const VecNd<27> &in_vec) {
-  const VecNd<3> anon_5eb84f =
-      (VecNd<3>() << (in_vec[9]), (in_vec[10]), (in_vec[11])).finished();
-  const VecNd<6> anon_4ec112 =
-      (VecNd<6>() << (in_vec[0]), (in_vec[1]), (in_vec[2]), (in_vec[3]),
-       (in_vec[4]), (in_vec[5]))
+ParametersDelta from_vector(const VecNd<9> &in_vec) {
+  const VecNd<3> anon_f36c07 =
+      (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
+  const VecNd<6> anon_77b0f5 =
+      (VecNd<6>() << (in_vec[3]), (in_vec[4]), (in_vec[5]), (in_vec[6]),
+       (in_vec[7]), (in_vec[8]))
           .finished();
-  const VecNd<3> anon_de973c =
-      (VecNd<3>() << (in_vec[6]), (in_vec[7]), (in_vec[8])).finished();
-  const VecNd<6> anon_b97d61 =
-      (VecNd<6>() << (in_vec[12]), (in_vec[13]), (in_vec[14]), (in_vec[15]),
-       (in_vec[16]), (in_vec[17]))
-          .finished();
-  const VecNd<3> anon_3e76d2 =
-      (VecNd<3>() << (in_vec[18]), (in_vec[19]), (in_vec[20])).finished();
-  const VecNd<6> anon_699a8c =
-      (VecNd<6>() << (in_vec[21]), (in_vec[22]), (in_vec[23]), (in_vec[24]),
-       (in_vec[25]), (in_vec[26]))
-          .finished();
-  const ParametersDelta out =
-      ParametersDelta{anon_4ec112, anon_de973c, anon_5eb84f,
-                      anon_b97d61, anon_3e76d2, anon_699a8c};
+  const ParametersDelta out = ParametersDelta{anon_f36c07, anon_77b0f5};
   return out;
 }
-Parameters apply_delta(const Parameters &a, const VecNd<27> &delta) {
+Parameters apply_delta(const Parameters &a, const VecNd<9> &delta) {
   const ParametersDelta grp_b = from_vector(delta);
   const Parameters out = a + grp_b;
   return out;
@@ -274,9 +228,9 @@ AccelMeasurement operator+(const AccelMeasurement &a,
   return out;
 }
 AccelMeasurementDelta from_vector(const VecNd<3> &in_vec) {
-  const VecNd<3> anon_431961 =
+  const VecNd<3> anon_07fd0b =
       (VecNd<3>() << (in_vec[0]), (in_vec[1]), (in_vec[2])).finished();
-  const AccelMeasurementDelta out = AccelMeasurementDelta{anon_431961};
+  const AccelMeasurementDelta out = AccelMeasurementDelta{anon_07fd0b};
   return out;
 }
 AccelMeasurement apply_delta(const AccelMeasurement &a, const VecNd<3> &delta) {
