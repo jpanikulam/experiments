@@ -22,6 +22,7 @@ cv::Mat Camera::capture_framebuffer() const {
   const cv::Mat image(HEIGHT, WIDTH, IM_CV_TYPE, out_data);
   cv::Mat flipped;
   cv::flip(image, flipped, 0);
+  delete out_data;
   return flipped;
 }
 
