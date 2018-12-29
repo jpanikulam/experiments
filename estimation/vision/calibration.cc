@@ -11,11 +11,11 @@ void CalibrationManager::add_camera_image(const cv::Mat image) {
   all_camera_images_.push_back(image);
 }
 
-const int CalibrationManager::num_images_collected() {
+int CalibrationManager::num_images_collected() const{
   return all_camera_images_.size();
 }
 
-const CameraIntrinsics CalibrationManager::calibrate() {
+CameraIntrinsics CalibrationManager::calibrate() const{
   // based on
   // https://github.com/sourishg/stereo-calibration/blob/master/calib_intrinsic.cpp
   assert(all_camera_images_.size() > 0);
