@@ -3,7 +3,7 @@
 
 #include "eigen.hh"
 
-#include <gtest/gtest.h>
+#include "testing/gtest.hh"
 
 using Vec1 = Eigen::Matrix<double, 1, 1>;
 using Vec2 = Eigen::Vector2d;
@@ -25,7 +25,7 @@ MatNd<2, 3> dzfunc_da(const Vec3& a) {
   J.row(1) << 0.0, 0.0, 4.0;
   return J;
 }
-}
+}  // namespace
 
 TEST(NumericalGradient, gfunc) {
   constexpr double EPS = 1e-6;
@@ -52,8 +52,8 @@ TEST(NumericalGradient, gfunc) {
 }
 
 TEST(NumericalJacobian, zfunc) {
-  const std::vector<Vec3> test_pts = {
-      Vec3(0.0, 0.0, 0.0), Vec3(1.0, -2.0, 7.0), Vec3(9.0, -12.0, 0.0), Vec3(1.0, 2.0, 1.0)};
+  const std::vector<Vec3> test_pts = {Vec3(0.0, 0.0, 0.0), Vec3(1.0, -2.0, 7.0),
+                                      Vec3(9.0, -12.0, 0.0), Vec3(1.0, 2.0, 1.0)};
 
   for (const auto x : test_pts) {
     const MatNd<2, 3> J = numerical_jacobian<2>(x, zfunc);
@@ -64,8 +64,8 @@ TEST(NumericalJacobian, zfunc) {
   }
 }
 TEST(NumericalHessian, ufunc) {
-  const std::vector<Vec3> test_pts = {
-      Vec3(0.0, 0.0, 0.0), Vec3(1.0, -2.0, 7.0), Vec3(9.0, -12.0, 0.0), Vec3(1.0, 2.0, 1.0)};
+  const std::vector<Vec3> test_pts = {Vec3(0.0, 0.0, 0.0), Vec3(1.0, -2.0, 7.0),
+                                      Vec3(9.0, -12.0, 0.0), Vec3(1.0, 2.0, 1.0)};
 
   using TMat = Eigen::Matrix<double, 3, 3>;
   const TMat A_u = TMat::Random();
@@ -80,9 +80,4 @@ TEST(NumericalHessian, ufunc) {
     EXPECT_LT((numerical_hess - hessian).norm(), EPS);
   }
 }
-}
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+}  // namespace numerics

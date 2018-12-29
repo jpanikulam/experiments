@@ -152,8 +152,6 @@ def discover_unlabelled_libs(tree):
                     'hdrs': [hdr_file],
                     'header_only': True
                 })
-            else:
-                Log.warn("Pure-header library found: {}; You may have to manually manage deps".format(raw_name))
 
 
 def build_dependency_table(all_tree, repo_path):
