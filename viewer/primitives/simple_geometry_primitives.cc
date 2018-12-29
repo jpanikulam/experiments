@@ -21,7 +21,8 @@ void draw_axes(const Axes &axes) {
   glScaled(axes.scale, axes.scale, axes.scale);
 
   if (axes.dotted) {
-    glLineStipple(1.0, 0x1010);
+    glEnable(GL_LINE_STIPPLE);
+    glLineStipple(1.0, 0x00FF);
   }
   glLineWidth(axes.line_width);
 
