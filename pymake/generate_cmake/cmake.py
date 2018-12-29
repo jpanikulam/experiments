@@ -5,7 +5,9 @@ from generate_cmake.log import Log
 
 
 def _reduce_srcs(sources, base_directory, prejoin="${PROJECT_SOURCE_DIR}"):
-    return map(lambda o: os.path.join(prejoin, o.replace(base_directory + '/', "")), sources)
+    # return map(lambda o: os.path.join(prejoin, o.replace(base_directory + '/', "")), sources)
+    # return map(lambda o: os.path.join(prejoin, o.replace(base_directory + '/', "")), sources)
+    return sources
 
 
 def create_lib(build_item, base_directory=""):
