@@ -286,9 +286,9 @@ void go() {
       }
     }
     jet_geo->flip();
+    view->spin_until_step();
   }
 
-  view->spin_until_step();
   cv::destroyAllWindows();
 }
 
