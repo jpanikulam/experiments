@@ -94,12 +94,10 @@ BlockSparseMatrix AcausalOptimizer<Prob>::populate(const Solution& soln,
   const int p_ind = n_states;
 
   const auto& p = soln.p;
-  const auto& measurements = heap_.backing();
+  const auto& measurements = heap_.to_sorted_vector();
   for (int t = 0; t < static_cast<int>(measurements.size()); ++t) {
-    const auto& z_t = measurements[t];
+    const auto& z_t = measurements.at(t);
 
-    const double dt =
-        to_seconds(measurements[t + 1].time_of_validity - z_t.time_of_validity);
     // TODO: Do something special if dt == 0
     // Options:
     // -> Share a measurement on a state
@@ -115,6 +113,10 @@ BlockSparseMatrix AcausalOptimizer<Prob>::populate(const Solution& soln,
     (*v)[z_ind] = y_obs;
 
     if (t < static_cast<int>(soln.x.size()) - 1) {
+      const double dt =
+          to_seconds(measurements.at(t + 1).time_of_validity - z_t.time_of_validity);
+      assert(dt > 0.0);
+
       const State& x_t1 = soln.x.at(t + 1);
       const VecXd y_dyn =
           add_dynamics_residual(x_t, x_t1, p, dt, x_ind, z_ind + 1, p_ind, out(J));
@@ -156,26 +158,41 @@ double AcausalOptimizer<Prob>::cost(const std::vector<VecXd>& residuals) {
 
 template <typename Prob>
 typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
-    const Solution& initialization) {
+    const Solution& initialization, const Visitor& visitor) {
   assert(initialization.x.size() == heap_.size());
   Solution soln = initialization;
 
   // Generate our jacobian
 
-  for (int k = 0; k < 5; ++k) {
+  for (int k = 0; k < 55; ++k) {
+    std::cout << "\n-------" << std::endl;
     std::vector<VecXd> v;
     const BlockSparseMatrix J_bsm = populate(soln, out(v));
 
-    std::cout << "cost before: " << cost(v) << std::endl;
-    const VecXd delta = J_bsm.solve_lst_sq(v);
+    std::cout << "Cost at [" << k << "]: " << cost(v) << std::endl;
+    double lambda = 0.5;
+    if (k < 2) {
+      lambda = 5.0;
+    } else if (k < 5) {
+      lambda = 2.0;
+    }
+
+    if (k > 45) {
+      lambda = 1e-6;
+    }
+
+    const VecXd delta = J_bsm.solve_lst_sq(v, lambda);
     const auto new_soln = update_solution(soln, delta);
 
-    {
-      std::vector<VecXd> v2;
-      const BlockSparseMatrix J_bsm2 = populate(new_soln, out(v2));
-      std::cout << "cost after: " << cost(v2) << std::endl;
+    if (visitor) {
+      visitor(new_soln);
     }
     soln = new_soln;
+  }
+  {
+    std::vector<VecXd> v_final;
+    const BlockSparseMatrix J_bsm_final = populate(soln, out(v_final));
+    std::cout << "Cost Final: " << cost(v_final) << std::endl;
   }
 
   return soln;

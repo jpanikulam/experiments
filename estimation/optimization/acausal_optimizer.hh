@@ -70,7 +70,8 @@ class AcausalOptimizer {
     heap_.push({block_type, z, time_of_validity});
   }
 
-  Solution solve(const Solution& initialization);
+  using Visitor = std::function<void(const Solution&)>;
+  Solution solve(const Solution& initialization, const Visitor& visitor = {});
 
  private:
   VecXd add_observation_residual(const State& x,
