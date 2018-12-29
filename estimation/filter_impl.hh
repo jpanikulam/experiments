@@ -31,7 +31,7 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
   const State x_new = dynamics_fixed_dt(xp.x);
 
   const MatNd<State::DIM, State::DIM> P_new =
-      A * xp.P * A.transpose() + (Q * to_seconds(dt));
+      (A * xp.P * A.transpose()) + (Q * to_seconds(dt));
   return {x_new, P_new, xp.time_of_validity + dt};
 }
 
@@ -63,7 +63,7 @@ FilterState<State> Ekf<State>::service_all_measurements(
     const FilterStateUpdate<State> update = observer(x_hat, meas.observation);
 
     x_hat.x = apply_delta(x_hat.x, update.dx);
-    x_hat.P = update.P_new;
+    x_hat.P = (update.P_new + update.P_new.transpose()) * 0.5;
 
     measurements_.pop();
   }
