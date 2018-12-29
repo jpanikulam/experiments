@@ -7,18 +7,18 @@ constexpr int BOARD_WIDTH = 9;
 constexpr int BOARD_HEIGHT = 6;
 constexpr float SQUARE_SIZE = .1;
 
-void CalibrationManager::add_camera_image(cv::Mat image) {
-  all_camera_images.push_back(image);
+void CalibrationManager::add_camera_image(const cv::Mat image) {
+  all_camera_images_.push_back(image);
 }
 
-int CalibrationManager::num_images_collected() {
-  return all_camera_images.size();
+const int CalibrationManager::num_images_collected() {
+  return all_camera_images_.size();
 }
 
 const CameraIntrinsics CalibrationManager::calibrate() {
   // based on
   // https://github.com/sourishg/stereo-calibration/blob/master/calib_intrinsic.cpp
-  assert(all_camera_images.size() > 0);
+  assert(all_camera_images_.size() > 0);
 
   const auto board_size = cv::Size(BOARD_WIDTH, BOARD_HEIGHT);
 
@@ -31,7 +31,7 @@ const CameraIntrinsics CalibrationManager::calibrate() {
     for (int j = 0; j < BOARD_WIDTH; j++)
       obj.push_back(cv::Point3f((float)j * SQUARE_SIZE, (float)i * SQUARE_SIZE, 0));
 
-  for (auto const& image : all_camera_images) {
+  for (auto const& image : all_camera_images_) {
     cv::Mat gray;
     std::vector<cv::Point2f> corners;
 
@@ -53,7 +53,7 @@ const CameraIntrinsics CalibrationManager::calibrate() {
   int flag = 0;
   flag |= CV_CALIB_FIX_K4;
   flag |= CV_CALIB_FIX_K5;
-  cv::calibrateCamera(object_points, image_points, all_camera_images[0].size(), K, D,
+  cv::calibrateCamera(object_points, image_points, all_camera_images_[0].size(), K, D,
                       rvecs, tvecs, flag);
 
   CameraIntrinsics result;

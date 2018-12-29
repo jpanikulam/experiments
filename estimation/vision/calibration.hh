@@ -19,12 +19,12 @@ struct CameraIntrinsics{
 
 class CalibrationManager {
  private:
-  std::vector<cv::Mat> all_camera_images;
+  std::vector<cv::Mat> all_camera_images_;
 
  public:
-  void add_camera_image(cv::Mat image);
+  void add_camera_image(const cv::Mat image);
 
-  int num_images_collected();
+  const int num_images_collected();
 
   const CameraIntrinsics calibrate();
 };

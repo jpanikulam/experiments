@@ -5,7 +5,7 @@
 namespace estimation {
 namespace vision {
 
-std::vector<MarkerDetection> detect_markers(cv::Mat inputImage) {
+std::vector<MarkerDetection> detect_markers(const cv::Mat inputImage) {
   cv::Ptr<cv::aruco::Dictionary> dictionary =
       cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
   std::vector<int> ids;
@@ -15,12 +15,6 @@ std::vector<MarkerDetection> detect_markers(cv::Mat inputImage) {
 
   cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 320, 0, 320, 0, 320, 320, 0, 0, 1);
 
-  // webcam
-  // cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 509.55744588, 0, 331.84201483,
-  //                                            0, 512.03515271, 250.87030742,
-  //                                            0, 0, 1);
-  // cv::Mat distortionCoefficients = (cv::Mat1d(1, 8) << -0.0953, 0.108,
-  // 0.0455, -0.0312, -0.032);
   const cv::Mat distortionCoefficients = (cv::Mat1d(1, 8) << 0, 0, 0, 0, 0);
 
   cv::aruco::estimatePoseSingleMarkers(corners, 0.49375, cameraMatrix,
@@ -47,7 +41,7 @@ std::vector<MarkerDetection> detect_markers(cv::Mat inputImage) {
 
 std::vector<MarkerInWorld> get_world_from_marker_centers(const cv::Mat camera_image,
                                                          const SE3 world_from_camera) {
-  std::vector<MarkerDetection> marker_detections =
+  const std::vector<MarkerDetection> marker_detections =
       estimation::vision::detect_markers(camera_image);
   std::vector<MarkerInWorld> result;
   for (auto const& image_detection : marker_detections) {

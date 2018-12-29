@@ -67,7 +67,7 @@ void put_camera_projection(viewer::SimpleGeometry& geo, const viewer::Camera& ca
   geo.add_line({bottom_right_ray(length), bottom_left_ray(length), red});
 }
 
-void draw_fidudical_detections(cv::Mat localization_camera_image_rgb,
+void draw_fidudical_detections(const cv::Mat localization_camera_image_rgb,
                                const SE3 world_from_opengl_camera,
                                std::shared_ptr<viewer::SimpleGeometry> geo) {
   const auto opengl_camera_from_opencv_camera =
@@ -79,7 +79,6 @@ void draw_fidudical_detections(cv::Mat localization_camera_image_rgb,
       localization_camera_image_rgb, world_from_camera);
 
   for (auto const& marker_detection_world_space : world_from_markers) {
-    std::cout << "HEELLLOOO" << std::endl;
     geo->add_line({world_from_opengl_camera.translation(),
                    marker_detection_world_space.world_from_marker.translation(),
                    jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
@@ -250,8 +249,6 @@ void go() {
     draw_fidudical_detections(camera_image_rgb, world_from_jet * jet_from_camera,
                               jet_geo);
 
-    jet_geo->add_line(
-        {jcc::Vec3(1, 1, -1), jcc::Vec3(1, 5, -10), jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
 
     if (SHOW_CAMERA) {
       cv::imshow("Localization Camera", camera_image_rgb);
