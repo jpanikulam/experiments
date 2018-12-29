@@ -24,9 +24,9 @@ class CalibrationManager {
  public:
   void add_camera_image(const cv::Mat image);
 
-  const int num_images_collected();
+  int num_images_collected() const;
 
-  const CameraIntrinsics calibrate();
+  CameraIntrinsics calibrate() const;
 };
 
 }  // namespace vision
