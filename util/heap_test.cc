@@ -72,4 +72,16 @@ TEST(Heap, pushpoppushpop) {
   heap.pop();
   EXPECT_EQ(heap.top(), 0);
 }
+
+TEST(Heap, pop) {
+  Heap<int> heap;
+
+  heap.push(1);
+  heap.push(0);
+  heap.push(2);
+
+  EXPECT_EQ(heap.pop(), 2);
+  EXPECT_EQ(heap.pop(), 1);
+  EXPECT_EQ(heap.pop(), 0);
 }
+}  // namespace jcc

@@ -56,8 +56,14 @@ class Heap {
     return vector_.empty();
   }
 
-  const std::vector<T> &backing() const {
-    return vector_;
+  std::vector<T> to_sorted_vector() const {
+    Heap heap2 = *this;
+    std::vector<T> result;
+    while (!heap2.empty()) {
+      result.push_back(heap2.top());
+      heap2.drop();
+    }
+    return result;
   }
 
  private:
