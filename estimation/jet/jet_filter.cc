@@ -16,6 +16,7 @@ Parameters get_parameters() {
   const SE3 vehicle_from_sensor;
   Parameters p;
   p.T_sensor_from_body = vehicle_from_sensor;
+  p.g_world = g;
   return p;
 }
 
@@ -45,7 +46,10 @@ jcc::Vec3 accel_error_model(const State& x,
 
 FiducialMeasurement observe_fiducial(const State& x, const Parameters& p) {
   FiducialMeasurement meas;
-  const SE3 T_camera_from_world = p.T_camera_from_body * x.T_body_from_world;
+  // const SE3 T_camera_from_world = p.T_camera_from_body * x.T_body_from_world;
+  const SE3 T_camera_from_body = SE3();
+  const SE3 T_camera_from_world = T_camera_from_body * x.T_body_from_world;
+
   meas.T_fiducial_from_camera = fiducial_1_from_world * T_camera_from_world.inverse();
   return meas;
 }
