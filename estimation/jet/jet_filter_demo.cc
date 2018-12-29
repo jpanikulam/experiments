@@ -91,11 +91,10 @@ void draw_states(viewer::SimpleGeometry& geo,
                  bool truth) {
   for (const auto& state : states) {
     const SE3 T_world_from_body = state.T_body_from_world.inverse();
-
     if (truth) {
-      geo.add_axes({T_world_from_body, 0.5, 2.0, true});
-    } else {
       geo.add_axes({T_world_from_body, 1.0});
+    } else {
+      geo.add_axes({T_world_from_body, 0.5, 2.0, true});
     }
   }
 }
@@ -117,7 +116,16 @@ class JetOptimizer {
   }
 
   JetPoseOptimizer::Solution solve(const std::vector<State> x, const Parameters& p) {
-    return pose_opt_.solve({x, p});
+    const auto visitor = [](const JetPoseOptimizer::Solution& soln) {
+      const auto view = viewer::get_window3d("Mr. Filter, filters");
+      const auto geo = view->add_primitive<viewer::SimpleGeometry>();
+      draw_states(*geo, soln.x, false);
+      geo->flip();
+      view->spin_until_step();
+      geo->clear();
+    };
+
+    return pose_opt_.solve({x, p}, visitor);
   }
 
  private:
@@ -190,18 +198,16 @@ void run_filter() {
   }
 
   // Do the optimization
-
-  // const auto solution = jet_opt.solve(ground_truth, {});
-  std::vector<State> init(NUM_SIM_STEPS * 2, xp0.x);
-  const auto solution = jet_opt.solve(init, {});
-  std::cout << "Optimized g: " << solution.p.g_world.transpose() << std::endl;
-  std::cout << "Optimized T_sensor_from_body: "
-            << solution.p.T_sensor_from_body.log().transpose() << std::endl;
-
   setup();
   const auto view = viewer::get_window3d("Mr. Filter, filters");
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
   draw_states(*geo, ground_truth, true);
+
+  const auto solution = jet_opt.solve(est_states, {});
+  std::cout << "Optimized g: " << solution.p.g_world.transpose() << std::endl;
+  std::cout << "Optimized T_sensor_from_body: "
+            << solution.p.T_sensor_from_body.log().transpose() << std::endl;
+
   draw_states(*geo, solution.x, false);
 
   geo->flip();
