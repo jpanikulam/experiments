@@ -6,6 +6,7 @@
 #include "planning/jet/jet_dynamics.hh"
 #include "planning/jet/jet_planner.hh"
 
+#include "planning/jet/filter_sim.hh"
 #include "planning/jet/jet_model.hh"
 
 // TODO CLEANUP
@@ -195,6 +196,14 @@ void go() {
       std::cout << "\tw     : " << jet.w.transpose() << std::endl;
       std::cout << "\tv     : " << jet.v.transpose() << std::endl;
       std::cout << "\tthrust: " << jet.throttle_pct << std::endl;
+
+      const Parameters p = get_parameters();
+      const auto kf_state = kf_state_from_xlqr_state(jet, ctrl, p);
+
+      std::cout << "eps_dot   : " << kf_state.eps_dot.transpose() << std::endl;
+      std::cout << "eps_ddot  : " << kf_state.eps_ddot.transpose() << std::endl;
+      std::cout << "accel_bias: " << kf_state.accel_bias.transpose() << std::endl;
+      std::cout << "gyro_bias : " << kf_state.gyro_bias.transpose() << std::endl;
     }
 
     //
