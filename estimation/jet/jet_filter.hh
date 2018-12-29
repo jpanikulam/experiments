@@ -5,6 +5,9 @@
 namespace estimation {
 namespace jet_filter {
 
+// TODO generate this
+FiducialMeasurement observe_fiducial(const State& x, const Parameters& p);
+
 // TODO: generate this
 jcc::Vec3 accel_error_model(const State& x,
                             const AccelMeasurement& z,
@@ -38,7 +41,7 @@ class JetFilter {
 
   int imu_id_ = -1;
   int fiducial_id_ = -1;
-};
+  };
 
 }  // namespace jet_filter
-}  // namespace estimation
+}  // namespace jet_filter
