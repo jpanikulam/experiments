@@ -175,9 +175,10 @@ std::shared_ptr<Window3D> get_window3d(const std::string &title) {
   if (it != window_3d_state.windows.end()) {
     return it->second;
   } else {
-    auto window = std::make_shared<Window3D>();
+    const GlSize gl_size(640, 640);
+    auto window = std::make_shared<Window3D>(gl_size);
     window_3d_state.windows[title] = window;
-    WindowManager::register_window(GlSize(640, 640), window, title);
+    WindowManager::register_window(gl_size, window, title);
     return window;
   }
 }

@@ -1,4 +1,6 @@
 #include "viewer/window.hh"
+#include "viewer/window_2d.hh"
+#include "viewer/window_manager.hh"
 
 #include "viewer/primitives/plot.hh"
 
@@ -39,11 +41,8 @@ void run() {
 
   WindowManager::spin();
   std::cout << "Done" << std::endl;
-
-  glfwTerminate();
-  exit(EXIT_SUCCESS);
 }
-}
+}  // namespace viewer
 
 int main() {
   viewer::run();

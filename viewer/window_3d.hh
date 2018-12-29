@@ -27,7 +27,7 @@ using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
 
 class Window3D final : public SimpleWindow {
  public:
-  Window3D() = default;
+  Window3D(const GlSize &gl_size) : gl_size_(gl_size){};
 
   void on_key(int key, int scancode, int action, int mods) override;
   void on_mouse_button(int button, int action, int mods) override;
@@ -83,7 +83,7 @@ class Window3D final : public SimpleWindow {
   std::vector<std::shared_ptr<Primitive>> primitives_;
   std::vector<std::shared_ptr<Camera>> cameras_;
 
-  GlSize gl_size_ = GlSize(640, 640);
+  GlSize gl_size_;
 
   //
   // UI Control State
