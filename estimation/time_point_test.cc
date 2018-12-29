@@ -1,5 +1,7 @@
 #include "estimation/time_point.hh"
 
+#include "util/heap.hh"
+
 #include "testing/gtest.hh"
 
 namespace estimation {
@@ -23,4 +25,20 @@ TEST(TimePointTest, test_it_all) {
   constexpr double EPS = 0.015;
   EXPECT_LT(std::abs(secs - TIME) / TIME, EPS);
 }
+
+TEST(TimePointTest, sortable) {
+  Heap<TimePoint> heap;
+
+  const TimePoint start = TimePoint{};
+  heap.push(start + to_duration(0.1));
+  heap.push(start + to_duration(0.2));
+  heap.push(start + to_duration(0.5));
+  heap.push(start + to_duration(0.9));
+
+  EXPECT_DOUBLE_EQ(to_seconds(heap.pop() - start), 0.9);
+  EXPECT_DOUBLE_EQ(to_seconds(heap.pop() - start), 0.5);
+  EXPECT_DOUBLE_EQ(to_seconds(heap.pop() - start), 0.2);
+  EXPECT_DOUBLE_EQ(to_seconds(heap.pop() - start), 0.1);
+}
+
 }  // namespace estimation
