@@ -2,9 +2,6 @@
 
 #include "estimation/optimization/acausal_optimizer_impl.hh"
 
-//%deps(block_sparse_matrix)
-//%deps(numdiff)
-
 namespace estimation {
 namespace optimization {
 

@@ -34,7 +34,7 @@ def resolve_include_TODO(file_path, include_path, available_include_paths):
     # TODO: Make this handle more cases
 
 
-def resolve_include(file_path, include_path, available_include_paths=None):
+def resolve_include(file_path, include_path, available_include_paths=[]):
     # return os.path.join('/home/jacob/repos/experiments', include_path)
     directory, _ = os.path.split(file_path)
     extended_available_incl_paths = available_include_paths + [directory]

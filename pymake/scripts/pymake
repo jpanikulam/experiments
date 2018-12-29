@@ -14,7 +14,29 @@ def get_src_path(file, src):
     return os.path.join(fpath, src)
 
 
+def recurse_header_only_deps(file, lib, all_tree, repo_path):
+    if not lib.get('header_only', False):
+        return [lib['target']]
+
+    recursed_deps = []
+    re_resolved = all_tree[file]
+
+    for sub_lib in re_resolved['include']:
+        # Ignore system headers
+        if sub_lib['type'] == 'system':
+            continue
+
+        dep_path = sub_lib['given_path']
+        resolved_dep_path = resolve_include(file, dep_path, [repo_path])
+        mini_libs = all_tree[resolved_dep_path]['lib']
+        for mini_lib in mini_libs:
+            new_deps = recurse_header_only_deps(resolved_dep_path, mini_lib, all_tree, repo_path)
+            recursed_deps.extend(new_deps)
+    return recursed_deps
+
+
 def what_libs(file, elements, all_tree, known_libs, repo_path):
+    '''Determine what libs are required for this thing.'''
     external_libs_remapping = {
         'assimp': '${ASSIMP_LIBRARIES}',
         'opencv': '${OpenCV_LIBS}',
@@ -42,6 +64,10 @@ def what_libs(file, elements, all_tree, known_libs, repo_path):
             required_libs.append(dep)
 
     for lib in elements['lib']:
+        if lib.get('header_only', False):
+            # Log.warn(lib)
+            continue
+
         for src in lib['srcs']:
             resolved = get_src_path(file, src)
             src_libs = set(what_libs(resolved, all_tree[resolved], all_tree, known_libs, repo_path))
@@ -59,7 +85,10 @@ def what_libs(file, elements, all_tree, known_libs, repo_path):
             if available:
                 inferred_libs = all_tree[resolved]['lib']
                 for lib in inferred_libs:
-                    required_libs.append(lib['target'])
+                    if lib.get('header_only', False):
+                        required_libs.extend(recurse_header_only_deps(resolved, lib, all_tree, repo_path))
+                    else:
+                        required_libs.append(lib['target'])
 
     return required_libs
 
@@ -104,6 +133,7 @@ def discover_unlabelled_libs(tree):
         _, name = os.path.split(raw_name)
 
         if extension == '.hh':
+            hdr_file = name + '.hh'
             if raw_name + '.cc' in tree.keys():
                 Log.debug("Inferring Lib (Header Pair): {} ".format(name))
                 pairs.append((file, raw_name + '.cc'))
@@ -113,7 +143,14 @@ def discover_unlabelled_libs(tree):
                 src_file = name + '.cc'
                 elements['lib'].append({
                     'target': name,
-                    'srcs': [src_file]
+                    'srcs': [src_file],
+                    'hdrs': [hdr_file]
+                })
+            else:
+                elements['lib'].append({
+                    'target': name,
+                    'hdrs': [hdr_file],
+                    'header_only': True
                 })
             else:
                 Log.warn("Pure-header library found: {}; You may have to manually manage deps".format(raw_name))
@@ -155,6 +192,9 @@ def build_dependency_table(all_tree, repo_path):
             }
 
         for lib in elements['lib']:
+            if lib.get('header_only', False):
+                continue
+
             to_build[lib['target']] = {
                 'target': lib['target'],
                 'srcs': lib['srcs'],

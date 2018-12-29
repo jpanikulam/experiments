@@ -1,4 +1,4 @@
-//%deps(ASSIMP)
+//%deps(assimp)
 
 #include "geometry/import/read_collada.hh"
 
