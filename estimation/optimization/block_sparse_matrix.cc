@@ -195,9 +195,14 @@ BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
   return mat;
 }
 
-VecXd BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& residuals) const {
+VecXd BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& residuals,
+                                      const double lambda) const {
   const SpMat J = to_eigen_sparse();
-  const SpMat JtJ = (J.transpose() * J);
+
+  SpMat identity(J.cols(), J.cols());
+  identity.setIdentity();
+
+  const SpMat JtJ = (J.transpose() * J) + (lambda * identity);
 
   const Eigen::SimplicialCholesky<SpMat> chol(JtJ);
 
