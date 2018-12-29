@@ -12,13 +12,19 @@ using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
 
 void draw_axes(const Axes &axes) {
-  glPushAttrib(GL_CURRENT_BIT);
+  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
   glLineWidth(1.0);
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glTransform(axes.world_from_axes);
   glScaled(axes.scale, axes.scale, axes.scale);
+
+  if (axes.dotted) {
+    glLineStipple(1.0, 0x1010);
+  }
+  glLineWidth(axes.line_width);
+
   glBegin(GL_LINES);
 
   glColor4d(1.0, 0.0, 0.0, 0.9);

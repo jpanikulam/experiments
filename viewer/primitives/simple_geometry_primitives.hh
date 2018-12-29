@@ -17,6 +17,8 @@ using Vec4 = Eigen::Vector4d;
 struct Axes {
   SE3 world_from_axes;
   double scale = 1.0;
+  double line_width = 1.0;
+  bool dotted = false;
 };
 
 struct Line {
