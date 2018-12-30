@@ -47,7 +47,7 @@ def resolve_include(file_path, include_path, available_include_paths=[]):
 
 
 def parse_ignore(path):
-    if '.ignore' not in os.listdir(path):
+    if path is None or '.ignore' not in os.listdir(path):
         ignores = [
             ".git",
             "bin/",

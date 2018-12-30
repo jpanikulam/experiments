@@ -28,6 +28,12 @@ def recurse_header_only_deps(file, lib, all_tree, repo_path):
 
         dep_path = sub_lib['given_path']
         resolved_dep_path = resolve_include(file, dep_path, [repo_path])
+
+        if resolved_dep_path not in all_tree:
+            # TODO Jake, do something more intelligent
+            # This happens when a header-only library includes a file that is ignored
+            continue
+
         mini_libs = all_tree[resolved_dep_path]['lib']
         for mini_lib in mini_libs:
             new_deps = recurse_header_only_deps(resolved_dep_path, mini_lib, all_tree, repo_path)
@@ -65,7 +71,6 @@ def what_libs(file, elements, all_tree, known_libs, repo_path):
 
     for lib in elements['lib']:
         if lib.get('header_only', False):
-            # Log.warn(lib)
             continue
 
         for src in lib['srcs']:
@@ -140,6 +145,10 @@ def discover_unlabelled_libs(tree):
 
                 if has_annotations(elements):
                     Log.debug("Header pair has annotations: {}".format(raw_name))
+
+                if should_ignore(elements) or should_ignore(tree[raw_name + '.cc']):
+                    continue
+
                 src_file = name + '.cc'
                 elements['lib'].append({
                     'target': name,
@@ -242,10 +251,10 @@ def main():
         recursed_files = get_files(path, ignores_path=here)
         files.extend(recursed_files)
 
-    results = {}
+    parsed_file_tree = {}
     for file in files:
-        results.update(parse_file(file))
-    to_build = build_dependency_table(results, path)
+        parsed_file_tree.update(parse_file(file))
+    to_build = build_dependency_table(parsed_file_tree, path)
     build_cmakes(to_build, path)
 
 
