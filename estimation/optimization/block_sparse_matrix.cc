@@ -68,9 +68,11 @@ Eigen::SparseVector<double> to_sparse(const std::vector<VecXd> v) {
 BlockSparseMatrix::BlockSparseMatrix(const int n_block_rows, const int n_block_cols) {
   rows_.resize(n_block_rows);
   n_cols_.resize(n_block_cols, -1);
+  valid_ = true;
 }
 
 void BlockSparseMatrix::set(int row, int col, const Eigen::MatrixXd& mat) {
+  assert(valid_);
   //
   // Assert in col/row bounds
   //
@@ -108,6 +110,7 @@ void BlockSparseMatrix::set(int row, int col, const Eigen::MatrixXd& mat) {
 }
 
 const Eigen::MatrixXd& BlockSparseMatrix::get(int row, int col) const {
+  assert(valid_);
   //
   // Enforce row, col bounds
   //
@@ -118,11 +121,12 @@ const Eigen::MatrixXd& BlockSparseMatrix::get(int row, int col) const {
 
   // This is (implicitly) zero, but you probably didn't mean to do this
   const auto& block_row = rows_.at(row);
-  assert(block_row.cols.count(col));
+  assert(block_row.cols.count(col) != 0);
   return block_row.cols.at(col).block;
 }
 
 int BlockSparseMatrix::real_rows() const {
+  assert(valid_);
   int total = 0;
   for (const auto& row : rows_) {
     assert(row.n_rows != -1);
@@ -133,6 +137,7 @@ int BlockSparseMatrix::real_rows() const {
 }
 
 int BlockSparseMatrix::real_cols() const {
+  assert(valid_);
   int total = 0;
   for (const auto& n : n_cols_) {
     total += n;
@@ -141,6 +146,7 @@ int BlockSparseMatrix::real_cols() const {
 }
 
 int BlockSparseMatrix::real_rows_above_block(int block_row) const {
+  assert(valid_);
   assert(block_row >= 0);
   assert(block_row < static_cast<int>(rows_.size()));
 
@@ -155,6 +161,7 @@ int BlockSparseMatrix::real_rows_above_block(int block_row) const {
 }
 
 int BlockSparseMatrix::real_cols_left_of_block(int block_col) const {
+  assert(valid_);
   assert(block_col >= 0);
   assert(block_col < static_cast<int>(n_cols_.size()));
 
@@ -166,6 +173,7 @@ int BlockSparseMatrix::real_cols_left_of_block(int block_col) const {
 }
 
 BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
+  assert(valid_);
   const int rows = real_rows();
   const int cols = real_cols();
   SpMat mat(rows, cols);
@@ -196,21 +204,36 @@ BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
 }
 
 VecXd BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& residuals,
+                                      const BlockSparseMatrix& R_inv,
                                       const double lambda) const {
+  assert(valid_);
   const SpMat J = to_eigen_sparse();
 
   SpMat identity(J.cols(), J.cols());
   identity.setIdentity();
 
-  const SpMat JtJ = (J.transpose() * J) + (lambda * identity);
+  const SpMat JtRi = J.transpose() * R_inv.to_eigen_sparse();
 
-  const Eigen::SimplicialCholesky<SpMat> chol(JtJ);
+  // const SpMat JtJ = (J.transpose() * J) + (lambda * identity);
+
+  const SpMat JtRiJ = (JtRi * J);
+  // Levenberg
+  // const SpMat damped_JtRiJ = (JtRi * J) + (lambda * identity);
+
+  // Levenberg-Marquardt
+  const SpMat damped_JtRiJ = JtRiJ + (lambda * SpMat(JtRiJ.diagonal().asDiagonal()));
+
+  const Eigen::SimplicialCholesky<SpMat> chol(damped_JtRiJ);
 
   const SpVec v = to_sparse(residuals);
 
   // Jtv
-  const SpMat Jtv = J.transpose() * v;
-  const VecXd delta = chol.solve(Jtv);
+  // const SpMat Jtv = J.transpose() * v;
+  // const VecXd delta = chol.solve(Jtv);
+
+  const SpMat JtRiv = JtRi * v;
+  const VecXd delta = chol.solve(JtRiv);
+
   return delta;
 }
 

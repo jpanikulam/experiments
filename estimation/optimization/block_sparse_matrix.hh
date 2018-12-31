@@ -15,6 +15,9 @@ class BlockSparseMatrix {
   using SpVec = Eigen::SparseVector<double>;
 
  public:
+  BlockSparseMatrix() {
+    valid_ = false;
+  }
   BlockSparseMatrix(const int n_block_rows, const int n_block_cols);
 
   void set(int row, int col, const Eigen::MatrixXd& mat);
@@ -29,6 +32,7 @@ class BlockSparseMatrix {
   SpMat to_eigen_sparse() const;
 
   VecXd solve_lst_sq(const std::vector<VecXd>& residuals,
+                     const BlockSparseMatrix& R_inv,
                      const double lambda = 0.0) const;
 
  private:
@@ -45,6 +49,8 @@ class BlockSparseMatrix {
   std::vector<int> n_cols_;
   // The block rows
   std::vector<Row> rows_;
+
+  bool valid_ = false;
 };
 }  // namespace optimization
 }  // namespace estimation
