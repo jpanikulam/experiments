@@ -11,6 +11,16 @@ struct StateDelta {
   VecNd<6> eps_dot_error = VecNd<6>::Zero();
   VecNd<3> gyro_bias_error = VecNd<3>::Zero();
   VecNd<6> T_body_from_world_error_log = VecNd<6>::Zero();
+  static constexpr int accel_bias_error_ind = 0;
+  static constexpr int accel_bias_error_dim = 3;
+  static constexpr int eps_ddot_error_ind = 3;
+  static constexpr int eps_ddot_error_dim = 6;
+  static constexpr int eps_dot_error_ind = 9;
+  static constexpr int eps_dot_error_dim = 6;
+  static constexpr int gyro_bias_error_ind = 15;
+  static constexpr int gyro_bias_error_dim = 3;
+  static constexpr int T_body_from_world_error_log_ind = 18;
+  static constexpr int T_body_from_world_error_log_dim = 6;
   static constexpr int DIM = 24;
 };
 struct Parameters {
@@ -28,6 +38,8 @@ struct State {
 };
 struct AccelMeasurement {
   VecNd<3> observed_acceleration = VecNd<3>::Zero();
+  static constexpr int observed_acceleration_ind = 0;
+  static constexpr int observed_acceleration_dim = 3;
   static constexpr int DIM = 3;
 };
 struct StateDot {
@@ -36,15 +48,31 @@ struct StateDot {
   VecNd<6> eps_ddot = VecNd<6>::Zero();
   VecNd<3> gyro_bias_dot = VecNd<3>::Zero();
   VecNd<6> eps_dot = VecNd<6>::Zero();
+  static constexpr int accel_bias_dot_ind = 0;
+  static constexpr int accel_bias_dot_dim = 3;
+  static constexpr int eps_ddot_dot_ind = 3;
+  static constexpr int eps_ddot_dot_dim = 6;
+  static constexpr int eps_ddot_ind = 9;
+  static constexpr int eps_ddot_dim = 6;
+  static constexpr int gyro_bias_dot_ind = 15;
+  static constexpr int gyro_bias_dot_dim = 3;
+  static constexpr int eps_dot_ind = 18;
+  static constexpr int eps_dot_dim = 6;
   static constexpr int DIM = 24;
 };
 struct ParametersDelta {
   VecNd<3> g_world_error = VecNd<3>::Zero();
   VecNd<6> T_sensor_from_body_error_log = VecNd<6>::Zero();
+  static constexpr int g_world_error_ind = 0;
+  static constexpr int g_world_error_dim = 3;
+  static constexpr int T_sensor_from_body_error_log_ind = 3;
+  static constexpr int T_sensor_from_body_error_log_dim = 6;
   static constexpr int DIM = 9;
 };
 struct AccelMeasurementDelta {
   VecNd<3> observed_acceleration_error = VecNd<3>::Zero();
+  static constexpr int observed_acceleration_error_ind = 0;
+  static constexpr int observed_acceleration_error_dim = 3;
   static constexpr int DIM = 3;
 };
 VecNd<3> observe_accel(const State &state, const Parameters &parameters);
