@@ -25,6 +25,12 @@ struct OptimizerSolution {
   typename Prob::Parameters p;
 };
 
+struct LinearSystem {
+  BlockSparseMatrix J;
+  BlockSparseMatrix R_inv;
+  std::vector<VecXd> v;
+};
+
 template <typename Prob>
 class AcausalOptimizer {
  public:
@@ -37,8 +43,13 @@ class AcausalOptimizer {
   using ErrorModel = std::function<VecNd<Observation::DIM>(
       const State&, const Observation&, const Parameters&)>;
 
-  using TypelessErrorModel =
-      std::function<VecXd(const State& x, const std::any& z, const Parameters& p)>;
+  struct TypelessErrorModel {
+    using TypeleErasedErrorModel =
+        std::function<VecXd(const State& x, const std::any& z, const Parameters& p)>;
+
+    TypeleErasedErrorModel error;
+    int out_dim = -1;
+  };
 
   struct Measurement {
     int type = -1;
@@ -50,7 +61,8 @@ class AcausalOptimizer {
   }
 
   template <typename Observation>
-  int add_error_model(const ErrorModel<Observation>& model) {
+  int add_error_model(const ErrorModel<Observation>& model,
+                      const MatNd<Observation::DIM, Observation::DIM>& cov) {
     int model_id = models_.size();
     const auto type_erased_model = [model](const State& x, const std::any& z,
                                            const Parameters& p) {
@@ -58,8 +70,14 @@ class AcausalOptimizer {
       return VecXd(error);
     };
 
-    models_[model_id] = type_erased_model;
+    models_[model_id] = {type_erased_model, Observation::DIM};
+    covariances_[model_id] = MatXd(cov);
+
     return model_id;
+  }
+
+  void set_dynamics_cov(const MatNd<State::DIM, State::DIM>& cov) {
+    dyn_cov_ = cov;
   }
 
   template <typename Observation>
@@ -71,7 +89,7 @@ class AcausalOptimizer {
   }
 
   using Visitor = std::function<void(const Solution&)>;
-  Solution solve(const Solution& initialization, const Visitor& visitor = {});
+  Solution solve(const Solution& initialization, const Visitor& visitor = {}) const;
 
  private:
   VecXd add_observation_residual(const State& x,
@@ -80,7 +98,7 @@ class AcausalOptimizer {
                                  int x_ind,
                                  int residual_ind,
                                  int param_ind,
-                                 Out<BlockSparseMatrix> bsm);
+                                 Out<BlockSparseMatrix> bsm) const;
 
   VecXd add_dynamics_residual(const State& x_0,
                               const State& x_1,
@@ -89,15 +107,18 @@ class AcausalOptimizer {
                               int x_ind,
                               int residual_ind,
                               int param_ind,
-                              Out<BlockSparseMatrix> bsm);
+                              Out<BlockSparseMatrix> bsm) const;
 
-  Solution update_solution(const Solution& soln, const VecXd& delta);
-  BlockSparseMatrix populate(const Solution& soln, Out<std::vector<VecXd>> v);
+  Solution update_solution(const Solution& soln, const VecXd& delta) const;
+  LinearSystem populate(const Solution& soln) const;
 
-  double cost(const std::vector<VecXd>& residuals);
+  double cost(const LinearSystem& system) const;
 
   Dynamics dynamics_;
+  MatNd<State::DIM, State::DIM> dyn_cov_;
+
   std::map<int, TypelessErrorModel> models_;
+  std::map<int, MatXd> covariances_;
 
   // Min-Heap
   Heap<Measurement> heap_ =
