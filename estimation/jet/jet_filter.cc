@@ -12,7 +12,8 @@ namespace {
 const SE3 fiducial_1_from_world;
 
 Parameters get_parameters() {
-  const jcc::Vec3 g(0.0, 0.0, 0.0);
+  const jcc::Vec3 g(0.0, 0.0, -1.0);
+
   const SE3 vehicle_from_sensor;
   Parameters p;
   p.T_sensor_from_body = vehicle_from_sensor;
@@ -72,10 +73,11 @@ VecNd<6> fiducial_error_model(const State& x,
 }
 
 JetFilter::JetFilter(const JetFilterState& xp0) : xp_(xp0), ekf_(dynamics) {
-  const Parameters p = get_parameters();
-  imu_id_ = ekf_.add_model(bind_parameters<AccelMeasurement>(accel_error_model, p));
+  parameters_ = get_parameters();
+  imu_id_ = ekf_.add_model(bind_parameters<AccelMeasurement>(accel_error_model, parameters_));
   fiducial_id_ =
-      ekf_.add_model(bind_parameters<FiducialMeasurement>(fiducial_error_model, p));
+      ekf_.add_model(bind_parameters<FiducialMeasurement>(fiducial_error_model, parameters_));
+
 }
 
 void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t) {

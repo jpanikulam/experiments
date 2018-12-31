@@ -31,6 +31,10 @@ class JetFilter {
 
   void free_run();
 
+  const Parameters& parameters() const {
+    return parameters_;
+  }
+
   const JetFilterState& state() const {
     return xp_;
   }
@@ -38,6 +42,7 @@ class JetFilter {
  private:
   JetFilterState xp_;
   JetEkf ekf_;
+  Parameters parameters_;
 
   int imu_id_ = -1;
   int fiducial_id_ = -1;
