@@ -66,8 +66,12 @@ void go() {
 */
 
 Parameters mock_parameters() {
-  const jcc::Vec3 g(0.0, 0.0, 4.1);
-  const SE3 vehicle_from_sensor;
+  const jcc::Vec3 g(0.0, 0.0, -1.3);
+  // const jcc::Vec3 t(0.1, 0.5, 0.1);
+  const jcc::Vec3 t(0.0, 0.1, 0.25);
+  // const jcc::Vec3 t = jcc::Vec3::Zero();
+  const SO3 r_vehicle_from_sensor = SO3::exp(jcc::Vec3(0.0, 0.0, 0.0));
+  const SE3 vehicle_from_sensor(r_vehicle_from_sensor, t);
   Parameters p;
   p.T_sensor_from_body = vehicle_from_sensor;
   p.g_world = g;
@@ -89,22 +93,75 @@ void setup() {
 void draw_states(viewer::SimpleGeometry& geo,
                  const std::vector<State>& states,
                  bool truth) {
-  for (const auto& state : states) {
+  const int n_states = static_cast<int>(states.size());
+  for (int k = 0; k < n_states; ++k) {
+    auto& state = states.at(k);
     const SE3 T_world_from_body = state.T_body_from_world.inverse();
     if (truth) {
-      geo.add_axes({T_world_from_body, 1.0});
+      geo.add_axes({T_world_from_body, 0.1});
     } else {
-      geo.add_axes({T_world_from_body, 0.5, 2.0, true});
+      geo.add_axes({T_world_from_body, 0.05, 2.0, true});
+
+      if (k < n_states - 1) {
+        const auto& next_state = states.at(k + 1);
+        const SE3 T_world_from_body_next = next_state.T_body_from_world.inverse();
+        geo.add_line(
+            {T_world_from_body.translation(), T_world_from_body_next.translation()});
+      }
     }
   }
+}
+
+void print_state(const State& x) {
+  std::cout << "\teps_dot   : " << x.eps_dot.transpose() << std::endl;
+  std::cout << "\teps_ddot  : " << x.eps_ddot.transpose() << std::endl;
+  std::cout << "\taccel_bias: " << x.accel_bias.transpose() << std::endl;
+  std::cout << "\tgyro_bias : " << x.gyro_bias.transpose() << std::endl;
+  // const auto res = observe_accel(xp.x, true_params);
+  // std::cout << "\tExpected Measurement: " << res.transpose() << std::endl;
+}
+
+template <int dim, int row, int mat_size>
+void set_diag_to_value(MatNd<mat_size, mat_size>& mat, double value) {
+  mat.template block<dim, dim>(row, row) = (MatNd<dim, dim>::Identity() * value);
 }
 }  // namespace
 
 class JetOptimizer {
  public:
   JetOptimizer() {
-    imu_id_ = pose_opt_.add_error_model<AccelMeasurement>(accel_error_model);
-    fiducial_id_ = pose_opt_.add_error_model<FiducialMeasurement>(fiducial_error_model);
+    MatNd<AccelMeasurement::DIM, AccelMeasurement::DIM> accel_cov;
+    accel_cov.setZero();
+    set_diag_to_value<AccelMeasurementDelta::observed_acceleration_error_dim,
+                      AccelMeasurementDelta::observed_acceleration_error_ind>(accel_cov,
+                                                                              0.01);
+
+    MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;
+    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.001;
+    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.0001;
+
+    MatNd<State::DIM, State::DIM> state_cov;
+    state_cov.setZero();
+    set_diag_to_value<StateDelta::accel_bias_error_dim, StateDelta::accel_bias_error_ind>(
+        state_cov, 0.0001);
+    set_diag_to_value<StateDelta::gyro_bias_error_dim, StateDelta::gyro_bias_error_ind>(
+        state_cov, 0.0001);
+    set_diag_to_value<StateDelta::eps_dot_error_dim, StateDelta::eps_dot_error_ind>(
+        state_cov, 0.0001);
+    set_diag_to_value<StateDelta::eps_ddot_error_dim, StateDelta::eps_ddot_error_ind>(
+        state_cov, 0.0001);
+
+    constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
+    constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
+    set_diag_to_value<T_error_dim, T_error_ind>(state_cov, 0.001);
+
+    std::cout << "AAAAA" << std::endl;
+    std::cout << accel_cov << std::endl;
+
+    imu_id_ = pose_opt_.add_error_model<AccelMeasurement>(accel_error_model, accel_cov);
+    fiducial_id_ = pose_opt_.add_error_model<FiducialMeasurement>(fiducial_error_model,
+                                                                  fiducial_cov);
+    pose_opt_.set_dynamics_cov(state_cov);
   }
 
   void measure_imu(const AccelMeasurement& meas, const TimePoint& t) {
@@ -119,8 +176,13 @@ class JetOptimizer {
     const auto visitor = [](const JetPoseOptimizer::Solution& soln) {
       const auto view = viewer::get_window3d("Mr. Filter, filters");
       const auto geo = view->add_primitive<viewer::SimpleGeometry>();
+
       draw_states(*geo, soln.x, false);
       geo->flip();
+      std::cout << "\tOptimized g: " << soln.p.g_world.transpose() << std::endl;
+      std::cout << "\tOptimized T_sensor_from_body: "
+                << soln.p.T_sensor_from_body.translation().transpose() << "; "
+                << soln.p.T_sensor_from_body.so3().log().transpose() << std::endl;
       view->spin_until_step();
       geo->clear();
     };
@@ -141,11 +203,16 @@ void run_filter() {
 
   FilterState<State> xp0;
   xp0.P.setIdentity();
-  xp0.x.eps_ddot[0] = 0.0;
+  xp0.x.eps_dot[0] = 1.0;
+  xp0.x.eps_dot[4] = -0.1;
+  xp0.x.eps_dot[5] = -1.0;
+
+  xp0.x.eps_ddot[1] = 0.01;
+  xp0.x.eps_ddot[5] = 0.01;
+
+  xp0.time_of_validity = {};
 
   State true_x = xp0.x;
-  true_x.eps_dot[0] = 0.1;
-  true_x.eps_dot[3] = -0.1;
   true_x.eps_dot[4] = 0.1;
 
   JetFilter jf(xp0);
@@ -153,64 +220,121 @@ void run_filter() {
   // AccelMeasurement imu_meas;
   // imu_meas.observed_acceleration[0] = 2.0;
 
+  setup();
+  const auto view = viewer::get_window3d("Mr. Filter, filters");
+  const auto obs_geo = view->add_primitive<viewer::SimpleGeometry>();
+  constexpr double sphere_size_m = 0.05;
+
   std::vector<State> ground_truth;
   std::vector<State> est_states;
 
   TimePoint start_time = {};
-  constexpr auto dt = to_duration(0.5);
+  constexpr auto dt = to_duration(0.1);
 
-  constexpr int NUM_SIM_STEPS = 76;
+  constexpr int NUM_SIM_STEPS = 25;
+
+  TimePoint current_time = start_time;
 
   for (int k = 0; k < NUM_SIM_STEPS; ++k) {
-    const TimePoint obs_time = (dt * k) + start_time;
-    const AccelMeasurement imu_meas = {observe_accel(true_x, true_params)};
-    std::cout << "Accel: " << imu_meas.observed_acceleration.transpose() << std::endl;
+    if (k > 75 && k < 95) {
+      true_x.eps_ddot[4] = 0.1;
+      true_x.eps_ddot[3] = 0.1;
+      true_x.eps_ddot[5] = -0.01;
+      true_x.eps_ddot[1] = -0.01;
+    } else if (k > 95) {
+      true_x.eps_ddot.setZero();
+    }
 
-    jf.measure_imu(imu_meas, obs_time);
-    jet_opt.measure_imu(imu_meas, obs_time);
-    jf.free_run();
-    est_states.push_back(jf.state().x);
-    ground_truth.push_back(true_x);
+    //
+    // Accelerometer Observation
+    //
+    // if ((k % 10 == 0) && k > 75) {
+    if (true) {
+      ground_truth.push_back(true_x);
+      const AccelMeasurement imu_meas = {observe_accel(true_x, true_params)};
+      std::cout << "Accel: " << imu_meas.observed_acceleration.transpose() << std::endl;
 
-    constexpr auto dt2 = to_duration(0.1);
-    true_x = rk4_integrate(true_x, true_params, to_seconds(dt2));
-    ground_truth.push_back(true_x);
-    const FiducialMeasurement fiducial_meas = observe_fiducial(true_x, true_params);
+      jf.measure_imu(imu_meas, current_time);
+      jet_opt.measure_imu(imu_meas, current_time);
 
-    jf.measure_fiducial(fiducial_meas, obs_time + dt2);
-    jet_opt.measure_fiducial(fiducial_meas, obs_time + dt2);
-    jf.free_run();
-    est_states.push_back(jf.state().x);
+      jf.free_run();
+      est_states.push_back(jf.state().x);
+      assert(jf.state().time_of_validity == current_time);
 
-    const auto xp = jf.state();
-    std::cout << "k: " << k << std::endl;
-    std::cout << "\teps_dot   : " << xp.x.eps_dot.transpose() << std::endl;
-    std::cout << "\teps_ddot  : " << xp.x.eps_ddot.transpose() << std::endl;
-    std::cout << "\taccel_bias: " << xp.x.accel_bias.transpose() << std::endl;
-    std::cout << "\tgyro_bias : " << xp.x.gyro_bias.transpose() << std::endl;
+      const jcc::Vec4 accel_color(0.0, 0.7, 0.7, 0.8);
+      obs_geo->add_sphere({jf.state().x.T_body_from_world.inverse().translation(),
+                           sphere_size_m, accel_color});
 
-    std::cout << "\tModelled Error: "
-              << accel_error_model(xp.x, imu_meas, true_params).transpose() << std::endl;
-    const auto res = observe_accel(xp.x, mock_parameters());
-    std::cout << "\tExpected Measurement: " << res.transpose() << std::endl;
+      const SE3 world_from_body = jf.state().x.T_body_from_world.inverse();
+      const jcc::Vec3 observed_accel_body_frame =
+          (world_from_body.so3() * true_params.T_sensor_from_body.so3().inverse() *
+           imu_meas.observed_acceleration);
 
+      obs_geo->add_line(
+          {world_from_body.translation(),
+           world_from_body.translation() + (0.25 * observed_accel_body_frame),
+           accel_color});
+    }
+
+    //
+    // Fiducial Measurement
+    //
+
+    {
+      constexpr auto dt2 = to_duration(0.05);
+      true_x = rk4_integrate(true_x, true_params, to_seconds(dt2));
+      current_time += dt2;
+
+      ground_truth.push_back(true_x);
+      const FiducialMeasurement fiducial_meas = observe_fiducial(true_x, true_params);
+
+      jf.measure_fiducial(fiducial_meas, current_time);
+      jet_opt.measure_fiducial(fiducial_meas, current_time);
+
+      jf.free_run();
+      est_states.push_back(jf.state().x);
+      assert(jf.state().time_of_validity == current_time);
+      obs_geo->add_sphere({jf.state().x.T_body_from_world.inverse().translation(),
+                           sphere_size_m, jcc::Vec4(1.0, 0.0, 0.0, 1.0)});
+    }
+
+    //
+    // Printout
+    //
+    {
+      const auto xp = jf.state();
+      std::cout << "k: " << k << std::endl;
+      print_state(xp.x);
+    }
     true_x = rk4_integrate(true_x, true_params, to_seconds(dt));
+    current_time += dt;
   }
 
   // Do the optimization
-  setup();
-  const auto view = viewer::get_window3d("Mr. Filter, filters");
+
+  obs_geo->flip();
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
   draw_states(*geo, ground_truth, true);
+  geo->flip();
 
-  const auto solution = jet_opt.solve(est_states, {});
+  // const std::vector<State> crap_init(est_states.size(), xp0.x);
+  // const auto solution = jet_opt.solve(crap_init, jf.parameters());
+  const auto solution = jet_opt.solve(est_states, jf.parameters());
+  // const auto solution = jet_opt.solve(ground_truth, jf.parameters());
+
+  for (std::size_t k = 0; k < solution.x.size(); ++k) {
+    const auto& state = solution.x.at(k);
+    std::cout << "----- " << k << std::endl;
+    print_state(state);
+    std::cout << "\\\\\\\\\\\\" << std::endl;
+    print_state(ground_truth.at(k));
+  }
   std::cout << "Optimized g: " << solution.p.g_world.transpose() << std::endl;
   std::cout << "Optimized T_sensor_from_body: "
-            << solution.p.T_sensor_from_body.log().transpose() << std::endl;
+            << solution.p.T_sensor_from_body.translation().transpose() << "; "
+            << solution.p.T_sensor_from_body.so3().log().transpose() << std::endl;
 
   draw_states(*geo, solution.x, false);
-
-  geo->flip();
 
   view->spin_until_step();
 }
