@@ -143,6 +143,7 @@ typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
     // Compute cost-to-go for next step state (Schur complement)
     Vx = Qx - lqr_soln[k].K.transpose() * Quu * lqr_soln[k].k;
     Vxx = Qxx - lqr_soln[k].K.transpose() * Quu * lqr_soln[k].K;
+    Vxx = (Vxx + Vxx.transpose()) * 0.5;
   }
   return lqr_soln;
 }
