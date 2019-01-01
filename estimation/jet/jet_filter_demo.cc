@@ -104,7 +104,7 @@ class JetOptimizer {
       set_diag_to_value<StateDelta::eps_dot_error_dim, StateDelta::eps_dot_error_ind>(
           state_cov, 0.1);
       set_diag_to_value<StateDelta::eps_ddot_error_dim, StateDelta::eps_ddot_error_ind>(
-          state_cov, 0.1);
+          state_cov, 3.0);
 
       constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
       constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
@@ -222,13 +222,13 @@ void run_filter() {
 
   for (int k = 0; k < NUM_SIM_STEPS; ++k) {
     if (k > 75 && k < 130) {
-      // true_x.eps_ddot[0] = 0.1;
+      true_x.eps_ddot[0] = 0.1;
       // true_x.eps_ddot[1] = -0.02;
       // true_x.eps_ddot[2] = -0.03;
 
-      // true_x.eps_ddot[3] = 0.1;
-      // true_x.eps_ddot[4] = 0.05;
-      // true_x.eps_ddot[5] = -0.01;
+      true_x.eps_ddot[3] = 0.1;
+      true_x.eps_ddot[4] = 0.05;
+      true_x.eps_ddot[5] = -0.01;
     } else if (k > 130) {
       // true_x.eps_ddot.setZero();
     }
