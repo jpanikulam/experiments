@@ -190,9 +190,11 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   constexpr double LAMBDA_DOWN_LITE_FACTOR = 0.75;
   constexpr double LAMBDA_INITIAL = 5.0;
   constexpr double DECREASE_RATIO_FOR_DAMPING_DOWN = 0.7;
-  constexpr double MAX_LAMBDA = 25e3;
+  constexpr double MAX_LAMBDA = 1e3;
+  constexpr double MIN_LAMBDA = 1e-25;
 
-  double prev_cost = cost(populate(soln));
+  LinearSystem current_system = populate(soln);
+  double prev_cost = cost(current_system);
   double lambda = LAMBDA_INITIAL;
 
   for (int k = 0; k < 300; ++k) {
@@ -206,18 +208,20 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
 
     std::cout << "\n-------" << std::endl;
     std::vector<VecXd> v;
-    const LinearSystem system = populate(soln);
+    current_system = populate(soln);
 
-    std::cout << "Cost at [" << k << "]: " << cost(system) << std::endl;
+    std::cout << "Cost at [" << k << "]: " << cost(current_system) << std::endl;
 
     // if (k < 500) {
     // lambda = 1.0;
     // }
 
-    const VecXd delta = system.J.solve_lst_sq(system.v, system.R_inv, lambda);
+    const VecXd delta =
+        current_system.J.solve_lst_sq(current_system.v, current_system.R_inv, lambda);
     const auto new_soln = update_solution(soln, delta);
 
-    const double new_cost = cost(populate(new_soln));
+    const auto new_system = populate(new_soln);
+    const double new_cost = cost(new_system);
 
     std::cout << "\tPossible cost: " << new_cost << std::endl;
     if (new_cost > prev_cost) {
@@ -226,13 +230,16 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
       continue;
     } else if (new_cost < DECREASE_RATIO_FOR_DAMPING_DOWN * prev_cost) {
       lambda *= LAMBDA_DOWN_FACTOR;
+      lambda = std::max(lambda, MIN_LAMBDA);
       std::cout << "\tDecreasing damping to " << lambda << std::endl;
     } else {
       lambda *= LAMBDA_DOWN_LITE_FACTOR;
+      lambda = std::max(lambda, MIN_LAMBDA);
       std::cout << "\tDecreasing damping to " << lambda << std::endl;
     }
 
     prev_cost = new_cost;
+    current_system = new_system;
     soln = new_soln;
   }
   {
