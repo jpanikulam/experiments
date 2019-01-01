@@ -55,12 +55,12 @@ VecXd AcausalOptimizer<Prob>::add_dynamics_residual(const State& x_0,
   const auto& model = dynamics_;
   const auto y_of_x = [dt, &model, &x_1, &p](const State& x) {
     // Hold p, x_1
-    return compute_delta(x_1, model(x, p, dt));
+    return State::compute_delta(x_1, model(x, p, dt));
   };
 
   const auto y_of_p = [dt, &model, &x_0, &x_1](const Parameters& p) {
     // Hold x_0, x_1
-    return compute_delta(x_1, model(x_0, p, dt));
+    return State::compute_delta(x_1, model(x_0, p, dt));
   };
 
   const MatXd dy_dx = -numerics::dynamic_group_jacobian<State>(x_0, y_of_x);
@@ -74,7 +74,7 @@ VecXd AcausalOptimizer<Prob>::add_dynamics_residual(const State& x_0,
   bsm->set(residual_ind, x_ind + 1, dy_d_x1);
   bsm->set(residual_ind, param_ind, dy_dp);
 
-  return compute_delta(x_1, model(x_0, p, dt));
+  return State::compute_delta(x_1, model(x_0, p, dt));
 }
 
 template <typename Prob>
@@ -154,12 +154,12 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::update_solutio
   assert(delta.rows() == (n_states * State::DIM) + (n_params * Parameters::DIM));
   for (int t = 0; t < static_cast<int>(prev_soln.x.size()); ++t) {
     const VecNd<State::DIM> sub_delta = delta.segment(t * State::DIM, State::DIM);
-    updated_soln.x[t] = apply_delta(prev_soln.x.at(t), sub_delta);
+    updated_soln.x[t] = State::apply_delta(prev_soln.x.at(t), sub_delta);
   }
   const VecNd<Parameters::DIM> p_delta =
       delta.segment(n_states * State::DIM, Parameters::DIM);
 
-  updated_soln.p = apply_delta(prev_soln.p, p_delta);
+  updated_soln.p = Parameters::apply_delta(prev_soln.p, p_delta);
   return updated_soln;
 }
 
@@ -185,7 +185,7 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
 
   // Generate our jacobian
 
-  constexpr double LAMBDA_UP_FACTOR = 2.0;
+  constexpr double LAMBDA_UP_FACTOR = 10.0;
   constexpr double LAMBDA_DOWN_FACTOR = 0.5;
   constexpr double LAMBDA_DOWN_LITE_FACTOR = 0.75;
   constexpr double LAMBDA_INITIAL = 5.0;
@@ -211,10 +211,6 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
     current_system = populate(soln);
 
     std::cout << "Cost at [" << k << "]: " << cost(current_system) << std::endl;
-
-    // if (k < 500) {
-    // lambda = 1.0;
-    // }
 
     const VecXd delta =
         current_system.J.solve_lst_sq(current_system.v, current_system.R_inv, lambda);
