@@ -9,11 +9,6 @@ namespace jet_filter {
 FiducialMeasurement observe_fiducial(const State& x, const Parameters& p);
 
 // TODO: generate this
-jcc::Vec3 accel_error_model(const State& x,
-                            const AccelMeasurement& z,
-                            const Parameters& p);
-
-// TODO: generate this
 VecNd<6> fiducial_error_model(const State& x,
                               const FiducialMeasurement& z,
                               const Parameters& p);
@@ -26,6 +21,8 @@ class JetFilter {
   JetFilter(const JetFilterState& xp0);
 
   void measure_imu(const AccelMeasurement& meas, const TimePoint& t);
+
+  void measure_gyro(const GyroMeasurement& meas, const TimePoint& t);
 
   void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t);
 
@@ -46,7 +43,8 @@ class JetFilter {
 
   int imu_id_ = -1;
   int fiducial_id_ = -1;
-  };
+  int gyro_id_ = -1;
+};
 
 }  // namespace jet_filter
-}  // namespace jet_filter
+}  // namespace estimation

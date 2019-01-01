@@ -8,5 +8,6 @@ namespace estimation {
 template class Ekf<jet_filter::State>;
 template class ObservationModel<jet_filter::State, jet_filter::AccelMeasurement>;
 template class ObservationModel<jet_filter::State, jet_filter::FiducialMeasurement>;
+template class ObservationModel<jet_filter::State, jet_filter::GyroMeasurement>;
 
 }  // namespace estimation

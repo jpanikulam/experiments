@@ -37,14 +37,6 @@ std::function<VecNd<Meas::DIM>(const State&, const Meas&)> bind_parameters(
 
 }  // namespace
 
-//jcc::Vec3 accel_error_model(const State& x,
-//                            const AccelMeasurement& z,
-//                            const Parameters& p) {
-//  const jcc::Vec3 expected_a_mpss = observe_accel(x, p);
-//  const jcc::Vec3 error = z.observed_acceleration - expected_a_mpss;
-//  return error;
-//}
-
 FiducialMeasurement observe_fiducial(const State& x, const Parameters& p) {
   FiducialMeasurement meas;
   // const SE3 T_camera_from_world = p.T_camera_from_body * x.T_body_from_world;
@@ -74,14 +66,21 @@ VecNd<6> fiducial_error_model(const State& x,
 
 JetFilter::JetFilter(const JetFilterState& xp0) : xp_(xp0), ekf_(dynamics) {
   parameters_ = get_parameters();
-  imu_id_ = ekf_.add_model(bind_parameters<AccelMeasurement>(compute_delta, parameters_));
-  fiducial_id_ =
-      ekf_.add_model(bind_parameters<FiducialMeasurement>(fiducial_error_model, parameters_));
+  imu_id_ = ekf_.add_model(
+      bind_parameters<AccelMeasurement>(observe_accel_error_model, parameters_));
+  gyro_id_ = ekf_.add_model(
+      bind_parameters<GyroMeasurement>(observe_gyro_error_model, parameters_));
 
+  fiducial_id_ = ekf_.add_model(
+      bind_parameters<FiducialMeasurement>(fiducial_error_model, parameters_));
 }
 
 void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t) {
   ekf_.measure(meas, t, imu_id_);
+}
+
+void JetFilter::measure_gyro(const GyroMeasurement& meas, const TimePoint& t) {
+  ekf_.measure(meas, t, gyro_id_);
 }
 
 void JetFilter::measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t) {
