@@ -63,7 +63,7 @@ FilterState<State> Ekf<State>::service_all_measurements(
     const auto& observer = observation_models_.at(i);
     const FilterStateUpdate<State> update = observer(x_hat, meas.observation);
 
-    x_hat.x = apply_delta(x_hat.x, update.dx);
+    x_hat.x = State::apply_delta(x_hat.x, update.dx);
     x_hat.P = numerics::symmetrize(update.P_new);
 
     measurements_.pop();
