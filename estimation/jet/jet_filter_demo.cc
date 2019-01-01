@@ -83,30 +83,41 @@ class JetOptimizer {
   JetOptimizer() {
     MatNd<AccelMeasurement::DIM, AccelMeasurement::DIM> accel_cov;
     accel_cov.setZero();
-    set_diag_to_value<AccelMeasurementDelta::observed_acceleration_error_dim,
-                      AccelMeasurementDelta::observed_acceleration_error_ind>(accel_cov,
-                                                                              0.01);
+    {
+      set_diag_to_value<AccelMeasurementDelta::observed_acceleration_error_dim,
+                        AccelMeasurementDelta::observed_acceleration_error_ind>(accel_cov,
+                                                                                0.01);
+    }
 
     MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;
-    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.001;
-    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.0001;
-
+    {
+      fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.001;
+      fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.0001;
+    }
     MatNd<State::DIM, State::DIM> state_cov;
-    state_cov.setZero();
-    set_diag_to_value<StateDelta::accel_bias_error_dim, StateDelta::accel_bias_error_ind>(
-        state_cov, 0.0001);
-    set_diag_to_value<StateDelta::gyro_bias_error_dim, StateDelta::gyro_bias_error_ind>(
-        state_cov, 0.0001);
-    set_diag_to_value<StateDelta::eps_dot_error_dim, StateDelta::eps_dot_error_ind>(
-        state_cov, 0.1);
-    set_diag_to_value<StateDelta::eps_ddot_error_dim, StateDelta::eps_ddot_error_ind>(
-        state_cov, 0.1);
+    {
+      state_cov.setZero();
+      set_diag_to_value<StateDelta::accel_bias_error_dim,
+                        StateDelta::accel_bias_error_ind>(state_cov, 0.0001);
+      set_diag_to_value<StateDelta::gyro_bias_error_dim, StateDelta::gyro_bias_error_ind>(
+          state_cov, 0.0001);
+      set_diag_to_value<StateDelta::eps_dot_error_dim, StateDelta::eps_dot_error_ind>(
+          state_cov, 0.1);
+      set_diag_to_value<StateDelta::eps_ddot_error_dim, StateDelta::eps_ddot_error_ind>(
+          state_cov, 0.1);
 
-    constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
-    constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
-    set_diag_to_value<T_error_dim, T_error_ind>(state_cov, 0.001);
+      constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
+      constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
+      set_diag_to_value<T_error_dim, T_error_ind>(state_cov, 0.001);
+    }
 
-    imu_id_ = pose_opt_.add_error_model<AccelMeasurement>(accel_error_model, accel_cov);
+    const MatNd<GyroMeasurement::DIM, GyroMeasurement::DIM> gyro_cov = accel_cov;
+
+    imu_id_ =
+        pose_opt_.add_error_model<AccelMeasurement>(observe_accel_error_model, accel_cov);
+    gyro_id_ =
+        pose_opt_.add_error_model<GyroMeasurement>(observe_gyro_error_model, gyro_cov);
+
     fiducial_id_ = pose_opt_.add_error_model<FiducialMeasurement>(fiducial_error_model,
                                                                   fiducial_cov);
     pose_opt_.set_dynamics_cov(state_cov);
@@ -118,6 +129,10 @@ class JetOptimizer {
 
   void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t) {
     pose_opt_.add_measurement(meas, t, fiducial_id_);
+  }
+
+  void measure_gyro(const GyroMeasurement& meas, const TimePoint& t) {
+    pose_opt_.add_measurement(meas, t, gyro_id_);
   }
 
   JetPoseOptimizer::Solution solve(const std::vector<State> x, const Parameters& p) {
@@ -140,6 +155,7 @@ class JetOptimizer {
  private:
   JetPoseOptimizer pose_opt_{rk4_integrate};
   int imu_id_ = -1;
+  int gyro_id_ = -1;
   int fiducial_id_ = -1;
 };
 
@@ -149,18 +165,40 @@ void run_filter() {
   JetOptimizer jet_opt;
 
   FilterState<State> xp0;
-  xp0.P.setIdentity();
-  xp0.x.eps_dot[0] = 1.0;
-  xp0.x.eps_dot[4] = -0.6;
-  xp0.x.eps_dot[5] = -0.2;
+  {
+    MatNd<State::DIM, State::DIM> state_cov;
+    state_cov.setZero();
+    set_diag_to_value<StateDelta::accel_bias_error_dim, StateDelta::accel_bias_error_ind>(
+        state_cov, 0.0001);
+    set_diag_to_value<StateDelta::gyro_bias_error_dim, StateDelta::gyro_bias_error_ind>(
+        state_cov, 0.0001);
+    set_diag_to_value<StateDelta::eps_dot_error_dim, StateDelta::eps_dot_error_ind>(
+        state_cov, 0.01);
+    set_diag_to_value<StateDelta::eps_ddot_error_dim, StateDelta::eps_ddot_error_ind>(
+        state_cov, 0.1);
 
-  xp0.x.eps_ddot[1] = 0.01;
-  xp0.x.eps_ddot[5] = 0.01;
+    xp0.P = state_cov;
+  }
+  // xp0.x.eps_dot[0] = 1.0;
+  // xp0.x.eps_dot[4] = -0.6;
+  // xp0.x.eps_dot[5] = -0.2;
+
+  // xp0.x.eps_ddot[1] = 0.01;
+  // xp0.x.eps_ddot[5] = 0.01;
+  // xp0.x.eps_ddot[3] = 0.02;
 
   xp0.time_of_validity = {};
 
   State true_x = xp0.x;
   true_x.eps_dot[4] = 0.1;
+
+  true_x.eps_dot[0] = 1.0;
+  true_x.eps_dot[4] = -0.6;
+  true_x.eps_dot[5] = -0.2;
+
+  true_x.eps_ddot[1] = 0.01;
+  true_x.eps_ddot[5] = 0.01;
+  true_x.eps_ddot[3] = 0.02;
 
   JetFilter jf(xp0);
 
@@ -178,21 +216,21 @@ void run_filter() {
   TimePoint start_time = {};
   constexpr auto dt = to_duration(0.1);
 
-  constexpr int NUM_SIM_STEPS = 1000;
+  constexpr int NUM_SIM_STEPS = 300;
 
   TimePoint current_time = start_time;
 
   for (int k = 0; k < NUM_SIM_STEPS; ++k) {
     if (k > 75 && k < 130) {
-      true_x.eps_ddot[0] = 0.1;
-      true_x.eps_ddot[1] = -0.02;
-      true_x.eps_ddot[2] = -0.03;
+      // true_x.eps_ddot[0] = 0.1;
+      // true_x.eps_ddot[1] = -0.02;
+      // true_x.eps_ddot[2] = -0.03;
 
-      true_x.eps_ddot[3] = 0.1;
-      true_x.eps_ddot[4] = 0.05;
-      true_x.eps_ddot[5] = -0.01;
+      // true_x.eps_ddot[3] = 0.1;
+      // true_x.eps_ddot[4] = 0.05;
+      // true_x.eps_ddot[5] = -0.01;
     } else if (k > 130) {
-      true_x.eps_ddot.setZero();
+      // true_x.eps_ddot.setZero();
     }
 
     //
@@ -200,36 +238,6 @@ void run_filter() {
     //
     // if ((k % 10 == 0) && k > 75) {
     if (true) {
-      ground_truth.push_back(true_x);
-      const AccelMeasurement imu_meas =observe_accel(true_x, true_params;
-      std::cout << "Accel: " << imu_meas.observed_acceleration.transpose() << std::endl;
-
-      jf.measure_imu(imu_meas, current_time);
-      jet_opt.measure_imu(imu_meas, current_time);
-
-      jf.free_run();
-      est_states.push_back(jf.state().x);
-      assert(jf.state().time_of_validity == current_time);
-
-      const jcc::Vec4 accel_color(0.0, 0.7, 0.7, 0.8);
-      obs_geo->add_sphere({jf.state().x.T_body_from_world.inverse().translation(),
-                           sphere_size_m, accel_color});
-
-      const SE3 world_from_body = jf.state().x.T_body_from_world.inverse();
-      const jcc::Vec3 observed_accel_body_frame =
-          (world_from_body.so3() * true_params.T_imu_from_vehicle.so3().inverse() *
-           imu_meas.observed_acceleration);
-
-      obs_geo->add_line(
-          {world_from_body.translation(),
-           world_from_body.translation() + (0.25 * observed_accel_body_frame),
-           accel_color});
-    }
-
-    //
-    // Gyro Observation
-    //
-    if (false) {
       ground_truth.push_back(true_x);
       const AccelMeasurement imu_meas = observe_accel(true_x, true_params);
       std::cout << "Accel: " << imu_meas.observed_acceleration.transpose() << std::endl;
@@ -246,14 +254,47 @@ void run_filter() {
                            sphere_size_m, accel_color});
 
       const SE3 world_from_body = jf.state().x.T_body_from_world.inverse();
-      const jcc::Vec3 observed_accel_body_frame =
+      const jcc::Vec3 observed_accel_world_frame =
           (world_from_body.so3() * true_params.T_imu_from_vehicle.so3().inverse() *
            imu_meas.observed_acceleration);
 
       obs_geo->add_line(
           {world_from_body.translation(),
-           world_from_body.translation() + (0.25 * observed_accel_body_frame),
+           world_from_body.translation() + (0.25 * observed_accel_world_frame),
            accel_color});
+    }
+
+    //
+    // Gyro Observation
+    //
+    if (true) {
+      constexpr auto dt2 = to_duration(0.01);
+      true_x = rk4_integrate(true_x, true_params, to_seconds(dt2));
+      current_time += dt2;
+      ground_truth.push_back(true_x);
+
+      const GyroMeasurement gyro_meas = observe_gyro(true_x, true_params);
+      std::cout << "Gyro: " << gyro_meas.observed_w.transpose() << std::endl;
+
+      jf.measure_gyro(gyro_meas, current_time);
+      jet_opt.measure_gyro(gyro_meas, current_time);
+
+      jf.free_run();
+      est_states.push_back(jf.state().x);
+      assert(jf.state().time_of_validity == current_time);
+
+      const jcc::Vec4 gyro_color(0.7, 0.1, 0.7, 0.8);
+      obs_geo->add_sphere({jf.state().x.T_body_from_world.inverse().translation(),
+                           sphere_size_m, gyro_color});
+
+      const SE3 world_from_body = jf.state().x.T_body_from_world.inverse();
+      const jcc::Vec3 observed_w_world_frame =
+          (world_from_body.so3() * true_params.T_imu_from_vehicle.so3().inverse() *
+           gyro_meas.observed_w);
+
+      obs_geo->add_line({world_from_body.translation(),
+                         world_from_body.translation() + (0.25 * observed_w_world_frame),
+                         gyro_color});
     }
 
     //
