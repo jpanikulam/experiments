@@ -14,67 +14,18 @@
 namespace estimation {
 namespace jet_filter {
 namespace {
-/*
-void go() {
-  setup();
-  const auto view = viewer::get_window3d("Mr. Filter, filters");
-  const auto geo = view->add_primitive<viewer::SimpleGeometry>();
-
-  const jcc::Vec3 g(0.0, 0.0, 0.0);
-  const SO3 r_sensor_from_body;
-  const jcc::Vec3 t_sensor_from_body = jcc::Vec3(0.0, 0.0, 1.0);
-  const SE3 sensor_from_body = SE3(r_sensor_from_body, t_sensor_from_body);
-
-  State x;
-  x.T_body_from_world = SE3(SO3(), jcc::Vec3(5.0, 0.0, 0.0));
-
-  x.eps_dot[0] = 0.0;
-  x.eps_dot[1] = 0.0;
-  x.eps_dot[2] = 0.0;
-  x.eps_dot[3] = 0.0;
-  x.eps_dot[4] = 0.0;
-  x.eps_dot[5] = 0.0;
-
-  x.eps_ddot[0] = 0.0;
-  x.eps_ddot[1] = 1.0;
-  x.eps_ddot[2] = 0.0;
-  x.eps_ddot[3] = 0.0;
-  x.eps_ddot[4] = 0.0;
-  x.eps_ddot[5] = 1.0;
-
-  p = mock_parameters();
-  const auto res = observe_accel(x, p);
-
-  constexpr double dt = 0.01;
-  while (!view->should_close()) {
-    x = dynamics(x, dt);
-
-    geo->add_axes({x.T_body_from_world.inverse()});
-    const SE3 world_from_sensor = (sensor_from_body * x.T_body_from_world).inverse();
-    geo->add_axes({world_from_sensor, 0.25});
-    const auto res =
-        observe_accel(x.T_body_from_world, x.eps_dot, x.eps_ddot, sensor_from_body, g);
-
-    geo->add_ray(
-        {world_from_sensor.translation(), world_from_sensor.so3() * res, res.norm()});
-
-    geo->flip();
-
-    view->spin_until_step();
-  }
-}
-*/
 
 Parameters mock_parameters() {
+  Parameters p;
   const jcc::Vec3 g(0.0, 0.0, -1.3);
+  p.g_world = g;
+
   // const jcc::Vec3 t(0.1, 0.5, 0.1);
   const jcc::Vec3 t(0.0, 0.1, 0.25);
   // const jcc::Vec3 t = jcc::Vec3::Zero();
   const SO3 r_vehicle_from_sensor = SO3::exp(jcc::Vec3(0.0, 0.0, 0.0));
-  const SE3 vehicle_from_sensor(r_vehicle_from_sensor, t);
-  Parameters p;
-  p.T_sensor_from_body = vehicle_from_sensor;
-  p.g_world = g;
+  const SE3 sensor_from_body(r_vehicle_from_sensor, t);
+  p.T_imu_from_vehicle = sensor_from_body;
   return p;
 }
 
@@ -147,16 +98,13 @@ class JetOptimizer {
     set_diag_to_value<StateDelta::gyro_bias_error_dim, StateDelta::gyro_bias_error_ind>(
         state_cov, 0.0001);
     set_diag_to_value<StateDelta::eps_dot_error_dim, StateDelta::eps_dot_error_ind>(
-        state_cov, 0.0001);
+        state_cov, 0.1);
     set_diag_to_value<StateDelta::eps_ddot_error_dim, StateDelta::eps_ddot_error_ind>(
-        state_cov, 0.0001);
+        state_cov, 0.1);
 
     constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
     constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
     set_diag_to_value<T_error_dim, T_error_ind>(state_cov, 0.001);
-
-    std::cout << "AAAAA" << std::endl;
-    std::cout << accel_cov << std::endl;
 
     imu_id_ = pose_opt_.add_error_model<AccelMeasurement>(accel_error_model, accel_cov);
     fiducial_id_ = pose_opt_.add_error_model<FiducialMeasurement>(fiducial_error_model,
@@ -173,18 +121,17 @@ class JetOptimizer {
   }
 
   JetPoseOptimizer::Solution solve(const std::vector<State> x, const Parameters& p) {
-    const auto visitor = [](const JetPoseOptimizer::Solution& soln) {
-      const auto view = viewer::get_window3d("Mr. Filter, filters");
-      const auto geo = view->add_primitive<viewer::SimpleGeometry>();
-
+    const auto view = viewer::get_window3d("Mr. Filter, filters");
+    const auto geo = view->add_primitive<viewer::SimpleGeometry>();
+    const auto visitor = [&view, &geo](const JetPoseOptimizer::Solution& soln) {
+      geo->clear();
       draw_states(*geo, soln.x, false);
       geo->flip();
       std::cout << "\tOptimized g: " << soln.p.g_world.transpose() << std::endl;
-      std::cout << "\tOptimized T_sensor_from_body: "
-                << soln.p.T_sensor_from_body.translation().transpose() << "; "
-                << soln.p.T_sensor_from_body.so3().log().transpose() << std::endl;
+      std::cout << "\tOptimized T_imu_from_vehicle: "
+                << soln.p.T_imu_from_vehicle.translation().transpose() << "; "
+                << soln.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
       view->spin_until_step();
-      geo->clear();
     };
 
     return pose_opt_.solve({x, p}, visitor);
@@ -204,8 +151,8 @@ void run_filter() {
   FilterState<State> xp0;
   xp0.P.setIdentity();
   xp0.x.eps_dot[0] = 1.0;
-  xp0.x.eps_dot[4] = -0.1;
-  xp0.x.eps_dot[5] = -1.0;
+  xp0.x.eps_dot[4] = -0.6;
+  xp0.x.eps_dot[5] = -0.2;
 
   xp0.x.eps_ddot[1] = 0.01;
   xp0.x.eps_ddot[5] = 0.01;
@@ -231,17 +178,20 @@ void run_filter() {
   TimePoint start_time = {};
   constexpr auto dt = to_duration(0.1);
 
-  constexpr int NUM_SIM_STEPS = 25;
+  constexpr int NUM_SIM_STEPS = 1000;
 
   TimePoint current_time = start_time;
 
   for (int k = 0; k < NUM_SIM_STEPS; ++k) {
-    if (k > 75 && k < 95) {
-      true_x.eps_ddot[4] = 0.1;
+    if (k > 75 && k < 130) {
+      true_x.eps_ddot[0] = 0.1;
+      true_x.eps_ddot[1] = -0.02;
+      true_x.eps_ddot[2] = -0.03;
+
       true_x.eps_ddot[3] = 0.1;
+      true_x.eps_ddot[4] = 0.05;
       true_x.eps_ddot[5] = -0.01;
-      true_x.eps_ddot[1] = -0.01;
-    } else if (k > 95) {
+    } else if (k > 130) {
       true_x.eps_ddot.setZero();
     }
 
@@ -251,7 +201,7 @@ void run_filter() {
     // if ((k % 10 == 0) && k > 75) {
     if (true) {
       ground_truth.push_back(true_x);
-      const AccelMeasurement imu_meas = {observe_accel(true_x, true_params)};
+      const AccelMeasurement imu_meas =observe_accel(true_x, true_params;
       std::cout << "Accel: " << imu_meas.observed_acceleration.transpose() << std::endl;
 
       jf.measure_imu(imu_meas, current_time);
@@ -267,7 +217,37 @@ void run_filter() {
 
       const SE3 world_from_body = jf.state().x.T_body_from_world.inverse();
       const jcc::Vec3 observed_accel_body_frame =
-          (world_from_body.so3() * true_params.T_sensor_from_body.so3().inverse() *
+          (world_from_body.so3() * true_params.T_imu_from_vehicle.so3().inverse() *
+           imu_meas.observed_acceleration);
+
+      obs_geo->add_line(
+          {world_from_body.translation(),
+           world_from_body.translation() + (0.25 * observed_accel_body_frame),
+           accel_color});
+    }
+
+    //
+    // Gyro Observation
+    //
+    if (false) {
+      ground_truth.push_back(true_x);
+      const AccelMeasurement imu_meas = observe_accel(true_x, true_params);
+      std::cout << "Accel: " << imu_meas.observed_acceleration.transpose() << std::endl;
+
+      jf.measure_imu(imu_meas, current_time);
+      jet_opt.measure_imu(imu_meas, current_time);
+
+      jf.free_run();
+      est_states.push_back(jf.state().x);
+      assert(jf.state().time_of_validity == current_time);
+
+      const jcc::Vec4 accel_color(0.0, 0.7, 0.7, 0.8);
+      obs_geo->add_sphere({jf.state().x.T_body_from_world.inverse().translation(),
+                           sphere_size_m, accel_color});
+
+      const SE3 world_from_body = jf.state().x.T_body_from_world.inverse();
+      const jcc::Vec3 observed_accel_body_frame =
+          (world_from_body.so3() * true_params.T_imu_from_vehicle.so3().inverse() *
            imu_meas.observed_acceleration);
 
       obs_geo->add_line(
@@ -330,9 +310,9 @@ void run_filter() {
     print_state(ground_truth.at(k));
   }
   std::cout << "Optimized g: " << solution.p.g_world.transpose() << std::endl;
-  std::cout << "Optimized T_sensor_from_body: "
-            << solution.p.T_sensor_from_body.translation().transpose() << "; "
-            << solution.p.T_sensor_from_body.so3().log().transpose() << std::endl;
+  std::cout << "Optimized T_imu_from_vehicle: "
+            << solution.p.T_imu_from_vehicle.translation().transpose() << "; "
+            << solution.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
 
   draw_states(*geo, solution.x, false);
 

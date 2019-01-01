@@ -16,7 +16,7 @@ Parameters get_parameters() {
 
   const SE3 vehicle_from_sensor;
   Parameters p;
-  p.T_sensor_from_body = vehicle_from_sensor;
+  p.T_imu_from_vehicle = vehicle_from_sensor;
   p.g_world = g;
   return p;
 }
@@ -37,13 +37,13 @@ std::function<VecNd<Meas::DIM>(const State&, const Meas&)> bind_parameters(
 
 }  // namespace
 
-jcc::Vec3 accel_error_model(const State& x,
-                            const AccelMeasurement& z,
-                            const Parameters& p) {
-  const jcc::Vec3 expected_a_mpss = observe_accel(x, p);
-  const jcc::Vec3 error = z.observed_acceleration - expected_a_mpss;
-  return error;
-}
+//jcc::Vec3 accel_error_model(const State& x,
+//                            const AccelMeasurement& z,
+//                            const Parameters& p) {
+//  const jcc::Vec3 expected_a_mpss = observe_accel(x, p);
+//  const jcc::Vec3 error = z.observed_acceleration - expected_a_mpss;
+//  return error;
+//}
 
 FiducialMeasurement observe_fiducial(const State& x, const Parameters& p) {
   FiducialMeasurement meas;
@@ -74,7 +74,7 @@ VecNd<6> fiducial_error_model(const State& x,
 
 JetFilter::JetFilter(const JetFilterState& xp0) : xp_(xp0), ekf_(dynamics) {
   parameters_ = get_parameters();
-  imu_id_ = ekf_.add_model(bind_parameters<AccelMeasurement>(accel_error_model, parameters_));
+  imu_id_ = ekf_.add_model(bind_parameters<AccelMeasurement>(compute_delta, parameters_));
   fiducial_id_ =
       ekf_.add_model(bind_parameters<FiducialMeasurement>(fiducial_error_model, parameters_));
 
