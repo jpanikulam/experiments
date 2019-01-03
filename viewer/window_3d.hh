@@ -72,6 +72,13 @@ class Window3D final : public SimpleWindow {
     continue_ms_ = dt_ms;
   }
 
+  void set_azimuth(const double azimuth) {
+    view_.set_azimuth(azimuth);
+  }
+  void set_elevation(const double elevation) {
+    view_.set_elevation(elevation);
+  }
+
  private:
   void draw_all_primitives() const;
 

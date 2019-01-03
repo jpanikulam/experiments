@@ -156,7 +156,7 @@ void Window3D::render() {
 
   const double t_now = glfwGetTime();
 
-  const double dt = t_now - last_update_time_;
+  const double dt = std::max(t_now - last_update_time_, 0.02);
   view_.apply_keys(held_keys(), dt);
   view_ = view_.simulate(dt);
   last_update_time_ = t_now;

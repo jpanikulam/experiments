@@ -22,6 +22,24 @@ class OrbitCamera {
  public:
   using KeyMap = std::unordered_map<int, bool>;
 
+  OrbitCamera() = default;
+  OrbitCamera(const double azimuth,
+              const double elevation,
+              const double zoom = 0.1,
+              const double dist_to_target = 1.0)
+      : azimuth_(azimuth),
+        elevation_(elevation),
+        zoom_(zoom),
+        dist_to_target_(dist_to_target) {
+  }
+
+  void set_azimuth(const double az){
+    azimuth_ = az;
+  }
+  void set_elevation(const double el) {
+    elevation_ = el;
+  }
+
   // Get the actual view
   SE3 camera_from_world() const;
 
@@ -54,9 +72,9 @@ class OrbitCamera {
   static constexpr double INITIAL_Z_OFFSET_M = 15.0;
   SE3 camera_from_anchor_ = SE3(SO3(), Vec3(0.0, 0.0, INITIAL_Z_OFFSET_M));
 
-  double zoom_ = 0.1;
   double azimuth_ = M_PI * 0.25;
   double elevation_ = M_PI * 0.25;
+  double zoom_ = 0.1;
   double dist_to_target_ = 1.0;
 };
 

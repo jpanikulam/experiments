@@ -59,7 +59,7 @@ class SimpleWindow {
  private:
   std::string title_;
   std::unordered_map<int, bool> held_keys_;
-  std::array<bool, 3> held_mouse_buttons_;
+  std::array<bool, 3> held_mouse_buttons_ = {false, false, false};
   bool should_close_ = false;
 
   GlSize gl_size_;
