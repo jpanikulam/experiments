@@ -7,12 +7,42 @@
 #include <opencv2/opencv.hpp>
 #include "estimation/vision/fiducial_pose.hh"
 
+#include "estimation/jet/jet_filter.hh"
+#include "estimation/jet/jet_optimizer.hh"
+#include "estimation/time_point.hh"
+
+// TODO: Factor
+#include "numerics/set_diag_to_value.hh"
+
 #include "eigen.hh"
 #include "sophus.hh"
 
 namespace estimation {
 namespace jet_filter {
 namespace {
+
+// TODO FACTOR
+void draw_states(viewer::SimpleGeometry& geo,
+                 const std::vector<State>& states,
+                 bool truth) {
+  const int n_states = static_cast<int>(states.size());
+  for (int k = 0; k < n_states; ++k) {
+    auto& state = states.at(k);
+    const SE3 T_world_from_body = state.T_body_from_world.inverse();
+    if (truth) {
+      geo.add_axes({T_world_from_body, 0.1});
+    } else {
+      geo.add_axes({T_world_from_body, 0.05, 2.0, true});
+
+      if (k < n_states - 1) {
+        const auto& next_state = states.at(k + 1);
+        const SE3 T_world_from_body_next = next_state.T_body_from_world.inverse();
+        geo.add_line(
+            {T_world_from_body.translation(), T_world_from_body_next.translation()});
+      }
+    }
+  }
+}
 
 struct ProjectionModel {
   double fx;
@@ -98,16 +128,6 @@ void run() {
   const std::string fiducial_path = jcc::Environment::asset_path() + "fiducial.jpg";
   const cv::Mat fiducial_tag = cv::imread(fiducial_path);
   const auto fiducial_image = view->add_primitive<viewer::Image>(fiducial_tag, 0.28, 1);
-  /*
-  const auto image = std::make_shared<viewer::Image>(camera_frame, 1, 1);
-  {
-    const auto tree = view->add_primitive<viewer::SceneTree>();
-    // const SE3 world_from_image(SO3::exp(jcc::Vec3(M_PI * 0.5, 0.0, 0.0)),
-                               // jcc::Vec3::Zero());
-    const SE3 world_from_image;
-    tree->add_primitive("root", world_from_image, "image", image);
-  }
-  */
 
   const auto im_view = viewer::get_window3d("ImageView");
   cv::Mat camera_frame = cv::Mat::zeros(cv::Size(640, 640), CV_8UC3);
@@ -120,11 +140,36 @@ void run() {
   cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.25);
   cap.set(cv::CAP_PROP_AUTO_WB, 0);
 
-  // cap.set(cv::CAP_PROP_AUTO_WB, 0);
-  // cap.set(cv::CAP_PROP_AUTO_WB, 0);
-  // cap.set(cv::CAP_PROP_AUTO_WB, 0);
+  //
+  // Set up filters & optimizers
+  //
 
-  while (!view->should_close()) {
+  FilterState<State> xp0;
+  {
+    MatNd<State::DIM, State::DIM> state_cov;
+    state_cov.setZero();
+    numerics::set_diag_to_value<StateDelta::accel_bias_error_dim,
+                                StateDelta::accel_bias_error_ind>(state_cov, 0.0001);
+    numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
+                                StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
+    numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
+                                StateDelta::eps_dot_error_ind>(state_cov, 0.01);
+    numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
+                                StateDelta::eps_ddot_error_ind>(state_cov, 0.1);
+
+    xp0.P = state_cov;
+    xp0.time_of_validity = jcc::now();
+  }
+
+  JetFilter jf(xp0);
+  JetOptimizer jet_opt;
+  std::vector<State> est_states;
+
+  const auto obs_geo = view->add_primitive<viewer::SimpleGeometry>();
+  constexpr double sphere_size_m = 0.05;
+
+  while (!im_view->should_close()) {
+    const TimePoint current_time = jcc::now();
     if (cap.read(camera_frame)) {
       cv::Mat cf_blurred;
       // blur = cv2.blur(img,(5,5))
@@ -141,9 +186,48 @@ void run() {
                      cv::Scalar(255, 15, 15), 5.0);
         }
       }
+
+      if (!result.empty()) {
+        const FiducialMeasurement fiducial_meas = {
+            -1, result.at(0u).marker_center_from_camera};
+        jf.measure_fiducial(fiducial_meas, current_time);
+        jet_opt.measure_fiducial(fiducial_meas, current_time);
+
+        jf.free_run();
+        est_states.push_back(jf.state().x);
+        assert(jf.state().time_of_validity == current_time);
+
+        const SE3 world_from_jet = jf.state().x.T_body_from_world.inverse();
+        obs_geo->add_sphere({world_from_jet.translation(), sphere_size_m,
+                             jcc::Vec4(0.0, 1.0, 0.0, 1.0), world_from_jet.so3()});
+      } else {
+        const SE3 world_from_jet = jf.view(current_time).T_body_from_world.inverse();
+        obs_geo->add_sphere({world_from_jet.translation(), sphere_size_m,
+                             jcc::Vec4(1.0, 0.6, 0.0, 1.0), world_from_jet.so3()});
+      }
+
       geo->flip();
+      obs_geo->flip();
+
       image->update_image(camera_frame);
     }
+  }
+
+  std::cout << "Done, optimizing" << std::endl;
+  {
+    const auto visitor_geo = view->add_primitive<viewer::SimpleGeometry>();
+    const auto visitor = [&view, &visitor_geo](const JetPoseOptimizer::Solution& soln) {
+      visitor_geo->clear();
+      draw_states(*visitor_geo, soln.x, false);
+      visitor_geo->flip();
+      std::cout << "\tOptimized g: " << soln.p.g_world.transpose() << std::endl;
+      std::cout << "\tOptimized T_imu_from_vehicle: "
+                << soln.p.T_imu_from_vehicle.translation().transpose() << "; "
+                << soln.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
+      view->spin_until_step();
+    };
+
+    const auto solution = jet_opt.solve(est_states, jf.parameters(), visitor);
   }
 
   view->spin_until_step();
