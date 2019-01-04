@@ -230,7 +230,7 @@ void run_filter() {
       true_x.eps_ddot[4] = 0.05;
       true_x.eps_ddot[5] = -0.01;
     } else if (k > 130) {
-      // true_x.eps_ddot.setZero();
+      true_x.eps_ddot.setZero();
     }
 
     //
@@ -301,7 +301,7 @@ void run_filter() {
     // Fiducial Measurement
     //
 
-    {
+    if (true) {
       constexpr auto dt2 = to_duration(0.05);
       true_x = rk4_integrate(true_x, true_params, to_seconds(dt2));
       current_time += dt2;
