@@ -6,6 +6,7 @@
 #include <opencv2/aruco.hpp>
 #include <opencv2/opencv.hpp>
 
+#include "eigen.hh"
 #include "sophus.hh"
 
 namespace estimation {
@@ -13,6 +14,7 @@ namespace vision {
 
 struct MarkerDetection {
   SE3 marker_center_from_camera;
+  std::vector<jcc::Vec2> image_points;
   int id;
 };
 

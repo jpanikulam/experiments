@@ -9,23 +9,37 @@ std::vector<MarkerDetection> detect_markers(const cv::Mat& inputImage) {
   cv::Ptr<cv::aruco::Dictionary> dictionary =
       cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
   std::vector<int> ids;
-  std::vector<std::vector<cv::Point2f> > corners;
-  cv::aruco::detectMarkers(inputImage, dictionary, corners, ids);
+  std::vector<std::vector<cv::Point2f>> corners;
+  // cv::aruco::DetectorParameters params;
+  const auto params = cv::aruco::DetectorParameters::create();
+  params->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+
+  cv::aruco::detectMarkers(inputImage, dictionary, corners, ids, params);
   std::vector<cv::Vec3d> rvecs, tvecs;
 
-  cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << 320, 0, 320, 0, 320, 320, 0, 0, 1);
+  // cv::Mat camera_matrix = (cv::Mat1d(3, 3) << 320, 0, 320, 0, 320, 320, 0, 0, 1);
+  // const cv::Mat distortion_coefficients = (cv::Mat1d(1, 8) << 0, 0, 0, 0, 0);
 
-  const cv::Mat distortionCoefficients = (cv::Mat1d(1, 8) << 0, 0, 0, 0, 0);
+  const cv::Mat camera_matrix =
+      (cv::Mat1d(3, 3) << 265.9604351267379, 0, 323.3841822012849, 0, 302.7743119963964,
+       177.7795703229708, 0, 0, 1);
+  const cv::Mat distortion_coefficients = (cv::Mat1d(1, 5) << -0.0881294556831833,
+                                           0.08627577358744372,
+                                           -0.006574803742454203,
+                                           0.01200680448589873,
+                                           -0.02887266477084746);
 
-  cv::aruco::estimatePoseSingleMarkers(corners, 0.49375, cameraMatrix,
-                                       distortionCoefficients, rvecs, tvecs);
+  constexpr double SIZE_M = 0.14;
+  cv::aruco::estimatePoseSingleMarkers(corners, SIZE_M, camera_matrix,
+                                       distortion_coefficients, rvecs, tvecs);
+
   // The returned transformation is the one that transforms points from each marker
   // coordinate system to the camera coordinate system. The marker corrdinate system is
   // centered on the middle of the marker, with the Z axis perpendicular to the marker
   // plane.
   std::vector<MarkerDetection> detections;
   // draw axis for each marker
-  for (int i = 0; i < ids.size(); i++) {
+  for (int i = 0; i < static_cast<int>(ids.size()); i++) {
     const auto camera_from_marker_center =
         SE3(SO3::exp(jcc::Vec3(rvecs[i][0], rvecs[i][1], rvecs[i][2])),
             jcc::Vec3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
@@ -33,6 +47,11 @@ std::vector<MarkerDetection> detect_markers(const cv::Mat& inputImage) {
     MarkerDetection detection;
     detection.marker_center_from_camera = camera_from_marker_center.inverse();
     detection.id = ids[i];
+
+    for (const auto& pt : corners[i]) {
+      detection.image_points.emplace_back(pt.x, pt.y);
+    }
+
     detections.push_back(detection);
   }
 
