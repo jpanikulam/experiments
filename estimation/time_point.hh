@@ -21,3 +21,10 @@ constexpr double to_seconds(const TimeDuration& t) {
 }
 
 }  // namespace estimation
+
+namespace jcc {
+inline estimation::TimePoint now() {
+  return std::chrono::system_clock::now();
+}
+
+}  // namespace jcc
