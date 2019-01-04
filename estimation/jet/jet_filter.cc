@@ -9,8 +9,6 @@ namespace estimation {
 namespace jet_filter {
 namespace {
 
-const SE3 fiducial_1_from_world;
-
 Parameters get_parameters() {
   const jcc::Vec3 g(0.0, 0.0, -1.0);
 
@@ -37,33 +35,6 @@ std::function<VecNd<Meas::DIM>(const State&, const Meas&)> bind_parameters(
 
 }  // namespace
 
-FiducialMeasurement observe_fiducial(const State& x, const Parameters& p) {
-  FiducialMeasurement meas;
-  // const SE3 T_camera_from_world = p.T_camera_from_body * x.T_body_from_world;
-  const SE3 T_camera_from_body = SE3();
-  const SE3 T_camera_from_world = T_camera_from_body * x.T_body_from_world;
-
-  meas.T_fiducial_from_camera = fiducial_1_from_world * T_camera_from_world.inverse();
-  return meas;
-}
-
-VecNd<6> fiducial_error_model(const State& x,
-                              const FiducialMeasurement& z,
-                              const Parameters& p) {
-  /*  const SE3 measured_body_from_fiducial =
-        (z.T_fiducial_from_camera * p.T_camera_from_body).inverse();
-    const SE3 expected_body_from_fiducial =
-        x.T_body_from_world * fiducial_1_from_world.inverse();
-    const SE3 error = measured_body_from_fiducial * expected_body_from_fiducial;
-  */
-
-  const auto expected_fiducial = observe_fiducial(x, p);
-  const SE3 error =
-      z.T_fiducial_from_camera * expected_fiducial.T_fiducial_from_camera.inverse();
-
-  return SE3::log(error);
-}
-
 JetFilter::JetFilter(const JetFilterState& xp0) : xp_(xp0), ekf_(dynamics) {
   parameters_ = get_parameters();
   imu_id_ = ekf_.add_model(
@@ -89,6 +60,10 @@ void JetFilter::measure_fiducial(const FiducialMeasurement& meas, const TimePoin
 
 void JetFilter::free_run() {
   xp_ = ekf_.service_all_measurements(xp_);
+}
+
+State JetFilter::view(const TimePoint& t) const {
+  return ekf_.dynamics_until(xp_, t).x;
 }
 
 }  // namespace jet_filter

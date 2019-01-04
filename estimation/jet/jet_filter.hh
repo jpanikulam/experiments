@@ -5,14 +5,6 @@
 namespace estimation {
 namespace jet_filter {
 
-// TODO generate this
-FiducialMeasurement observe_fiducial(const State& x, const Parameters& p);
-
-// TODO: generate this
-VecNd<6> fiducial_error_model(const State& x,
-                              const FiducialMeasurement& z,
-                              const Parameters& p);
-
 class JetFilter {
   using Update = FilterStateUpdate<State>;
   using JetFilterState = FilterState<State>;
@@ -27,6 +19,7 @@ class JetFilter {
   void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t);
 
   void free_run();
+  State view(const TimePoint& t) const;
 
   const Parameters& parameters() const {
     return parameters_;

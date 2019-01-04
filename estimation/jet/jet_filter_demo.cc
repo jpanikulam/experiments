@@ -2,9 +2,11 @@
 #include "viewer/window_3d.hh"
 
 #include "estimation/jet/jet_filter.hh"
-#include "estimation/jet/jet_pose_opt.hh"
+#include "estimation/jet/jet_optimizer.hh"
 
 #include "estimation/jet/jet_rk4.hh"
+
+#include "numerics/set_diag_to_value.hh"
 
 #include "util/environment.hh"
 
@@ -72,92 +74,7 @@ void print_state(const State& x) {
   // std::cout << "\tExpected Measurement: " << res.transpose() << std::endl;
 }
 
-template <int dim, int row, int mat_size>
-void set_diag_to_value(MatNd<mat_size, mat_size>& mat, double value) {
-  mat.template block<dim, dim>(row, row) = (MatNd<dim, dim>::Identity() * value);
-}
 }  // namespace
-
-class JetOptimizer {
- public:
-  JetOptimizer() {
-    MatNd<AccelMeasurement::DIM, AccelMeasurement::DIM> accel_cov;
-    accel_cov.setZero();
-    {
-      set_diag_to_value<AccelMeasurementDelta::observed_acceleration_error_dim,
-                        AccelMeasurementDelta::observed_acceleration_error_ind>(accel_cov,
-                                                                                0.01);
-    }
-
-    MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;
-    {
-      fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.001;
-      fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.0001;
-    }
-    MatNd<State::DIM, State::DIM> state_cov;
-    {
-      state_cov.setZero();
-      set_diag_to_value<StateDelta::accel_bias_error_dim,
-                        StateDelta::accel_bias_error_ind>(state_cov, 0.0001);
-      set_diag_to_value<StateDelta::gyro_bias_error_dim, StateDelta::gyro_bias_error_ind>(
-          state_cov, 0.0001);
-      set_diag_to_value<StateDelta::eps_dot_error_dim, StateDelta::eps_dot_error_ind>(
-          state_cov, 0.1);
-      set_diag_to_value<StateDelta::eps_ddot_error_dim, StateDelta::eps_ddot_error_ind>(
-          state_cov, 3.0);
-
-      constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
-      constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
-      set_diag_to_value<T_error_dim, T_error_ind>(state_cov, 0.001);
-    }
-
-    const MatNd<GyroMeasurement::DIM, GyroMeasurement::DIM> gyro_cov = accel_cov;
-
-    imu_id_ =
-        pose_opt_.add_error_model<AccelMeasurement>(observe_accel_error_model, accel_cov);
-    gyro_id_ =
-        pose_opt_.add_error_model<GyroMeasurement>(observe_gyro_error_model, gyro_cov);
-
-    fiducial_id_ = pose_opt_.add_error_model<FiducialMeasurement>(fiducial_error_model,
-                                                                  fiducial_cov);
-    pose_opt_.set_dynamics_cov(state_cov);
-  }
-
-  void measure_imu(const AccelMeasurement& meas, const TimePoint& t) {
-    pose_opt_.add_measurement(meas, t, imu_id_);
-  }
-
-  void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t) {
-    pose_opt_.add_measurement(meas, t, fiducial_id_);
-  }
-
-  void measure_gyro(const GyroMeasurement& meas, const TimePoint& t) {
-    pose_opt_.add_measurement(meas, t, gyro_id_);
-  }
-
-  JetPoseOptimizer::Solution solve(const std::vector<State> x, const Parameters& p) {
-    const auto view = viewer::get_window3d("Mr. Filter, filters");
-    const auto geo = view->add_primitive<viewer::SimpleGeometry>();
-    const auto visitor = [&view, &geo](const JetPoseOptimizer::Solution& soln) {
-      geo->clear();
-      draw_states(*geo, soln.x, false);
-      geo->flip();
-      std::cout << "\tOptimized g: " << soln.p.g_world.transpose() << std::endl;
-      std::cout << "\tOptimized T_imu_from_vehicle: "
-                << soln.p.T_imu_from_vehicle.translation().transpose() << "; "
-                << soln.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
-      view->spin_until_step();
-    };
-
-    return pose_opt_.solve({x, p}, visitor);
-  }
-
- private:
-  JetPoseOptimizer pose_opt_{rk4_integrate};
-  int imu_id_ = -1;
-  int gyro_id_ = -1;
-  int fiducial_id_ = -1;
-};
 
 void run_filter() {
   const Parameters true_params = mock_parameters();
@@ -168,14 +85,14 @@ void run_filter() {
   {
     MatNd<State::DIM, State::DIM> state_cov;
     state_cov.setZero();
-    set_diag_to_value<StateDelta::accel_bias_error_dim, StateDelta::accel_bias_error_ind>(
-        state_cov, 0.0001);
-    set_diag_to_value<StateDelta::gyro_bias_error_dim, StateDelta::gyro_bias_error_ind>(
-        state_cov, 0.0001);
-    set_diag_to_value<StateDelta::eps_dot_error_dim, StateDelta::eps_dot_error_ind>(
-        state_cov, 0.01);
-    set_diag_to_value<StateDelta::eps_ddot_error_dim, StateDelta::eps_ddot_error_ind>(
-        state_cov, 0.1);
+    numerics::set_diag_to_value<StateDelta::accel_bias_error_dim,
+                                StateDelta::accel_bias_error_ind>(state_cov, 0.0001);
+    numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
+                                StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
+    numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
+                                StateDelta::eps_dot_error_ind>(state_cov, 0.01);
+    numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
+                                StateDelta::eps_ddot_error_ind>(state_cov, 0.1);
 
     xp0.P = state_cov;
   }
@@ -237,7 +154,7 @@ void run_filter() {
     // Accelerometer Observation
     //
     // if ((k % 10 == 0) && k > 75) {
-    if (true) {
+    if (false) {
       ground_truth.push_back(true_x);
       const AccelMeasurement imu_meas = observe_accel(true_x, true_params);
       std::cout << "Accel: " << imu_meas.observed_acceleration.transpose() << std::endl;
@@ -267,7 +184,7 @@ void run_filter() {
     //
     // Gyro Observation
     //
-    if (true) {
+    if (false) {
       constexpr auto dt2 = to_duration(0.01);
       true_x = rk4_integrate(true_x, true_params, to_seconds(dt2));
       current_time += dt2;
@@ -338,9 +255,25 @@ void run_filter() {
   draw_states(*geo, ground_truth, true);
   geo->flip();
 
+  //
+  // Create solver visitor
+  //
+
+  const auto visitor_geo = view->add_primitive<viewer::SimpleGeometry>();
+  const auto visitor = [&view, &visitor_geo](const JetPoseOptimizer::Solution& soln) {
+    visitor_geo->clear();
+    draw_states(*visitor_geo, soln.x, false);
+    visitor_geo->flip();
+    std::cout << "\tOptimized g: " << soln.p.g_world.transpose() << std::endl;
+    std::cout << "\tOptimized T_imu_from_vehicle: "
+              << soln.p.T_imu_from_vehicle.translation().transpose() << "; "
+              << soln.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
+    view->spin_until_step();
+  };
+
   // const std::vector<State> crap_init(est_states.size(), xp0.x);
   // const auto solution = jet_opt.solve(crap_init, jf.parameters());
-  const auto solution = jet_opt.solve(est_states, jf.parameters());
+  const auto solution = jet_opt.solve(est_states, jf.parameters(), visitor);
   // const auto solution = jet_opt.solve(ground_truth, jf.parameters());
 
   for (std::size_t k = 0; k < solution.x.size(); ++k) {
