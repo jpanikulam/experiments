@@ -41,6 +41,23 @@ def recurse_header_only_deps(file, lib, all_tree, repo_path):
     return recursed_deps
 
 
+def compute_deps_from_includes(elements):
+    external_includes_mapping = {
+        "opencv2/opencv.hpp": 'opencv',
+        "assimp/*": 'assimp',
+        "GLFW/glfw3.h": 'glfw',
+        "GL/glew.h": 'opengl',
+    }
+
+    new_deps = []
+    for include in elements['include']:
+        if include['type'] != 'system':
+            continue
+        if include['given_path'] in external_includes_mapping:
+            new_deps.append(external_includes_mapping[include['given_path']])
+    return new_deps
+
+
 def what_libs(file, elements, all_tree, known_libs, repo_path):
     '''Determine what libs are required for this thing.'''
     external_libs_remapping = {
@@ -60,7 +77,8 @@ def what_libs(file, elements, all_tree, known_libs, repo_path):
 
     required_libs = []
     # Obviated dependencies
-    for dep in elements['deps']:
+    estimated_deps = elements['deps'] + compute_deps_from_includes(elements)
+    for dep in estimated_deps:
         if dep in known_libs:
             required_libs.append(dep)
         elif dep.lower() in external_libs_remapping.keys():
