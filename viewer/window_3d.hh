@@ -6,8 +6,8 @@
 #include "viewer/simple_window.hh"
 
 #include "sophus.hh"
-#include "viewer/primitives/primitive.hh"
 #include "viewer/primitives/camera.hh"
+#include "viewer/primitives/primitive.hh"
 
 #include "eigen.hh"
 
@@ -77,6 +77,9 @@ class Window3D final : public SimpleWindow {
   }
   void set_elevation(const double elevation) {
     view_.set_elevation(elevation);
+  }
+  void set_zoom(const double zoom) {
+    view_.set_zoom(zoom);
   }
 
  private:

@@ -33,13 +33,15 @@ class OrbitCamera {
         dist_to_target_(dist_to_target) {
   }
 
-  void set_azimuth(const double az){
+  void set_azimuth(const double az) {
     azimuth_ = az;
   }
   void set_elevation(const double el) {
     elevation_ = el;
   }
-
+  void set_zoom(const double zoom) {
+    zoom_ = zoom;
+  }
   // Get the actual view
   SE3 camera_from_world() const;
 
