@@ -136,8 +136,12 @@ void run() {
   auto cap = cv::VideoCapture(0);
   cap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
   cap.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
+  cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('B', 'G', 'R', '8'));
   cap.set(cv::CAP_PROP_AUTOFOCUS, 0);
   cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.25);
+  constexpr double LETS_USE_THIS_EXPOSURE = 0.1;
+  cap.set(cv::CAP_PROP_EXPOSURE, LETS_USE_THIS_EXPOSURE);
+
   cap.set(cv::CAP_PROP_AUTO_WB, 0);
 
   //
@@ -170,7 +174,10 @@ void run() {
 
   while (!im_view->should_close()) {
     const TimePoint current_time = jcc::now();
+    cap.set(cv::CAP_PROP_EXPOSURE, LETS_USE_THIS_EXPOSURE);
     if (cap.read(camera_frame)) {
+      cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.25);
+
       cv::Mat cf_blurred;
       // blur = cv2.blur(img,(5,5))
       cv::GaussianBlur(camera_frame, cf_blurred, cv::Size(5, 5), 1.0, 1.0);

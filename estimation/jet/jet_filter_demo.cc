@@ -113,6 +113,8 @@ void run_filter() {
   true_x.eps_dot[4] = -0.6;
   true_x.eps_dot[5] = -0.2;
 
+  true_x.accel_bias = jcc::Vec3(0.1, -0.05, 0.15);
+
   true_x.eps_ddot[1] = 0.01;
   true_x.eps_ddot[5] = 0.01;
   true_x.eps_ddot[3] = 0.02;
@@ -154,7 +156,7 @@ void run_filter() {
     // Accelerometer Observation
     //
     // if ((k % 10 == 0) && k > 75) {
-    if (false) {
+    if (true) {
       ground_truth.push_back(true_x);
       const AccelMeasurement imu_meas = observe_accel(true_x, true_params);
       std::cout << "Accel: " << imu_meas.observed_acceleration.transpose() << std::endl;
@@ -184,7 +186,7 @@ void run_filter() {
     //
     // Gyro Observation
     //
-    if (false) {
+    if (true) {
       constexpr auto dt2 = to_duration(0.01);
       true_x = rk4_integrate(true_x, true_params, to_seconds(dt2));
       current_time += dt2;
