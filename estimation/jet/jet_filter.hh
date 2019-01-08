@@ -10,6 +10,8 @@ class JetFilter {
   using JetFilterState = FilterState<State>;
 
  public:
+  static JetFilterState reasonable_initial_state();
+
   JetFilter(const JetFilterState& xp0);
 
   void measure_imu(const AccelMeasurement& meas, const TimePoint& t);

@@ -6,8 +6,6 @@
 
 #include "estimation/jet/jet_rk4.hh"
 
-#include "numerics/set_diag_to_value.hh"
-
 #include "util/environment.hh"
 
 #include "eigen.hh"
@@ -25,7 +23,7 @@ Parameters mock_parameters() {
   // const jcc::Vec3 t(0.1, 0.5, 0.1);
   const jcc::Vec3 t(0.0, 0.1, 0.25);
   // const jcc::Vec3 t = jcc::Vec3::Zero();
-  const SO3 r_vehicle_from_sensor = SO3::exp(jcc::Vec3(0.0, 0.0, 0.0));
+  const SO3 r_vehicle_from_sensor = SO3::exp(jcc::Vec3(0.0, 0.0, 1.5));
   const SE3 sensor_from_body(r_vehicle_from_sensor, t);
   p.T_imu_from_vehicle = sensor_from_body;
   return p;
@@ -81,28 +79,7 @@ void run_filter() {
 
   JetOptimizer jet_opt;
 
-  FilterState<State> xp0;
-  {
-    MatNd<State::DIM, State::DIM> state_cov;
-    state_cov.setZero();
-    numerics::set_diag_to_value<StateDelta::accel_bias_error_dim,
-                                StateDelta::accel_bias_error_ind>(state_cov, 0.0001);
-    numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
-                                StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
-    numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
-                                StateDelta::eps_dot_error_ind>(state_cov, 0.01);
-    numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
-                                StateDelta::eps_ddot_error_ind>(state_cov, 0.1);
-
-    xp0.P = state_cov;
-  }
-  // xp0.x.eps_dot[0] = 1.0;
-  // xp0.x.eps_dot[4] = -0.6;
-  // xp0.x.eps_dot[5] = -0.2;
-
-  // xp0.x.eps_ddot[1] = 0.01;
-  // xp0.x.eps_ddot[5] = 0.01;
-  // xp0.x.eps_ddot[3] = 0.02;
+  FilterState<State> xp0 = JetFilter::reasonable_initial_state();
 
   xp0.time_of_validity = {};
 

@@ -2,6 +2,7 @@
 
 #include "estimation/jet/jet_ekf.hh"
 #include "estimation/jet/jet_rk4.hh"
+#include "numerics/set_diag_to_value.hh"
 
 #include "sophus.hh"
 
@@ -34,6 +35,23 @@ std::function<VecNd<Meas::DIM>(const State&, const Meas&)> bind_parameters(
 }
 
 }  // namespace
+
+FilterState<State> JetFilter::reasonable_initial_state() {
+  FilterState<State> xp0;
+  MatNd<State::DIM, State::DIM> state_cov;
+  state_cov.setZero();
+  numerics::set_diag_to_value<StateDelta::accel_bias_error_dim,
+                              StateDelta::accel_bias_error_ind>(state_cov, 0.0001);
+  numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
+                              StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
+  numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
+                              StateDelta::eps_dot_error_ind>(state_cov, 0.01);
+  numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
+                              StateDelta::eps_ddot_error_ind>(state_cov, 0.1);
+
+  xp0.P = state_cov;
+  return xp0;
+}
 
 JetFilter::JetFilter(const JetFilterState& xp0) : xp_(xp0), ekf_(dynamics) {
   parameters_ = get_parameters();
