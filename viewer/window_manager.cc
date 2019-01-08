@@ -85,13 +85,14 @@ void WindowManager::register_window(const GlSize &size,
       glfwCreateWindow(size.height, size.width, window_name.c_str(), nullptr, nullptr);
   simple_window->set_title(window_name);
 
-  glfwSetWindowPos(window, global_state->last_placed_window_x, 0);
 
   if (!window) {
     glfwTerminate();
     std::cerr << "\nFailed to create new window" << std::endl;
     exit(EXIT_FAILURE);
   }
+
+  glfwSetWindowPos(window, global_state->last_placed_window_x, 0);
 
   glfwSetKeyCallback(window, key_callback);
   glfwSetCursorPosCallback(window, cursor_position_callback);
