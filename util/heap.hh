@@ -16,11 +16,15 @@ class Heap {
                                        const T &b) { return std::less<T>()(a, b); })
       : cmp_(cmp) {
   }
+
   Heap(const std::vector<T> &vector,
        const CompareFunction &cmp = [](const T &a,
                                        const T &b) { return std::less<T>()(a, b); })
       : cmp_(cmp), vector_(vector) {
     std::make_heap(vector_, cmp_);
+  }
+
+  Heap(const Heap<T> &o_heap) : cmp_(o_heap.cmp_), vector_(o_heap.vector_) {
   }
 
   void drop() {
