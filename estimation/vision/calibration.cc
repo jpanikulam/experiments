@@ -5,7 +5,7 @@ namespace vision {
 
 constexpr int BOARD_WIDTH = 9;
 constexpr int BOARD_HEIGHT = 6;
-constexpr float SQUARE_SIZE = .0345;
+constexpr float SQUARE_SIZE = .034;
 
 void CalibrationManager::add_camera_image(const cv::Mat image) {
   all_camera_images_.push_back(image.clone());
