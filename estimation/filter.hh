@@ -2,10 +2,10 @@
 
 #include "estimation/filter_state.hh"
 #include "estimation/observation_model.hh"
+#include "util/heap.hh"
 
 #include <any>
 #include <map>
-#include <queue>
 
 namespace estimation {
 
@@ -60,6 +60,8 @@ class Ekf {
   FilterState<State> dynamics_until(const FilterState<State>& x0,
                                     const TimePoint& t) const;
 
+  FilterState<State> soft_service_all_measurements(
+      const FilterState<State>& x_hat0) const;
   FilterState<State> service_all_measurements(const FilterState<State>& x_hat0);
 
  private:
@@ -68,8 +70,7 @@ class Ekf {
       return a.time_of_validity > b.time_of_validity;
     }
   };
-  using MinQueue = std::priority_queue<Measurement, std::vector<Measurement>, Comparator>;
-  MinQueue measurements_;
+  Heap<Measurement> measurements_{Comparator()};
 
   std::map<int, AnyObservationModel> observation_models_;
 

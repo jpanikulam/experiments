@@ -52,11 +52,13 @@ FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
 }
 
 template <typename State>
-FilterState<State> Ekf<State>::service_all_measurements(
-    const FilterState<State>& x_hat0) {
+FilterState<State> Ekf<State>::soft_service_all_measurements(
+    const FilterState<State>& x_hat0) const {
   FilterState<State> x_hat = x_hat0;
-  while (!measurements_.empty()) {
-    const Measurement meas = measurements_.top();
+  // Copy measurements
+  Heap<Measurement> measurements{measurements_};
+  while (!measurements.empty()) {
+    const Measurement meas = measurements.top();
     x_hat = dynamics_until(x_hat, meas.time_of_validity);
 
     const int i = meas.type;
@@ -66,10 +68,20 @@ FilterState<State> Ekf<State>::service_all_measurements(
     x_hat.x = State::apply_delta(x_hat.x, update.dx);
     x_hat.P = numerics::symmetrize(update.P_new);
 
-    measurements_.pop();
+    measurements.pop();
   }
-
   return x_hat;
+}
+
+template <typename State>
+FilterState<State> Ekf<State>::service_all_measurements(
+    const FilterState<State>& x_hat0) {
+  FilterState<State> x_hat = x_hat0;
+
+  const auto x_hat_f = soft_service_all_measurements(x_hat);
+  measurements_.clear();
+
+  return x_hat_f;
 }
 
 }  // namespace estimation
