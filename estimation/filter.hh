@@ -3,6 +3,7 @@
 #include "estimation/filter_state.hh"
 #include "estimation/observation_model.hh"
 #include "util/heap.hh"
+#include "util/optional.hh"
 
 #include <any>
 #include <map>
@@ -63,6 +64,9 @@ class Ekf {
   FilterState<State> soft_service_all_measurements(
       const FilterState<State>& x_hat0) const;
   FilterState<State> service_all_measurements(const FilterState<State>& x_hat0);
+
+  jcc::Optional<FilterState<State>> service_next_measurement(
+      const FilterState<State>& x_hat0);
 
  private:
   struct Comparator {

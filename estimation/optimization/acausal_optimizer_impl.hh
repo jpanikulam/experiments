@@ -122,8 +122,10 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
     if (t < static_cast<int>(soln.x.size()) - 1) {
       const double dt =
           to_seconds(measurements.at(t + 1).time_of_validity - z_t.time_of_validity);
+
       assert(dt > 0.0);
-      // assert(dt < 0.3); // Arbitrary constant that is surprising enough to indicate a bug
+      // assert(dt < 0.3);  // Arbitrary constant that is surprising enough to indicate a
+      // bug
 
       const State& x_t1 = soln.x.at(t + 1);
 
@@ -197,7 +199,7 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   double prev_cost = cost(current_system);
   double lambda = LAMBDA_INITIAL;
 
-  for (int k = 0; k < 300; ++k) {
+  for (int k = 0; k < 1000; ++k) {
     if (visitor) {
       visitor(soln);
     }

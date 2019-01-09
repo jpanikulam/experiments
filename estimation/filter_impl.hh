@@ -84,4 +84,27 @@ FilterState<State> Ekf<State>::service_all_measurements(
   return x_hat_f;
 }
 
+template <typename State>
+jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
+    const FilterState<State>& x_hat0) {
+  if (!measurements_.empty()) {
+    const Measurement meas = measurements_.top();
+    const auto x_hat_t = dynamics_until(x_hat0, meas.time_of_validity);
+
+    const int i = meas.type;
+    const auto& observer = observation_models_.at(i);
+    const FilterStateUpdate<State> update = observer(x_hat_t, meas.observation);
+
+    FilterState<State> x_est_t = x_hat_t;
+    x_est_t.x = State::apply_delta(x_hat0.x, update.dx);
+    x_est_t.P = numerics::symmetrize(update.P_new);
+
+
+    measurements_.pop();
+    return {x_est_t};
+  } else {
+    return {};
+  }
+}
+
 }  // namespace estimation

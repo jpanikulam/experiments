@@ -14,13 +14,19 @@ class JetFilter {
 
   JetFilter(const JetFilterState& xp0);
 
+  void reset(const JetFilterState& xp) {
+    xp_ = xp;
+  }
+
   void measure_imu(const AccelMeasurement& meas, const TimePoint& t);
 
   void measure_gyro(const GyroMeasurement& meas, const TimePoint& t);
 
   void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t);
 
-  void free_run();
+  State free_run();
+  jcc::Optional<State> next_measurement();
+
   State view(const TimePoint& t) const;
 
   const Parameters& parameters() const {

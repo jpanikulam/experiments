@@ -15,7 +15,7 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
     const FilterState<State>& xp, const Observation& z) const {
   using ObservationInfo = MatNd<Observation::DIM, Observation::DIM>;
 
-  const ObservationInfo R = ObservationInfo::Identity() * 0.1;
+  const ObservationInfo R = ObservationInfo::Identity() * 0.001;
   const ObsVec innovation = error_model_(xp.x, z);
 
   const auto held_error_model = [this, &z](const State& x) -> ObsVec {

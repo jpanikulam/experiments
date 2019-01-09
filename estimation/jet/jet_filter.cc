@@ -11,7 +11,7 @@ namespace jet_filter {
 namespace {
 
 Parameters get_parameters() {
-  const jcc::Vec3 g(0.0, 0.0, -1.0);
+  const jcc::Vec3 g(0.0, 0.0, -9.81);
 
   const SE3 vehicle_from_sensor;
   Parameters p;
@@ -45,9 +45,13 @@ FilterState<State> JetFilter::reasonable_initial_state() {
   numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
                               StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
   numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
-                              StateDelta::eps_dot_error_ind>(state_cov, 0.01);
+                              StateDelta::eps_dot_error_ind>(state_cov, 0.001);
   numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
-                              StateDelta::eps_ddot_error_ind>(state_cov, 0.1);
+                              StateDelta::eps_ddot_error_ind>(state_cov, 0.01);
+
+  numerics::set_diag_to_value<StateDelta::T_body_from_world_error_log_dim,
+                              StateDelta::T_body_from_world_error_log_ind>(state_cov,
+                                                                           1.0);
 
   xp0.P = state_cov;
   return xp0;
@@ -76,8 +80,19 @@ void JetFilter::measure_fiducial(const FiducialMeasurement& meas, const TimePoin
   ekf_.measure(meas, t, fiducial_id_);
 }
 
-void JetFilter::free_run() {
+State JetFilter::free_run() {
   xp_ = ekf_.service_all_measurements(xp_);
+  return xp_.x;
+}
+
+jcc::Optional<State> JetFilter::next_measurement() {
+  const auto result = ekf_.service_next_measurement(xp_);
+  if (result) {
+    xp_ = *result;
+    return {result->x};
+  } else {
+    return {};
+  }
 }
 
 State JetFilter::view(const TimePoint& t) const {
