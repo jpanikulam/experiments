@@ -11,8 +11,6 @@ template <typename _Prob>
 typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::solve(
     const typename XlqrProblem<_Prob>::State x0,
     const typename XlqrProblem<_Prob>::Solution& initialization) const {
-  double prev_cost = std::numeric_limits<double>::max();
-
   Solution traj0;
   if (initialization.x.empty()) {
     traj0.x.resize(prob_.horizon());

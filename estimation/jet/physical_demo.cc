@@ -142,8 +142,6 @@ void run() {
   constexpr double LETS_USE_THIS_EXPOSURE = 0.1;
   cap.set(cv::CAP_PROP_EXPOSURE, LETS_USE_THIS_EXPOSURE);
 
-  cap.set(cv::CAP_PROP_AUTO_WB, 0);
-
   //
   // Set up filters & optimizers
   //

@@ -101,8 +101,8 @@ void walk() {
   for (int t = 0; t < 1500; ++t) {
     const geometry::shapes::Plane ground{Vec3::UnitZ(), 0.0};
     geo->add_plane({ground});
-    geo->add_plane({{Vec3::UnitX(), 0.0}, Vec4(1.0, 0.0, 0.0, 0.3)});
-    geo->add_plane({{Vec3::UnitY(), 0.0}, Vec4(0.0, 1.0, 0.0, 0.3)});
+    geo->add_plane({{Vec3::UnitX(), 0.0}, 1.0,Vec4(1.0, 0.0, 0.0, 0.3)});
+    geo->add_plane({{Vec3::UnitY(), 0.0}, 1.0,Vec4(0.0, 1.0, 0.0, 0.3)});
 
     put_body(*geo, walker);
 
