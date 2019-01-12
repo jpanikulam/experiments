@@ -82,6 +82,10 @@ class Window3D final : public SimpleWindow {
     view_.set_zoom(zoom);
   }
 
+  void set_orthogonal(const bool ortho) {
+    orthogonal_projection_ = ortho;
+  }
+
  private:
   void draw_all_primitives() const;
 
@@ -90,6 +94,7 @@ class Window3D final : public SimpleWindow {
   //
 
   Projection projection_;
+  bool orthogonal_projection_ = false;
   std::vector<std::shared_ptr<Primitive>> primitives_;
   std::vector<std::shared_ptr<Camera>> cameras_;
 
