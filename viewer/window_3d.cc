@@ -17,16 +17,20 @@
 namespace viewer {
 namespace {
 
-void apply_view(const OrbitCamera &view) {
+void apply_view(const OrbitCamera &view, bool show_axes) {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
   glTransform(view.camera_from_anchor());
   glScaled(view.zoom(), view.zoom(), view.zoom());
-  draw_axes({SE3(), 0.5});
+  if (show_axes) {
+    draw_axes({SE3(), 0.5});
+  }
 
   glTransform(view.anchor_from_world());
-  draw_axes({SE3(), 1.5});
+  if (show_axes) {
+    draw_axes({SE3(), 1.5});
+  }
 }
 
 void prepare_to_render() {
@@ -102,6 +106,9 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
     if (key == static_cast<int>('O')) {
       orthogonal_projection_ = !orthogonal_projection_;
     }
+    if (key == static_cast<int>('H')) {
+      hide_axes_ = !hide_axes_;
+    }
   }
 }
 void Window3D::on_mouse_button(int button, int action, int mods) {
@@ -159,7 +166,7 @@ void Window3D::render() {
   {  // Render main scene
     set_perspective(gl_size_, orthogonal_projection_);
     prepare_to_render();
-    apply_view(view_);
+    apply_view(view_, !hide_axes_);
     projection_ = Projection::get_from_current();
     draw_all_primitives();
   }

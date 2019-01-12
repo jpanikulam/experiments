@@ -82,8 +82,12 @@ class Window3D final : public SimpleWindow {
     view_.set_zoom(zoom);
   }
 
-  void set_orthogonal(const bool ortho) {
+  void set_orthogonal(const bool ortho = true) {
     orthogonal_projection_ = ortho;
+  }
+
+  void set_show_axes(const bool hide_axes = true) {
+    hide_axes_ = hide_axes;
   }
 
  private:
@@ -107,6 +111,7 @@ class Window3D final : public SimpleWindow {
   WindowPoint mouse_pos_last_click_;
   OrbitCamera view_;
   int continue_ms_ = 100;
+  bool hide_axes_ = false;
 
   //
   // Interaction History
