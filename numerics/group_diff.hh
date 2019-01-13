@@ -34,7 +34,7 @@ template <typename X, typename Y>
 MatNd<Y::DIM, X::DIM> group_jacobian(const X& x, const GroupFnc<X, Y>& fnc) {
   const auto f_x = [&fnc, &x](const VecNd<X::DIM>& dx) {
     const X xplus_dx = X::apply_delta(x, dx);
-    return X::compute_delta(fnc(xplus_dx), fnc(x));
+    return Y::compute_delta(fnc(xplus_dx), fnc(x));
   };
   return numerical_jacobian<Y::DIM>(VecNd<X::DIM>::Zero().eval(), f_x);
 }
