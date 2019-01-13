@@ -26,11 +26,10 @@ struct StateDelta {
   static StateDelta from_vector(const VecNd<24> &in_vec);
 };
 struct Parameters {
-  VecNd<3> g_world = VecNd<3>::Zero();
   SE3 T_imu_from_vehicle = SE3();
-  static constexpr int DIM = 9;
-  static VecNd<9> compute_delta(const Parameters &a, const Parameters &b);
-  static Parameters apply_delta(const Parameters &a, const VecNd<9> &delta);
+  static constexpr int DIM = 6;
+  static VecNd<6> compute_delta(const Parameters &a, const Parameters &b);
+  static Parameters apply_delta(const Parameters &a, const VecNd<6> &delta);
 };
 struct GyroMeasurementDelta {
   VecNd<3> observed_w_error = VecNd<3>::Zero();
@@ -89,15 +88,12 @@ struct StateDot {
   static constexpr int DIM = 24;
 };
 struct ParametersDelta {
-  VecNd<3> g_world_error = VecNd<3>::Zero();
   VecNd<6> T_imu_from_vehicle_error_log = VecNd<6>::Zero();
-  static constexpr int g_world_error_ind = 0;
-  static constexpr int g_world_error_dim = 3;
-  static constexpr int T_imu_from_vehicle_error_log_ind = 3;
+  static constexpr int T_imu_from_vehicle_error_log_ind = 0;
   static constexpr int T_imu_from_vehicle_error_log_dim = 6;
-  static constexpr int DIM = 9;
-  static VecNd<9> to_vector(const ParametersDelta &in_grp);
-  static ParametersDelta from_vector(const VecNd<9> &in_vec);
+  static constexpr int DIM = 6;
+  static VecNd<6> to_vector(const ParametersDelta &in_grp);
+  static ParametersDelta from_vector(const VecNd<6> &in_vec);
 };
 struct AccelMeasurementDelta {
   VecNd<3> observed_acceleration_error = VecNd<3>::Zero();
