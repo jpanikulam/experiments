@@ -15,7 +15,6 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
     const FilterState<State>& xp, const Observation& z) const {
   using ObservationInfo = MatNd<Observation::DIM, Observation::DIM>;
 
-  const ObservationInfo R = ObservationInfo::Identity() * 0.001;
   const ObsVec innovation = error_model_(xp.x, z);
 
   const auto held_error_model = [this, &z](const State& x) -> ObsVec {
@@ -26,7 +25,7 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
   const MatNd<Observation::DIM, State::DIM> H =
       -numerics::group_jacobian<Observation::DIM, State>(xp.x, held_error_model);
 
-  const ObservationInfo S = (H * xp.P * H.transpose()) + R;
+  const ObservationInfo S = (H * xp.P * H.transpose()) + cov_;
 
   assert(numerics::is_symmetric(xp.P));
 

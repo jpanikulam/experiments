@@ -18,7 +18,9 @@ class ObservationModel {
   using ErrorModel = std::function<ObsVec(const State&, const Observation&)>;
   using LogLikelihood = std::function<double(const State&, const Observation& z)>;
 
-  ObservationModel(const ErrorModel& error_model) : error_model_(error_model) {
+  ObservationModel(const ErrorModel& error_model,
+                   const MatNd<Observation::DIM, Observation::DIM>& cov)
+      : error_model_(error_model), cov_(cov) {
   }
 
   // This return z [-] h(x)
@@ -36,6 +38,10 @@ class ObservationModel {
 
  private:
   const ErrorModel error_model_;
+
+  // "R" by convention
+  const MatNd<Observation::DIM, Observation::DIM> cov_;
+
   LogLikelihood log_likelihood_;
 };
 
