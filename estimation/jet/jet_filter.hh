@@ -12,10 +12,12 @@ class JetFilter {
  public:
   static JetFilterState reasonable_initial_state();
 
-  JetFilter(const JetFilterState& xp0);
+  JetFilter(const JetFilterState& xp);
+  JetFilter();
 
   void reset(const JetFilterState& xp) {
     xp_ = xp;
+    initialized_ = true;
   }
 
   void measure_imu(const AccelMeasurement& meas, const TimePoint& t);
@@ -38,9 +40,13 @@ class JetFilter {
   }
 
  private:
+  void setup_models();
+
   JetFilterState xp_;
   JetEkf ekf_;
   Parameters parameters_;
+
+  bool initialized_ = false;
 
   int imu_id_ = -1;
   int fiducial_id_ = -1;

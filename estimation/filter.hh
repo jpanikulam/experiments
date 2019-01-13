@@ -30,7 +30,8 @@ class Ekf {
  public:
   using Dynamics = std::function<State(const State& x, double dt)>;
 
-  Ekf(const Dynamics& dynamics) : dynamics_(dynamics) {
+  Ekf(const Dynamics& dynamics, const MatNd<State::DIM, State::DIM>& cov)
+      : dynamics_(dynamics), Q_(cov) {
   }
 
   FilterState<State> update_state(const FilterState<State>& xp,
@@ -41,8 +42,9 @@ class Ekf {
       std::function<VecNd<MeasurementType::DIM>(const State&, const MeasurementType&)>;
 
   template <typename MeasurementType>
-  int add_model(const ErrorModel<MeasurementType>& fnc) {
-    const ObservationModel<State, MeasurementType> model(fnc);
+  int add_model(const ErrorModel<MeasurementType>& fnc,
+                const MatNd<MeasurementType::DIM, MeasurementType::DIM>& cov) {
+    const ObservationModel<State, MeasurementType> model(fnc, cov);
     const auto type_erased_fnc = [model](const FilterState<State>& x,
                                          const std::any& obs) {
       return model.generate_update(x, std::any_cast<MeasurementType>(obs));
@@ -79,6 +81,7 @@ class Ekf {
   std::map<int, AnyObservationModel> observation_models_;
 
   const Dynamics dynamics_;
+  const MatNd<State::DIM, State::DIM> Q_;
 };
 
 }  // namespace estimation

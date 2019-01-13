@@ -20,8 +20,6 @@ int Ekf<State>::add_model_pr(const Ekf<State>::AnyObservationModel& model) {
 template <typename State>
 FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
                                             const TimeDuration& dt) const {
-  const MatNd<State::DIM, State::DIM> Q = MatNd<State::DIM, State::DIM>::Identity() * 0.1;
-
   const auto dynamics_fixed_dt = [this, dt](const State& x) -> State {
     return dynamics_(x, to_seconds(dt));
   };
@@ -32,7 +30,7 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
   const State x_new = dynamics_fixed_dt(xp.x);
 
   const MatNd<State::DIM, State::DIM> P_new =
-      (A * xp.P * A.transpose()) + (Q * to_seconds(dt));
+      (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
   return {x_new, P_new, xp.time_of_validity + dt};
 }
 
