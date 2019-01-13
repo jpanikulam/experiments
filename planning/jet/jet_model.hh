@@ -12,8 +12,7 @@ namespace jet {
 
 class JetModel {
  public:
-  JetModel() : model_(jcc::Environment::asset_path() + "Hover-Jet Vehicle.dae") {
-  }
+  JetModel();
 
   void insert(viewer::SceneTree& tree) const;
   // const State& jet

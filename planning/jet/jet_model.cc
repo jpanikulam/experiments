@@ -6,6 +6,9 @@
 namespace planning {
 namespace jet {
 
+void JetModel::JetModel() : model_(jcc::Environment::asset_path() + "Hover-Jet Vehicle.dae") {
+}
+
 void JetModel::insert(viewer::SceneTree& tree) const {
   const SE3 world_from_jet = SE3();
 
