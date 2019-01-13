@@ -225,7 +225,7 @@ void run() {
       visitor_geo->clear();
       draw_states(*visitor_geo, soln.x, false);
       visitor_geo->flip();
-      std::cout << "\tOptimized g: " << soln.p.g_world.transpose() << std::endl;
+      // std::cout << "\tOptimized g: " << soln.p.g_world.transpose() << std::endl;
       std::cout << "\tOptimized T_imu_from_vehicle: "
                 << soln.p.T_imu_from_vehicle.translation().transpose() << "; "
                 << soln.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;

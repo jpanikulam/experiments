@@ -17,8 +17,8 @@ namespace {
 
 Parameters mock_parameters() {
   Parameters p;
-  const jcc::Vec3 g(0.0, 0.0, -1.3);
-  p.g_world = g;
+  // const jcc::Vec3 g(0.0, 0.0, -1.3);
+  // p.g_world = g;
 
   // const jcc::Vec3 t(0.1, 0.5, 0.1);
   const jcc::Vec3 t(0.0, 0.1, 0.25);
@@ -243,7 +243,7 @@ void run_filter() {
     visitor_geo->clear();
     draw_states(*visitor_geo, soln.x, false);
     visitor_geo->flip();
-    std::cout << "\tOptimized g: " << soln.p.g_world.transpose() << std::endl;
+    // std::cout << "\tOptimized g: " << soln.p.g_world.transpose() << std::endl;
     std::cout << "\tOptimized T_imu_from_vehicle: "
               << soln.p.T_imu_from_vehicle.translation().transpose() << "; "
               << soln.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
@@ -262,7 +262,7 @@ void run_filter() {
     std::cout << "\\\\\\\\\\\\" << std::endl;
     print_state(ground_truth.at(k));
   }
-  std::cout << "Optimized g: " << solution.p.g_world.transpose() << std::endl;
+  // std::cout << "Optimized g: " << solution.p.g_world.transpose() << std::endl;
   std::cout << "Optimized T_imu_from_vehicle: "
             << solution.p.T_imu_from_vehicle.translation().transpose() << "; "
             << solution.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
