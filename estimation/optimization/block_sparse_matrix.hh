@@ -35,6 +35,13 @@ class BlockSparseMatrix {
                      const BlockSparseMatrix& R_inv,
                      const double lambda = 0.0) const;
 
+  int block_rows() const {
+    return rows_.size();
+  }
+  int block_cols() const {
+    return n_cols_.size();
+  }
+
  private:
   struct Block {
     Eigen::MatrixXd block;
