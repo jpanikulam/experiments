@@ -215,8 +215,8 @@ void draw_plane_grid(const Plane &plane) {
   const double displacement = n_lines * plane.line_spacing;
   const Vec3 offset = plane.plane.u_normal * plane.plane.distance_from_origin;
 
-  const Vec3 y_offset = y_dir * 10.0;
-  const Vec3 x_offset = x_dir * 10.0;
+  const Vec3 y_offset = y_dir * (n_lines * plane.line_spacing);
+  const Vec3 x_offset = x_dir * (n_lines * plane.line_spacing);
 
   glPushAttrib(GL_CURRENT_BIT);
   glColor(plane.color);
