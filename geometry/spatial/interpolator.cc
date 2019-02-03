@@ -14,12 +14,21 @@ jcc::Vec3 lerp(const double alpha, const jcc::Vec3& a, const jcc::Vec3& b) {
 }
 }  // namespace
 
+std::vector<ControlPoint> sort_control_points(const std::vector<ControlPoint>& points) {
+  const auto cmp = [](const ControlPoint& a, const ControlPoint& b) {
+    return a.parameter < b.parameter;
+  };
+  std::vector<ControlPoint> result = points;
+  std::sort(result.begin(), result.end(), cmp);
+  return result;
+}
+
 LinearInterpolator::LinearInterpolator(const std::vector<ControlPoint>& control_points)
     : control_points_(control_points) {
   //
   // Verify that the control points are sorted by spline parameter
   //
-  double prev = std::numeric_limits<double>::min();
+  double prev = std::numeric_limits<double>::lowest();
   for (std::size_t k = 0; k < control_points.size(); ++k) {
     const double cur = control_points.at(k).parameter;
     // Strict inequality is required

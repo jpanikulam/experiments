@@ -11,9 +11,10 @@ struct ControlPoint {
   jcc::Vec3 value;
 };
 
+// Return a sorted vector of control points
+std::vector<ControlPoint> sort_control_points(const std::vector<ControlPoint>& points);
+
 class Interpolator {
-  // Interpolator(const std::vector<ControlPoint>& control_points) {
-  // }
   virtual jcc::Optional<jcc::Vec3> operator()(const double t) const = 0;
 };
 
