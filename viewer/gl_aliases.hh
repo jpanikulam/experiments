@@ -146,4 +146,11 @@ inline void glApply(const Eigen::Matrix4d &matrix) {
   glMultMatrixd(transposed.data());
 }
 
+inline void glApply(const Eigen::Matrix3d &matrix) {
+  Eigen::Matrix4d full = Eigen::Matrix4d::Zero();
+  full(3, 3) = 1.0;
+  full.block<3, 3>(0, 0) = matrix;
+  glMultMatrixd(full.data());
+}
+
 }  // namespace viewer
