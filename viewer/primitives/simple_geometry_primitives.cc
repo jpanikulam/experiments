@@ -13,7 +13,6 @@ using Vec4 = Eigen::Vector4d;
 
 void draw_axes(const Axes &axes) {
   glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
-  glLineWidth(1.0);
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
@@ -183,12 +182,28 @@ void draw_circle(const Vec3 &center,
 }
 
 void draw_sphere(const Sphere &sphere) {
+  glLineWidth(sphere.line_width);
   draw_circle(sphere.center, sphere.world_from_sphere * Vec3::UnitX(), sphere.radius,
               sphere.color);
   draw_circle(sphere.center, sphere.world_from_sphere * Vec3::UnitY(), sphere.radius,
               sphere.color);
   draw_circle(sphere.center, sphere.world_from_sphere * Vec3::UnitZ(), sphere.radius,
               sphere.color);
+}
+
+void draw_ellipsoid(const Ellipsoid &ellipsoid) {
+  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+
+  // Deform the universe by the ellipse's cholesky factor
+  const Eigen::Matrix3d L = ellipsoid.ellipse.cholesky_factor;
+  glTranslate(ellipsoid.ellipse.p0);
+  glApply(L);
+  draw_sphere({jcc::Vec3::Zero(), 1.0, ellipsoid.color, ellipsoid.line_width});
+
+  glPopMatrix();
+  glPopAttrib();
 }
 
 void draw_plane_grid(const Plane &plane) {

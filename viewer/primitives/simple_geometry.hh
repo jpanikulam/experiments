@@ -30,7 +30,7 @@ class SimpleGeometry final : public Primitive {
   void add_ray(const Ray &ray);
 
   void add_ray(const geometry::Ray &ray,
-               const double length = 1.0,
+               const double length,
                const Eigen::Vector4d &color = Eigen::Vector4d(1.0, 1.0, 1.0, 1.0));
 
   void add_polygon(const Polygon &polygon);
@@ -44,6 +44,8 @@ class SimpleGeometry final : public Primitive {
   void add_points2d(const Points2d &points);
 
   void add_sphere(const Sphere &sphere);
+
+  void add_ellipsoid(const Ellipsoid &ellipsoid);
 
   void add_box(const AxisAlignedBox &box);
 
@@ -65,6 +67,7 @@ class SimpleGeometry final : public Primitive {
     std::vector<Point> raw_points;
     std::vector<Points2d> points2d;
     std::vector<Sphere> spheres;
+    std::vector<Ellipsoid> ellipsoids;
     std::vector<Plane> planes;
     std::vector<Polygon> polygons;
     std::vector<ColoredPoints> colored_points;
@@ -77,6 +80,7 @@ class SimpleGeometry final : public Primitive {
       raw_points.clear();
       points2d.clear();
       spheres.clear();
+      ellipsoids.clear();
       planes.clear();
       polygons.clear();
       colored_points.clear();

@@ -42,6 +42,11 @@ void SimpleGeometry::add_sphere(const Sphere &sphere) {
   back_buffer_.spheres.push_back(sphere);
 }
 
+void SimpleGeometry::add_ellipsoid(const Ellipsoid &ellipsoid) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.ellipsoids.push_back(ellipsoid);
+}
+
 void SimpleGeometry::add_plane(const Plane &plane) {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   back_buffer_.planes.push_back(plane);
@@ -75,6 +80,7 @@ void SimpleGeometry::flush() {
   insert(front_buffer_.raw_points, back_buffer_.raw_points);
   insert(front_buffer_.points2d, back_buffer_.points2d);
   insert(front_buffer_.spheres, back_buffer_.spheres);
+  insert(front_buffer_.ellipsoids, back_buffer_.ellipsoids);
   insert(front_buffer_.planes, back_buffer_.planes);
   insert(front_buffer_.polygons, back_buffer_.polygons);
   insert(front_buffer_.colored_points, back_buffer_.colored_points);
@@ -190,6 +196,10 @@ void SimpleGeometry::draw() const {
 
   for (const auto &circle : front_buffer_.spheres) {
     draw_sphere(circle);
+  }
+
+  for (const auto &ellipse : front_buffer_.ellipsoids) {
+    draw_ellipsoid(ellipse);
   }
 
   for (const auto &polygon : front_buffer_.polygons) {

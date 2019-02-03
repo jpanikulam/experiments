@@ -6,6 +6,7 @@
 #include "viewer/primitives/primitive.hh"
 
 #include "geometry/shapes/halfspace.hh"
+#include "geometry/shapes/fit_ellipse.hh"
 #include "geometry/tri_mesh.hh"
 
 #include <vector>
@@ -67,7 +68,14 @@ struct Sphere {
   Vec3 center;
   double radius;
   Vec4 color = Vec4(0.0, 1.0, 0.0, 1.0);
+  double line_width = 1.0;
   SO3 world_from_sphere;
+};
+
+struct Ellipsoid {
+  geometry::shapes::Ellipse ellipse;
+  Vec4 color = Vec4(0.0, 1.0, 0.0, 1.0);
+  double line_width = 1.0;
 };
 
 struct Plane {
@@ -112,6 +120,8 @@ void draw_colored_points(const ColoredPoints &points);
 void draw_points2d(const Points2d &points);
 
 void draw_sphere(const Sphere &sphere);
+
+void draw_ellipsoid(const Ellipsoid &ellipsoid);
 
 void draw_point(const Point &point);
 
