@@ -7,6 +7,8 @@
 #include "estimation/optimization/block_sparse_matrix.hh"
 #include "estimation/time_point.hh"
 
+#include "vision/robust_estimator.hh"
+
 #include "out.hh"
 #include "util/heap.hh"
 
@@ -112,7 +114,9 @@ class AcausalOptimizer {
   Solution update_solution(const Solution& soln, const VecXd& delta) const;
   LinearSystem populate(const Solution& soln) const;
 
-  double cost(const LinearSystem& system) const;
+  double cost(const LinearSystem& system,
+              const slam::RobustEstimator& rcost,
+              std::vector<double>* weights = nullptr) const;
 
   Dynamics dynamics_;
   MatNd<State::DIM, State::DIM> dyn_cov_;

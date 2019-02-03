@@ -13,20 +13,12 @@ namespace {
 Parameters get_parameters() {
   const jcc::Vec3 g(0.0, 0.0, -9.81);
 
-  // -1.55978   1.57047 -0.920068
-  // -3.02467 -0.164068  -0.12841
+  // const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0, 0.0, 0.0);
+  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(0.0, 0.0, 0.0));
 
-  const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0287393, -0.00822752, 0.0522846);
-  const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(2.38822, 1.84212, -0.491325));
-
-  // const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0287393, -0.00822752, 0.0522846);
-  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-M_PI * 0.5, 0.0, 0.0));
-
-  // const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0287393, -0.00822752, 0.0522846);
-  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-1.59661, -2.24556, -0.775857));
-
-  // const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(-0.156639, -0.0103233, 0.074726);
-  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(0.13263, 1.98582, 0.361942));
+  // const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.22094, -0.181402, -0.685096);
+  const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0, 0.0, 0.0);
+  const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-3.10341, -0.0387912, -0.00578994));
 
   const SE3 imu_from_vehicle(R_imu_from_vehicle, trans_imu_from_vehicle);
 
@@ -104,8 +96,8 @@ void JetFilter::setup_models() {
   MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;
   fiducial_cov.setZero();
   {
-    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.0001;
-    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.00001;
+    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.001;
+    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.0001;
   }
 
   parameters_ = get_parameters();

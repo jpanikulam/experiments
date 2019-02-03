@@ -17,8 +17,8 @@ JetOptimizer::JetOptimizer() {
   MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;
   fiducial_cov.setZero();
   {
-    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.0001;
-    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.00001;
+    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.001;
+    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.0001;
   }
   MatNd<State::DIM, State::DIM> state_cov;
   {

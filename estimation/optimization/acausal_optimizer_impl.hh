@@ -3,6 +3,7 @@
 #include "estimation/optimization/acausal_optimizer.hh"
 #include "numerics/group_diff.hh"
 
+#include <memory>
 #include <limits>
 
 namespace estimation {
@@ -123,6 +124,9 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
       const double dt =
           to_seconds(measurements.at(t + 1).time_of_validity - z_t.time_of_validity);
 
+      if (dt <= 0.0) {
+        std::cerr << "Dt was less than 0.0 for: " << dt << std::endl;
+      }
       assert(dt > 0.0);
       // assert(dt < 0.3);  // Arbitrary constant that is surprising enough to indicate a
       // bug
@@ -166,18 +170,44 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::update_solutio
 }
 
 template <typename Prob>
-double AcausalOptimizer<Prob>::cost(const LinearSystem& system) const {
+double AcausalOptimizer<Prob>::cost(const LinearSystem& system,
+                                    const slam::RobustEstimator& rcost,
+                                    std::vector<double>* weights) const {
   double cost = 0.0;
+  if (weights) {
+    weights->clear();
+    weights->resize(system.v.size());
+  }
+
   for (int k = 0; k < static_cast<int>(system.v.size()); ++k) {
     const VecXd& sub_v = system.v.at(k);
+    const double error = sub_v.dot(system.R_inv.get(k, k) * sub_v);
+    // cost += sub_v.dot(system.R_inv.get(k, k) * sub_v);
 
-    cost += sub_v.dot(system.R_inv.get(k, k) * sub_v);
+    const auto cost_weight = rcost.cost_weight(error);
+
+    cost += cost_weight.cost;
+    if (weights) {
+      (*weights)[k] = cost_weight.weight;
+    }
   }
 
   assert(cost > 0.0);
 
   return cost;
 }
+
+namespace {
+std::shared_ptr<slam::RobustEstimator> cost_schedule(int k) {
+  if (k > 15111) {
+    // return std::make_shared<slam::TukeyCost>(1.0);
+    return std::make_shared<slam::L2Cost>();
+  } else {
+    return std::make_shared<slam::L2Cost>();
+    // return std::make_shared<slam::HuberCost>(10.0);
+  }
+}
+}  // namespace
 
 template <typename Prob>
 typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
@@ -196,7 +226,7 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   constexpr double MIN_LAMBDA = 1e-25;
 
   LinearSystem current_system = populate(soln);
-  double prev_cost = cost(current_system);
+  double prev_cost = cost(current_system, *cost_schedule(0));
   double lambda = LAMBDA_INITIAL;
 
   for (int k = 0; k < 1000; ++k) {
@@ -212,14 +242,24 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
     std::vector<VecXd> v;
     current_system = populate(soln);
 
-    std::cout << "Cost at [" << k << "]: " << cost(current_system) << std::endl;
+    const auto rcost = cost_schedule(k);
+    {
+      std::vector<double> weights;
+      std::cout << "Cost at [" << k << "]: " << cost(current_system, *rcost, &weights)
+                << std::endl;
+      for (int j = 0; j < current_system.R_inv.block_cols(); ++j) {
+        const Eigen::MatrixXd old = current_system.R_inv.get(j, j);
+        const double weight = weights.at(j);
+        current_system.R_inv.set(j, j, old * weight);
+      }
+    }
 
-    const VecXd delta =
-        current_system.J.solve_lst_sq(current_system.v, current_system.R_inv, lambda);
+    const VecXd delta = current_system.J.solve_lst_sq(
+        current_system.v, current_system.R_inv, lambda);
     const auto new_soln = update_solution(soln, delta);
 
     const auto new_system = populate(new_soln);
-    const double new_cost = cost(new_system);
+    const double new_cost = cost(new_system, *rcost);
 
     std::cout << "\tPossible cost: " << new_cost << std::endl;
     if (new_cost > prev_cost) {
@@ -243,7 +283,7 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   {
     std::vector<VecXd> v_final;
     const LinearSystem system_final = populate(soln);
-    std::cout << "Cost Final: " << cost(system_final) << std::endl;
+    std::cout << "Cost Final: " << cost(system_final, *cost_schedule(1500)) << std::endl;
     if (visitor) {
       visitor(soln);
     }
