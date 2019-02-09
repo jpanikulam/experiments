@@ -37,7 +37,7 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
 template <typename State>
 FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
                                               const TimePoint& t) const {
-  constexpr TimeDuration MAX_DT = to_duration(0.1);
+  constexpr TimeDuration MAX_DT = to_duration(0.01);
 
   FilterState<State> x = x0;
   TimePoint time_simulated = x0.time_of_validity;
@@ -90,6 +90,9 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
     const auto x_hat_t = dynamics_until(x_hat0, meas.time_of_validity);
 
     const int i = meas.type;
+
+    std::cout << "Measurement type: " << i << std::endl;
+
     const auto& observer = observation_models_.at(i);
     const FilterStateUpdate<State> update = observer(x_hat_t, meas.observation);
 

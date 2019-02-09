@@ -272,6 +272,7 @@ AccelMeasurement observe_accel(const State &state,
   const VecNd<3> unit_z = VecNd<3>::UnitZ();
   const MatNd<6, 6> adj = imu_from_vehicle.Adj();
   const VecNd<3> w_imu = (adj * eps_dot).block<3, 1>(3, 0);
+  // const VecNd<3> w_imu = VecNd<3>::Zero();
   const VecNd<3> v_imu = (adj * eps_dot).block<3, 1>(0, 0);
   const VecNd<3> g_world = unit_z * g_mpss;
   const VecNd<6> eps_ddot = state.eps_ddot;

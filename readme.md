@@ -60,6 +60,7 @@ pymake
 
 # Read
 http://hhoppe.com/ravg.pdf
-
+https://www.researchgate.net/profile/Paulo_Oliveira11/publication/224230400_Geometric_Approach_to_Strapdown_Magnetometer_Calibration_in_Sensor_Frame/links/00b7d527b9b7297d54000000/Geometric-Approach-to-Strapdown-Magnetometer-Calibration-in-Sensor-Frame.pdf
+https://radionavlab.ae.utexas.edu/images/stories/files/papers/sierra_for_distribution.pdf
 # TODO
 * Unify VecN...

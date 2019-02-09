@@ -15,7 +15,12 @@ struct ControlPoint {
 std::vector<ControlPoint> sort_control_points(const std::vector<ControlPoint>& points);
 
 class Interpolator {
+public:
+ jcc::Optional<jcc::Vec3> interpolate(const double t) const {
+   return (*this)(t);
+  }
   virtual jcc::Optional<jcc::Vec3> operator()(const double t) const = 0;
+
 };
 
 class LinearInterpolator final : public Interpolator {
@@ -29,5 +34,4 @@ class LinearInterpolator final : public Interpolator {
 };
 
 }  // namespace spatial
-
 }  // namespace geometry

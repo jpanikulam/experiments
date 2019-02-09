@@ -228,9 +228,11 @@ void draw_plane_grid(const Plane &plane) {
       // Lines retreating off to infinity by homogeneousness
       // turns out, it doesn't look that good.
 
-      /*glVertex4d(v.x(), v.y(), v.z(), 0.0);
+      /*
+      glVertex4d(v.x(), v.y(), v.z(), 0.0);
       glVertex4d(y_dir.x(), y_dir.y(), y_dir.z(), 0.0);
-      glVertex4d(v.x(), v.y(), v.z(), 1.0);*/
+      glVertex4d(v.x(), v.y(), v.z(), 1.0);
+      */
 
       glVertex(Vec3(v + y_offset));
       glVertex(Vec3(v - y_offset));

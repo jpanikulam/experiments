@@ -27,6 +27,7 @@ class JetFilter {
   void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t);
 
   State free_run();
+  State run_until(const TimePoint& t);
   jcc::Optional<State> next_measurement();
 
   State view(const TimePoint& t) const;
