@@ -204,11 +204,11 @@ void run() {
 
         const SE3 world_from_jet = jf.state().x.T_body_from_world.inverse();
         obs_geo->add_sphere({world_from_jet.translation(), sphere_size_m,
-                             jcc::Vec4(0.0, 1.0, 0.0, 1.0), world_from_jet.so3()});
+                             jcc::Vec4(0.0, 1.0, 0.0, 1.0), 1.0, world_from_jet.so3()});
       } else {
         const SE3 world_from_jet = jf.view(current_time).T_body_from_world.inverse();
         obs_geo->add_sphere({world_from_jet.translation(), sphere_size_m,
-                             jcc::Vec4(1.0, 0.6, 0.0, 1.0), world_from_jet.so3()});
+                             jcc::Vec4(1.0, 0.6, 0.0, 1.0), 1.0, world_from_jet.so3()});
       }
 
       geo->flip();
