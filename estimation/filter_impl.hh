@@ -29,15 +29,27 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
 
   const State x_new = dynamics_fixed_dt(xp.x);
 
+  // const MatNd<State::DIM, State::DIM> P_new =
+  // (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
   const MatNd<State::DIM, State::DIM> P_new =
       (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
+
+  // std::cout << "\n\nxp.P--\n" << std::endl;
+  // std::cout << xp.P << std::endl;
+
+  // std::cout << "\n\nQ" << std::endl;
+  // std::cout << (Q_ * to_seconds(dt)) << std::endl;
+
+  // std::cout << "\n\nA" << std::endl;
+  // std::cout << A << std::endl;
+
   return {x_new, P_new, xp.time_of_validity + dt};
 }
 
 template <typename State>
 FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
                                               const TimePoint& t) const {
-  constexpr TimeDuration MAX_DT = to_duration(0.01);
+  constexpr TimeDuration MAX_DT = to_duration(0.1);
 
   FilterState<State> x = x0;
   TimePoint time_simulated = x0.time_of_validity;
@@ -46,6 +58,7 @@ FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
     x = update_state(x, dt);
     time_simulated += dt;
   }
+
   return x;
 }
 
@@ -87,6 +100,12 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
     const FilterState<State>& x_hat0) {
   if (!measurements_.empty()) {
     const Measurement meas = measurements_.top();
+
+    const double dt_sec = to_seconds(meas.time_of_validity - x_hat0.time_of_validity);
+    if (dt_sec > 0.5) {
+      std::cerr << "Time (" << dt_sec << ") longer than 0.5 sec" << std::endl;
+    }
+
     const auto x_hat_t = dynamics_until(x_hat0, meas.time_of_validity);
 
     const int i = meas.type;
@@ -99,7 +118,6 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
     FilterState<State> x_est_t = x_hat_t;
     x_est_t.x = State::apply_delta(x_hat0.x, update.dx);
     x_est_t.P = numerics::symmetrize(update.P_new);
-
 
     measurements_.pop();
     return {x_est_t};

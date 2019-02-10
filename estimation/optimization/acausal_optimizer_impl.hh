@@ -3,8 +3,8 @@
 #include "estimation/optimization/acausal_optimizer.hh"
 #include "numerics/group_diff.hh"
 
-#include <memory>
 #include <limits>
+#include <memory>
 
 namespace estimation {
 namespace optimization {
@@ -80,6 +80,9 @@ VecXd AcausalOptimizer<Prob>::add_dynamics_residual(const State& x_0,
 
 template <typename Prob>
 LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
+  if (soln.x.size() != heap_.size()) {
+    std::cerr << "Expected " << soln.x.size() << " == " << heap_.size() << std::endl;
+  }
   assert(soln.x.size() == heap_.size());
   LinearSystem system;
 
@@ -127,8 +130,11 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
       if (dt <= 0.0) {
         std::cerr << "Dt was less than 0.0 for: " << dt << std::endl;
       }
+      if (dt > 0.3) {
+        std::cerr << "Expected dt ( " << dt << " ) < 0.3" << std::endl;
+      }
       assert(dt > 0.0);
-      // assert(dt < 0.3);  // Arbitrary constant that is surprising enough to indicate a
+      assert(dt < 0.3);  // Arbitrary constant that is surprising enough to indicate a
       // bug
 
       const State& x_t1 = soln.x.at(t + 1);
@@ -212,6 +218,9 @@ std::shared_ptr<slam::RobustEstimator> cost_schedule(int k) {
 template <typename Prob>
 typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
     const Solution& initialization, const Visitor& visitor) const {
+  if (initialization.x.size() != heap_.size()) {
+    std::cerr << "Expected " << initialization.x.size() << " == " << heap_.size() << std::endl;
+  }
   assert(initialization.x.size() == heap_.size());
   Solution soln = initialization;
 
@@ -254,8 +263,8 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
       }
     }
 
-    const VecXd delta = current_system.J.solve_lst_sq(
-        current_system.v, current_system.R_inv, lambda);
+    const VecXd delta =
+        current_system.J.solve_lst_sq(current_system.v, current_system.R_inv, lambda);
     const auto new_soln = update_solution(soln, delta);
 
     const auto new_system = populate(new_soln);

@@ -20,6 +20,10 @@ class JetFilter {
     initialized_ = true;
   }
 
+  bool initialized() const {
+    return initialized_;
+  }
+
   void measure_imu(const AccelMeasurement& meas, const TimePoint& t);
 
   void measure_gyro(const GyroMeasurement& meas, const TimePoint& t);

@@ -130,17 +130,15 @@ void run() {
   const auto fiducial_image = view->add_primitive<viewer::Image>(fiducial_tag, 0.28, 1);
 
   const auto im_view = viewer::get_window3d("ImageView");
-  cv::Mat camera_frame = cv::Mat::zeros(cv::Size(640, 640), CV_8UC3);
+  cv::Mat camera_frame = cv::Mat::zeros(cv::Size(640, 480), CV_8UC3);
   const auto image = im_view->add_primitive<viewer::Image>(camera_frame);
 
   auto cap = cv::VideoCapture(0);
   cap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
   cap.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
   cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('B', 'G', 'R', '8'));
-  cap.set(cv::CAP_PROP_AUTOFOCUS, 0);
-  cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.25);
-  constexpr double LETS_USE_THIS_EXPOSURE = 0.1;
-  cap.set(cv::CAP_PROP_EXPOSURE, LETS_USE_THIS_EXPOSURE);
+
+  constexpr double WEBCAM_EXPOSURE = 0.01;
 
   //
   // Set up filters & optimizers
@@ -172,9 +170,10 @@ void run() {
 
   while (!im_view->should_close()) {
     const TimePoint current_time = jcc::now();
-    cap.set(cv::CAP_PROP_EXPOSURE, LETS_USE_THIS_EXPOSURE);
+    cap.set(cv::CAP_PROP_AUTOFOCUS, 0);
+    cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.25);
+    cap.set(cv::CAP_PROP_EXPOSURE, WEBCAM_EXPOSURE);
     if (cap.read(camera_frame)) {
-      cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.25);
 
       cv::Mat cf_blurred;
       // blur = cv2.blur(img,(5,5))
