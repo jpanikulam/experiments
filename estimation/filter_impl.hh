@@ -32,7 +32,7 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
   // const MatNd<State::DIM, State::DIM> P_new =
   // (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
   const MatNd<State::DIM, State::DIM> P_new =
-      (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
+      (A.transpose() * xp.P * A) + (Q_ * to_seconds(dt));
 
   // std::cout << "\n\nxp.P--\n" << std::endl;
   // std::cout << xp.P << std::endl;

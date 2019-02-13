@@ -37,9 +37,17 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
 
   using StateInfo = MatNd<State::DIM, State::DIM>;
 
-    const MatNd<State::DIM, Observation::DIM> PHt = xp.P * H.transpose();
-    const StateVec update = PHt * S_llt.solve(innovation);
-    const StateInfo P_new = (StateInfo::Identity() - (PHt * S_llt.solve(H))) * xp.P;
+  const ObservationInfo S_inv = S.inverse();
+
+  const double log_likelihood = innovation.dot(S_inv * innovation);
+  std::cout << "Likelihood: " << log_likelihood << std::endl;
+  if (log_likelihood > 500) {
+    return {StateVec::Zero(), xp.P};
+  }
+
+  const MatNd<State::DIM, Observation::DIM> PHt = xp.P * H.transpose();
+  const StateVec update = PHt * S_llt.solve(innovation);
+  const StateInfo P_new = (StateInfo::Identity() - (PHt * S_llt.solve(H))) * xp.P;
 
   return FilterStateUpdate<State>{update, P_new};
 }

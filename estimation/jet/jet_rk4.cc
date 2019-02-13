@@ -187,14 +187,17 @@ AccelMeasurementDelta AccelMeasurementDelta::from_vector(const VecNd<3> &in_vec)
   return out;
 }
 StateDot compute_qdot(const State &Q, const Parameters &Z) {
-  const VecNd<3> gyro_bias_dot = VecNd<3>::Zero();
-
-  const VecNd<6> eps_dot = Q.eps_dot;
-  // const VecNd<6> eps_ddot = Q.eps_ddot;
-  const VecNd<6> eps_ddot = VecNd<6>::Zero();
-
-  const VecNd<3> accel_bias_dot = VecNd<3>::Zero();
   const VecNd<6> eps_ddot_dot = VecNd<6>::Zero();
+  const VecNd<3> gyro_bias_dot = VecNd<3>::Zero();
+  const VecNd<3> accel_bias_dot = VecNd<3>::Zero();
+
+  const VecNd<6> eps_ddot =
+      (VecNd<6>() << Q.eps_ddot.head<3>(), 0.0, 0.0, 0.0).finished();
+  // const VecNd<6> eps_ddot = VecNd<6>::Zero();
+  const VecNd<3> d_translation = Q.T_body_from_world.so3() * Q.eps_dot.head<3>();
+  const VecNd<3> w = Q.eps_dot.tail<3>();
+  const VecNd<6> eps_dot = (VecNd<6>() << d_translation, w).finished();
+
   const StateDot Qdot =
       StateDot{accel_bias_dot, eps_ddot_dot, eps_ddot, gyro_bias_dot, eps_dot};
   return Qdot;
@@ -214,9 +217,12 @@ State operator+(const State &Q, const StateDot &anon_106530) {
   const jcc::Vec3 translation_body_from_world = Q.T_body_from_world.translation();
   const SO3 R_body_from_world = Q.T_body_from_world.so3();
 
-  const SE3 new_body_from_world(
-      SO3::exp(anon_106530.eps_dot.tail<3>()) * R_body_from_world,
-      anon_106530.eps_dot.head<3>() + translation_body_from_world);
+  const SO3 body_new_from_body_old = SO3::exp(anon_106530.eps_dot.tail<3>());
+  const VecNd<3> translation_body_new_from_body_old =
+      anon_106530.eps_dot.head<3>() + translation_body_from_world;
+
+  const SE3 new_body_from_world(body_new_from_body_old * R_body_from_world,
+                                translation_body_new_from_body_old);
 
   Q2.T_body_from_world = new_body_from_world;
   return Q2;
@@ -232,20 +238,23 @@ StateDot operator+(const StateDot &anon_997f0c, const StateDot &anon_56ce14) {
   return anon_1f1812;
 }
 State rk4_integrate(const State &Q, const Parameters &Z, const double h) {
-  // const double half = 0.5;
-  // const double half_h = h * half;
-  // const StateDot K1 = compute_qdot(Q, Z);
-  // const State Q2 = Q + (half_h * (h * K1));
-  // const StateDot K2 = compute_qdot(Q2, Z);
-  // const State Q3 = Q + (half_h * (h * K2));
-  // const StateDot K3 = compute_qdot(Q3, Z);
-  // const State Q4 = Q + (h * (h * K3));
-  // const StateDot K4 = compute_qdot(Q4, Z);
-  // const double two = 2.0;
-  // const double sixth = 0.166666666667;
-  // const State Qn = Q + (sixth * (((h * K1) + (h * K4)) + (two * ((h * K2) + (h *
-  // K3)))));
+  const double half = 0.5;
+  const double half_h = h * half;
+  const StateDot K1 = compute_qdot(Q, Z);
+  const State Q2 = Q + (half_h * (h * K1));
+  const StateDot K2 = compute_qdot(Q2, Z);
+  const State Q3 = Q + (half_h * (h * K2));
+  const StateDot K3 = compute_qdot(Q3, Z);
+  const State Q4 = Q + (h * (h * K3));
+  const StateDot K4 = compute_qdot(Q4, Z);
+  const double two = 2.0;
+  const double sixth = 0.166666666667;
+  const State Qn = Q + (sixth * (((h * K1) + (h * K4)) + (two * ((h * K2) + (h *
+  K3)))));
+  /*
   const State Qn = Q + (h * compute_qdot(Q, Z));
+  */
+
   return Qn;
 }
 GyroMeasurement observe_gyro(const State &state, const Parameters &parameters) {
@@ -259,6 +268,23 @@ GyroMeasurement observe_gyro(const State &state, const Parameters &parameters) {
   return gyro_meas;
 }
 AccelMeasurement observe_accel(const State &state, const Parameters &parameters) {
+  const VecNd<6> eps_ddot = state.eps_ddot;
+  const VecNd<6> eps_dot = state.eps_dot;
+  const SE3 vehicle_from_world = state.T_body_from_world;
+
+  const SE3 imu_from_vehicle = parameters.T_imu_from_vehicle;
+  const SO3 R_sensor_from_world = (imu_from_vehicle * vehicle_from_world).so3();
+
+  const double g_mpss = 9.81;
+  const VecNd<3> z_world = VecNd<3>::UnitZ();
+  const VecNd<3> g_imu = R_sensor_from_world * (z_world * g_mpss);
+
+  const VecNd<3> a_world = state.eps_ddot.head<3>();
+  // const VecNd<3> a_imu = imu_from_vehicle * a_vehicle;
+  const VecNd<3> a_imu = R_sensor_from_world * a_world;
+  return AccelMeasurement{a_imu + g_imu};
+
+  /*
   const VecNd<6> eps_dot = state.eps_dot;
   const SE3 imu_from_vehicle = parameters.T_imu_from_vehicle;
   const SE3 vehicle_from_world = state.T_body_from_world;
@@ -278,6 +304,7 @@ AccelMeasurement observe_accel(const State &state, const Parameters &parameters)
   const VecNd<3> observed_acceleration = (clean + g_imu) + accel_bias;
   const AccelMeasurement accel_meas = AccelMeasurement{observed_acceleration};
   return accel_meas;
+  */
 }
 VecNd<3> observe_accel_error_model(const State &state,
                                    const AccelMeasurement &meas,

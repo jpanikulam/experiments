@@ -51,18 +51,18 @@ MatNd<State::DIM, State::DIM> make_cov() {
   numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
                               StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
 
-  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind>(state_cov, 0.35);
+  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind>(state_cov, 0.01);
 
   numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind + 3>(state_cov, 0.01);
 
-  numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind>(state_cov, 0.5);
+  numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind>(state_cov, 0.1);
   numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind + 3>(state_cov, 0.1);
 
   numerics::set_diag_to_value<3, StateDelta::T_body_from_world_error_log_ind>(state_cov,
-                                                                              0.01);
+                                                                              0.001);
 
   numerics::set_diag_to_value<3, StateDelta::T_body_from_world_error_log_ind + 3>(
-      state_cov, 0.01);
+      state_cov, 0.001);
 
   return state_cov;
 }
@@ -96,14 +96,14 @@ void JetFilter::setup_models() {
   {
     numerics::set_diag_to_value<AccelMeasurementDelta::observed_acceleration_error_dim,
                                 AccelMeasurementDelta::observed_acceleration_error_ind>(
-        accel_cov, 0.2);
+        accel_cov, 0.01);
   }
 
   MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;
   fiducial_cov.setZero();
   {
-    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.0025;
-    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.0076;
+    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.00025;
+    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.00076;
   }
 
   parameters_ = get_parameters();
