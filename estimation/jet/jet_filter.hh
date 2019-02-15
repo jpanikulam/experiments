@@ -35,6 +35,7 @@ class JetFilter {
   jcc::Optional<State> next_measurement();
 
   State view(const TimePoint& t) const;
+  State predict(const TimePoint& t) const;
 
   const Parameters& parameters() const {
     return parameters_;

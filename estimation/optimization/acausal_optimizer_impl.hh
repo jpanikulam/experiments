@@ -231,7 +231,7 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   constexpr double LAMBDA_DOWN_LITE_FACTOR = 0.75;
   constexpr double LAMBDA_INITIAL = 5.0;
   constexpr double DECREASE_RATIO_FOR_DAMPING_DOWN = 0.7;
-  constexpr double MAX_LAMBDA = 1e3;
+  constexpr double MAX_LAMBDA = 1e5;
   constexpr double MIN_LAMBDA = 1e-25;
 
   LinearSystem current_system = populate(soln);

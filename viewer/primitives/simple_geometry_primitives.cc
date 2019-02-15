@@ -49,8 +49,8 @@ void draw_lines(const std::vector<Line> &lines) {
 
   for (const auto &line : lines) {
     glLineWidth(line.width);
-    glBegin(GL_LINES);
     glColor(line.color);
+    glBegin(GL_LINES);
     glVertex(line.start);
     glVertex(line.end);
     glEnd();

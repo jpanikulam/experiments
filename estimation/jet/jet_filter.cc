@@ -51,9 +51,9 @@ MatNd<State::DIM, State::DIM> make_cov() {
   numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
                               StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
 
-  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind>(state_cov, 0.01);
+  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind>(state_cov, 0.001);
 
-  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind + 3>(state_cov, 0.01);
+  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind + 3>(state_cov, 0.001);
 
   numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind>(state_cov, 0.1);
   numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind + 3>(state_cov, 0.1);
@@ -159,8 +159,15 @@ jcc::Optional<State> JetFilter::next_measurement() {
 
 State JetFilter::view(const TimePoint& t) const {
   assert(initialized_);
+  // TODO: Make this soft_service_until(xp_, t)
   const auto xp_t = ekf_.soft_service_all_measurements(xp_);
   return ekf_.dynamics_until(xp_t, t).x;
+}
+
+State JetFilter::predict(const TimePoint& t) const {
+  assert(initialized_);
+  // TODO: Make this soft_service_until(xp_, t)
+  return ekf_.dynamics_until(xp_, t).x;
 }
 
 }  // namespace jet_filter

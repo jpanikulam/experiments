@@ -1,3 +1,5 @@
+//%ignore
+
 #include "util/environment.hh"
 #include "viewer/primitives/image.hh"
 #include "viewer/primitives/scene_tree.hh"

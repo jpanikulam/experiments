@@ -38,14 +38,15 @@ CameraIntrinsics CalibrationManager::calibrate() const{
     cv::Mat gray;
     std::vector<cv::Point2f> corners;
 
-    cv::cvtColor(image, gray, CV_BGR2GRAY);
+    cv::cvtColor(image, gray, cv::COLOR_RGB2GRAY);
     bool found =
         cv::findChessboardCorners(gray, board_size, corners,
-                                  CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);
+                                  cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_FILTER_QUADS);
     if (found) {
       std::cout << "-";
       cornerSubPix(gray, corners, cv::Size(11, 11), cv::Size(-1, -1),
-                   cv::TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.001));
+                   cv::TermCriteria(cv::TermCriteria::EPS | cv::TermCriteria::MAX_ITER,
+                                    30, 0.001));
       image_points.push_back(corners);
       object_points.push_back(obj);
     }

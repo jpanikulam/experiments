@@ -194,6 +194,7 @@ StateDot compute_qdot(const State &Q, const Parameters &Z) {
   const VecNd<6> eps_ddot =
       (VecNd<6>() << Q.eps_ddot.head<3>(), 0.0, 0.0, 0.0).finished();
   // const VecNd<6> eps_ddot = VecNd<6>::Zero();
+  // Is this one of those covariant-invariant things...?
   const VecNd<3> d_translation = Q.T_body_from_world.so3() * Q.eps_dot.head<3>();
   const VecNd<3> w = Q.eps_dot.tail<3>();
   const VecNd<6> eps_dot = (VecNd<6>() << d_translation, w).finished();
@@ -238,7 +239,7 @@ StateDot operator+(const StateDot &anon_997f0c, const StateDot &anon_56ce14) {
   return anon_1f1812;
 }
 State rk4_integrate(const State &Q, const Parameters &Z, const double h) {
-  const double half = 0.5;
+  /*const double half = 0.5;
   const double half_h = h * half;
   const StateDot K1 = compute_qdot(Q, Z);
   const State Q2 = Q + (half_h * (h * K1));
@@ -249,21 +250,24 @@ State rk4_integrate(const State &Q, const Parameters &Z, const double h) {
   const StateDot K4 = compute_qdot(Q4, Z);
   const double two = 2.0;
   const double sixth = 0.166666666667;
-  const State Qn = Q + (sixth * (((h * K1) + (h * K4)) + (two * ((h * K2) + (h *
-  K3)))));
-  /*
+  const State Qn = Q + (sixth * (((h * K1) + (h * K4)) + (two * ((h * K2) + (h * K3)))));
+*/
   const State Qn = Q + (h * compute_qdot(Q, Z));
-  */
 
   return Qn;
 }
 GyroMeasurement observe_gyro(const State &state, const Parameters &parameters) {
   const VecNd<6> eps_dot = state.eps_dot;
-  const VecNd<3> w = eps_dot.block<3, 1>(3, 0);
+  // const VecNd<3> w = eps_dot.block<3, 1>(3, 0);
   const SE3 imu_from_vehicle = parameters.T_imu_from_vehicle;
   const VecNd<3> gyro_bias = state.gyro_bias;
+  // const SO3 R_sensor_from_vehicle = imu_from_vehicle.so3();
+  // const VecNd<3> observed_w = gyro_bias - (R_sensor_from_vehicle * w);
+
   const SO3 R_sensor_from_vehicle = imu_from_vehicle.so3();
-  const VecNd<3> observed_w = gyro_bias - (R_sensor_from_vehicle * w);
+  const VecNd<3> w_imu = R_sensor_from_vehicle * eps_dot.block<3, 1>(3, 0);
+  const VecNd<3> observed_w = w_imu + gyro_bias;
+
   const GyroMeasurement gyro_meas = GyroMeasurement{observed_w};
   return gyro_meas;
 }
@@ -278,11 +282,12 @@ AccelMeasurement observe_accel(const State &state, const Parameters &parameters)
   const double g_mpss = 9.81;
   const VecNd<3> z_world = VecNd<3>::UnitZ();
   const VecNd<3> g_imu = R_sensor_from_world * (z_world * g_mpss);
+  const VecNd<3> accel_bias = state.accel_bias;
 
   const VecNd<3> a_world = state.eps_ddot.head<3>();
   // const VecNd<3> a_imu = imu_from_vehicle * a_vehicle;
   const VecNd<3> a_imu = R_sensor_from_world * a_world;
-  return AccelMeasurement{a_imu + g_imu};
+  return AccelMeasurement{a_imu + g_imu + accel_bias};
 
   /*
   const VecNd<6> eps_dot = state.eps_dot;
