@@ -16,7 +16,6 @@
 #include "main.h"
 #include <unsupported/Eigen/CXX11/Tensor>
 
-
 using Eigen::Tensor;
 typedef Tensor<float, 1>::DimensionPair DimPair;
 
