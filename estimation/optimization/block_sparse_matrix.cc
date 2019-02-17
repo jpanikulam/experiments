@@ -37,7 +37,7 @@ void insert_into_triplets(const Eigen::MatrixXd& mat,
 
   for (int row = 0; row < mat.rows(); ++row) {
     for (int col = 0; col < mat.cols(); ++col) {
-      const double& val = mat(row, col);
+      const double val = mat(row, col);
       if (std::abs(val) > 1e-12) {
         triplets->emplace_back(row + offset_row, col + offset_col, val);
       }
@@ -45,7 +45,7 @@ void insert_into_triplets(const Eigen::MatrixXd& mat,
   }
 }
 
-Eigen::SparseVector<double> to_sparse(const std::vector<VecXd> v) {
+Eigen::SparseVector<double> to_sparse(const std::vector<VecXd>& v) {
   int numel = 0;
   for (const auto& sub_v : v) {
     numel += sub_v.rows();
@@ -139,7 +139,7 @@ int BlockSparseMatrix::real_rows() const {
 int BlockSparseMatrix::real_cols() const {
   assert(valid_);
   int total = 0;
-  for (const auto& n : n_cols_) {
+  for (const int n : n_cols_) {
     total += n;
   }
   return total;
@@ -193,7 +193,9 @@ BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
       const auto& col = col_block.second;
       const int true_col_num = real_cols_left_of_block(block_col_ind);
 
-      const MatXd& submat = col.block;
+      // [TODO] Possibly can be reference
+      const MatXd submat = col.block;
+
       insert_into_triplets(submat, true_row_num, true_col_num, out(triplets));
     }
   }
@@ -203,38 +205,72 @@ BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
   return mat;
 }
 
-VecXd BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& residuals,
-                                      const BlockSparseMatrix& R_inv,
-                                      const double lambda) const {
+jcc::Optional<VecXd> BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& residuals,
+                                                     const BlockSparseMatrix& R_inv,
+                                                     const double lambda) const {
   assert(valid_);
   const SpMat J = to_eigen_sparse();
 
   SpMat identity(J.cols(), J.cols());
   identity.setIdentity();
 
-  const SpMat JtRi = J.transpose() * R_inv.to_eigen_sparse();
+  constexpr bool LEVENBERG_ONLY = false;
 
-  // const SpMat JtJ = (J.transpose() * J) + (lambda * identity);
+  //
+  // Undamped
+  //
 
-  const SpMat JtRiJ = (JtRi * J);
+  /*
+  const SpMat JtJ = (J.transpose() * J) + (lambda * identity);
+  */
+
+  //
   // Levenberg
-  // const SpMat damped_JtRiJ = (JtRi * J) + (lambda * identity);
+  //
+  if constexpr (LEVENBERG_ONLY) {
+    const SpMat JtRi = J.transpose() * R_inv.to_eigen_sparse();
+    const SpMat damped_JtRiJ = (JtRi * J) + (lambda * identity);
+    const SpVec v = to_sparse(residuals);
+    const SpMat Jtv = J.transpose() * v;
+    const Eigen::SimplicialCholesky<SpMat> chol(damped_JtRiJ);
+    if (chol.info() != Eigen::Success) {
+      return {};
+    }
 
+    const VecXd delta = chol.solve(Jtv);
+    return {delta};
+  }
+
+  //
   // Levenberg-Marquardt
-  const SpMat damped_JtRiJ = JtRiJ + (lambda * SpMat(JtRiJ.diagonal().asDiagonal()));
+  //
 
-  const Eigen::SimplicialCholesky<SpMat> chol(damped_JtRiJ);
+  if constexpr (!LEVENBERG_ONLY) {
+    const SpMat JtRi = J.transpose() * R_inv.to_eigen_sparse();
+    const SpMat JtRiJ = (JtRi * J);
 
-  const SpVec v = to_sparse(residuals);
+    const VecXd jtj_diag = JtRiJ.diagonal();
 
-  // Jtv
-  // const SpMat Jtv = J.transpose() * v;
-  // const VecXd delta = chol.solve(Jtv);
+    SpMat sp_diag(J.cols(), J.cols());
+    std::vector<Eigen::Triplet<double>> triplets;
+    for (int k = 0; k < J.cols(); ++k) {
+      triplets.emplace_back(k, k, jtj_diag[k]);
+    }
+    sp_diag.setFromTriplets(triplets.begin(), triplets.end());
 
-  const SpMat JtRiv = JtRi * v;
-  const VecXd delta = chol.solve(JtRiv);
+    const SpMat damped_JtRiJ = JtRiJ + (lambda * sp_diag);
+    const Eigen::SimplicialLDLT<SpMat> chol(damped_JtRiJ);
 
-  return delta;
+    if (chol.info() != Eigen::Success) {
+      std::cout << "Failed to solve" << std::endl;
+      return {};
+    }
+
+    const SpVec v = to_sparse(residuals);
+    const SpMat JtRiv = JtRi * v;
+    const VecXd delta = chol.solve(JtRiv);
+    return {delta};
+  }
 }
 
 }  // namespace optimization

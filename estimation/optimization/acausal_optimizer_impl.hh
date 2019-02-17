@@ -68,8 +68,9 @@ VecXd AcausalOptimizer<Prob>::add_dynamics_residual(const State& x_0,
   const MatXd dy_dp = -numerics::dynamic_group_jacobian<Parameters>(p, y_of_p);
 
   using StateToStateJac = MatNd<State::DIM, State::DIM>;
+  // [TODO] Should this be positive?
   const StateToStateJac dy_d_x1 = -StateToStateJac::Identity();
-  // const StateToStateJac dy_d_x1 = StateToStateJac::Zero();
+  // const StateToStateJac dy_d_x1 = StateToStateJac::Identity();
 
   bsm->set(residual_ind, x_ind, dy_dx);
   bsm->set(residual_ind, x_ind + 1, dy_d_x1);
@@ -134,8 +135,8 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
         std::cerr << "Expected dt ( " << dt << " ) < 0.3" << std::endl;
       }
       assert(dt > 0.0);
-      assert(dt < 0.3);  // Arbitrary constant that is surprising enough to indicate a
-      // bug
+      // Arbitrary constant that is surprising enough to indicate a bug
+      assert(dt < 0.3);
 
       const State& x_t1 = soln.x.at(t + 1);
 
@@ -144,7 +145,9 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
           add_dynamics_residual(x_t, x_t1, p, dt, x_ind, z_obs_ind, p_ind, out(J));
       v[z_obs_ind] = y_dyn;
 
-      R_inv.set(z_obs_ind, z_obs_ind, (dyn_cov_ * dt).inverse());
+      // R_inv.set(z_obs_ind, z_obs_ind, (dyn_cov_ * dt).inverse());
+      const double inv_dt = 1.0 / dt;
+      R_inv.set(z_obs_ind, z_obs_ind, dyn_info_ * inv_dt);
     }
   }
 
@@ -166,6 +169,9 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::update_solutio
   assert(delta.rows() == (n_states * State::DIM) + (n_params * Parameters::DIM));
   for (int t = 0; t < static_cast<int>(prev_soln.x.size()); ++t) {
     const VecNd<State::DIM> sub_delta = delta.segment(t * State::DIM, State::DIM);
+
+    // std::cout << t << ": " << sub_delta.transpose() << std::endl;
+
     updated_soln.x[t] = State::apply_delta(prev_soln.x.at(t), sub_delta);
   }
   const VecNd<Parameters::DIM> p_delta =
@@ -182,7 +188,7 @@ double AcausalOptimizer<Prob>::cost(const LinearSystem& system,
   double cost = 0.0;
   if (weights) {
     weights->clear();
-    weights->resize(system.v.size());
+    weights->resize(system.v.size(), 1.0);
   }
 
   for (int k = 0; k < static_cast<int>(system.v.size()); ++k) {
@@ -192,10 +198,19 @@ double AcausalOptimizer<Prob>::cost(const LinearSystem& system,
 
     const auto cost_weight = rcost.cost_weight(error);
 
-    cost += cost_weight.cost;
-    if (weights) {
-      (*weights)[k] = cost_weight.weight;
+    if (error > 1e3) {
+      // std::cout << "k: " << k << std::endl;
+      // std::cout << system.R_inv.get(k, k) << std::endl;
+      // std::cout << "s: " << sub_v.transpose() << std::endl;
+      // std::cout << "\terr: " << error << std::endl;
+      // std::cout << "\tCw: " << cost_weight.cost << " , " << cost_weight.weight
+      //           << std::endl;
     }
+
+    cost += cost_weight.cost;
+    // if (weights) {
+    //  (*weights)[k] = cost_weight.weight;
+    //}
   }
 
   assert(cost > 0.0);
@@ -205,21 +220,18 @@ double AcausalOptimizer<Prob>::cost(const LinearSystem& system,
 
 namespace {
 std::shared_ptr<slam::RobustEstimator> cost_schedule(int k) {
-  if (k > 15111) {
-    // return std::make_shared<slam::TukeyCost>(1.0);
-    return std::make_shared<slam::L2Cost>();
-  } else {
-    return std::make_shared<slam::L2Cost>();
-    // return std::make_shared<slam::HuberCost>(10.0);
-  }
+  return std::make_shared<slam::L2Cost>();
 }
 }  // namespace
 
 template <typename Prob>
 typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
     const Solution& initialization, const Visitor& visitor) const {
+  assert(numerics::is_pd(dyn_info_));
+
   if (initialization.x.size() != heap_.size()) {
-    std::cerr << "Expected " << initialization.x.size() << " == " << heap_.size() << std::endl;
+    std::cerr << "Expected " << initialization.x.size() << " == " << heap_.size()
+              << std::endl;
   }
   assert(initialization.x.size() == heap_.size());
   Solution soln = initialization;
@@ -229,7 +241,7 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   constexpr double LAMBDA_UP_FACTOR = 10.0;
   constexpr double LAMBDA_DOWN_FACTOR = 0.5;
   constexpr double LAMBDA_DOWN_LITE_FACTOR = 0.75;
-  constexpr double LAMBDA_INITIAL = 5.0;
+  constexpr double LAMBDA_INITIAL = 0.1;
   constexpr double DECREASE_RATIO_FOR_DAMPING_DOWN = 0.7;
   constexpr double MAX_LAMBDA = 1e5;
   constexpr double MIN_LAMBDA = 1e-25;
@@ -248,25 +260,32 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
     }
 
     std::cout << "\n-------" << std::endl;
-    std::vector<VecXd> v;
     current_system = populate(soln);
 
     const auto rcost = cost_schedule(k);
-    {
-      std::vector<double> weights;
-      std::cout << "Cost at [" << k << "]: " << cost(current_system, *rcost, &weights)
-                << std::endl;
-      for (int j = 0; j < current_system.R_inv.block_cols(); ++j) {
-        const Eigen::MatrixXd old = current_system.R_inv.get(j, j);
-        const double weight = weights.at(j);
-        current_system.R_inv.set(j, j, old * weight);
-      }
+    std::cout << "Cost at [" << k << "]: " << cost(current_system, *rcost) << std::endl;
+    // {
+    //   std::vector<double> weights;
+    //   std::cout << "Cost at [" << k << "]: " << cost(current_system, *rcost, &weights)
+    //             << std::endl;
+    //   for (int j = 0; j < current_system.R_inv.block_cols(); ++j) {
+    //     const Eigen::MatrixXd old = current_system.R_inv.get(j, j);
+    //     const double weight = weights.at(j);
+    //     current_system.R_inv.set(j, j, old * weight);
+    //   }
+    // }
+
+    const auto maybe_delta =
+        current_system.J.solve_lst_sq(current_system.v, current_system.R_inv, lambda);
+
+    if (!maybe_delta) {
+      lambda *= LAMBDA_UP_FACTOR;
+      std::cout << "Numerical issue: Increasing lambda to" << lambda << std::endl;
+      continue;
     }
 
-    const VecXd delta =
-        current_system.J.solve_lst_sq(current_system.v, current_system.R_inv, lambda);
+    const VecXd delta = *maybe_delta;
     const auto new_soln = update_solution(soln, delta);
-
     const auto new_system = populate(new_soln);
     const double new_cost = cost(new_system, *rcost);
 

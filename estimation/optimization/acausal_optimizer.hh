@@ -7,6 +7,7 @@
 #include "estimation/optimization/block_sparse_matrix.hh"
 #include "estimation/time_point.hh"
 
+#include "numerics/is_pd.hh"
 #include "vision/robust_estimator.hh"
 
 #include "out.hh"
@@ -66,6 +67,7 @@ class AcausalOptimizer {
   int add_error_model(const ErrorModel<Observation>& model,
                       const MatNd<Observation::DIM, Observation::DIM>& cov) {
     int model_id = models_.size();
+    assert(numerics::is_pd(cov));
     const auto type_erased_model = [model](const State& x, const std::any& z,
                                            const Parameters& p) {
       const VecNd<Observation::DIM> error = model(x, std::any_cast<Observation>(z), p);
@@ -79,7 +81,8 @@ class AcausalOptimizer {
   }
 
   void set_dynamics_cov(const MatNd<State::DIM, State::DIM>& cov) {
-    dyn_cov_ = cov;
+    dyn_info_ = cov.inverse();
+    assert(numerics::is_pd(dyn_info_));
   }
 
   template <typename Observation>
@@ -119,7 +122,7 @@ class AcausalOptimizer {
               std::vector<double>* weights = nullptr) const;
 
   Dynamics dynamics_;
-  MatNd<State::DIM, State::DIM> dyn_cov_;
+  MatNd<State::DIM, State::DIM> dyn_info_;
 
   std::map<int, TypelessErrorModel> models_;
   std::map<int, MatXd> covariances_;

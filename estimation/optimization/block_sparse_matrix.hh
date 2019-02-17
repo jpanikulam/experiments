@@ -5,6 +5,7 @@
 #include <Eigen/Sparse>
 
 #include "eigen.hh"
+#include "util/optional.hh"
 
 namespace estimation {
 namespace optimization {
@@ -31,9 +32,9 @@ class BlockSparseMatrix {
 
   SpMat to_eigen_sparse() const;
 
-  VecXd solve_lst_sq(const std::vector<VecXd>& residuals,
-                     const BlockSparseMatrix& R_inv,
-                     const double lambda = 0.0) const;
+  jcc::Optional<VecXd> solve_lst_sq(const std::vector<VecXd>& residuals,
+                                   const BlockSparseMatrix& R_inv,
+                                   const double lambda = 0.0) const;
 
   int block_rows() const {
     return rows_.size();
