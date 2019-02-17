@@ -25,7 +25,7 @@ MatNd<Y::DIM, X::DIM> group_jacobian(const X& x,
                                      const ApplyDelta<X>& apply_delta) {
   const auto fx = fnc(x);
   const auto f_x =
-      [&apply_delta, &compute_delta, &fnc, &fx, &x](const VecNd<X::DIM>& dx) {
+      [&apply_delta, &compute_delta, &fnc, fx, &x](const VecNd<X::DIM>& dx) {
         const X xplus_dx = apply_delta(x, dx);
         return compute_delta(fnc(xplus_dx), fx);
       };
@@ -35,7 +35,7 @@ MatNd<Y::DIM, X::DIM> group_jacobian(const X& x,
 template <typename X, typename Y>
 MatNd<Y::DIM, X::DIM> group_jacobian(const X& x, const GroupFnc<X, Y>& fnc) {
   const auto fx = fnc(x);
-  const auto f_x = [&fnc, &x, &fx](const VecNd<X::DIM>& dx) {
+  const auto f_x = [&fnc, &x, fx](const VecNd<X::DIM>& dx) {
     const X xplus_dx = X::apply_delta(x, dx);
     return Y::compute_delta(fnc(xplus_dx), fx);
   };
@@ -45,7 +45,7 @@ MatNd<Y::DIM, X::DIM> group_jacobian(const X& x, const GroupFnc<X, Y>& fnc) {
 template <int N_ROWS, typename X>
 MatNd<N_ROWS, X::DIM> group_jacobian(const X& x, const GroupToDelta<X, N_ROWS>& fnc) {
   const auto fx = fnc(x);
-  const auto f_x = [&fnc, &x, &fx](const VecNd<X::DIM>& dx) -> VecNd<N_ROWS> {
+  const auto f_x = [&fnc, &x, fx](const VecNd<X::DIM>& dx) -> VecNd<N_ROWS> {
     const X xplus_dx = X::apply_delta(x, dx);
     return fnc(xplus_dx) - fx;
   };
@@ -56,7 +56,7 @@ template <typename X>
 Eigen::MatrixXd dynamic_group_jacobian(const X& x,
                                        const GroupToDelta<X, Eigen::Dynamic>& fnc) {
   const auto fx = fnc(x);
-  const auto f_x = [&fnc, &x, &fx](const VecNd<X::DIM>& dx) -> VecXd {
+  const auto f_x = [&fnc, &x, fx](const VecNd<X::DIM>& dx) -> VecXd {
     const X xplus_dx = X::apply_delta(x, dx);
     return fnc(xplus_dx) - fx;
   };
