@@ -3,12 +3,21 @@
 #include "estimation/observation_model.hh"
 
 #include "numerics/group_diff.hh"
+#include "numerics/is_pd.hh"
 #include "numerics/is_symmetric.hh"
 
 // TODO
 #include <iostream>
 
 namespace estimation {
+
+template <typename State, typename Observation>
+ObservationModel<State, Observation>::ObservationModel(
+    const typename ObservationModel<State, Observation>::ErrorModel& error_model,
+    const MatNd<Observation::DIM, Observation::DIM>& cov)
+    : error_model_(error_model), cov_(cov) {
+  assert(numerics::is_pd(cov_));
+}
 
 template <typename State, typename Observation>
 FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
