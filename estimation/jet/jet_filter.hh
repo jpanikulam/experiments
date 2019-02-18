@@ -5,6 +5,11 @@
 namespace estimation {
 namespace jet_filter {
 
+inline SE3 get_world_from_body(const State& x) {
+  const SE3 T_world_from_body = SE3(x.R_world_from_body, x.x_world);
+  return T_world_from_body;
+}
+
 class JetFilter {
   using Update = FilterStateUpdate<State>;
   using JetFilterState = FilterState<State>;
