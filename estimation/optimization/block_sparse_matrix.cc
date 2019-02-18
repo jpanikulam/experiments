@@ -1,5 +1,6 @@
 #include "estimation/optimization/block_sparse_matrix.hh"
 
+#include "numerics/is_pd.hh"
 #include "out.hh"
 
 // TODO
@@ -9,25 +10,6 @@ namespace estimation {
 namespace optimization {
 
 namespace {
-/*
-VecXd to_dynamic(const std::vector<VecXd> v) {
-int numel = 0;
-for (const auto& sub_v : v) {
-  numel += sub_v.rows();
-}
-
-VecXd vec(numel);
-int elements_so_far = 0;
-for (const auto& sub_v : v) {
-  for (int sub_row = 0; sub_row < sub_v.rows(); ++sub_row) {
-    // triplets.emplace_back(elements_so_far + sub_row, sub_v[sub_row]);
-    vec[elements_so_far + sub_row] = sub_v[sub_row];
-  }
-  elements_so_far += sub_v.rows();
-}
-return vec;
-}
-*/
 
 void insert_into_triplets(const Eigen::MatrixXd& mat,
                           int offset_row,
@@ -234,6 +216,7 @@ jcc::Optional<VecXd> BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& r
     const SpMat Jtv = J.transpose() * v;
     const Eigen::SimplicialCholesky<SpMat> chol(damped_JtRiJ);
     if (chol.info() != Eigen::Success) {
+      std::cout << "Failed to solve: " << chol.info() << std::endl;
       return {};
     }
 
@@ -248,21 +231,33 @@ jcc::Optional<VecXd> BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& r
   if constexpr (!LEVENBERG_ONLY) {
     const SpMat JtRi = J.transpose() * R_inv.to_eigen_sparse();
     const SpMat JtRiJ = (JtRi * J);
-
     const VecXd jtj_diag = JtRiJ.diagonal();
 
-    SpMat sp_diag(J.cols(), J.cols());
+    SpMat sp_diag(JtRiJ.cols(), JtRiJ.cols());
     std::vector<Eigen::Triplet<double>> triplets;
-    for (int k = 0; k < J.cols(); ++k) {
+    for (int k = 0; k < JtRiJ.cols(); ++k) {
       triplets.emplace_back(k, k, jtj_diag[k]);
     }
     sp_diag.setFromTriplets(triplets.begin(), triplets.end());
 
-    const SpMat damped_JtRiJ = JtRiJ + (lambda * sp_diag);
-    const Eigen::SimplicialLDLT<SpMat> chol(damped_JtRiJ);
+    const SpMat damped_JtRiJ = JtRiJ + (lambda * sp_diag) + (lambda * identity);
+    // std::cout << "JtRiJ" << std::endl;
+    // std::cout << MatXd(JtRiJ) << std::endl;
+    // std::cout << "----" << std::endl;
+    // std::cout << "damped_JtRiJ" << std::endl;
+    // std::cout << MatXd(damped_JtRiJ) << std::endl;
+
+    // const MatXd dense_jtrij = MatXd(JtRiJ);
+    // const Eigen::SelfAdjointEigenSolver<MatXd> solver(dense_jtrij);
+    // std::cout << solver.eigenvalues()[0] << std::endl;
+    // std::cout << solver.eigenvectors().col(0) << std::endl;
+    // assert(numerics::is_pd(MatXd(JtRiJ)));
+    // assert(numerics::is_pd(MatXd(damped_JtRiJ)));
+
+    const Eigen::SimplicialCholesky<SpMat> chol(damped_JtRiJ);
 
     if (chol.info() != Eigen::Success) {
-      std::cout << "Failed to solve" << std::endl;
+      std::cout << "Failed to solve: " << chol.info() << std::endl;
       return {};
     }
 

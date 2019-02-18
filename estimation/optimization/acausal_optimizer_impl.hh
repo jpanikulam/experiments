@@ -3,6 +3,7 @@
 #include "estimation/optimization/acausal_optimizer.hh"
 #include "numerics/group_diff.hh"
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 
@@ -10,33 +11,156 @@ namespace estimation {
 namespace optimization {
 
 template <typename Prob>
-VecXd AcausalOptimizer<Prob>::add_observation_residual(const State& x,
-                                                       const Measurement& z,
-                                                       const Parameters& p,
-                                                       int x_ind,
-                                                       int residual_ind,
-                                                       int param_ind,
-                                                       Out<BlockSparseMatrix> bsm) const {
+typename AcausalOptimizer<Prob>::DynamicsDifferentials AcausalOptimizer<
+    Prob>::dynamics_diff(const State& x, const Parameters& p, const double dt) const {
+  const auto& model = dynamics_;
+  const auto f_of_x = [dt, &model, &p](const State& x) {
+    // Hold p, x_1
+    return model(x, p, dt);
+  };
+
+  const auto f_of_p = [dt, &model, &x](const Parameters& p) {
+    // Hold x_0, x_1
+    return model(x, p, dt);
+  };
+
+  const MatXd df_dx = numerics::group_jacobian<State, State>(x, f_of_x);
+  const MatXd df_dp = numerics::group_jacobian<Parameters, State>(p, f_of_p);
+  return {df_dx, df_dp};
+}
+
+template <typename Prob>
+typename AcausalOptimizer<Prob>::StateForTime AcausalOptimizer<Prob>::get_state_for_time(
+    const Solution& soln, const TimePoint& t) const {
+  const auto cmp = [](const TimePoint target, const StateObservation& b) {
+    return target < b.time_of_validity;
+  };
+  const auto upper_bound = std::upper_bound(soln.x.begin(), soln.x.end(), t, cmp);
+  const auto state_iter = upper_bound - 1u;
+  const int x_ind = static_cast<int>(std::distance(soln.x.begin(), state_iter));
+
+  const auto state_obs = *state_iter;
+
+  const double dt = to_seconds(t - state_obs.time_of_validity);
+  assert(dt >= 0.0);
+
+  return {x_ind, state_obs.x, dt};
+}
+
+template <typename Prob>
+LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
+  const auto measurements = heap_.to_sorted_vector();
+
+  const double total_dt = to_seconds(measurements.back().time_of_validity -
+                                     measurements.front().time_of_validity);
+  const int n_params = 1;
+  // const int n_states = static_cast<int>(std::ceil(total_dt / MAX_DT));
+  const int n_states = soln.x.size();
+  const int n_measurements = static_cast<int>(heap_.size());
+  const int n_residuals = (n_states - 1) + n_measurements;
+
+  BlockSparseMatrix J(n_residuals, n_states + n_params);
+  BlockSparseMatrix R_inv(n_residuals, n_residuals);
+
+  std::vector<VecXd> v;
+  v.resize(n_residuals);
+
+  // Immediately after the states
+  const int p_ind = n_states;
+
+  const auto& p = soln.p;
+  for (int z_ind = 0; z_ind < static_cast<int>(measurements.size()); ++z_ind) {
+    const auto& z_t = measurements.at(z_ind);
+
+    const StateForTime x_for_t = get_state_for_time(soln, z_t.time_of_validity);
+    const State x_t = dynamics_(x_for_t.x, p, x_for_t.dt);
+    const DynamicsDifferentials dyn_diff = dynamics_diff(x_for_t.x, p, x_for_t.dt);
+    const MeasurementDifferentials y_obs = add_observation_residual(x_t, z_t, p);
+    v[z_ind] = y_obs.residual;
+
+    /*
+        std::cout << "\n" << std::endl;
+        std::cout << "---- type:" << z_t.type << std::endl;
+        std::cout << "dt: " << x_for_t.dt << std::endl;
+        std::cout << "z_ind: " << z_ind << std::endl;
+        std::cout << "x_ind: " << x_for_t.x_ind << std::endl;
+        std::cout << "y_obs.dh_dx: " << y_obs.dh_dx.rows() << ", " << y_obs.dh_dx.cols()
+                  << std::endl;
+        std::cout << "dyn_diff.df_dx: " << dyn_diff.df_dx.rows() << ", "
+                  << dyn_diff.df_dx.cols() << std::endl;
+    */
+
+    const MatXd dh_dx = y_obs.dh_dx * dyn_diff.df_dx;
+    const MatXd dh_dp = y_obs.dh_dp + (y_obs.dh_dx * dyn_diff.df_dp);
+    J.set(z_ind, x_for_t.x_ind, dh_dx);
+    J.set(z_ind, p_ind, dh_dp);
+
+    const MatXd& cov = covariances_.at(z_t.type);
+    R_inv.set(z_ind, z_ind, cov.inverse());
+  }
+
+  assert(soln.x.size() > 2);
+  for (int x_ind = 0; x_ind < static_cast<int>(soln.x.size() - 1); ++x_ind) {
+    const StateObservation& state_obs = soln.x.at(x_ind);
+    const StateObservation& next_state_obs = soln.x.at(x_ind + 1);
+
+    const State& x_t = state_obs.x;
+    const State& x_t1 = next_state_obs.x;
+    const double dt =
+        to_seconds(next_state_obs.time_of_validity - state_obs.time_of_validity);
+
+    if (dt <= 0.0) {
+      std::cerr << "Dt was less than 0.0 for: " << dt << std::endl;
+    }
+    assert(dt > 0.0);
+    if (dt > MAX_DT) {
+      std::cerr << "Expected dt ( " << dt << " ) < 0.3" << std::endl;
+    }
+    // Arbitrary constant that is surprising enough to indicate a bug
+    assert(dt < MAX_DT);
+
+    // This doesn't yield great fill-in
+    const int z_obs_ind = x_ind + n_measurements;
+    const VecXd y_dyn =
+        add_dynamics_residual(x_t, x_t1, p, dt, x_ind, z_obs_ind, p_ind, out(J));
+    v[z_obs_ind] = y_dyn;
+
+    const double inv_dt = 1.0 / dt;
+    R_inv.set(z_obs_ind, z_obs_ind, dyn_info_ * inv_dt);
+  }
+
+  LinearSystem system;
+  system.v = v;
+  system.J = J;
+  system.R_inv = R_inv;
+  return system;
+}
+
+template <typename Prob>
+typename AcausalOptimizer<Prob>::MeasurementDifferentials AcausalOptimizer<
+    Prob>::add_observation_residual(const State& x,
+                                    const Measurement& z,
+                                    const Parameters& p) const {
   // y = (z[t] - h(x[t]; p))
   // J[obs_ind,  state_ind] = dy/dx[t] = H
   // J[obs_ind, params_ind] = dy/dp    = C
 
   const auto& model = models_.at(z.type);
-  const auto y_of_x = [&model, &z, &p](const State& x) {
+  const auto v_of_x = [&model, &z, &p](const State& x) {
     // Hold p
     return model.error(x, z.observation, p);
   };
-  const auto y_of_p = [&model, &z, &x](const Parameters& p) {
+  const auto v_of_p = [&model, &z, &x](const Parameters& p) {
     // Hold x
     return model.error(x, z.observation, p);
   };
 
-  const MatXd dy_dx = -numerics::dynamic_group_jacobian<State>(x, y_of_x);
-  const MatXd dy_dp = -numerics::dynamic_group_jacobian<Parameters>(p, y_of_p);
-  bsm->set(residual_ind, x_ind, dy_dx);
-  bsm->set(residual_ind, param_ind, dy_dp);
+  const MatXd dv_dx = numerics::dynamic_group_jacobian<State>(x, v_of_x);
+  const MatXd dv_dp = numerics::dynamic_group_jacobian<Parameters>(p, v_of_p);
+  // bsm->set(residual_ind, x_ind, dy_dx);
+  // bsm->set(residual_ind, param_ind, dy_dp);
 
-  return model.error(x, z.observation, p);
+  return {model.error(x, z.observation, p), -dv_dx, -dv_dp};
 }
 
 template <typename Prob>
@@ -49,113 +173,33 @@ VecXd AcausalOptimizer<Prob>::add_dynamics_residual(const State& x_0,
                                                     int param_ind,
                                                     Out<BlockSparseMatrix> bsm) const {
   // y = (x[t+1] - f(x[t]; p)
-  // J[obs_ind,          t] = dy/dx[t]   = A
-  // J[obs_ind, params_ind] = dy/dp      = G
-  // J[obs_ind,        t+1] = dy/dx[t+1] = -I
+  // J[obs_ind,          t] = -dv/dx[t]   = A
+  // J[obs_ind, params_ind] = -dv/dp      = G
+  // J[obs_ind,        t+1] = -dv/dx[t+1] = -I
 
   const auto& model = dynamics_;
-  const auto y_of_x = [dt, &model, &x_1, &p](const State& x) {
+  const auto v_of_x = [dt, &model, &x_1, &p](const State& x) {
     // Hold p, x_1
     return State::compute_delta(x_1, model(x, p, dt));
   };
 
-  const auto y_of_p = [dt, &model, &x_0, &x_1](const Parameters& p) {
+  const auto v_of_p = [dt, &model, &x_0, &x_1](const Parameters& p) {
     // Hold x_0, x_1
     return State::compute_delta(x_1, model(x_0, p, dt));
   };
 
-  const MatXd dy_dx = -numerics::dynamic_group_jacobian<State>(x_0, y_of_x);
-  const MatXd dy_dp = -numerics::dynamic_group_jacobian<Parameters>(p, y_of_p);
+  // TODO ELIMINATE
+  const MatXd dv_dx = -numerics::dynamic_group_jacobian<State>(x_0, v_of_x);
+  const MatXd dv_dp = -numerics::dynamic_group_jacobian<Parameters>(p, v_of_p);
 
   using StateToStateJac = MatNd<State::DIM, State::DIM>;
-  // [TODO] Should this be positive?
-  const StateToStateJac dy_d_x1 = -StateToStateJac::Identity();
-  // const StateToStateJac dy_d_x1 = StateToStateJac::Identity();
+  const StateToStateJac dv_d_x1 = -StateToStateJac::Identity();
 
-  bsm->set(residual_ind, x_ind, dy_dx);
-  bsm->set(residual_ind, x_ind + 1, dy_d_x1);
-  bsm->set(residual_ind, param_ind, dy_dp);
+  bsm->set(residual_ind, x_ind, dv_dx);
+  bsm->set(residual_ind, x_ind + 1, dv_d_x1);
+  bsm->set(residual_ind, param_ind, dv_dp);
 
   return State::compute_delta(x_1, model(x_0, p, dt));
-}
-
-template <typename Prob>
-LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
-  if (soln.x.size() != heap_.size()) {
-    std::cerr << "Expected " << soln.x.size() << " == " << heap_.size() << std::endl;
-  }
-  assert(soln.x.size() == heap_.size());
-  LinearSystem system;
-
-  constexpr int n_params = 1;
-  const int n_measurements = static_cast<int>(heap_.size());
-  const int n_states = static_cast<int>(soln.x.size());
-  const int n_residuals = (n_states - 1) + n_measurements;
-
-  BlockSparseMatrix J(n_residuals, n_states + n_params);
-  BlockSparseMatrix R_inv(n_residuals, n_residuals);
-
-  std::vector<VecXd> v;
-  v.resize(n_residuals);
-
-  // Immediately after the states
-  const int p_ind = n_states;
-
-  // covariances_[model_id]
-  const auto& p = soln.p;
-  const auto& measurements = heap_.to_sorted_vector();
-  for (int t = 0; t < static_cast<int>(measurements.size()); ++t) {
-    const auto& z_t = measurements.at(t);
-
-    // TODO: Do something special if dt == 0
-    // Options:
-    // -> Share a measurement on a state
-    // -> [Infinitely] weight state-matching observation
-    // The two options are equivalent, but the first is well-conditioned
-
-    // TODO: Divide information by dt
-    const int x_ind = t;
-    const int z_ind = 2 * t;
-    const State& x_t = soln.x.at(t);
-    const VecXd y_obs =
-        add_observation_residual(x_t, z_t, p, x_ind, z_ind, p_ind, out(J));
-    v[z_ind] = y_obs;
-
-    const MatXd& cov = covariances_.at(z_t.type);
-    R_inv.set(z_ind, z_ind, cov.inverse());
-
-    if (t < static_cast<int>(soln.x.size()) - 1) {
-      const double dt =
-          to_seconds(measurements.at(t + 1).time_of_validity - z_t.time_of_validity);
-
-      if (dt <= 0.0) {
-        std::cerr << "Dt was less than 0.0 for: " << dt << std::endl;
-      }
-      if (dt > 0.3) {
-        std::cerr << "Expected dt ( " << dt << " ) < 0.3" << std::endl;
-      }
-      assert(dt > 0.0);
-      // Arbitrary constant that is surprising enough to indicate a bug
-      assert(dt < 0.3);
-
-      const State& x_t1 = soln.x.at(t + 1);
-
-      const int z_obs_ind = z_ind + 1;
-      const VecXd y_dyn =
-          add_dynamics_residual(x_t, x_t1, p, dt, x_ind, z_obs_ind, p_ind, out(J));
-      v[z_obs_ind] = y_dyn;
-
-      // R_inv.set(z_obs_ind, z_obs_ind, (dyn_cov_ * dt).inverse());
-      const double inv_dt = 1.0 / dt;
-      R_inv.set(z_obs_ind, z_obs_ind, dyn_info_ * inv_dt);
-    }
-  }
-
-  system.v = v;
-  system.J = J;
-  system.R_inv = R_inv;
-
-  return system;
 }
 
 template <typename Prob>
@@ -169,10 +213,8 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::update_solutio
   assert(delta.rows() == (n_states * State::DIM) + (n_params * Parameters::DIM));
   for (int t = 0; t < static_cast<int>(prev_soln.x.size()); ++t) {
     const VecNd<State::DIM> sub_delta = delta.segment(t * State::DIM, State::DIM);
-
-    // std::cout << t << ": " << sub_delta.transpose() << std::endl;
-
-    updated_soln.x[t] = State::apply_delta(prev_soln.x.at(t), sub_delta);
+    updated_soln.x[t].x = State::apply_delta(prev_soln.x.at(t).x, sub_delta);
+    updated_soln.x[t].time_of_validity = prev_soln.x.at(t).time_of_validity;
   }
   const VecNd<Parameters::DIM> p_delta =
       delta.segment(n_states * State::DIM, Parameters::DIM);
@@ -194,23 +236,8 @@ double AcausalOptimizer<Prob>::cost(const LinearSystem& system,
   for (int k = 0; k < static_cast<int>(system.v.size()); ++k) {
     const VecXd& sub_v = system.v.at(k);
     const double error = sub_v.dot(system.R_inv.get(k, k) * sub_v);
-    // cost += sub_v.dot(system.R_inv.get(k, k) * sub_v);
-
     const auto cost_weight = rcost.cost_weight(error);
-
-    if (error > 1e3) {
-      // std::cout << "k: " << k << std::endl;
-      // std::cout << system.R_inv.get(k, k) << std::endl;
-      // std::cout << "s: " << sub_v.transpose() << std::endl;
-      // std::cout << "\terr: " << error << std::endl;
-      // std::cout << "\tCw: " << cost_weight.cost << " , " << cost_weight.weight
-      //           << std::endl;
-    }
-
     cost += cost_weight.cost;
-    // if (weights) {
-    //  (*weights)[k] = cost_weight.weight;
-    //}
   }
 
   assert(cost > 0.0);
@@ -229,11 +256,6 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
     const Solution& initialization, const Visitor& visitor) const {
   assert(numerics::is_pd(dyn_info_));
 
-  if (initialization.x.size() != heap_.size()) {
-    std::cerr << "Expected " << initialization.x.size() << " == " << heap_.size()
-              << std::endl;
-  }
-  assert(initialization.x.size() == heap_.size());
   Solution soln = initialization;
 
   // Generate our jacobian
@@ -243,8 +265,8 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
   constexpr double LAMBDA_DOWN_LITE_FACTOR = 0.75;
   constexpr double LAMBDA_INITIAL = 0.1;
   constexpr double DECREASE_RATIO_FOR_DAMPING_DOWN = 0.7;
-  constexpr double MAX_LAMBDA = 1e5;
-  constexpr double MIN_LAMBDA = 1e-25;
+  constexpr double MAX_LAMBDA = 1e6;
+  constexpr double MIN_LAMBDA = 1e-9;
 
   LinearSystem current_system = populate(soln);
   double prev_cost = cost(current_system, *cost_schedule(0));
@@ -266,7 +288,8 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
     std::cout << "Cost at [" << k << "]: " << cost(current_system, *rcost) << std::endl;
     // {
     //   std::vector<double> weights;
-    //   std::cout << "Cost at [" << k << "]: " << cost(current_system, *rcost, &weights)
+    //   std::cout << "Cost at [" << k << "]: " << cost(current_system, *rcost,
+    //   &weights)
     //             << std::endl;
     //   for (int j = 0; j < current_system.R_inv.block_cols(); ++j) {
     //     const Eigen::MatrixXd old = current_system.R_inv.get(j, j);
@@ -280,7 +303,7 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
 
     if (!maybe_delta) {
       lambda *= LAMBDA_UP_FACTOR;
-      std::cout << "Numerical issue: Increasing lambda to" << lambda << std::endl;
+      std::cout << "Numerical issue: Increasing lambda to " << lambda << std::endl;
       continue;
     }
 
@@ -299,9 +322,9 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
       lambda = std::max(lambda, MIN_LAMBDA);
       std::cout << "\tDecreasing damping to " << lambda << std::endl;
     } else {
-      lambda *= LAMBDA_DOWN_LITE_FACTOR;
-      lambda = std::max(lambda, MIN_LAMBDA);
-      std::cout << "\tDecreasing damping to " << lambda << std::endl;
+      lambda *= LAMBDA_UP_FACTOR;
+      // lambda = std::max(lambda, MIN_LAMBDA);
+      // std::cout << "\tDecreasing damping to " << lambda << std::endl;
     }
 
     prev_cost = new_cost;

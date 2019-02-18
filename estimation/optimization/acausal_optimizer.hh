@@ -20,11 +20,16 @@ template <typename _State, typename _Parameters>
 struct ProblemType {
   using State = _State;
   using Parameters = _Parameters;
+
+  struct StateObservation {
+    State x;
+    TimePoint time_of_validity;
+  };
 };
 
 template <typename Prob>
 struct OptimizerSolution {
-  std::vector<typename Prob::State> x;
+  std::vector<typename Prob::StateObservation> x;
   typename Prob::Parameters p;
 };
 
@@ -41,6 +46,7 @@ class AcausalOptimizer {
   using Parameters = typename Prob::Parameters;
   using Solution = OptimizerSolution<Prob>;
   using Dynamics = std::function<State(const State&, const Parameters&, double dt)>;
+  using StateObservation = typename Prob::StateObservation;
 
   template <typename Observation>
   using ErrorModel = std::function<VecNd<Observation::DIM>(
@@ -59,6 +65,11 @@ class AcausalOptimizer {
     std::any observation;
     TimePoint time_of_validity;
   };
+
+  // struct DebugInfo {
+  //   std::vector<State> x_estimated;
+  //   std::vector<Measurement> original_z;
+  // };
 
   AcausalOptimizer(const Dynamics& dynamics) : dynamics_(dynamics) {
   }
@@ -97,13 +108,32 @@ class AcausalOptimizer {
   Solution solve(const Solution& initialization, const Visitor& visitor = {}) const;
 
  private:
-  VecXd add_observation_residual(const State& x,
-                                 const Measurement& z,
-                                 const Parameters& p,
-                                 int x_ind,
-                                 int residual_ind,
-                                 int param_ind,
-                                 Out<BlockSparseMatrix> bsm) const;
+  struct DynamicsDifferentials {
+    MatXd df_dx;
+    MatXd df_dp;
+  };
+
+  struct MeasurementDifferentials {
+    VecXd residual;
+    MatXd dh_dx;
+    MatXd dh_dp;
+  };
+
+  struct StateForTime {
+    int x_ind;
+    State x;
+    double dt;
+  };
+
+  DynamicsDifferentials dynamics_diff(const State& x,
+                                      const Parameters& p,
+                                      const double dt) const;
+
+  StateForTime get_state_for_time(const Solution& soln, const TimePoint& t) const;
+
+  MeasurementDifferentials add_observation_residual(const State& x,
+                                                    const Measurement& z,
+                                                    const Parameters& p) const;
 
   VecXd add_dynamics_residual(const State& x_0,
                               const State& x_1,
@@ -132,6 +162,7 @@ class AcausalOptimizer {
       Heap<Measurement>([](const Measurement& a, const Measurement& b) {
         return a.time_of_validity > b.time_of_validity;
       });
+  static constexpr double MAX_DT = 0.5;
 };
 
 }  // namespace optimization
