@@ -11,7 +11,8 @@ estimation::jet_filter::State kf_state_from_xlqr_state(const State& x,
   estimation::jet_filter::State kf_state;
   const SE3 world_from_body = SE3(x.R_world_from_body, x.x);
 
-  kf_state.T_body_from_world = world_from_body.inverse();
+  kf_state.R_world_from_body = x.R_world_from_body;
+  kf_state.x_world = x.x;
 
   const jcc::Vec3 dR_dt = x.w;
   const jcc::Vec3 dx_dt = x.v;
