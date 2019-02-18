@@ -11,6 +11,8 @@ namespace jet_filter {
 
 class JetOptimizer {
  public:
+  using StateObservation = JetPoseOptimizer::StateObservation;
+
   JetOptimizer();
 
   void measure_imu(const AccelMeasurement& meas, const TimePoint& t);
@@ -19,7 +21,7 @@ class JetOptimizer {
 
   void measure_gyro(const GyroMeasurement& meas, const TimePoint& t);
 
-  JetPoseOptimizer::Solution solve(const std::vector<State> x,
+  JetPoseOptimizer::Solution solve(const std::vector<StateObservation>& x,
                                    const Parameters& p,
                                    const JetPoseOptimizer::Visitor& visitor = {});
 

@@ -24,17 +24,21 @@ JetOptimizer::JetOptimizer() {
   {
     state_cov.setZero();
     numerics::set_diag_to_value<StateDelta::accel_bias_error_dim,
-                                StateDelta::accel_bias_error_ind>(state_cov, 0.001);
+                                StateDelta::accel_bias_error_ind>(state_cov, 0.01);
     numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
-                                StateDelta::gyro_bias_error_ind>(state_cov, 0.001);
+                                StateDelta::gyro_bias_error_ind>(state_cov, 0.01);
     numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
                                 StateDelta::eps_dot_error_ind>(state_cov, 0.01);
     numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
-                                StateDelta::eps_ddot_error_ind>(state_cov, 12.0);
+                                StateDelta::eps_ddot_error_ind>(state_cov, 3.0);
 
-    constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
-    constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
-    numerics::set_diag_to_value<T_error_dim, T_error_ind>(state_cov, 0.01);
+    // constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
+    // constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
+    // numerics::set_diag_to_value<T_error_dim, T_error_ind>(state_cov, 0.01);
+
+    numerics::set_diag_to_value<3, StateDelta::R_world_from_body_error_log_ind>(state_cov,
+                                                                                0.1);
+    numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.1);
   }
 
   const MatNd<GyroMeasurement::DIM, GyroMeasurement::DIM> gyro_cov = accel_cov;
@@ -61,9 +65,10 @@ void JetOptimizer::measure_gyro(const GyroMeasurement& meas, const TimePoint& t)
   pose_opt_.add_measurement(meas, t, gyro_id_);
 }
 
-JetPoseOptimizer::Solution JetOptimizer::solve(const std::vector<State> x,
-                                               const Parameters& p,
-                                               const JetPoseOptimizer::Visitor& visitor) {
+JetPoseOptimizer::Solution JetOptimizer::solve(
+    const std::vector<JetPoseOptimizer::StateObservation>& x,
+    const Parameters& p,
+    const JetPoseOptimizer::Visitor& visitor) {
   return pose_opt_.solve({x, p}, visitor);
 }
 
