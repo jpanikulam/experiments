@@ -3,13 +3,16 @@
 namespace estimation {
 namespace jet_filter {
 
-const SE3 fiducial_1_from_world;
-
 FiducialMeasurement observe_fiducial(const State& x, const Parameters& p) {
+  const SE3 fiducial_1_from_world;
+
   FiducialMeasurement meas;
   // const SE3 T_camera_from_world = p.T_camera_from_body * x.T_body_from_world;
   const SE3 T_camera_from_body = SE3();
-  const SE3 T_camera_from_world = T_camera_from_body * x.T_body_from_world;
+
+  const SE3 T_world_from_body = SE3(x.R_world_from_body, x.x_world);
+
+  const SE3 T_camera_from_world = T_camera_from_body * T_world_from_body.inverse();
 
   meas.T_fiducial_from_camera = fiducial_1_from_world * T_camera_from_world.inverse();
   return meas;
@@ -26,6 +29,8 @@ VecNd<6> fiducial_error_model(const State& x,
   */
 
   const auto expected_fiducial = observe_fiducial(x, p);
+  // const SE3 error =
+  // z.T_fiducial_from_camera * expected_fiducial.T_fiducial_from_camera.inverse();
   const SE3 error =
       z.T_fiducial_from_camera * expected_fiducial.T_fiducial_from_camera.inverse();
 
