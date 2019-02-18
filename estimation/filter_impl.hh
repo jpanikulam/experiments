@@ -4,10 +4,17 @@
 #include "estimation/time_point.hh"
 
 #include "numerics/group_diff.hh"
+#include "numerics/is_pd.hh"
 #include "numerics/numdiff.hh"
 #include "numerics/symmetrize.hh"
 
 namespace estimation {
+
+template <typename State>
+Ekf<State>::Ekf(const Dynamics& dynamics, const MatNd<State::DIM, State::DIM>& cov)
+    : dynamics_(dynamics), Q_(cov) {
+  assert(numerics::is_pd(Q_));
+}
 
 // Returns the index of the added model
 template <typename State>
@@ -29,10 +36,10 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
 
   const State x_new = dynamics_fixed_dt(xp.x);
 
-  // const MatNd<State::DIM, State::DIM> P_new =
-  // (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
   const MatNd<State::DIM, State::DIM> P_new =
-      (A.transpose() * xp.P * A) + (Q_ * to_seconds(dt));
+      (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
+  // const MatNd<State::DIM, State::DIM> P_new =
+  // (A.transpose() * xp.P * A) + (Q_ * to_seconds(dt));
 
   // std::cout << "\n\nxp.P--\n" << std::endl;
   // std::cout << xp.P << std::endl;

@@ -30,9 +30,7 @@ class Ekf {
  public:
   using Dynamics = std::function<State(const State& x, double dt)>;
 
-  Ekf(const Dynamics& dynamics, const MatNd<State::DIM, State::DIM>& cov)
-      : dynamics_(dynamics), Q_(cov) {
-  }
+  Ekf(const Dynamics& dynamics, const MatNd<State::DIM, State::DIM>& cov);
 
   FilterState<State> update_state(const FilterState<State>& xp,
                                   const TimeDuration& dt) const;
