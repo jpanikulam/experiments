@@ -187,14 +187,18 @@ struct Window3DGlobalState {
 
 Window3DGlobalState window_3d_state;
 
+Window3DGlobalState &get_global_state() {
+  return window_3d_state;
+}
+
 std::shared_ptr<Window3D> get_window3d(const std::string &title) {
-  const auto it = window_3d_state.windows.find(title);
-  if (it != window_3d_state.windows.end()) {
+  const auto it = get_global_state().windows.find(title);
+  if (it != get_global_state().windows.end()) {
     return it->second;
   } else {
     const GlSize gl_size(640, 640);
     auto window = std::make_shared<Window3D>(gl_size);
-    window_3d_state.windows[title] = window;
+    get_global_state().windows[title] = window;
     WindowManager::register_window(gl_size, window, title);
     return window;
   }

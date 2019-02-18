@@ -12,6 +12,7 @@
 #include <thread>
 
 namespace viewer {
+constexpr bool VALGRIND = false;
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos);
@@ -72,6 +73,10 @@ void WindowManager::register_window(const GlSize &size,
                                     const std::shared_ptr<SimpleWindow> simple_window,
                                     const std::string &window_name,
                                     const int win_ver_maj) {
+  if (VALGRIND) {
+    simple_window->close();
+    return;
+  }
   maybe_create_global_state();
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, win_ver_maj);
