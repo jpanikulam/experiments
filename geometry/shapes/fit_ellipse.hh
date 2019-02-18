@@ -38,5 +38,11 @@ using Visitor = std::function<void(const EllipseFit& fit)>;
 //            the optimization at each iteration
 EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor = {});
 
+jcc::Vec3 deform_ellipse_to_unit_sphere(const jcc::Vec3& pt_on_ellipse,
+                                        const Ellipse& ellipse);
+
+jcc::Vec3 deform_unit_sphere_to_ellipse(const jcc::Vec3& pt_on_sphere,
+                                        const Ellipse& ellipse);
+
 }  // namespace shapes
 }  // namespace geometry
