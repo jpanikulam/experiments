@@ -5,8 +5,8 @@
 namespace slam {
 
 struct CostWeight {
-  double cost;
-  double weight;
+  double cost = -1.0;
+  double weight = -1.0;
 };
 
 class RobustEstimator {
