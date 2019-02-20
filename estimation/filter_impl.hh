@@ -38,17 +38,6 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
 
   const MatNd<State::DIM, State::DIM> P_new =
       (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
-  // const MatNd<State::DIM, State::DIM> P_new =
-  // (A.transpose() * xp.P * A) + (Q_ * to_seconds(dt));
-
-  // std::cout << "\n\nxp.P--\n" << std::endl;
-  // std::cout << xp.P << std::endl;
-
-  // std::cout << "\n\nQ" << std::endl;
-  // std::cout << (Q_ * to_seconds(dt)) << std::endl;
-
-  // std::cout << "\n\nA" << std::endl;
-  // std::cout << A << std::endl;
 
   return {x_new, P_new, xp.time_of_validity + dt};
 }
@@ -124,7 +113,7 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
     const FilterStateUpdate<State> update = observer(x_hat_t, meas.observation);
 
     FilterState<State> x_est_t = x_hat_t;
-    x_est_t.x = State::apply_delta(x_hat0.x, update.dx);
+    x_est_t.x = State::apply_delta(x_hat_t.x, update.dx);
     x_est_t.P = numerics::symmetrize(update.P_new);
 
     measurements_.pop();
