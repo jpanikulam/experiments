@@ -322,9 +322,10 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
       lambda = std::max(lambda, MIN_LAMBDA);
       std::cout << "\tDecreasing damping to " << lambda << std::endl;
     } else {
-      lambda *= LAMBDA_UP_FACTOR;
-      // lambda = std::max(lambda, MIN_LAMBDA);
-      // std::cout << "\tDecreasing damping to " << lambda << std::endl;
+      // lambda *= LAMBDA_UP_FACTOR;
+      lambda *= LAMBDA_DOWN_LITE_FACTOR;
+      lambda = std::max(lambda, MIN_LAMBDA);
+      std::cout << "\tDecreasing damping to " << lambda << std::endl;
     }
 
     prev_cost = new_cost;
