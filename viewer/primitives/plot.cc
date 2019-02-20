@@ -3,15 +3,15 @@
 #include <GL/glew.h>
 #include "viewer/gl_aliases.hh"
 
-// TODO
-#include <iostream>
 #include <limits>
 
 namespace viewer {
 using Vec2 = Eigen::Vector2d;
 using Vec4 = Eigen::Vector4d;
 
-Histogram::Histogram(const std::vector<double> &values, const HistogramConfig &config, const Vec4 &color) {
+Histogram::Histogram(const std::vector<double> &values,
+                     const HistogramConfig &config,
+                     const Vec4 &color) {
   config_ = config;
   color_ = color;
   double min = std::numeric_limits<double>::max();
@@ -100,7 +100,8 @@ void draw_surface(const Surface &surface) {
       const double value = surface.surface(row, col);
       glVertex3d(row * surface.scale, col * surface.scale, value);
 
-      glColor4f(normalizer * value, (normalizer * value * 0.5) + 0.2, (normalizer * value * 0.25) + 0.2, 0.8);
+      glColor4f(normalizer * value, (normalizer * value * 0.5) + 0.2,
+                (normalizer * value * 0.25) + 0.2, 0.8);
 
       for (const auto &r : offsets) {
         const int &x = r[0];
@@ -118,14 +119,44 @@ void draw_surface(const Surface &surface) {
 
   glEnd();
 }
-} // namespace
+
+void draw_line_plot(const LinePlot &line_plot) {
+  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
+
+  for (const auto &subplot_pair : line_plot.subplots) {
+    const auto &subplot = subplot_pair.second;
+    glColor(subplot.color);
+
+    if (subplot.dotted) {
+      glEnable(GL_LINE_STIPPLE);
+      glLineStipple(1.0, 0x00FF);
+    } else {
+      glDisable(GL_LINE_STIPPLE);
+    }
+
+    glLineWidth(subplot.line_width);
+    glBegin(GL_LINE_STRIP);
+    for (const auto &pt : subplot.points) {
+      glVertex(jcc::Vec2(pt.x, pt.y));
+    }
+    glEnd();
+  }
+  glPopAttrib();
+}
+
+}  // namespace
 
 void Plot::draw() const {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+
   for (const auto &surface : surfaces_) {
     draw_surface(surface);
   }
   for (const auto &histogram : histograms_) {
     histogram.draw();
   }
+  for (const auto &line_plot : line_plots_) {
+    draw_line_plot(line_plot);
+  }
 }
-} // namespace viewer
+}  // namespace viewer
