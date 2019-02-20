@@ -10,6 +10,19 @@
 #include <iostream>
 
 namespace estimation {
+namespace {
+template <int rows>
+double compute_likelihood(const MatNd<rows, rows>& info, const VecNd<rows>& innov) {
+  constexpr double K_LOG_2PI = rows * std::log(2.0 * M_PI);
+  const double mahalanobis_sq = 0.5 * innov.dot(info * innov);
+  const double log_normalizer =
+      -0.5 * (K_LOG_2PI + std::log(info.inverse().determinant()));
+  // return -mahalanobis_sq + log_normalizer;
+
+  return std::exp(-mahalanobis_sq) /
+         std::sqrt(std::pow(2.0 * M_PI, rows) * info.inverse().determinant());
+}
+}  // namespace
 
 template <typename State, typename Observation>
 ObservationModel<State, Observation>::ObservationModel(
@@ -48,15 +61,24 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
 
   const ObservationInfo S_inv = S.inverse();
 
-  const double log_likelihood = innovation.dot(S_inv * innovation);
+  // const double log_likelihood = innovation.dot(S_inv * innovation);
+  const double log_likelihood = compute_likelihood(S_inv, innovation);
   std::cout << "Likelihood: " << log_likelihood << std::endl;
-  if (log_likelihood > 500) {
-    return {StateVec::Zero(), xp.P};
-  }
+  // if (log_likelihood > 500) {
+    // return {StateVec::Zero(), xp.P};
+  // }
 
-  const MatNd<State::DIM, Observation::DIM> PHt = xp.P * H.transpose();
-  const StateVec update = PHt * S_llt.solve(innovation);
-  const StateInfo P_new = (StateInfo::Identity() - (PHt * S_llt.solve(H))) * xp.P;
+  //
+
+  const MatNd<State::DIM, Observation::DIM> K = xp.P * H.transpose() * S_inv;
+  const StateVec update = K * innovation;
+  const StateInfo P_new = (StateInfo::Identity() - (K * H)) * xp.P;
+
+  //
+
+  // const MatNd<State::DIM, Observation::DIM> PHt = xp.P * H.transpose();
+  // const StateVec update = PHt * S_llt.solve(innovation);
+  // const StateInfo P_new = (StateInfo::Identity() - (PHt * S_llt.solve(H))) * xp.P;
 
   return FilterStateUpdate<State>{update, P_new};
 }

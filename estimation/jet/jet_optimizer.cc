@@ -24,21 +24,21 @@ JetOptimizer::JetOptimizer() {
   {
     state_cov.setZero();
     numerics::set_diag_to_value<StateDelta::accel_bias_error_dim,
-                                StateDelta::accel_bias_error_ind>(state_cov, 0.01);
+                                StateDelta::accel_bias_error_ind>(state_cov, 0.001);
     numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
-                                StateDelta::gyro_bias_error_ind>(state_cov, 0.01);
+                                StateDelta::gyro_bias_error_ind>(state_cov, 0.001);
     numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
-                                StateDelta::eps_dot_error_ind>(state_cov, 0.01);
+                                StateDelta::eps_dot_error_ind>(state_cov, 0.001);
     numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
-                                StateDelta::eps_ddot_error_ind>(state_cov, 1.0);
+                                StateDelta::eps_ddot_error_ind>(state_cov, 0.5);
 
     // constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
     // constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
     // numerics::set_diag_to_value<T_error_dim, T_error_ind>(state_cov, 0.01);
 
     numerics::set_diag_to_value<3, StateDelta::R_world_from_body_error_log_ind>(state_cov,
-                                                                                0.1);
-    numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.1);
+                                                                                0.001);
+    numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.001);
   }
 
   const MatNd<GyroMeasurement::DIM, GyroMeasurement::DIM> gyro_cov = accel_cov * 0.1;

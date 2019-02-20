@@ -20,8 +20,8 @@ Parameters get_parameters() {
   // const SO3 R_imu_from_vehicle = SO3::exp(-M_PI * jcc::Vec3::UnitX());
   // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-3.08419, 0.0229764, 0.0580917));
 
-  const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0414591, 0.149307, 0.312134);
-  const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-3.08209, 0.00414157, 0.0582306));
+  const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0281067, 0.140086, 0.317844);
+  const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-3.08209, -0.0347532, 0.0108954));
 
   // FOR CAMERA
   // const jcc::Vec3 trans_imu_from_vehicle(-0.0172203, 0.0913384, 0.245508);
@@ -57,12 +57,12 @@ MatNd<State::DIM, State::DIM> make_cov() {
   numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
                               StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
 
-  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind>(state_cov, 0.5);
+  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind>(state_cov, 0.001);
 
-  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind + 3>(state_cov, 0.3);
+  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind + 3>(state_cov, 0.001);
 
-  numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind>(state_cov, 0.3);
-  numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind + 3>(state_cov, 0.3);
+  numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind>(state_cov, 0.5);
+  numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind + 3>(state_cov, 0.5);
 
   // numerics::set_diag_to_value<3,
   // StateDelta::T_body_from_world_error_log_ind>(state_cov,
@@ -72,8 +72,8 @@ MatNd<State::DIM, State::DIM> make_cov() {
   //     state_cov, 0.001);
 
   numerics::set_diag_to_value<3, StateDelta::R_world_from_body_error_log_ind>(state_cov,
-                                                                              0.1);
-  numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.1);
+                                                                              0.001);
+  numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.001);
   return state_cov;
 }
 
@@ -88,9 +88,9 @@ FilterState<State> JetFilter::reasonable_initial_state() {
   numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
                               StateDelta::gyro_bias_error_ind>(state_cov, 0.01);
   numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
-                              StateDelta::eps_dot_error_ind>(state_cov, 0.4);
+                              StateDelta::eps_dot_error_ind>(state_cov, 0.1);
   numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
-                              StateDelta::eps_ddot_error_ind>(state_cov, 0.4);
+                              StateDelta::eps_ddot_error_ind>(state_cov, 0.1);
 
   // numerics::set_diag_to_value<StateDelta::T_body_from_world_error_log_dim,
   //                             StateDelta::T_body_from_world_error_log_ind>(state_cov,
@@ -108,7 +108,7 @@ void JetFilter::setup_models() {
   {
     numerics::set_diag_to_value<AccelMeasurementDelta::observed_acceleration_error_dim,
                                 AccelMeasurementDelta::observed_acceleration_error_ind>(
-        accel_cov, 0.01);
+        accel_cov, 0.1);
   }
 
   MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;

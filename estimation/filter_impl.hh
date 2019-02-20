@@ -31,11 +31,10 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
     return dynamics_(x, to_seconds(dt));
   };
 
-  const MatNd<State::DIM, State::DIM> A =
-      numerics::group_jacobian<State, State>(xp.x, dynamics_fixed_dt);
-
   const State x_new = dynamics_fixed_dt(xp.x);
 
+  const MatNd<State::DIM, State::DIM> A =
+      numerics::group_jacobian<State, State>(xp.x, dynamics_fixed_dt);
   const MatNd<State::DIM, State::DIM> P_new =
       (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
 
@@ -55,6 +54,7 @@ FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
     time_simulated += dt;
   }
   assert(time_simulated == t);
+  assert(x.time_of_validity == t);
 
   return x;
 }
@@ -115,6 +115,7 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
     FilterState<State> x_est_t = x_hat_t;
     x_est_t.x = State::apply_delta(x_hat_t.x, update.dx);
     x_est_t.P = numerics::symmetrize(update.P_new);
+    assert(x_est_t.time_of_validity == meas.time_of_validity);
 
     measurements_.pop();
     return {x_est_t};
