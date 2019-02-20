@@ -8,7 +8,9 @@ FiducialMeasurement observe_fiducial(const State& x, const Parameters& p) {
 
   FiducialMeasurement meas;
   // const SE3 T_camera_from_world = p.T_camera_from_body * x.T_body_from_world;
+
   const SE3 T_camera_from_body = SE3();
+  // const SE3 T_camera_from_body = p.T_imu_from_vehicle;
 
   const SE3 T_world_from_body = SE3(x.R_world_from_body, x.x_world);
 

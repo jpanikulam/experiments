@@ -11,7 +11,7 @@ JetOptimizer::JetOptimizer() {
   {
     numerics::set_diag_to_value<AccelMeasurementDelta::observed_acceleration_error_dim,
                                 AccelMeasurementDelta::observed_acceleration_error_ind>(
-        accel_cov, 0.01);
+        accel_cov, 0.1);
   }
 
   MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;
@@ -30,7 +30,7 @@ JetOptimizer::JetOptimizer() {
     numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
                                 StateDelta::eps_dot_error_ind>(state_cov, 0.01);
     numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
-                                StateDelta::eps_ddot_error_ind>(state_cov, 3.0);
+                                StateDelta::eps_ddot_error_ind>(state_cov, 1.0);
 
     // constexpr int T_error_dim = StateDelta::T_body_from_world_error_log_dim;
     // constexpr int T_error_ind = StateDelta::T_body_from_world_error_log_ind;
@@ -41,7 +41,7 @@ JetOptimizer::JetOptimizer() {
     numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.1);
   }
 
-  const MatNd<GyroMeasurement::DIM, GyroMeasurement::DIM> gyro_cov = accel_cov;
+  const MatNd<GyroMeasurement::DIM, GyroMeasurement::DIM> gyro_cov = accel_cov * 0.1;
 
   imu_id_ =
       pose_opt_.add_error_model<AccelMeasurement>(observe_accel_error_model, accel_cov);

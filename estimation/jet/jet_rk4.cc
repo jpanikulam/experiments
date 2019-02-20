@@ -263,6 +263,7 @@ GyroMeasurement observe_gyro(const State &state, const Parameters &parameters) {
 }
 AccelMeasurement observe_accel(const State &state, const Parameters &parameters) {
   const SE3 imu_from_vehicle = parameters.T_imu_from_vehicle;
+  // const SE3 imu_from_vehicle = SE3();
   const SO3 R_imu_from_vehicle = imu_from_vehicle.so3();
   const SO3 R_world_from_body = state.R_world_from_body;
   const SO3 R_body_from_world = R_world_from_body.inverse();
