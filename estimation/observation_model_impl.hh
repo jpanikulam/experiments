@@ -65,10 +65,8 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
   const double log_likelihood = compute_likelihood(S_inv, innovation);
   std::cout << "Likelihood: " << log_likelihood << std::endl;
   // if (log_likelihood > 500) {
-    // return {StateVec::Zero(), xp.P};
+  // return {StateVec::Zero(), xp.P};
   // }
-
-  //
 
   const MatNd<State::DIM, Observation::DIM> K = xp.P * H.transpose() * S_inv;
   const StateVec update = K * innovation;
