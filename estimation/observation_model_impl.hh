@@ -20,7 +20,7 @@ double compute_likelihood(const MatNd<rows, rows>& info, const VecNd<rows>& inno
   // return -mahalanobis_sq + log_normalizer;
 
   return std::exp(-mahalanobis_sq) /
-         std::sqrt(std::pow(2.0 * M_PI, rows) * info.inverse().determinant());
+         std::sqrt(std::pow(2.0 * M_PI, rows) * (1.0 / info.determinant()));
 }
 }  // namespace
 
