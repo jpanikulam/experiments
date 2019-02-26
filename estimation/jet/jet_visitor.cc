@@ -1,7 +1,7 @@
 #pragma once
 
-#include "estimation/jet/jet_optimizer.hh"
-#include "viewer/primitives/simple_geometry.hh"
+#include "estimation/jet/jet_visitor.hh"
+#include "estimation/jet/jet_filter.hh"
 
 namespace estimation {
 namespace jet_filter {
@@ -32,7 +32,7 @@ void draw_states(viewer::SimpleGeometry& geo,
 }  // namespace
 
 JetPoseOptimizer::Visitor make_visitor(
-    const std::shared_ptr<viewer::Window3d>& view,
+    const std::shared_ptr<viewer::Window3D>& view,
     const std::shared_ptr<viewer::SimpleGeometry>& geo) {
   const auto visitor = [view, geo](const JetPoseOptimizer::Solution& soln) {
     geo->clear();
@@ -42,7 +42,8 @@ JetPoseOptimizer::Visitor make_visitor(
               << soln.p.T_imu_from_vehicle.translation().transpose() << "; "
               << soln.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
     view->spin_until_step();
-  }
+  };
+  return visitor;
 }
 
 }  // namespace jet_filter
