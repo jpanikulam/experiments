@@ -3,6 +3,8 @@
 #include "viewer/gl_size.hh"
 #include "viewer/gl_types.hh"
 
+#include <GLFW/glfw3.h>
+
 #include <string>
 #include <unordered_map>
 
@@ -42,6 +44,14 @@ class SimpleWindow {
     return should_close_;
   }
 
+  void set_window(GLFWwindow *window) {
+    window_ = window;
+  }
+
+  GLFWwindow *get_window() {
+    return window_;
+  }
+
   // Make the title something
   void set_title(const std::string title);
 
@@ -64,5 +74,7 @@ class SimpleWindow {
 
   GlSize gl_size_;
   WindowPoint mouse_pos_;
+
+  GLFWwindow *window_;
 };
 }  // namespace viewer
