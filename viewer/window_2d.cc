@@ -2,21 +2,20 @@
 // All members of the collective may share in its bounty
 //
 
-//%deps(opengl, glfw)
-
-#include "viewer/window_2d.hh"
-
 // inc order weird for these guys
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+//%deps(opengl, glfw)
+
+#include "viewer/window_2d.hh"
 
 #include "geometry/plane.hh"
 #include "viewer/gl_aliases.hh"
 #include "viewer/window_manager.hh"
 
 #include <iostream>
-#include <thread>
 #include <map>
+#include <thread>
 
 namespace viewer {
 namespace {
@@ -122,7 +121,9 @@ void Window2D::spin_until_step() {
   should_continue_ = false;
 }
 
-bool point_on_plane(const Projection &proj, const WindowPoint &point, Out<Vec3> intersection) {
+bool point_on_plane(const Projection &proj,
+                    const WindowPoint &point,
+                    Out<Vec3> intersection) {
   const geometry::Ray ray = proj.unproject(point);
   const geometry::Plane plane({Vec3::Zero(), Vec3::UnitZ()});
   return plane.intersect(ray, intersection);
@@ -143,7 +144,8 @@ void Window2D::on_mouse_move(const WindowPoint &position) {
     Vec3 intersection;
     if (point_on_plane(projection_, position, out(intersection))) {
       const double t_now = glfwGetTime();
-      const Vec4 color((std::sin(t_now / 5.0) + 1.0) * 0.5, (std::sin(t_now / 1.0) + 1.0) * 0.5, 0.2, 0.9);
+      const Vec4 color((std::sin(t_now / 5.0) + 1.0) * 0.5,
+                       (std::sin(t_now / 1.0) + 1.0) * 0.5, 0.2, 0.9);
       (void)color;
       // add_circle({Vec2(intersection.x(), intersection.y()), 0.3, color});
     }
@@ -238,7 +240,8 @@ void Window2D::draw_renderables(const Renderables &renderables) const {
     glColor(circle.color);
     // glBegin(GL_LINE_LOOP);
     glBegin(GL_LINES);
-    for (double angular_fraction = 0.0; angular_fraction < (2.0 * M_PI); angular_fraction += segment_angular_fraction) {
+    for (double angular_fraction = 0.0; angular_fraction < (2.0 * M_PI);
+         angular_fraction += segment_angular_fraction) {
       const double x = (circle.radius * std::cos(angular_fraction)) + circle.center.x();
       const double y = (circle.radius * std::sin(angular_fraction)) + circle.center.y();
 
@@ -266,7 +269,9 @@ void Window2D::render() {
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(60, static_cast<double>(gl_size_.width) / static_cast<double>(gl_size_.height), 0.1, 100.0);
+  gluPerspective(
+      60, static_cast<double>(gl_size_.width) / static_cast<double>(gl_size_.height), 0.1,
+      100.0);
 
   //
   // Compute ground plane intersection

@@ -3,6 +3,7 @@
 #include "viewer/gl_size.hh"
 #include "viewer/gl_types.hh"
 
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include <string>
