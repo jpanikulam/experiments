@@ -47,6 +47,9 @@ def compute_deps_from_includes(elements):
         "assimp/*": 'assimp',
         "GLFW/glfw3.h": 'glfw',
         "GL/glew.h": 'opengl',
+        "libserialport.h": "serialport",
+        "crossguid/guid.hpp": "crossguid",
+        "mqtt/*": "paho-mqttpp3"
     }
 
     new_deps = []
