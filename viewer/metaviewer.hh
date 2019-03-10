@@ -27,8 +27,12 @@ class MetaViewer final : public SimpleWindow {
 
   void resize(const GlSize &gl_size) override;
 
-  void add_window3d(const std::shared_ptr<Window3D> &window) {
+  std::shared_ptr<Window3D> add_window3d(const std::string &title = "main") {
+    const GlSize gl_size(640, 320);
+    const auto window = std::make_shared<Window3D>(gl_size);
+    window->set_window(get_window());
     partitions_.push_back(window);
+    return window;
   }
 
   void clear() {
@@ -37,7 +41,7 @@ class MetaViewer final : public SimpleWindow {
   }
 
  private:
-  // PartitionStructure partitions;
+  // PartitionStructure partitions_;
   std::vector<std::shared_ptr<SimpleWindow>> partitions_;
 
   GlSize gl_size_;

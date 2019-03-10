@@ -18,20 +18,20 @@ namespace viewer {
 void MetaViewer::on_key(int key, int scancode, int action, int mods) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
   for (const auto &partition : partitions_) {
-    partition->on_key(key, scancode, action, mods);
+    partition->key_pressed(key, scancode, action, mods);
   }
 }
 void MetaViewer::on_mouse_button(int button, int action, int mods) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
   for (const auto &partition : partitions_) {
-    partition->on_mouse_button(button, action, mods);
+    partition->mouse_button(button, action, mods);
   }
 }
 
 void MetaViewer::on_mouse_move(const WindowPoint &mouse_pos) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
   for (const auto &partition : partitions_) {
-    partition->on_mouse_move(mouse_pos);
+    partition->mouse_moved(mouse_pos.point.x(), mouse_pos.point.y());
   }
 }
 
@@ -65,8 +65,9 @@ void MetaViewer::render() {
   const double dt = std::max(t_now - last_update_time_, 0.02);
   last_update_time_ = t_now;
 
-  glFinish();
 }  // namespace viewer
+
+namespace {
 
 struct MetaViewerGlobalState {
   std::map<std::string, std::shared_ptr<MetaViewer>> windows;
@@ -77,6 +78,7 @@ MetaViewerGlobalState window_3d_state;
 MetaViewerGlobalState &get_global_state() {
   return window_3d_state;
 }
+}  // namespace
 
 std::shared_ptr<MetaViewer> get_metaviewer(const std::string &title) {
   const auto it = get_global_state().windows.find(title);

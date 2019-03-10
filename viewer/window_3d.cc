@@ -127,11 +127,11 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   const bool left = left_mouse_held() && !shift;
   const bool right = right_mouse_held() || (shift && left_mouse_held());
 
-  if (left || right) {
-    glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  } else {
-    glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-  }
+  // if (left || right) {
+    // glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  // } else {
+    // glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  // }
 
   view_.apply_mouse(mouse_pos, mouse_pos_last_click_, left, right);
 
@@ -189,6 +189,7 @@ void Window3D::render() {
   glFinish();
 }  // namespace viewer
 
+namespace {
 struct Window3DGlobalState {
   std::map<std::string, std::shared_ptr<Window3D>> windows;
 };
@@ -198,6 +199,7 @@ Window3DGlobalState window_3d_state;
 Window3DGlobalState &get_global_state() {
   return window_3d_state;
 }
+}  // namespace
 
 std::shared_ptr<Window3D> get_window3d(const std::string &title) {
   const auto it = get_global_state().windows.find(title);

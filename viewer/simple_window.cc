@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <string>
 
+// TODO
+#include <iostream>
+
 namespace viewer {
 
 void SimpleWindow::key_pressed(int key, int scancode, int action, int mods) {
@@ -15,6 +18,7 @@ void SimpleWindow::key_pressed(int key, int scancode, int action, int mods) {
   } else if (action == GLFW_RELEASE) {
     held_keys_[key] = false;
   }
+
 
   on_key(key, scancode, action, mods);
 }
