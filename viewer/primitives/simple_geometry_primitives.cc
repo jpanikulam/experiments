@@ -42,6 +42,11 @@ void draw_axes(const Axes &axes) {
 
   glPopMatrix();
   glPopAttrib();
+
+  if (axes.dotted) {
+    glDisable(GL_LINE_STIPPLE);
+  }
+
 }
 
 void draw_lines(const std::vector<Line> &lines) {
