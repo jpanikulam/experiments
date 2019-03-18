@@ -13,10 +13,10 @@ namespace estimation {
 namespace {
 template <int rows>
 double compute_likelihood(const MatNd<rows, rows>& info, const VecNd<rows>& innov) {
-  constexpr double K_LOG_2PI = rows * std::log(2.0 * M_PI);
   const double mahalanobis_sq = 0.5 * innov.dot(info * innov);
-  const double log_normalizer =
-      -0.5 * (K_LOG_2PI + std::log(info.inverse().determinant()));
+  // constexpr double K_LOG_2PI = rows * std::log(2.0 * M_PI);
+  // const double log_normalizer =
+  // -0.5 * (K_LOG_2PI + std::log(info.inverse().determinant()));
   // return -mahalanobis_sq + log_normalizer;
 
   return std::exp(-mahalanobis_sq) /
