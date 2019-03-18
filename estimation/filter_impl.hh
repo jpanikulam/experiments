@@ -1,5 +1,7 @@
 #pragma once
 
+#include "logging/assert.hh"
+
 #include "estimation/filter.hh"
 #include "estimation/time_point.hh"
 
@@ -99,9 +101,9 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
     const Measurement meas = measurements_.top();
 
     const double dt_sec = to_seconds(meas.time_of_validity - x_hat0.time_of_validity);
-    if (dt_sec > 0.5) {
-      std::cerr << "Time (" << dt_sec << ") longer than 0.5 sec" << std::endl;
-    }
+
+    JASSERT_GE(dt_sec, 0.0, "Time moved backwards");
+    JASSERT_LE(dt_sec, 0.5, "Time was insufficiently long");
 
     const auto x_hat_t = dynamics_until(x_hat0, meas.time_of_validity);
 
@@ -115,7 +117,9 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
     FilterState<State> x_est_t = x_hat_t;
     x_est_t.x = State::apply_delta(x_hat_t.x, update.dx);
     x_est_t.P = numerics::symmetrize(update.P_new);
-    assert(x_est_t.time_of_validity == meas.time_of_validity);
+
+    JASSERT_EQ(x_est_t.time_of_validity, meas.time_of_validity,
+               "Failed to bring state tov to measurement tov");
 
     measurements_.pop();
     return {x_est_t};
