@@ -1,3 +1,6 @@
+#pragma once
+
+#include "logging/log.hh"
 #include "macros.hh"
 
 namespace jcc {
@@ -9,8 +12,8 @@ void assert_gt(const A& a,
                char const* const file_name,
                int line_num) {
   if (UNLIKELY(a <= b)) {
-    std::cerr << file_name << ":" << line_num << ": Error, expected: " << a << " > " << b
-              << " " << msg << std::endl;
+    std::cerr << file_name << ":" << line_num << ": " << Format::red() << "Expected"
+              << Format::reset() << ": " << a << " > " << b << ": " << msg << std::endl;
     std::abort();
   }
 }
@@ -22,8 +25,8 @@ void assert_ge(const A& a,
                char const* const file_name,
                int line_num) {
   if (UNLIKELY(a < b)) {
-    std::cerr << file_name << ":" << line_num << ": Error, expected: " << a << " >= " << b
-              << " " << msg << std::endl;
+    std::cerr << file_name << ":" << line_num << ": " << Format::red() << "Expected"
+              << Format::reset() << ": " << a << " >= " << b << ": " << msg << std::endl;
     std::abort();
   }
 }
@@ -35,8 +38,8 @@ void assert_lt(const A& a,
                char const* const file_name,
                int line_num) {
   if (UNLIKELY(a >= b)) {
-    std::cerr << file_name << ":" << line_num << ": Error, expected: " << a << " < " << b
-              << " " << msg << std::endl;
+    std::cerr << file_name << ":" << line_num << ": " << Format::red() << "Expected"
+              << Format::reset() << ": " << a << " < " << b << ": " << msg << std::endl;
     std::abort();
   }
 }
@@ -47,8 +50,8 @@ void assert_le(const A& a,
                char const* const file_name,
                int line_num) {
   if (UNLIKELY(a > b)) {
-    std::cerr << file_name << ":" << line_num << ": Error, expected: " << a << " <= " << b
-              << " " << msg << std::endl;
+    std::cerr << file_name << ":" << line_num << ": " << Format::red() << "Expected"
+              << Format::reset() << ": " << a << " <= " << b << ": " << msg << std::endl;
     std::abort();
   }
 }
@@ -59,9 +62,24 @@ void assert_eq(const A& a,
                char const* const msg,
                char const* const file_name,
                int line_num) {
+  if (UNLIKELY(a != b)) {
+    std::cerr << file_name << ":" << line_num << ": " << Format::red() << "Expected"
+              << Format::reset() << ": " << a << " == " << b << ": " << msg << std::endl;
+
+    std::abort();
+  }
+}
+
+template <typename A, typename B>
+void assert_ne(const A& a,
+               const B& b,
+               char const* const msg,
+               char const* const file_name,
+               int line_num) {
   if (UNLIKELY(a == b)) {
-    std::cerr << file_name << ":" << line_num << ": Error, expected: " << a << " == " << b
-              << " " << msg << std::endl;
+    std::cerr << file_name << ":" << line_num << ": " << Format::red() << "Expected"
+              << Format::reset() << ": " << a << " != " << b << ": " << msg << std::endl;
+
     std::abort();
   }
 }
@@ -73,3 +91,4 @@ void assert_eq(const A& a,
 #define JASSERT_LE(a, b, msg) jcc::assert_le(a, b, msg, __FILE__, __LINE__);
 #define JASSERT_LT(a, b, msg) jcc::assert_lt(a, b, msg, __FILE__, __LINE__);
 #define JASSERT_EQ(a, b, msg) jcc::assert_eq(a, b, msg, __FILE__, __LINE__);
+#define JASSERT_NE(a, b, msg) jcc::assert_eq(a, b, msg, __FILE__, __LINE__);
