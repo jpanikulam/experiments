@@ -31,5 +31,4 @@ inline estimation::TimePoint now() {
 }  // namespace jcc
 
 std::ostream& operator<<(std::ostream& os, const estimation::TimePoint& t);
-
 std::ostream& operator<<(std::ostream& os, const estimation::TimeDuration& dt);
