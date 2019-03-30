@@ -48,6 +48,8 @@ FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
                                               const TimePoint& t) const {
   constexpr TimeDuration MAX_DT = to_duration(0.01);
 
+  JASSERT_LE(x0.time_of_validity, t, "Target time must be less than filter state time");
+
   FilterState<State> x = x0;
   TimePoint time_simulated = x0.time_of_validity;
   while (time_simulated < t) {
@@ -55,8 +57,8 @@ FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
     x = update_state(x, dt);
     time_simulated += dt;
   }
-  assert(time_simulated == t);
-  assert(x.time_of_validity == t);
+  JASSERT_EQ(time_simulated, t, "Failed to simulate the correct amount of time");
+  JASSERT_EQ(x.time_of_validity, t, "Failed to simulate up to target time of validity");
 
   return x;
 }
