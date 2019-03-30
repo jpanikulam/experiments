@@ -46,7 +46,6 @@ void draw_axes(const Axes &axes) {
   if (axes.dotted) {
     glDisable(GL_LINE_STIPPLE);
   }
-
 }
 
 void draw_lines(const std::vector<Line> &lines) {
@@ -216,7 +215,7 @@ void draw_plane_grid(const Plane &plane) {
   const Vec3 x_dir = geometry::perp(n);
   const Vec3 y_dir = x_dir.cross(n).normalized();
 
-  const int n_lines = 10;
+  const int n_lines = 100;
   const double displacement = n_lines * plane.line_spacing;
   const Vec3 offset = plane.plane.u_normal * plane.plane.distance_from_origin;
 
@@ -224,30 +223,41 @@ void draw_plane_grid(const Plane &plane) {
   const Vec3 x_offset = x_dir * (n_lines * plane.line_spacing);
 
   glPushAttrib(GL_CURRENT_BIT);
+  glLineWidth(1.0);
+
   glColor(plane.color);
   glBegin(GL_LINES);
   {
-    for (double x = -displacement; x <= displacement; x += plane.line_spacing) {
-      const Vec3 v = (x * x_dir) + offset;
+    for (double x = -displacement; x < -plane.line_spacing; x += plane.line_spacing) {
+      const Vec3 v_x = (x * x_dir) + offset;
+      const Vec3 v_y = (x * y_dir) + offset;
 
-      // Lines retreating off to infinity by homogeneousness
-      // turns out, it doesn't look that good.
-
-      /*
-      glVertex4d(v.x(), v.y(), v.z(), 0.0);
-      glVertex4d(y_dir.x(), y_dir.y(), y_dir.z(), 0.0);
-      glVertex4d(v.x(), v.y(), v.z(), 1.0);
-      */
-
-      glVertex(Vec3(v + y_offset));
-      glVertex(Vec3(v - y_offset));
+      glVertex(Vec3(v_x + y_offset));
+      glVertex(Vec3(v_x - y_offset));
+      glVertex(Vec3(v_y + x_offset));
+      glVertex(Vec3(v_y - x_offset));
     }
-    for (double y = -displacement; y <= displacement; y += plane.line_spacing) {
-      const Vec3 v = (y * y_dir) + offset;
-
-      glVertex(Vec3(v + x_offset));
-      glVertex(Vec3(v - x_offset));
+    for (double x = plane.line_spacing; x <= displacement; x += plane.line_spacing) {
+      const Vec3 v_x = (x * x_dir) + offset;
+      const Vec3 v_y = (x * y_dir) + offset;
+      glVertex(Vec3(v_x + y_offset));
+      glVertex(Vec3(v_x - y_offset));
+      glVertex(Vec3(v_y + x_offset));
+      glVertex(Vec3(v_y - x_offset));
     }
+  }
+
+  glEnd();
+  glLineWidth(8.0);
+  glBegin(GL_LINES);
+  {
+    glColor(Vec4(1.0, 0.0, 0.0, 0.8));
+    glVertex(Vec3(x_offset));
+    glVertex(Vec3(-x_offset));
+
+    glColor(Vec4(0.0, 1.0, 0.0, 0.8));
+    glVertex(Vec3(y_offset));
+    glVertex(Vec3(-y_offset));
   }
   glEnd();
   glPopAttrib();
