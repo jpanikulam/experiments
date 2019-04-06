@@ -221,8 +221,8 @@ State operator+(const State &Q, const StateDot &anon_fe2e87) {
   const State Q2 = State{
       ((Q.gyro_bias) + (anon_fe2e87.gyro_bias_dot)),
       ((Q.eps_ddot) + (anon_fe2e87.eps_ddot_dot)), ((Q.eps_dot) + (anon_fe2e87.eps_ddot)),
-      // ((SO3::exp((anon_fe2e87.w))) * (Q.R_world_from_body)),
-      ((SO3::exp(anon_fe2e87.w) * Q.R_world_from_body.inverse()).inverse()),
+      ((SO3::exp((anon_fe2e87.w))) * (Q.R_world_from_body)),
+      // ((SO3::exp(anon_fe2e87.w) * Q.R_world_from_body.inverse()).inverse()),
       ((Q.accel_bias) + (anon_fe2e87.accel_bias_dot)), ((Q.x_world) + (anon_fe2e87.v))};
   return Q2;
 }
@@ -253,11 +253,14 @@ State rk4_integrate(const State &Q, const Parameters &Z, const double h) {
 }
 GyroMeasurement observe_gyro(const State &state, const Parameters &parameters) {
   const VecNd<6> eps_dot = state.eps_dot;
+  const SO3 R_world_from_body = state.R_world_from_body;
+
   const VecNd<3> w = eps_dot.block<3, 1>(3, 0);
   const SE3 imu_from_vehicle = parameters.T_imu_from_vehicle;
   const VecNd<3> gyro_bias = state.gyro_bias;
   const SO3 R_sensor_from_vehicle = imu_from_vehicle.so3();
-  const VecNd<3> observed_w = gyro_bias - (R_sensor_from_vehicle * w);
+  const VecNd<3> observed_w =
+      gyro_bias + (R_sensor_from_vehicle * R_world_from_body.inverse() * w);
   const GyroMeasurement gyro_meas = GyroMeasurement{observed_w};
   return gyro_meas;
 }

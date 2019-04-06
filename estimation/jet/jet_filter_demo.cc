@@ -86,22 +86,23 @@ void run_filter() {
   JetOptimizer jet_opt;
 
   FilterState<State> xp0 = JetFilter::reasonable_initial_state();
+  xp0.x.R_world_from_body = SO3::exp(jcc::Vec3::UnitX() * M_PI * 0.5);
 
   xp0.time_of_validity = {};
 
   State true_x = xp0.x;
-  true_x.eps_dot[4] = 0.1;
+  // true_x.eps_dot[4] = 0.1;
 
   true_x.eps_dot[0] = 1.0;
-  true_x.eps_dot[4] = -0.6;
-  true_x.eps_dot[5] = -0.2;
+  // true_x.eps_dot[4] = -0.6;
+  true_x.eps_dot[5] = 1.2;
 
   // true_x.accel_bias = jcc::Vec3(0.1, -0.05, 0.15);
   true_x.accel_bias = jcc::Vec3::Zero();
 
-  true_x.eps_ddot[1] = 0.01;
-  true_x.eps_ddot[5] = 0.01;
-  true_x.eps_ddot[3] = 0.02;
+  // true_x.eps_ddot[1] = 0.01;
+  // true_x.eps_ddot[5] = 0.01;
+  // true_x.eps_ddot[3] = 0.02;
 
   JetFilter jf(xp0);
 
