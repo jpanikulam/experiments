@@ -1,6 +1,7 @@
 #pragma once
 
 #include "estimation/optimization/acausal_optimizer.hh"
+#include "logging/assert.hh"
 #include "numerics/group_diff.hh"
 
 #include <algorithm>
@@ -42,7 +43,7 @@ typename AcausalOptimizer<Prob>::StateForTime AcausalOptimizer<Prob>::get_state_
   const auto state_obs = *state_iter;
 
   const double dt = to_seconds(t - state_obs.time_of_validity);
-  assert(dt >= 0.0);
+  JASSERT_GE(dt, 0.0, "Time must flow forward");
 
   return {x_ind, state_obs.x, dt};
 }
@@ -99,7 +100,7 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
     R_inv.set(z_ind, z_ind, cov.inverse());
   }
 
-  assert(soln.x.size() > 2);
+  JASSERT_GT(soln.x.size(), 2u, "Must have at least 2 elements in the proposed solution");
   for (int x_ind = 0; x_ind < static_cast<int>(soln.x.size() - 1); ++x_ind) {
     const StateObservation& state_obs = soln.x.at(x_ind);
     const StateObservation& next_state_obs = soln.x.at(x_ind + 1);
@@ -109,15 +110,9 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
     const double dt =
         to_seconds(next_state_obs.time_of_validity - state_obs.time_of_validity);
 
-    if (dt <= 0.0) {
-      std::cerr << "Dt was less than 0.0 for: " << dt << std::endl;
-    }
-    assert(dt > 0.0);
-    if (dt > MAX_DT) {
-      std::cerr << "Expected dt ( " << dt << " ) < 0.3" << std::endl;
-    }
+    JASSERT_GT(dt, 0.0, "Time must be strictly positive");
     // Arbitrary constant that is surprising enough to indicate a bug
-    assert(dt < MAX_DT);
+    JASSERT_LT(dt, MAX_DT, "Time must be less than max passed time");
 
     // This doesn't yield great fill-in
     const int z_obs_ind = x_ind + n_measurements;
@@ -210,7 +205,9 @@ typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::update_solutio
   Solution updated_soln;
   updated_soln.x.resize(n_states);
 
-  assert(delta.rows() == (n_states * State::DIM) + (n_params * Parameters::DIM));
+  JASSERT_EQ(delta.rows(),
+             (n_states * State::DIM) + (n_params * Parameters::DIM),
+             "Delta must have the correct dimension");
   for (int t = 0; t < static_cast<int>(prev_soln.x.size()); ++t) {
     const VecNd<State::DIM> sub_delta = delta.segment(t * State::DIM, State::DIM);
     updated_soln.x[t].x = State::apply_delta(prev_soln.x.at(t).x, sub_delta);
@@ -240,7 +237,7 @@ double AcausalOptimizer<Prob>::cost(const LinearSystem& system,
     cost += cost_weight.cost;
   }
 
-  assert(cost > 0.0);
+  JASSERT_GT(cost, 0.0, "Cost must be positive");
 
   return cost;
 }
@@ -254,7 +251,7 @@ std::shared_ptr<slam::RobustEstimator> cost_schedule(int k) {
 template <typename Prob>
 typename AcausalOptimizer<Prob>::Solution AcausalOptimizer<Prob>::solve(
     const Solution& initialization, const Visitor& visitor) const {
-  assert(numerics::is_pd(dyn_info_));
+  JASSERT(numerics::is_pd(dyn_info_), "Dynamics information matrix must be PD");
 
   Solution soln = initialization;
 

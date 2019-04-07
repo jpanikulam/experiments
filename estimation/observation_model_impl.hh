@@ -2,12 +2,10 @@
 
 #include "estimation/observation_model.hh"
 
+#include "logging/assert.hh"
 #include "numerics/group_diff.hh"
 #include "numerics/is_pd.hh"
 #include "numerics/is_symmetric.hh"
-
-// TODO
-#include <iostream>
 
 namespace estimation {
 namespace {
@@ -29,7 +27,7 @@ ObservationModel<State, Observation>::ObservationModel(
     const typename ObservationModel<State, Observation>::ErrorModel& error_model,
     const MatNd<Observation::DIM, Observation::DIM>& cov)
     : error_model_(error_model), cov_(cov) {
-  assert(numerics::is_pd(cov_));
+  JASSERT(numerics::is_pd(cov_), "Observation covariance must be positive definite");
 }
 
 template <typename State, typename Observation>
@@ -49,13 +47,10 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
 
   const ObservationInfo S = (H * xp.P * H.transpose()) + cov_;
 
-  assert(numerics::is_symmetric(xp.P));
+  JASSERT(numerics::is_symmetric(xp.P), "Current state covariance must be symmetric");
 
   const Eigen::LLT<ObservationInfo> S_llt(S);
-  if (S_llt.info() != Eigen::Success) {
-    std::cerr << "LLT solve was degenerate" << std::endl;
-    assert(false);
-  }
+  JASSERT_EQ(S_llt.info(), Eigen::Success, "LLT must not be degenerate");
 
   using StateInfo = MatNd<State::DIM, State::DIM>;
 
@@ -64,9 +59,6 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
   // const double log_likelihood = innovation.dot(S_inv * innovation);
   const double log_likelihood = compute_likelihood(S_inv, innovation);
   std::cout << "Likelihood: " << log_likelihood << std::endl;
-  // if (log_likelihood > 500) {
-  // return {StateVec::Zero(), xp.P};
-  // }
 
   const MatNd<State::DIM, Observation::DIM> K = xp.P * H.transpose() * S_inv;
   const StateVec update = K * innovation;

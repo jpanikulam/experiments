@@ -15,7 +15,7 @@ namespace estimation {
 template <typename State>
 Ekf<State>::Ekf(const Dynamics& dynamics, const MatNd<State::DIM, State::DIM>& cov)
     : dynamics_(dynamics), Q_(cov) {
-  assert(numerics::is_pd(Q_));
+  JASSERT(numerics::is_pd(Q_), "Dynamics covariance must be PD");
 }
 
 // Returns the index of the added model

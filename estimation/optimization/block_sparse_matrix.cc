@@ -1,10 +1,8 @@
 #include "estimation/optimization/block_sparse_matrix.hh"
 
+#include "logging/assert.hh"
 #include "numerics/is_pd.hh"
 #include "out.hh"
-
-// TODO
-#include <iostream>
 
 namespace estimation {
 namespace optimization {
@@ -54,15 +52,15 @@ BlockSparseMatrix::BlockSparseMatrix(const int n_block_rows, const int n_block_c
 }
 
 void BlockSparseMatrix::set(int row, int col, const Eigen::MatrixXd& mat) {
-  assert(valid_);
+  JASSERT(valid_, "Must be valid");
   //
   // Assert in col/row bounds
   //
 
-  assert(row >= 0);
-  assert(col >= 0);
-  assert(row < static_cast<int>(rows_.size()));
-  assert(col < static_cast<int>(n_cols_.size()));
+  JASSERT_GE(row, 0, "Row must be nonnegative");
+  JASSERT_GE(col, 0, "Column must be nonnegative");
+  JASSERT_LT(row, static_cast<int>(rows_.size()), "Row must be within the matrix");
+  JASSERT_LT(col, static_cast<int>(n_cols_.size()), "Col must be within the matrix");
 
   //
   // Update (or assert) row
@@ -71,7 +69,10 @@ void BlockSparseMatrix::set(int row, int col, const Eigen::MatrixXd& mat) {
   if (rows_[row].cols.empty()) {
     rows_[row].n_rows = mat.rows();
   } else {
-    assert(mat.rows() == rows_[row].n_rows);
+    JASSERT_EQ(
+        mat.rows(),
+        rows_[row].n_rows,
+        "Must have the same number of rows as the other elements in this block row");
   }
 
   //
@@ -81,7 +82,10 @@ void BlockSparseMatrix::set(int row, int col, const Eigen::MatrixXd& mat) {
   if (n_cols_[col] == -1) {
     n_cols_[col] = mat.cols();
   } else {
-    assert(n_cols_[col] == mat.cols());
+    JASSERT_EQ(
+        n_cols_[col],
+        mat.cols(),
+        "Must have the same number of columns as the other elements in this block col");
   }
 
   //
@@ -92,26 +96,28 @@ void BlockSparseMatrix::set(int row, int col, const Eigen::MatrixXd& mat) {
 }
 
 const Eigen::MatrixXd& BlockSparseMatrix::get(int row, int col) const {
-  assert(valid_);
+  JASSERT(valid_, "Must be valid");
   //
   // Enforce row, col bounds
   //
-  assert(row >= 0);
-  assert(col >= 0);
-  assert(row < static_cast<int>(rows_.size()));
-  assert(col < static_cast<int>(n_cols_.size()));
+  JASSERT_GE(row, 0, "Row must be nonnegative");
+  JASSERT_GE(col, 0, "Column must be nonnegative");
+  JASSERT_LT(row, static_cast<int>(rows_.size()), "Row must be within the matrix");
+  JASSERT_LT(col, static_cast<int>(n_cols_.size()), "Col must be within the matrix");
 
   // This is (implicitly) zero, but you probably didn't mean to do this
   const auto& block_row = rows_.at(row);
-  assert(block_row.cols.count(col) != 0);
+  JASSERT_NE(block_row.cols.count(col),
+             0u,
+             "Cannot access an empty block (You probably didn't mean to do this)");
   return block_row.cols.at(col).block;
 }
 
 int BlockSparseMatrix::real_rows() const {
-  assert(valid_);
+  JASSERT(valid_, "Block Sparse Matrix must be valid");
   int total = 0;
   for (const auto& row : rows_) {
-    assert(row.n_rows != -1);
+    JASSERT_NE(row.n_rows, -1, "Encountered an uninitialized row");
     total += row.n_rows;
   }
 
@@ -119,7 +125,7 @@ int BlockSparseMatrix::real_rows() const {
 }
 
 int BlockSparseMatrix::real_cols() const {
-  assert(valid_);
+  JASSERT(valid_, "Block Sparse Matrix must be valid");
   int total = 0;
   for (const int n : n_cols_) {
     total += n;
@@ -128,14 +134,14 @@ int BlockSparseMatrix::real_cols() const {
 }
 
 int BlockSparseMatrix::real_rows_above_block(int block_row) const {
-  assert(valid_);
-  assert(block_row >= 0);
-  assert(block_row < static_cast<int>(rows_.size()));
+  JASSERT(valid_, "Block Sparse Matrix must be valid");
+  JASSERT_GE(block_row, 0, "Block row must be greater than zero");
+  JASSERT_LT(block_row, static_cast<int>(rows_.size()), "Block must be in matrix");
 
   int total = 0;
   for (int i = 0; i < block_row; ++i) {
     const auto& row = rows_[i];
-    assert(row.n_rows != -1);
+    JASSERT_NE(row.n_rows, -1, "Row must be initialized");
     total += row.n_rows;
   }
 
@@ -143,9 +149,9 @@ int BlockSparseMatrix::real_rows_above_block(int block_row) const {
 }
 
 int BlockSparseMatrix::real_cols_left_of_block(int block_col) const {
-  assert(valid_);
-  assert(block_col >= 0);
-  assert(block_col < static_cast<int>(n_cols_.size()));
+  JASSERT(valid_, "Block Sparse Matrix must be valid");
+  JASSERT_GE(block_col, 0, "Block col must be in matrix");
+  JASSERT_LT(block_col, static_cast<int>(n_cols_.size()), "Block must be in matrix");
 
   int total = 0;
   for (int i = 0; i < block_col; ++i) {
@@ -155,7 +161,7 @@ int BlockSparseMatrix::real_cols_left_of_block(int block_col) const {
 }
 
 BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
-  assert(valid_);
+  JASSERT(valid_, "Block Sparse Matrix must be valid");
   const int rows = real_rows();
   const int cols = real_cols();
   SpMat mat(rows, cols);
@@ -190,21 +196,13 @@ BlockSparseMatrix::SpMat BlockSparseMatrix::to_eigen_sparse() const {
 jcc::Optional<VecXd> BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& residuals,
                                                      const BlockSparseMatrix& R_inv,
                                                      const double lambda) const {
-  assert(valid_);
+  JASSERT(valid_, "Block Sparse Matrix must be valid");
   const SpMat J = to_eigen_sparse();
 
   SpMat identity(J.cols(), J.cols());
   identity.setIdentity();
 
   constexpr bool LEVENBERG_ONLY = false;
-
-  //
-  // Undamped
-  //
-
-  /*
-  const SpMat JtJ = (J.transpose() * J) + (lambda * identity);
-  */
 
   //
   // Levenberg
@@ -241,19 +239,6 @@ jcc::Optional<VecXd> BlockSparseMatrix::solve_lst_sq(const std::vector<VecXd>& r
     sp_diag.setFromTriplets(triplets.begin(), triplets.end());
 
     const SpMat damped_JtRiJ = JtRiJ + (lambda * sp_diag) + (lambda * identity);
-    // std::cout << "JtRiJ" << std::endl;
-    // std::cout << MatXd(JtRiJ) << std::endl;
-    // std::cout << "----" << std::endl;
-    // std::cout << "damped_JtRiJ" << std::endl;
-    // std::cout << MatXd(damped_JtRiJ) << std::endl;
-
-    // const MatXd dense_jtrij = MatXd(JtRiJ);
-    // const Eigen::SelfAdjointEigenSolver<MatXd> solver(dense_jtrij);
-    // std::cout << solver.eigenvalues()[0] << std::endl;
-    // std::cout << solver.eigenvectors().col(0) << std::endl;
-    // assert(numerics::is_pd(MatXd(JtRiJ)));
-    // assert(numerics::is_pd(MatXd(damped_JtRiJ)));
-
     const Eigen::SimplicialCholesky<SpMat> chol(damped_JtRiJ);
 
     if (chol.info() != Eigen::Success) {
