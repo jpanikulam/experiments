@@ -3,6 +3,7 @@
 #include <libgen.h>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include "logging/log.hh"
 #include "macros.hh"
@@ -13,6 +14,23 @@ namespace {
 
 inline char* filename(char const* const argument) {
   return basename(const_cast<char*>(argument));
+}
+
+template <typename A, typename B>
+inline std::stringstream expector_string(const A& a,
+                                         const B& b,
+                                         char const* const a_expr,
+                                         char const* const b_expr,
+                                         char const* const msg,
+                                         char const* const file_name,
+                                         int line_num,
+                                         char const* const operator_name) {
+  std::stringstream ss;
+  std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
+            << Format::red() << "Expected" << Format::reset() << ": " << a_expr << " ("
+            << a << ") " << operator_name << " " << b_expr << " (" << b << ")"
+            << ": " << msg;
+  return ss;
 }
 
 }  // namespace
@@ -26,11 +44,9 @@ inline void assert_gt(const A& a,
                       char const* const file_name,
                       int line_num) {
   if (UNLIKELY(a <= b)) {
-    std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
-              << Format::red() << "Expected" << Format::reset() << ": " << a_expr << " ("
-              << a << ")"
-              << " > " << b_expr << " (" << b << ")"
-              << ": " << msg << std::endl;
+    std::cerr
+        << expector_string(a, b, a_expr, b_expr, msg, file_name, line_num, ">").str()
+        << std::endl;
     std::abort();
   }
 }
@@ -44,9 +60,9 @@ inline void assert_ge(const A& a,
                       char const* const file_name,
                       int line_num) {
   if (UNLIKELY(a < b)) {
-    std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
-              << Format::red() << "Expected" << Format::reset() << ": " << a
-              << " >= " << b << ": " << msg << std::endl;
+    std::cerr
+        << expector_string(a, b, a_expr, b_expr, msg, file_name, line_num, ">=").str()
+        << std::endl;
     std::abort();
   }
 }
@@ -60,9 +76,9 @@ inline void assert_lt(const A& a,
                       char const* const file_name,
                       int line_num) {
   if (UNLIKELY(a >= b)) {
-    std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
-              << Format::red() << "Expected" << Format::reset() << ": " << a << " < " << b
-              << ": " << msg << std::endl;
+    std::cerr
+        << expector_string(a, b, a_expr, b_expr, msg, file_name, line_num, "<").str()
+        << std::endl;
     std::abort();
   }
 }
@@ -75,9 +91,9 @@ inline void assert_le(const A& a,
                       char const* const file_name,
                       int line_num) {
   if (UNLIKELY(a > b)) {
-    std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
-              << Format::red() << "Expected" << Format::reset() << ": " << a
-              << " <= " << b << ": " << msg << std::endl;
+    std::cerr
+        << expector_string(a, b, a_expr, b_expr, msg, file_name, line_num, "<=").str()
+        << std::endl;
     std::abort();
   }
 }
@@ -91,9 +107,9 @@ inline void assert_eq(const A& a,
                       char const* const file_name,
                       int line_num) {
   if (UNLIKELY(a != b)) {
-    std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
-              << Format::red() << "Expected" << Format::reset() << ": " << a
-              << " == " << b << ": " << msg << std::endl;
+    std::cerr
+        << expector_string(a, b, a_expr, b_expr, msg, file_name, line_num, "==").str()
+        << std::endl;
 
     std::abort();
   }
@@ -108,10 +124,9 @@ inline void assert_ne(const A& a,
                       char const* const file_name,
                       int line_num) {
   if (UNLIKELY(a == b)) {
-    std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
-              << Format::red() << "Expected" << Format::reset() << ": " << a
-              << " != " << b << ": " << msg << std::endl;
-
+    std::cerr
+        << expector_string(a, b, a_expr, b_expr, msg, file_name, line_num, "!=").str()
+        << std::endl;
     std::abort();
   }
 }
