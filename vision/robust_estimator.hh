@@ -32,7 +32,7 @@ class L2Cost final : public RobustEstimator {
 class HuberCost final : public RobustEstimator {
  public:
   HuberCost(const double k) {
-    k_  = k;
+    k_ = k;
     kk_ = k * k;
   }
 
@@ -46,7 +46,7 @@ class HuberCost final : public RobustEstimator {
   }
 
  private:
-  double k_  = 0.0;
+  double k_ = 0.0;
   double kk_ = 0.0;
 };
 
@@ -55,18 +55,18 @@ class TukeyCost final : public RobustEstimator {
  public:
   TukeyCost(const double c) {
     cc_ = c * c;
-    c_  = c;
+    c_ = c;
   }
 
   CostWeight cost_weight(const double x2) const override {
     constexpr double six_inv = 1.0 / 6.0;
     if (x2 <= cc_) {
       // See journal for poly expansion, maybe not faster
-      const double one_minus_term  = (1.0 - (x2 / cc_));
+      const double one_minus_term = (1.0 - (x2 / cc_));
       const double one_minus_term2 = one_minus_term * one_minus_term;
       const double one_minus_term3 = one_minus_term2 * one_minus_term;
 
-      const double cost   = (cc_ * six_inv) * (1.0 - one_minus_term3);
+      const double cost = (cc_ * six_inv) * (1.0 - one_minus_term3);
       const double weight = one_minus_term2;
       return {cost, weight};
 
@@ -78,6 +78,6 @@ class TukeyCost final : public RobustEstimator {
 
  private:
   double cc_ = 0.0;
-  double c_  = 0.0;
+  double c_ = 0.0;
 };
-}
+}  // namespace slam

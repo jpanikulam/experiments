@@ -110,7 +110,7 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
     const double dt =
         to_seconds(next_state_obs.time_of_validity - state_obs.time_of_validity);
 
-    JASSERT_GT(dt, 0.0, "Time must be strictly positive");
+    // JASSERT_GT(dt, 0.0, "Time must be strictly positive");
     // Arbitrary constant that is surprising enough to indicate a bug
     JASSERT_LT(dt, MAX_DT, "Time must be less than max passed time");
 
@@ -120,7 +120,7 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
         add_dynamics_residual(x_t, x_t1, p, dt, x_ind, z_obs_ind, p_ind, out(J));
     v[z_obs_ind] = y_dyn;
 
-    const double inv_dt = 1.0 / dt;
+    const double inv_dt = 1.0 / std::max(dt, 1e-5);
     R_inv.set(z_obs_ind, z_obs_ind, dyn_info_ * inv_dt);
   }
 

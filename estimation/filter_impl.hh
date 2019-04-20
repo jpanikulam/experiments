@@ -38,7 +38,7 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
   const MatNd<State::DIM, State::DIM> A =
       numerics::group_jacobian<State, State>(xp.x, dynamics_fixed_dt);
   const MatNd<State::DIM, State::DIM> P_new =
-      (A * xp.P * A.transpose()) + (Q_ * to_seconds(dt));
+      (A * xp.P * A.transpose()) + (A * (Q_ * to_seconds(dt)) * A.transpose());
 
   return {x_new, P_new, xp.time_of_validity + dt};
 }
@@ -105,13 +105,14 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
     const double dt_sec = to_seconds(meas.time_of_validity - x_hat0.time_of_validity);
 
     JASSERT_GE(dt_sec, 0.0, "Time moved backwards");
-    JASSERT_LE(dt_sec, 0.5, "Time was insufficiently long");
+    JASSERT_LE(dt_sec, 0.5,
+               "A very long time has passed between measurements, "
+               "the filter has almost certainly already diverged");
 
     const auto x_hat_t = dynamics_until(x_hat0, meas.time_of_validity);
+    JASSERT_EQ(x_hat_t.time_of_validity, meas.time_of_validity, "Must simulate up to time of measurement");
 
     const int i = meas.type;
-
-    // std::cout << "Measurement type: " << i << std::endl;
 
     const auto& observer = observation_models_.at(i);
     const FilterStateUpdate<State> update = observer(x_hat_t, meas.observation);

@@ -11,27 +11,18 @@ namespace jet_filter {
 namespace {
 
 Parameters get_parameters() {
-  const jcc::Vec3 g(0.0, 0.0, -9.81);
+  // Jake Test stand
+  // const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0281067, 0.140086, 0.317844);
+  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-3.05586, -0.0352836, -0.00210199));
 
-  // const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0, 0.0, 0.0);
-  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(0.0, 0.0, 0.0));
-
-  // const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.22094, -0.181402, -0.685096);
-  // const SO3 R_imu_from_vehicle = SO3::exp(-M_PI * jcc::Vec3::UnitX());
-  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-3.08419, 0.0229764, 0.0580917));
-
-  const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0281067, 0.140086, 0.317844);
-  const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-3.08209, -0.0347532, 0.0108954));
-
-  // FOR CAMERA
-  // const jcc::Vec3 trans_imu_from_vehicle(-0.0172203, 0.0913384, 0.245508);
-  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(3.05423, 0.0143565, -0.00577434));
+  // Jet rotation
+  const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0, 0.0, 0.0);
+  const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-2.75553, 0.0790927, -0.0549754));
 
   const SE3 imu_from_vehicle(R_imu_from_vehicle, trans_imu_from_vehicle);
 
   Parameters p;
   p.T_imu_from_vehicle = imu_from_vehicle;
-  // p.g_world = g;
   return p;
 }
 
@@ -57,9 +48,9 @@ MatNd<State::DIM, State::DIM> make_cov() {
   numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
                               StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
 
-  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind>(state_cov, 0.1);
+  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind>(state_cov, 0.001);
 
-  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind + 3>(state_cov, 0.1);
+  numerics::set_diag_to_value<3, StateDelta::eps_dot_error_ind + 3>(state_cov, 0.001);
 
   numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind>(state_cov, 0.5);
   numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind + 3>(state_cov, 0.5);
@@ -72,8 +63,9 @@ MatNd<State::DIM, State::DIM> make_cov() {
   //     state_cov, 0.001)
   ;
   numerics::set_diag_to_value<3, StateDelta::R_world_from_body_error_log_ind>(state_cov,
-                                                                              0.001);
-  numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.001);
+                                                                              0.01);
+  numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.01);
+
   return state_cov;
 }
 
@@ -86,17 +78,18 @@ FilterState<State> JetFilter::reasonable_initial_state() {
   numerics::set_diag_to_value<StateDelta::accel_bias_error_dim,
                               StateDelta::accel_bias_error_ind>(state_cov, 0.001);
   numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
-                              StateDelta::gyro_bias_error_ind>(state_cov, 0.01);
+                              StateDelta::gyro_bias_error_ind>(state_cov, 0.001);
   numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
-                              StateDelta::eps_dot_error_ind>(state_cov, 0.4);
+                              StateDelta::eps_dot_error_ind>(state_cov, 0.0001);
   numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
-                              StateDelta::eps_ddot_error_ind>(state_cov, 0.4);
+                              StateDelta::eps_ddot_error_ind>(state_cov, 0.001);
 
   // numerics::set_diag_to_value<StateDelta::T_body_from_world_error_log_dim,
   //                             StateDelta::T_body_from_world_error_log_ind>(state_cov,
   //                                                                          1.0);
-  numerics::set_diag_to_value<3, StateDelta::R_world_from_body_error_log_ind>(state_cov, 0.01);
-  numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.01);
+  numerics::set_diag_to_value<3, StateDelta::R_world_from_body_error_log_ind>(state_cov,
+                                                                              0.001);
+  numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.001);
 
   xp0.P = state_cov;
   return xp0;

@@ -22,7 +22,11 @@ void draw_axes(const Axes &axes) {
   if (axes.dotted) {
     glEnable(GL_LINE_STIPPLE);
     glLineStipple(1.0, 0x00FF);
+  } else {
+    glLineStipple(1.0, 0x00FF);
   }
+
+
   glLineWidth(axes.line_width);
 
   glBegin(GL_LINES);
@@ -43,9 +47,10 @@ void draw_axes(const Axes &axes) {
   glPopMatrix();
   glPopAttrib();
 
-  if (axes.dotted) {
-    glDisable(GL_LINE_STIPPLE);
-  }
+  // if (axes.dotted) {
+    // glDisable(GL_LINE_STIPPLE);
+  // }
+  glLineStipple(1.0, 0xFFFF);
 }
 
 void draw_lines(const std::vector<Line> &lines) {
@@ -215,7 +220,7 @@ void draw_plane_grid(const Plane &plane) {
   const Vec3 x_dir = geometry::perp(n);
   const Vec3 y_dir = x_dir.cross(n).normalized();
 
-  const int n_lines = 100;
+  const int n_lines = 10;
   const double displacement = n_lines * plane.line_spacing;
   const Vec3 offset = plane.plane.u_normal * plane.plane.distance_from_origin;
 
@@ -276,14 +281,13 @@ void draw_point(const Point &point) {
 }
 
 void draw_trimesh(const TriMesh &trimesh) {
-  glPushAttrib(GL_CURRENT_BIT);
+  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 
   glPushMatrix();
   glTransform(trimesh.world_from_mesh);
 
   glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
   if (trimesh.outline) {
-    glPushAttrib(GL_LINE_BIT);
     glLineWidth(trimesh.outline_width);
     glBegin(GL_LINES);
     for (const auto &tri : trimesh.mesh.triangles) {
@@ -292,7 +296,6 @@ void draw_trimesh(const TriMesh &trimesh) {
       glVertex(tri.vertices[2]);
     }
     glEnd();
-    glPopAttrib();
   }
 
   // glEnable(GL_LIGHTING);

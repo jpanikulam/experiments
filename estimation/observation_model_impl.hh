@@ -7,6 +7,7 @@
 #include "numerics/is_pd.hh"
 #include "numerics/is_symmetric.hh"
 
+#include "vision/robust_estimator.hh"
 namespace estimation {
 namespace {
 template <int rows>
@@ -57,8 +58,13 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
   const ObservationInfo S_inv = S.inverse();
 
   // const double log_likelihood = innovation.dot(S_inv * innovation);
-  // const double log_likelihood = compute_likelihood(S_inv, innovation);
-  // std::cout << "Likelihood: " << log_likelihood << std::endl;
+
+  const double log_likelihood = compute_likelihood(S_inv, innovation);
+  // jcc::Debug() << "Likelihood: " << log_likelihood << std::endl;
+
+  // const slam::HuberCost hc(0.2);
+  // const auto cw = hc((innovation.transpose() * S_inv).dot(innovation));
+  // jcc::Debug() << "Weight: " << cw.weight << std::endl;
 
   const MatNd<State::DIM, Observation::DIM> K = xp.P * H.transpose() * S_inv;
   const StateVec update = K * innovation;

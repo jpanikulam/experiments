@@ -249,6 +249,7 @@ State rk4_integrate(const State &Q, const Parameters &Z, const double h) {
   const double two = 2.0;
   const double sixth = 0.166666666667;
   const State Qn = Q + (sixth * (((h * K1) + (h * K4)) + (two * ((h * K2) + (h * K3)))));
+
   return Qn;
 }
 GyroMeasurement observe_gyro(const State &state, const Parameters &parameters) {
@@ -274,7 +275,25 @@ AccelMeasurement observe_accel(const State &state, const Parameters &parameters)
   const VecNd<6> eps_ddot = state.eps_ddot;
   const VecNd<3> a_world = eps_ddot.block<3, 1>(0, 0);
   const VecNd<3> a_imu = R_imu_from_world * a_world;
+/*
+  const VecNd<3> imu_pos_body = imu_from_vehicle.inverse().translation();
+  const VecNd<3> w_world = state.eps_dot.block<3, 1>(3, 0);
+  const VecNd<3> v_world = state.eps_dot.block<3, 1>(0, 0);
+  const VecNd<3> alpha_world = eps_ddot.block<3, 1>(3, 0);
+
+  const VecNd<3> angular_accel_component =
+      alpha_world.cross(R_world_from_body * imu_pos_body);
+  const VecNd<3> v_at_imu = R_world_from_body.inverse() *
+                            (v_world - w_world.cross(R_world_from_body * imu_pos_body));
+  const VecNd<3> coriolis_component = w_world.cross(v_at_imu);
+
+  const VecNd<3> a_world_at_imu =
+      a_world - (angular_accel_component + coriolis_component);
+
+  const VecNd<3> a_imu = R_world_from_body.inverse() * a_world_at_imu;
+*/
   const VecNd<3> accel_bias = state.accel_bias;
+
   const VecNd<3> unit_z = VecNd<3>::UnitZ();
   const double g_mpss = 9.81;
   const VecNd<3> g_world = unit_z * g_mpss;

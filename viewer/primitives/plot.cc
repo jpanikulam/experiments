@@ -131,7 +131,8 @@ void draw_line_plot(const LinePlot &line_plot) {
       glEnable(GL_LINE_STIPPLE);
       glLineStipple(1.0, 0x00FF);
     } else {
-      glDisable(GL_LINE_STIPPLE);
+      // glDisable(GL_LINE_STIPPLE);
+      glLineStipple(1.0, 0xFFFF);
     }
 
     glLineWidth(subplot.line_width);
@@ -141,6 +142,7 @@ void draw_line_plot(const LinePlot &line_plot) {
     }
     glEnd();
   }
+
   glPopAttrib();
 }
 

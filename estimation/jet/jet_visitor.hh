@@ -11,5 +11,12 @@ JetPoseOptimizer::Visitor make_visitor(
     const std::shared_ptr<viewer::Window3D>& view,
     const std::shared_ptr<viewer::SimpleGeometry>& geo);
 
+class MeasurementVisualizer {
+  //
+  // Add measurements and corresponding times
+  // Add observation models corresponding to a measurement type
+  //
+};
+
 }  // namespace jet_filter
 }  // namespace estimation
