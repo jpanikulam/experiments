@@ -1,5 +1,3 @@
-#pragma once
-
 #include "estimation/jet/jet_visitor.hh"
 #include "estimation/jet/jet_filter.hh"
 

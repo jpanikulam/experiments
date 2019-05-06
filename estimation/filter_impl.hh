@@ -111,7 +111,7 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
 
     const int i = meas.type;
 
-    std::cout << "Measurement type: " << i << std::endl;
+    // std::cout << "Measurement type: " << i << std::endl;
 
     const auto& observer = observation_models_.at(i);
     const FilterStateUpdate<State> update = observer(x_hat_t, meas.observation);

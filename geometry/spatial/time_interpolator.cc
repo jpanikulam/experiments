@@ -1,4 +1,5 @@
 #include "geometry/spatial/time_interpolator.hh"
+#include "logging/assert.hh"
 
 namespace geometry {
 namespace spatial {
@@ -8,9 +9,9 @@ double TimeInterpolator::time_offset(const estimation::TimePoint& time_stamp) co
 }
 
 TimeInterpolator::TimeInterpolator(
-    const std::vector<TimeControlPoint>& time_control_points)
-    : first_time_(time_control_points.front().time_stamp) {
-  assert(!time_control_points.empty());
+    const std::vector<TimeControlPoint>& time_control_points) {
+  JASSERT_FALSE(time_control_points.empty(), "Cannot interpolate empty control points");
+  first_time_ = time_control_points.front().time_stamp;
 
   std::vector<ControlPoint> control_points;
 
