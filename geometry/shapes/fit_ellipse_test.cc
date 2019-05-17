@@ -43,7 +43,7 @@ void demo() {
   ell_geo->flip();
   view->spin_until_step();
 
-  std::cout << "done" << std::endl;
+  std::cout << "Done, avg error: " << result.average_error << std::endl;
 }
 
 }  // namespace shapes

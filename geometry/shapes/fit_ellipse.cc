@@ -2,6 +2,8 @@
 
 #include "numerics/numdiff.hh"
 
+#include "logging/assert.hh"
+
 namespace geometry {
 namespace shapes {
 
@@ -37,6 +39,8 @@ ParamVec create_reasonable_initialization() {
 }  // namespace
 
 EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor) {
+  JASSERT_GE(pts.size(), 6u, "Cannot fit an ellipse with fewer than 6 points");
+
   //
   // Create function mapping parameter vector to an ellipse
   //
@@ -67,6 +71,7 @@ EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor
 
   ParamVec params = create_reasonable_initialization();
 
+  double last_avg_error = -1.0;
   for (int k = 0; k < MAX_ITERS; ++k) {
     JtJMat jtj = JtJMat::Zero();
     JtvMat jtv = JtvMat::Zero();
@@ -75,10 +80,11 @@ EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor
     // Compute innovations and accumlate JtJ and Jtv
     //
 
+    double total_error = 0.0;
     for (const auto& pt : pts) {
       const auto single_residual = [&ellipse_from_params, &pt](const ParamVec& v) {
         const Ellipse ellipse = ellipse_from_params(v);
-        const auto residual = monotonic_sqd_ellipse(pt, ellipse);
+        const double residual = monotonic_sqd_ellipse(pt, ellipse);
         return (VecNd<OBS_DIM>() << residual).finished();
       };
 
@@ -86,7 +92,11 @@ EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor
       const auto v = single_residual(params);
       jtj += J.transpose() * J;
       jtv += J.transpose() * v;
+
+      total_error += std::abs(v[0]);
     }
+
+    const double average_error = total_error / static_cast<double>(pts.size());
 
     //
     // Damp the optimization --
@@ -103,11 +113,14 @@ EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor
 
     params += delta;
     if (visitor) {
-      visitor({0.0, ellipse_from_params(params)});
+      visitor({average_error, ellipse_from_params(params)});
     }
+    last_avg_error = average_error;
   }
 
-  return {0.0, ellipse_from_params(params)};
+  // Some defensive programming
+  JASSERT_NE(last_avg_error, -1.0, "Intrinsics fit average error must be set");
+  return {last_avg_error, ellipse_from_params(params)};
 }
 
 }  // namespace shapes
