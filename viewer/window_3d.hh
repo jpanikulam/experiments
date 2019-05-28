@@ -27,7 +27,15 @@ using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
 
 class Window3D final : public SimpleWindow {
  public:
-  Window3D(const GlSize &gl_size) : gl_size_(gl_size){};
+  Window3D(const GlSize &gl_size);
+
+  // How should the Z-Axis be set?
+  enum class ViewSetting {
+    STANDARD = 0,
+    CAMERA = 1,
+  };
+
+  void set_view_preset(const ViewSetting&);
 
   void on_key(int key, int scancode, int action, int mods) override;
   void on_mouse_button(int button, int action, int mods) override;
@@ -110,7 +118,7 @@ class Window3D final : public SimpleWindow {
 
   WindowPoint mouse_pos_last_click_;
   OrbitCamera view_;
-  int continue_ms_ = 100;
+  int continue_ms_ = 20;
   bool hide_axes_ = false;
 
   //

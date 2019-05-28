@@ -50,7 +50,7 @@ void prepare_to_render() {
   glEnable(GL_BLEND);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+  glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
   glEnable(GL_LINE_SMOOTH);
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
@@ -76,6 +76,25 @@ void set_perspective(const GlSize &gl_size, bool ortho = false) {
 }
 
 }  // namespace
+
+Window3D::Window3D(const GlSize &gl_size) : gl_size_(gl_size) {
+  set_view_preset(ViewSetting::STANDARD);
+}
+
+void Window3D::set_view_preset(const ViewSetting &setting) {
+  switch (setting) {
+    case ViewSetting::STANDARD: {
+      set_target_from_world(SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)),
+                                Eigen::Vector3d::Zero()));
+      break;
+    }
+    case ViewSetting::CAMERA: {
+      set_target_from_world(
+          SE3(SO3::exp(Eigen::Vector3d::Zero()), Eigen::Vector3d::Zero()));
+      break;
+    }
+  }
+}
 
 void Window3D::spin_until_step() {
   while (!should_step_ && !should_continue_ && !should_close()) {
@@ -128,9 +147,9 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   const bool right = right_mouse_held() || (shift && left_mouse_held());
 
   // if (left || right) {
-    // glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  // glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   // } else {
-    // glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  // glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   // }
 
   view_.apply_mouse(mouse_pos, mouse_pos_last_click_, left, right);
