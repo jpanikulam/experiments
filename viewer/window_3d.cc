@@ -113,19 +113,30 @@ void Window3D::spin_until_step() {
 void Window3D::on_key(int key, int scancode, int action, int mods) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
+  const char key_char = static_cast<char>(key);
+
   if (action == GLFW_PRESS) {
-    if (key == static_cast<int>('N')) {
+    //
+    // Toggling
+    //
+    if (key_mappings_.count(key_char) != 0) {
+      toggles_[key_mappings_.at(key_char)] = !toggles_[key_mappings_.at(key_char)];
+    }
+    //
+    // Navigation UI management
+    //
+    if (key_char == 'N') {
       should_step_ = true;
     }
 
-    if (key == static_cast<int>('C')) {
+    if (key_char == 'C') {
       should_continue_ = !should_continue_;
     }
 
-    if (key == static_cast<int>('O')) {
+    if (key_char == 'O') {
       orthogonal_projection_ = !orthogonal_projection_;
     }
-    if (key == static_cast<int>('H')) {
+    if (key_char == 'H') {
       hide_axes_ = !hide_axes_;
     }
   }

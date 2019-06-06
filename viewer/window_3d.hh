@@ -35,7 +35,7 @@ class Window3D final : public SimpleWindow {
     CAMERA = 1,
   };
 
-  void set_view_preset(const ViewSetting&);
+  void set_view_preset(const ViewSetting &);
 
   void on_key(int key, int scancode, int action, int mods) override;
   void on_mouse_button(int button, int action, int mods) override;
@@ -90,12 +90,22 @@ class Window3D final : public SimpleWindow {
     view_.set_zoom(zoom);
   }
 
+  // Switch to orthographic projection
   void set_orthogonal(const bool ortho = true) {
     orthogonal_projection_ = ortho;
   }
 
   void set_show_axes(const bool hide_axes = true) {
     hide_axes_ = hide_axes;
+  }
+
+  void add_toggle_hotkey(const std::string &toggle_name, bool default_state, char key) {
+    toggles_[toggle_name] = default_state;
+    key_mappings_[key] = toggle_name;
+  }
+
+  bool get_toggle(const std::string &state) const {
+    return toggles_.at(state);
   }
 
  private:
@@ -120,6 +130,9 @@ class Window3D final : public SimpleWindow {
   OrbitCamera view_;
   int continue_ms_ = 20;
   bool hide_axes_ = false;
+
+  std::map<std::string, bool> toggles_;
+  std::map<char, std::string> key_mappings_;
 
   //
   // Interaction History
