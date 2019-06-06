@@ -108,6 +108,16 @@ class Window3D final : public SimpleWindow {
     return toggles_.at(state);
   }
 
+  void clear_toggle_callbacks(const std::string &toggle_name){
+    toggle_callbacks_[toggle_name].clear();
+  }
+
+  using ToggleCallback = std::function<void(bool)>;
+  void add_toggle_callback(const std::string &toggle_name,
+                           const ToggleCallback &callback) {
+    toggle_callbacks_[toggle_name].push_back(callback);
+  }
+
  private:
   void draw_all_primitives() const;
 
@@ -132,6 +142,7 @@ class Window3D final : public SimpleWindow {
   bool hide_axes_ = false;
 
   std::map<std::string, bool> toggles_;
+  std::map<std::string, std::vector<ToggleCallback>> toggle_callbacks_;
   std::map<char, std::string> key_mappings_;
 
   //

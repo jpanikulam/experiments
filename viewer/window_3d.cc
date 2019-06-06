@@ -120,8 +120,14 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
     // Toggling
     //
     if (key_mappings_.count(key_char) != 0) {
-      toggles_[key_mappings_.at(key_char)] = !toggles_[key_mappings_.at(key_char)];
+      const std::string toggle_name = key_mappings_.at(key_char);
+      toggles_[toggle_name] = !toggles_[toggle_name];
+      const bool new_toggle_state = toggles_[toggle_name];
+      for (const auto &toggle_callback : toggle_callbacks_[toggle_name]) {
+        toggle_callback(new_toggle_state);
+      }
     }
+
     //
     // Navigation UI management
     //
