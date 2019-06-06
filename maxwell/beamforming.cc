@@ -27,6 +27,7 @@ Complexd sum_sources(const std::vector<PointSource>& sources, const Vec3& pt) {
 }
 
 void render_beam(viewer::SimpleGeometry& geo, const std::vector<PointSource>& sources) {
+  const auto view = viewer::get_window3d("Beams Baby");
   const double m_per_cell = 1.0;
   constexpr int GRID_SIZE = 50;
   constexpr int GRID_SIZE_Z = 50;
@@ -40,6 +41,7 @@ void render_beam(viewer::SimpleGeometry& geo, const std::vector<PointSource>& so
     points.size = 5.0;
   }
 
+  double max = 0.0;
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
       for (int k = -GRID_SIZE_Z; k < GRID_SIZE_Z; ++k) {
@@ -49,15 +51,22 @@ void render_beam(viewer::SimpleGeometry& geo, const std::vector<PointSource>& so
 
         const Complexd total = sum_sources(sources, Vec3(x, y, z));
 
-        const double amp = std::abs(total);
+        double cell_intensity = 0.0;
+        if (view->get_toggle("phase")) {
+          cell_intensity = std::atan(total.imag() / total.real());
+        } else {
+          cell_intensity = std::abs(total);
+        }
+
+        max = std::max(cell_intensity, max);
         points.points.push_back(Vec3(x, y, z));
-        intensities.push_back(amp);
+        intensities.push_back(cell_intensity);
       }
     }
   }
 
   for (const auto& source : sources) {
-    const Vec3 half_z = 0.5 * Vec3::UnitZ();
+    const Vec3 half_z = 0.5 * Vec3::UnitZ() * (source.phase_rad / 10.0);
     geo.add_line({source.origin - half_z, source.origin + half_z});
   }
 
@@ -67,6 +76,8 @@ void render_beam(viewer::SimpleGeometry& geo, const std::vector<PointSource>& so
 
 void beamform() {
   const auto view = viewer::get_window3d("Beams Baby");
+  view->add_toggle_hotkey("phase", false, 'P');
+
   const auto bgnd = view->add_primitive<viewer::SimpleGeometry>();
   const geometry::shapes::Plane ground{Vec3::UnitZ(), 0.0};
   bgnd->add_plane({ground});
@@ -77,10 +88,10 @@ void beamform() {
   constexpr double MAX_SCALE = 100.0;
   constexpr double COUNT = 1000.0;
 
-  const Vec3 dish_origin(1.0, 12.5, 0.0);
+  const Vec3 dish_origin(1.0, 25.0, 0.0);
   for (double offset = 0.0; offset < MAX_SCALE; offset += (MAX_SCALE / COUNT)) {
     std::vector<PointSource> sources;
-    int emitter_count = 7;
+    int emitter_count = 6;
     for (int k = 0; k < emitter_count; ++k) {
       // Two interesting reciever patterns:
       // Linear arrangement with linear phase
@@ -102,6 +113,10 @@ void beamform() {
 
       sources.push_back({p + dish_origin, phase, 1.0 / emitter_count});
     }
+
+    view->clear_toggle_callbacks("phase");
+    view->add_toggle_callback("phase",
+                              [geo, sources](bool) { render_beam(*geo, sources); });
 
     render_beam(*geo, sources);
     view->spin_until_step();
