@@ -15,6 +15,12 @@
 * Store links as constraints and compute the lagrange multiplier? Or directly compute force?
 * Ground-meeting joints could be expressed as lagrange constraints
 
+
+# Ideas
+* 2D physics simulation with augmented-lagrangian (instead of penalty) driven constraint mechanics
+* 3D physics simulation + cross-section visualization of inevitability regions
+
+
 Nonsense inspiration:
 
 https://i.redditmedia.com/s9h8d5yW7LAu0hiiTF7Nob0JYuGAxu8EBQf__A-T7jw.jpg?s=6694c592045369da452cae85e86221e3
