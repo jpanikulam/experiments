@@ -1,7 +1,7 @@
 #pragma once
 
 #include "viewer/gl_types.hh"
-#include "geometry/ray.hh"
+#include "geometry/shapes/ray.hh"
 
 #include "eigen.hh"
 

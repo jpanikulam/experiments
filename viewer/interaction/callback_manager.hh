@@ -1,7 +1,8 @@
 #pragma once
 
-#include "geometry/ray.hh"
+#include "geometry/intersection/ray_closest_approach.hh"
 #include "geometry/shapes/line_segment.hh"
+#include "geometry/shapes/ray.hh"
 
 #include "viewer/interaction/keys.hh"
 
@@ -12,25 +13,46 @@ namespace viewer {
 
 // --> GUI (Checkbox or button)
 // --> Single key-press(With description)
+// --> "ClickableObject" manager
 
 class CallbackManager {
-private:
-  struct CallbackPair {
-    ClickCallback callback;
-    std::vector<LineSegment> segments;
-  };
  public:
-  using ClickCallback = std::function<bool(void )>;
-  void register_callback(const ClickCallback& callback,
-                         const std::vector<LineSegment>& line_segments) {
-    callback_pairs.push_back({callback, line_segments});
+  // int       : Index
+  // double    : SQUARED distance
+  // jcc::Vec3 : Point on the line segment that was clicked
+  using ClickCallback = std::function<void(int, double, const jcc::Vec3&)>;
+  void register_click_callback(
+      const ClickCallback& callback,
+      const std::vector<geometry::shapes::LineSegment>& line_segments) {
+    callback_pairs_.push_back({callback, line_segments});
   }
 
+  // TODO: need to do some kind of screens-space solver
+  void handle_callbacks(const geometry::Ray& ray) {
+    for (const auto& callback_pair : callback_pairs_) {
+      const int segments_ct = static_cast<int>(callback_pair.segments.size());
 
+      for (int segment_index = 0; segment_index < segments_ct; ++segment_index) {
+        const auto& segment = callback_pair.segments[segment_index];
+        const auto result = line_ray_closest_approach(ray, segment);
+        if (result) {
+          callback_pair.callback(
+              segment_index, result->squared_distance, result->on_line);
+        }
+      }
+    }
+  }
+
+  void clear_callbacks() {
+    callback_pairs_.clear();
+  }
 
  private:
-  std::vector<CallbackPair> callback_pairs;
-  ;
+  struct CallbackPair {
+    ClickCallback callback;
+    std::vector<geometry::shapes::LineSegment> segments;
+  };
+  std::vector<CallbackPair> callback_pairs_;
 };
 
 }  // namespace viewer

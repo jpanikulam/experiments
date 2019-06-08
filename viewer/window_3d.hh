@@ -1,13 +1,14 @@
 #pragma once
 
 #include "viewer/gl_size.hh"
+#include "viewer/interaction/callback_manager.hh"
 #include "viewer/interaction/view3d.hh"
+#include "viewer/primitives/camera.hh"
+#include "viewer/primitives/primitive.hh"
 #include "viewer/projection.hh"
 #include "viewer/simple_window.hh"
 
 #include "sophus.hh"
-#include "viewer/primitives/camera.hh"
-#include "viewer/primitives/primitive.hh"
 
 #include "eigen.hh"
 
@@ -28,34 +29,24 @@ using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
 class Window3D final : public SimpleWindow {
  public:
   Window3D(const GlSize &gl_size);
-
-  // How should the Z-Axis be set?
-  enum class ViewSetting {
-    STANDARD = 0,
-    CAMERA = 1,
-  };
-
-  void set_view_preset(const ViewSetting &);
+  ///////////////////////////////////
+  // Window3D Configuration
+  //////////////////////////////////
 
   void on_key(int key, int scancode, int action, int mods) override;
   void on_mouse_button(int button, int action, int mods) override;
   void on_mouse_move(const WindowPoint &mouse_pos) override;
   void on_scroll(const double amount) override;
-
   void render() override;
-
   void resize(const GlSize &gl_size) override;
 
-  void spin_until_step();
+  ///////////////////////////////////
+  // Drawing
+  //////////////////////////////////
 
   void add_primitive(const std::shared_ptr<Primitive> primitive) {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
     primitives_.push_back(std::move(primitive));
-  }
-
-  void set_target_from_world(const SE3 &se3) {
-    const std::lock_guard<std::mutex> lk(behavior_mutex_);
-    view_.set_anchor_from_world(se3);
   }
 
   template <typename PrimitiveType, typename... Args>
@@ -76,8 +67,68 @@ class Window3D final : public SimpleWindow {
     primitives_.clear();
   }
 
+  ///////////////////////////////////
+  // GUI
+  ///////////////////////////////////
+
+  void spin_until_step();
+
+  //
+  // Toggle UI
+  //
+
+  void add_toggle_hotkey(const std::string &toggle_name, bool default_state, char key) {
+    toggles_[toggle_name] = default_state;
+    key_mappings_[key] = toggle_name;
+  }
+
+  bool get_toggle(const std::string &state) const {
+    return toggles_.at(state);
+  }
+
+  void clear_toggle_callbacks(const std::string &toggle_name) {
+    toggle_callbacks_[toggle_name].clear();
+  }
+
+  using ToggleCallback = std::function<void(bool)>;
+  void add_toggle_callback(const std::string &toggle_name,
+                           const ToggleCallback &callback) {
+    toggle_callbacks_[toggle_name].push_back(callback);
+  }
+
+  //
+  // Click Callbacks UI
+  //
+
+  void add_click_callback(
+      const CallbackManager::ClickCallback &callback,
+      const std::vector<geometry::shapes::LineSegment> &line_segments) {
+    callback_manager_.register_click_callback(callback, line_segments);
+  }
+
+  void clear_click_callbacks() {
+    callback_manager_.clear_callbacks();
+  }
+
+  ///////////////////////////////////
+  // View
+  ///////////////////////////////////
+
+  //
+  // Gross View Configuration
+  //
+
   void set_continue_time_ms(const int dt_ms) {
     continue_ms_ = dt_ms;
+  }
+
+  //
+  // View Camera Configuration
+  //
+
+  void set_target_from_world(const SE3 &se3) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
+    view_.set_anchor_from_world(se3);
   }
 
   void set_azimuth(const double azimuth) {
@@ -90,32 +141,25 @@ class Window3D final : public SimpleWindow {
     view_.set_zoom(zoom);
   }
 
+  // How should the Z-Axis be set?
+  enum class ViewSetting {
+    STANDARD = 0,
+    CAMERA = 1,
+  };
+
+  void set_view_preset(const ViewSetting &);
+
   // Switch to orthographic projection
   void set_orthogonal(const bool ortho = true) {
     orthogonal_projection_ = ortho;
   }
 
+  //
+  // View Minutia Configuration
+  //
+
   void set_show_axes(const bool hide_axes = true) {
     hide_axes_ = hide_axes;
-  }
-
-  void add_toggle_hotkey(const std::string &toggle_name, bool default_state, char key) {
-    toggles_[toggle_name] = default_state;
-    key_mappings_[key] = toggle_name;
-  }
-
-  bool get_toggle(const std::string &state) const {
-    return toggles_.at(state);
-  }
-
-  void clear_toggle_callbacks(const std::string &toggle_name){
-    toggle_callbacks_[toggle_name].clear();
-  }
-
-  using ToggleCallback = std::function<void(bool)>;
-  void add_toggle_callback(const std::string &toggle_name,
-                           const ToggleCallback &callback) {
-    toggle_callbacks_[toggle_name].push_back(callback);
   }
 
  private:
@@ -144,6 +188,8 @@ class Window3D final : public SimpleWindow {
   std::map<std::string, bool> toggles_;
   std::map<std::string, std::vector<ToggleCallback>> toggle_callbacks_;
   std::map<char, std::string> key_mappings_;
+
+  CallbackManager callback_manager_;
 
   //
   // Interaction History

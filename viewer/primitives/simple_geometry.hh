@@ -4,7 +4,7 @@
 
 #include "viewer/primitives/simple_geometry_primitives.hh"
 
-#include "geometry/ray.hh"
+#include "geometry/shapes/ray.hh"
 #include "geometry/tri_mesh.hh"
 
 #include "viewer/primitives/primitive.hh"

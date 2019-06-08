@@ -151,12 +151,7 @@ void Window3D::on_mouse_button(int button, int action, int mods) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
   const auto current_mouse_pos = mouse_pos();
-  const auto ray = projection_.unproject(current_mouse_pos);
-
-  ///
-  /// TODO: Refactor this out!
-  ///
-  // click_callback_manager.handle_callbacks(ray);
+  // const auto ray = projection_.unproject(current_mouse_pos);
 
   mouse_pos_last_click_ = current_mouse_pos;
 }
@@ -178,6 +173,9 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   // }
 
   view_.apply_mouse(mouse_pos, mouse_pos_last_click_, left, right);
+
+  const auto ray = projection_.unproject(mouse_pos);
+  callback_manager_.handle_callbacks(ray);
 
   if (left || right) {
     mouse_pos_last_click_ = mouse_pos;
