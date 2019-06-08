@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geometry/ray.hh"
+#include "geometry/shapes/ray.hh"
 #include "intersection.hh"
 
 #include "eigen.hh"

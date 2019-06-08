@@ -2,8 +2,10 @@
 
 // TODO: Move ray_ray_approx_intersect as well
 
-#include "geometry/ray.hh"
 #include "geometry/shapes/line_segment.hh"
+#include "geometry/shapes/ray.hh"
+
+#include "util/optional.hh"
 
 #include "eigen.hh"
 
@@ -15,7 +17,7 @@ struct LineApproachParameters {
   jcc::Vec3 on_line;
 };
 
-LineApproachParameters line_ray_closest_approach(const Ray& a,
-                                                 const shapes::LineSegment& b);
+jcc::Optional<LineApproachParameters> line_ray_closest_approach(
+    const Ray& a, const shapes::LineSegment& b);
 
 }  // namespace geometry

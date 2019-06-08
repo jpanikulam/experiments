@@ -4,6 +4,7 @@
 
 #include "sophus.hh"
 
+// TODO: I should remove the "shapes" namespace -- it's over namespacing
 namespace geometry {
 
 struct Ray {

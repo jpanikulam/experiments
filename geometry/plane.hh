@@ -4,7 +4,7 @@
 #include "out.hh"
 
 #include "geometry/line.hh"
-#include "geometry/ray.hh"
+#include "geometry/shapes/ray.hh"
 
 namespace geometry {
 

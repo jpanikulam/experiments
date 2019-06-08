@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geometry/ray.hh"
+#include "geometry/shapes/ray.hh"
 #include "bounding_box.hh"
 
 #include "intersection.hh"
