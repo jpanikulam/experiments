@@ -1,3 +1,4 @@
+#include "viewer/colors/colors.hh"
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
 
@@ -84,12 +85,21 @@ void beamform() {
   bgnd->flip();
 
   const auto demo_geo = view->add_primitive<viewer::SimpleGeometry>();
-  const auto hover_callback = [demo_geo](int a, double dist_sq, const Vec3& p) {
-    if (dist_sq < 1.0) {
-      demo_geo->add_sphere({p, 0.2});
-    }
-    demo_geo->flip();
-  };
+  const auto hover_callback =
+      [demo_geo](int a, double dist_sq, const Vec3& ray_pt, const Vec3& p) {
+        if (dist_sq < 1.0) {
+          demo_geo->add_sphere({ray_pt, 0.1, viewer::colors::red()});
+
+          constexpr double selection_sphere_radius = 0.2;
+          const Vec3 p_from_ray = (p - ray_pt);
+          const jcc::Vec3 p2 =
+              p_from_ray - (selection_sphere_radius * p_from_ray.normalized());
+
+          demo_geo->add_line({ray_pt, p2 + ray_pt, viewer::colors::green()});
+          demo_geo->add_sphere({p, selection_sphere_radius, viewer::colors::green()});
+        }
+        demo_geo->flip();
+      };
 
   view->add_click_callback(
       hover_callback,
