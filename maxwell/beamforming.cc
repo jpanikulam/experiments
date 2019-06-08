@@ -83,6 +83,18 @@ void beamform() {
   bgnd->add_plane({ground});
   bgnd->flip();
 
+  const auto demo_geo = view->add_primitive<viewer::SimpleGeometry>();
+  const auto hover_callback = [demo_geo](int a, double dist_sq, const Vec3& p) {
+    if (dist_sq < 1.0) {
+      demo_geo->add_sphere({p, 0.2});
+    }
+    demo_geo->flip();
+  };
+
+  view->add_click_callback(
+      hover_callback,
+      {geometry::shapes::LineSegment{Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 10.0)}});
+
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
   constexpr double MAX_SCALE = 100.0;
