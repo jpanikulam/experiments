@@ -42,6 +42,13 @@ find_package(GLEW REQUIRED)
 #
 find_package(ASSIMP REQUIRED)
 
+#########################
+# Freetype
+#
+find_package(Freetype REQUIRED)
+include_directories(${FREETYPE_INCLUDE_DIRS})
+
+
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/run)
 
 macro(add_test test_name test_file test_libs)
