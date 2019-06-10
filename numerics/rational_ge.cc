@@ -122,13 +122,18 @@ template <int cols>
 class RationalLinearSystem {
   using RationalLinearFunction = std::array<Rational, cols>;
 
-
-
+  const std::vector<RationalLinearFunction>& linear_fcns() const {
+    return linear_fcns_;
+  }
 
  private:
   std::vector<RationalLinearFunction> linear_fcns_;
 };
 
+std::ostream& operator<<(std::ostream& os, const RationalLinearSystem& system) {
+  return os;
+}
+
 int main() {
-  std::cout << (Rational(75, 75) > Rational(4, 7)) << std::endl;
+  // std::cout << (Rational(75, 75) > Rational(4, 7)) << std::endl;
 }
