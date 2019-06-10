@@ -39,3 +39,4 @@ sudo apt-get install python-tk -y
 sudo apt-get install xorg-dev libglu1-mesa-dev -y
 sudo apt-get install libglfw3 libglfw3-dev libglew-dev -y
 sudo apt-get install freeglut3-dev -y
+sudo apt-get install libfreetype6 libfreetype6-dev -y

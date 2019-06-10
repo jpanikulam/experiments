@@ -1,4 +1,5 @@
 from generate_cmake.log import Log
+from functools import partial
 
 
 def splitstrip(text, delim=','):
@@ -61,7 +62,7 @@ def grab_bin(line):
     return {'bin': {'target': arg_tokens[0]}}
 
 
-def grab_include(line):
+def grab_include(line, incl_type='"'):
     needs(line, ['#include'])
 
     incl_path = ""
@@ -70,12 +71,9 @@ def grab_include(line):
             incl_path = between(line, start, end)
             break
 
-    if start == '"':
-        incl_type = "local"
-    elif start == '<':
-        incl_type = "system"
-    else:
+    if (incl_type not in ("local", "system")):
         raise NotImplementedError("wtf?")
+
     Log.debug("    include: {} ({})".format(incl_path, incl_type))
 
     return {'include': {'given_path': incl_path, 'type': incl_type}}
@@ -92,7 +90,8 @@ tokens = {
     '//%bin': grab_bin,
     '//%deps': grab_dependencies,
     '//%lib': grab_lib,
-    '#include': grab_include,
+    '#include <': partial(grab_include, incl_type="system"),
+    '#include "': partial(grab_include, incl_type="local"),
     'int main(': make_flagger('has_main'),
     'void main(': make_flagger('has_main'),
     '//%ignore': make_flagger('ignore'),
