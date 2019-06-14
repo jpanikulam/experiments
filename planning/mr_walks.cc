@@ -1,4 +1,9 @@
+#include "planning/body.hh"
 
+#include "viewer/primitives/simple_geometry.hh"
+#include "viewer/window_3d.hh"
+
+#include <unordered_map>
 
 // x - Unitvector
 // x - Intersectible cylinder

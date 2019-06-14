@@ -1,5 +1,8 @@
 #include "planning/visualization/put_body.hh"
 
+#include "geometry/visualization/put_circle.hh"
+#include "geometry/shapes/circle.hh"
+
 #include "eigen.hh"
 #include "sophus.hh"
 

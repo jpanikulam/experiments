@@ -1,4 +1,5 @@
 #include "planning/body.hh"
+#include "planning/visualization/put_body.hh"
 #include "planning/joint_planner.hh"
 
 #include "geometry/intersection/sphere_plane.hh"

@@ -6,5 +6,5 @@
 namespace planning {
 void put_body(viewer::SimpleGeometry& geo,
               const Body& body,
-              const Eigen::Vector4d& color = Vec4(1.0, 1.0, 1.0, 1.0)) {
+              const Eigen::Vector4d& color = jcc::Vec4(1.0, 1.0, 1.0, 1.0));
 }  // namespace planning
