@@ -14,6 +14,9 @@
 #include <map>
 #include <thread>
 
+//TODO
+#include "viewer/text/gl_text.hh"
+
 namespace viewer {
 namespace {
 
@@ -220,6 +223,9 @@ void Window3D::render() {
     projection_ = Projection::get_from_current();
     draw_all_primitives();
   }
+
+  const auto strlib = create_text_library();
+  write_string("Jagop", strlib);
 
   const double t_now = glfwGetTime();
 
