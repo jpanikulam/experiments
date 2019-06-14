@@ -1,5 +1,6 @@
 #include "logging/assert.hh"
 
+#include <vector>
 #include <iostream>
 
 // Swap the positions of two rows.
@@ -130,7 +131,8 @@ class RationalLinearSystem {
   std::vector<RationalLinearFunction> linear_fcns_;
 };
 
-std::ostream& operator<<(std::ostream& os, const RationalLinearSystem& system) {
+template <int cols>
+std::ostream& operator<<(std::ostream& os, const RationalLinearSystem<cols>& system) {
   return os;
 }
 
