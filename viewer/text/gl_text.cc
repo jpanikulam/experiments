@@ -12,7 +12,6 @@ namespace viewer {
 
 class SmartTexture::ManagedTexture {
  public:
-  // ManagedTexture() = default;
   ManagedTexture() {
     glGenTextures(1, &texture_id_);
   }
@@ -56,6 +55,7 @@ void SmartTexture::tex_image_2d(const GLenum target,
 void SmartTexture::draw() const {
   managed_texture_->bind();
 
+  glColor3d(1.0, 1.0, 1.0);
   glBegin(GL_QUADS);
   {
     glTexCoord2d(0.0, 0.0);
@@ -79,32 +79,52 @@ CharacterLibrary create_font_textures(const FT_Face& face) {
   CharacterLibrary textures;
 
   for (GLubyte character_id = 0; character_id < 128; character_id++) {
-    // Load character glyph
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // Disable byte-alignment restriction
-
     if (FT_Load_Char(face, character_id, FT_LOAD_RENDER)) {
       continue;
     }
 
-    // Generate texture
-    // GLuint tex_id;
-    // glGenTextures(1, &tex_id);
-    const jcc::Vec2 dimensions =
-        jcc::Vec2(face->glyph->bitmap.width, face->glyph->bitmap.rows);
+    //
+    // Populate both a luminance and an alpha channel
+    //
+
+    unsigned char image[face->glyph->bitmap.rows][face->glyph->bitmap.width][2];
+    const auto& buffer = face->glyph->bitmap.buffer;
+    const int row_ct = face->glyph->bitmap.rows;
+    const int cols_per_row = face->glyph->bitmap.width;
+
+    // TODO(jpanikulam): Figure out how to memcpy it when less hungry
+    for (int row = 0; row < row_ct; ++row) {
+      for (int col = 0; col < cols_per_row; ++col) {
+        image[row][col][0] = buffer[cols_per_row * row + col];
+        image[row][col][1] = buffer[cols_per_row * row + col];
+      }
+    }
+
+    //
+    // Generate the actual texture
+    //
+
+    // Disable byte-alignment restriction
+    // TODO(jpanikulam): Understand this more clearly
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    const jcc::Vec2 dimensions = jcc::Vec2(cols_per_row, row_ct);
     SmartTexture smart_tex(dimensions);
 
-    // GL_LUMINANCE_ALPHA
+    // TODO(jpanikulam): Don't let the driver pick a format
     smart_tex.tex_image_2d(GL_TEXTURE_2D,
                            0,
-                           GL_LUMINANCE,
+                           GL_LUMINANCE_ALPHA,
                            face->glyph->bitmap.width,
                            face->glyph->bitmap.rows,
                            0,
-                           GL_LUMINANCE,
+                           GL_LUMINANCE_ALPHA,
                            GL_UNSIGNED_BYTE,
-                           face->glyph->bitmap.buffer);
+                           image);
 
-    // Store character for later use
+    //
+    // Store the character texture
+    //
 
     constexpr long int ADVANCE_PER_PX = 64;
     JASSERT_GT(
@@ -124,7 +144,7 @@ CharacterLibrary create_font_textures(const FT_Face& face) {
       "Failed to load any character glyphs. Probably, we failed to find a font.");
 
   return textures;
-}
+}  // namespace
 
 }  // namespace
 
@@ -134,13 +154,18 @@ CharacterLibrary create_text_library() {
   JASSERT_EQ(FT_Init_FreeType(&ft), 0, "Failed initialize freetype");
 
   FT_Face face;
-  const std::string libre_mono =
-      "/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf";
+  const std::string font = "/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf";
   JASSERT_EQ(
-      FT_New_Face(ft, libre_mono.c_str(), 0, &face), 0, "Failed to load freetype font");
+      FT_New_Face(ft, font.c_str(), 0, &face), 0, "Failed to load freetype font");
 
   // Test Load
-  FT_Set_Pixel_Sizes(face, 0, 48);
+  JASSERT_EQ(FT_Set_Pixel_Sizes(face, 0, 48), 0, "Failed to set pixel sizes");
+  constexpr int DPI = 500;
+  constexpr int FLG_MATCH_OTHER = 0;
+  JASSERT_EQ(FT_Set_Char_Size(face, 20 * 64, FLG_MATCH_OTHER, DPI, FLG_MATCH_OTHER),
+             0,
+             "Failed to set char size");
+
   JASSERT_EQ(FT_Load_Char(face, 'X', FT_LOAD_RENDER), 0, "Failed to load freetype glyph");
 
   const auto characters = create_font_textures(face);
@@ -157,18 +182,6 @@ void write_string(const std::string& text, const CharacterLibrary& lib) {
   for (std::size_t i = 0u; i < text.size(); ++i) {
     const char c = text[i];
     const auto character = lib.at(c);
-
-    // Debug stuff
-    /*
-    std::cout << "Drawing: " << c << std::endl;
-    std::cout << "\t"
-              << "Bearing: " << character.bearing.transpose() << std::endl;
-    std::cout << "\t"
-              << "Dims   : " << character.dimensions.transpose() << std::endl;
-    std::cout << "\t"
-              << "Advance: " << character.advance << std::endl;
-    std::cout << "\n---" << std::endl;
-    */
     glTranslated(character.bearing.x(), -character.bearing.y(), 0.0);
     character.texture.draw();
     glTranslated(character.advance - character.bearing.x(), character.bearing.y(), 0.0);
