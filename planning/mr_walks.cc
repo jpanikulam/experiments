@@ -1,8 +1,18 @@
 
 
-// - Unitvector
-// - Intersectible cylinder
-// - Clickable/hoverable objects in viewer
+// x - Unitvector
+// x - Intersectible cylinder
+// x - Clickable/hoverable objects in viewer
+
+// Text in Viewer
+//  - Generate text and draw lines to it in a vertical box
+//  - Simple 2D UI interface
+//  - jfc rename "SimpleGeometry" to Geometry"
+//  - Text drawing in simplegeometry
+//  - Fix the color bug (Or...why do gl attributes jump around?)
+//  - Fix alpha on the textures
+//  x - Working text drawing
+//  x - Freetype interface
 
 // - Visualize torque and force at joints (Or, at any point on the body!)
 // - Clickable objects & click viewers
