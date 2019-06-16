@@ -18,6 +18,11 @@ class UnitVector {
     v_ = v.normalized();
   }
 
+  static from_angle(const double theta) {
+    static_assert(N == 2);
+    return UnitVector::bless(VecNd<2>(std::cos(theta), std::sin(theta)));
+  }
+
 
   // For now, the below "sinful" operations shall remain in cold storage
   /*

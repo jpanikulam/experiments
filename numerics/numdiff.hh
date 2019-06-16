@@ -5,10 +5,9 @@
 namespace numerics {
 
 template <int rows, typename Callable>
-Eigen::Matrix<double, rows, 1> numerical_gradient(
-    const Eigen::Matrix<double, rows, 1> &x,
-    const Callable &fcn,
-    const double feps = 1e-6) {
+Eigen::Matrix<double, rows, 1> numerical_gradient(const Eigen::Matrix<double, rows, 1> &x,
+                                                  const Callable &fcn,
+                                                  const double feps = 1e-6) {
   static_assert(rows != Eigen::Dynamic, "No dynamic");
   using OutVec = Eigen::Matrix<double, rows, 1>;
 
@@ -56,4 +55,5 @@ Eigen::Matrix<double, output_rows, input_rows> numerical_jacobian(
   }
   return jac;
 }
+
 }  // namespace numerics
