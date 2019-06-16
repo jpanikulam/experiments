@@ -224,8 +224,8 @@ void Window3D::render() {
     draw_all_primitives();
   }
 
-  const auto strlib = create_text_library();
-  write_string("Jagop", strlib);
+  // const auto strlib = create_text_library();
+  // write_string("Jagop: Analytical 240.599", strlib);
 
   const double t_now = glfwGetTime();
 
