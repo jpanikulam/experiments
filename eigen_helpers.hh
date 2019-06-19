@@ -2,8 +2,6 @@
 
 #include "eigen.hh"
 
-#include "eigen.hh"
-
 namespace jcc {
 
 template <int a_rows, int b_rows, int cols>
