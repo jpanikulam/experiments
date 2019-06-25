@@ -19,7 +19,8 @@ inline char* filename(char const* const argument) {
 template <typename T>
 inline std::stringstream to_expr(const T& val, char const* const expr) {
   std::stringstream ss;
-  return expr << " (" << val << ")";
+  ss << expr << " (" << val << ")";
+  return ss;
 }
 
 template <typename A, typename B>
@@ -32,10 +33,9 @@ inline std::stringstream binary_expector_string(const A& a,
                                                 int line_num,
                                                 char const* const operator_name) {
   std::stringstream ss;
-  std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
-            << Format::red() << "Expected" << Format::reset() << ": "
-            << to_expr(a, a_expr) << operator_name << " " << to_expr(b, b_expr) << ": "
-            << msg;
+  ss << Format::yellow() << filename(file_name) << ":" << line_num << ": "
+     << Format::red() << "Expected" << Format::reset() << ": " << to_expr(a, a_expr).str()
+     << operator_name << " " << to_expr(b, b_expr).str() << ": " << msg;
   return ss;
 }
 
@@ -156,8 +156,8 @@ inline void assert_between(const A& a,
   if (UNLIKELY(((a < b) || (a > c)))) {
     std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
               << Format::red() << "Expected" << Format::reset() << ": "
-              << to_expr(b, b_expr) << " <= " << to_expr(a, a_expr)
-              << " <= " << to_expr(c, c_expr) << ": " << msg;
+              << to_expr(b, b_expr).str() << " <= " << to_expr(a, a_expr).str()
+              << " <= " << to_expr(c, c_expr).str() << ": " << msg;
 
     std::abort();
   }
@@ -176,8 +176,8 @@ inline void assert_outside(const A& a,
   if (UNLIKELY(((a < b) || (a > c)))) {
     std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
               << Format::red() << "Expected" << Format::reset() << ": "
-              << to_expr(b, b_expr) << " < " << to_expr(a, a_expr) << " < "
-              << to_expr(c, c_expr) << ": " << msg;
+              << to_expr(b, b_expr).str() << " < " << to_expr(a, a_expr).str() << " < "
+              << to_expr(c, c_expr).str() << ": " << msg;
 
     std::abort();
   }
