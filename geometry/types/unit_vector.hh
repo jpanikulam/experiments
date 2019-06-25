@@ -18,9 +18,9 @@ class UnitVector {
     v_ = v.normalized();
   }
 
-  static from_angle(const double theta) {
+  static UnitVector<2> from_angle(const double theta) {
     static_assert(N == 2);
-    return UnitVector::bless(VecNd<2>(std::cos(theta), std::sin(theta)));
+    return UnitVector<2>::bless(VecNd<2>(std::cos(theta), std::sin(theta)));
   }
 
 
