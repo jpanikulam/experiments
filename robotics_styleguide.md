@@ -30,6 +30,10 @@ If you found the above "cool", great. Most reasonable people do. But it's just a
 * Make sure that you have a one-click way to regenerate any model that you've run on the robot
     * Don't wait until you need this capability to get it
 
+## Measuring success
+* It should be clear to everyone by now, measure and track PR curves, don't rely on accuracy
+* If it's not clear: Imagine classifying whether a reddit comment has an original joke: You can get 99.999% accuracy if you return False for everything.
+
 ## Project Planning Pathologies
 * Easy trap 1: "End-to-end learn everything, this problem is hard to model"
     *
