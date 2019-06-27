@@ -6,6 +6,11 @@
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
 
+//
+// - Fix yaw
+//    - Draw a uniformly sampled (in output) yaw transfer
+//    - Write golden-section method + quadratic interpolation linesearch
+
 namespace planning {
 
 jcc::Vec3 immersion(const jcc::Vec2& uv) {
@@ -53,26 +58,6 @@ double theta_scaling(const jcc::Vec2& uv, const double phi, const double dphi) {
   return dtheta;
 }
 
-struct ShrinkingBracket {
-  double left_x;
-  double left_y;
-  double right_x;
-  double right_y;
-
-  double best_x;
-  double best_y;
-};
-
-ShrinkingBracket update_bracket(const double x,
-                                const double y,
-                                const ShrinkingBracket& bracket) {
-  JASSERT_BETWEEN(x, bracket.left, bracket.right, "ShrinkingBracket cannot grow");
-  if (x > bracket.left) {
-    if (x < bracket.right) {
-    }
-  }
-}
-
 std::vector<double> uniform_sample(const double start,
                                    const double end,
                                    const std::function<double(double)>& fnc) {
@@ -80,16 +65,17 @@ std::vector<double> uniform_sample(const double start,
   double prev_x = x;
 
   const auto dfnc = [&fnc](double xx) {
+    constexpr double EPS = 1e-7;
     constexpr double INV_2_EPS = 1.0 / (2.0 * EPS);
     const double error = fnc(xx + EPS) - fnc(xx - EPS);
     return error / INV_2_EPS;
   };
 
   // Must be monotonic
-  while (x > prev_x) {
-    while (std::abs(fnc(x) - fnc(prev_x)) <) {
-    }
-  }
+  // while (x > prev_x) {
+  //   while (std::abs(fnc(x) - fnc(prev_x)) <) {
+  //   }
+  // }
 }
 
 void go() {

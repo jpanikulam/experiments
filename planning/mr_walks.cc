@@ -14,7 +14,9 @@
 
 // Text in Viewer
 //  - Generate text and draw lines to it in a vertical box
-//  - Simple 2D UI-maker interface
+//     x - Generate any text at real locations
+//     - Fix the glOrtho bug -- when it's brighter inside
+//  x - Simple 2D UI-maker interface
 //  - jfc rename "SimpleGeometry" to Geometry"
 //  ~ - Fix the color bug (Or...why do gl attributes jump around?)
 //  x - Fix alpha on the textures
