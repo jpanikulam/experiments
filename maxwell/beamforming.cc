@@ -1,5 +1,7 @@
 #include "viewer/colors/colors.hh"
+#include "viewer/interaction/ui2d.hh"
 #include "viewer/primitives/simple_geometry.hh"
+
 #include "viewer/window_3d.hh"
 
 #include "eigen_helpers.hh"
@@ -85,8 +87,10 @@ void beamform() {
   bgnd->flip();
 
   const auto demo_geo = view->add_primitive<viewer::SimpleGeometry>();
+  const auto demo_text = view->add_primitive<viewer::Ui2d>();
+
   const auto hover_callback =
-      [demo_geo](int a, double dist_sq, const Vec3& ray_pt, const Vec3& p) {
+      [demo_geo, demo_text](int a, double dist_sq, const Vec3& ray_pt, const Vec3& p, const viewer::ViewportPoint& vp) {
         if (dist_sq < 1.0) {
           demo_geo->add_sphere({ray_pt, 0.1, viewer::colors::red()});
 
@@ -95,15 +99,21 @@ void beamform() {
           const jcc::Vec3 p2 =
               p_from_ray - (selection_sphere_radius * p_from_ray.normalized());
 
-          demo_geo->add_line({ray_pt, p2 + ray_pt, viewer::colors::green()});
-          demo_geo->add_sphere({p, selection_sphere_radius, viewer::colors::green()});
+          // demo_geo->add_line({ray_pt, p2 + ray_pt, viewer::colors::green()});
+          // demo_geo->add_sphere({p, selection_sphere_radius, viewer::colors::green()});
+
+          demo_text->add_pointer_target({"Dist: " + std::to_string(dist_sq), p, vp});
         }
+        demo_text->flip();
         demo_geo->flip();
       };
 
   view->add_click_callback(
       hover_callback,
-      {geometry::shapes::LineSegment{Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 10.0)}});
+      {geometry::shapes::LineSegment{Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.0, 10.0)}});
+  bgnd->add_line({jcc::Vec3(1.0, 1.0, 1.0), jcc::Vec3(0.0, 0.0, 10.0),
+                  jcc::Vec4(1.0, 0.5, 0.5, 0.8)});
+  bgnd->flip();
 
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
