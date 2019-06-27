@@ -22,6 +22,7 @@ std::array<std::complex<double>, 2u> QuadraticFunction1d::roots() const {
   const Eigen::EigenSolver<Mat> eig(companion);
   JASSERT_EQ(eig.info(), Eigen::Success, "Eigenvalue computation failed");
 
+  // Division by a_ doesn't move the roots --> todo, understand this
   return {eig.eigenvalues()(0), eig.eigenvalues()(1)};
 }
 
