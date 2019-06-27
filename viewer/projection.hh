@@ -1,7 +1,8 @@
 #pragma once
 
-#include "viewer/gl_types.hh"
 #include "geometry/shapes/ray.hh"
+#include "viewer/gl_types.hh"
+#include "viewer/gl_size.hh"
 
 #include "eigen.hh"
 
@@ -23,7 +24,9 @@ class Projection {
 
   Projection() = default;
 
-  Projection(const Mat4& projection_matrix, const Mat4& modelview_matrix, const Vec4i& viewport_dimensions)
+  Projection(const Mat4& projection_matrix,
+             const Mat4& modelview_matrix,
+             const Vec4i& viewport_dimensions)
       : valid_(true),
         projection_mat_(projection_matrix),
         modelview_mat_(modelview_matrix),
@@ -39,6 +42,10 @@ class Projection {
   // Get a view point from a window point
   //
   ViewportPoint to_viewport(const WindowPoint& window_point) const;
+
+  // Get a window point from a view point
+  //
+  WindowPoint to_window(const ViewportPoint& viewport_point) const;
 
   // Get a ray for a window point
   //
@@ -60,13 +67,18 @@ class Projection {
     return modelview_mat_;
   }
 
+  const GlSize viewport_size() const {
+    return GlSize(viewport_dimensions_.cast<double>()(2),
+                  viewport_dimensions_.cast<double>()(3));
+  }
+
  private:
   bool valid_ = false;
 
   Eigen::FullPivLU<Mat4> lu_;
-  Mat4                   projection_mat_;
-  Mat4                   modelview_mat_;
-  Vec4i                  viewport_dimensions_;
+  Mat4 projection_mat_;
+  Mat4 modelview_mat_;
+  Vec4i viewport_dimensions_;
 };
 
 }  // namespace viewer

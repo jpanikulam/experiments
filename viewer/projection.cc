@@ -54,6 +54,11 @@ ViewportPoint Projection::to_viewport(const WindowPoint& window_point) const {
   return view_point;
 }
 
+//WindowPoint Projection::to_window(const ViewportPoint& viewport_point) const {
+//  const double width = viewport_dimensions_.cast<double>()(2);
+//  const double height = viewport_dimensions_.cast<double>()(3);
+//}
+
 geometry::Ray Projection::unproject(const WindowPoint& window_point) const {
   const ViewportPoint viewport_pt = to_viewport(window_point);
   return unproject(viewport_pt);
