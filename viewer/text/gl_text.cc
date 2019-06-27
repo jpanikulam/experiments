@@ -55,6 +55,23 @@ void SmartTexture::tex_image_2d(const GLenum target,
 void SmartTexture::draw() const {
   managed_texture_->bind();
 
+  /*  glColor3d(1.0, 1.0, 1.0);
+    glBegin(GL_QUADS);
+    {
+      glTexCoord2d(0.0, 0.0);
+      glVertex2d(0.0, 0.0);
+
+      glTexCoord2d(0.0, 1.0);
+      glVertex2d(0.0, size_.y());
+
+      glTexCoord2d(1.0, 1.0);
+      glVertex2d(size_.x(), size_.y());
+
+      glTexCoord2d(1.0, 0.0);
+      glVertex2d(size_.x(), 0.0);
+    }
+    glEnd();*/
+
   glColor3d(1.0, 1.0, 1.0);
   glBegin(GL_QUADS);
   {
@@ -155,8 +172,7 @@ CharacterLibrary create_text_library() {
 
   FT_Face face;
   const std::string font = "/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf";
-  JASSERT_EQ(
-      FT_New_Face(ft, font.c_str(), 0, &face), 0, "Failed to load freetype font");
+  JASSERT_EQ(FT_New_Face(ft, font.c_str(), 0, &face), 0, "Failed to load freetype font");
 
   // Test Load
   JASSERT_EQ(FT_Set_Pixel_Sizes(face, 0, 48), 0, "Failed to set pixel sizes");
@@ -179,12 +195,28 @@ void write_string(const std::string& text, const CharacterLibrary& lib) {
   glPushAttrib(GL_ENABLE_BIT);
   glEnable(GL_TEXTURE_2D);
 
+  double row_length = 0;
+  double row_height = 0;
   for (std::size_t i = 0u; i < text.size(); ++i) {
     const char c = text[i];
+
+    if (c == '\n') {
+      if (i + 1 == text.size()) {
+        break;
+      }
+
+      glTranslated(-row_length, row_height + 35, 0.0);
+      row_length = 0;
+      row_height = 0;
+      continue;
+    }
+
     const auto character = lib.at(c);
     glTranslated(character.bearing.x(), -character.bearing.y(), 0.0);
     character.texture.draw();
     glTranslated(character.advance - character.bearing.x(), character.bearing.y(), 0.0);
+    row_length += character.advance;
+    row_height = std::max(row_height, character.dimensions.y());
   }
   glPopAttrib();
 }

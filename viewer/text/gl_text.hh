@@ -9,6 +9,7 @@
 
 namespace viewer {
 
+// TODO: Factor this into a different TU, hide the gl/glew dependency
 class SmartTexture {
  public:
   SmartTexture() = default;
@@ -34,6 +35,7 @@ class SmartTexture {
 
  private:
   class ManagedTexture;
+  // Really, this is the smart part
   std::shared_ptr<ManagedTexture> managed_texture_;
   jcc::Vec2 size_;
 };
