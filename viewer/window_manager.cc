@@ -157,6 +157,7 @@ void WindowManager::spin() {
     std::this_thread::sleep_for(std::chrono::milliseconds(16));
   }
   glfwTerminate();
+  std::abort();
 }
 
 void error_callback(int error, const char *description) {

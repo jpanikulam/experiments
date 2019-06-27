@@ -14,9 +14,6 @@
 #include <map>
 #include <thread>
 
-//TODO
-#include "viewer/text/gl_text.hh"
-
 namespace viewer {
 namespace {
 
@@ -178,7 +175,7 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   view_.apply_mouse(mouse_pos, mouse_pos_last_click_, left, right);
 
   const auto ray = projection_.unproject(mouse_pos);
-  callback_manager_.handle_callbacks(ray);
+  callback_manager_.handle_callbacks(ray, projection_.to_viewport(mouse_pos));
 
   if (left || right) {
     mouse_pos_last_click_ = mouse_pos;
@@ -223,9 +220,6 @@ void Window3D::render() {
     projection_ = Projection::get_from_current();
     draw_all_primitives();
   }
-
-  // const auto strlib = create_text_library();
-  // write_string("Jagop: Analytical 240.599", strlib);
 
   const double t_now = glfwGetTime();
 
