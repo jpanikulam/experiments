@@ -16,7 +16,7 @@ Projection Projection::get_from_current() {
   double projection[16];
   glGetDoublev(GL_PROJECTION_MATRIX, projection);
   const Eigen::Map<Mat4, Eigen::RowMajor> gl_projection_mat(projection);
-  const Mat4                              eigen_projection = gl_projection_mat;
+  const Mat4 eigen_projection = gl_projection_mat;
 
   //
   // Get a the modelview matrix
@@ -25,7 +25,7 @@ Projection Projection::get_from_current() {
   double modelview[16];
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
   const Eigen::Map<Mat4, Eigen::RowMajor> gl_modelview_mat(modelview);
-  const Mat4                              eigen_modelview = gl_modelview_mat;
+  const Mat4 eigen_modelview = gl_modelview_mat;
 
   //
   // Get the viewport dimensions
@@ -34,7 +34,7 @@ Projection Projection::get_from_current() {
   GLint viewport_dimensions[4];
   glGetIntegerv(GL_VIEWPORT, viewport_dimensions);
   const Eigen::Map<Vec4i> gl_viewport_dimensions(viewport_dimensions);
-  const Vec4i             eigen_viewport_dimension = gl_viewport_dimensions;
+  const Vec4i eigen_viewport_dimension = gl_viewport_dimensions;
 
   return Projection(eigen_projection, eigen_modelview, eigen_viewport_dimension);
 }
@@ -42,22 +42,35 @@ Projection Projection::get_from_current() {
 ViewportPoint Projection::to_viewport(const WindowPoint& window_point) const {
   // Return a viewport point!
 
-  const double width  = viewport_dimensions_.cast<double>()(2);
+  const double width = viewport_dimensions_.cast<double>()(2);
   const double height = viewport_dimensions_.cast<double>()(3);
 
   const double x = (2.0f * window_point.point.x()) / width - 1.0f;
   const double y = 1.0f - (2.0f * window_point.point.y()) / height;
 
-  const Vec2          view_point_eigen(x, y);
+  const Vec2 view_point_eigen(x, y);
   const ViewportPoint view_point(view_point_eigen);
 
   return view_point;
 }
 
-//WindowPoint Projection::to_window(const ViewportPoint& viewport_point) const {
-//  const double width = viewport_dimensions_.cast<double>()(2);
-//  const double height = viewport_dimensions_.cast<double>()(3);
-//}
+// Algebra:
+//
+// x = (2 * wp_x) / width - 1
+// x + 1 = (2 * wp_x) / width
+// (x + 1) * width / 2 = wp_x
+//
+// y = 1 - (2 * wp_y) / height;
+// y - 1 = (2 * wp_y) / height;
+// (y - 1) * height / 2 = wp_y
+WindowPoint Projection::to_window(const ViewportPoint& viewport_point) const {
+  const double width = viewport_dimensions_.cast<double>()(2);
+  const double height = viewport_dimensions_.cast<double>()(3);
+
+  const double wp_x = (viewport_point.point.x() + 1.0) * width / 2.0;
+  const double wp_y = (viewport_point.point.y() - 1.0f) * height / 2.0;
+  return WindowPoint(Vec2(wp_x, wp_y));
+}
 
 geometry::Ray Projection::unproject(const WindowPoint& window_point) const {
   const ViewportPoint viewport_pt = to_viewport(window_point);
@@ -66,13 +79,13 @@ geometry::Ray Projection::unproject(const WindowPoint& window_point) const {
 
 geometry::Ray Projection::unproject(const ViewportPoint& view_point) const {
   const Vec4 view_point_h_near = Vec4(view_point.point(0), view_point.point(1), 0.0, 1.0);
-  const Vec4 view_point_h_far  = Vec4(view_point.point(0), view_point.point(1), 1.0, 1.0);
+  const Vec4 view_point_h_far = Vec4(view_point.point(0), view_point.point(1), 1.0, 1.0);
 
   const Vec4 p_h_near = lu_.solve(view_point_h_near);
-  const Vec4 p_h_far  = lu_.solve(view_point_h_far);
+  const Vec4 p_h_far = lu_.solve(view_point_h_far);
 
   const Vec3 p_near = Vec3(p_h_near(0), p_h_near(1), p_h_near(2)) / p_h_near(3);
-  const Vec3 p_far  = Vec3(p_h_far(0), p_h_far(1), p_h_far(2)) / p_h_far(3);
+  const Vec3 p_far = Vec3(p_h_far(0), p_h_far(1), p_h_far(2)) / p_h_far(3);
 
   return geometry::Ray({p_near, (p_far - p_near).normalized()});
 }

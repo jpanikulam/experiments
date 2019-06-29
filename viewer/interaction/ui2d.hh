@@ -20,18 +20,12 @@ class Ui2d final : public Primitive {
   Ui2d() = default;
   void draw() const override;
 
-  void add_pointer_target(const PointerTarget& pointer_target) {
-    const std::lock_guard<std::mutex> lk(draw_mutex_);
-    back_buffer_.pointer_targets.push_back(pointer_target);
-  }
+  void add_pointer_target(const PointerTarget& pointer_target);
 
-  void clear() {
-    front_buffer_.clear();
-  }
+  void clear();
 
   void flush();
   void flip();
-
 
  private:
   struct Buffer {
@@ -46,6 +40,7 @@ class Ui2d final : public Primitive {
 
   Buffer back_buffer_;
   Buffer front_buffer_;
+
   mutable std::mutex draw_mutex_;
 };
 
