@@ -106,6 +106,11 @@ class Window3D final : public SimpleWindow {
     callback_manager_.register_click_callback(callback, line_segments);
   }
 
+  void add_click_callback(const CallbackManager::ClickCallback &callback,
+                          const geometry::Plane &plane) {
+    callback_manager_.register_click_callback(callback, plane);
+  }
+
   void clear_click_callbacks() {
     callback_manager_.clear_callbacks();
   }
