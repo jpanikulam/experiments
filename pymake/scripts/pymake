@@ -7,6 +7,7 @@ from generate_cmake.log import Log
 from generate_cmake.file_system import get_files, resolve_include
 from generate_cmake.parse import parse_text, has_annotations, should_ignore
 from generate_cmake.cmake import build_cmakes
+from generate_cmake.bazel import build_bazel_build
 
 
 def get_src_path(file, src):
@@ -207,6 +208,9 @@ def build_dependency_table(all_tree, repo_path):
         if len(required_libs):
             Log.debug('  needs: {}'.format(required_libs))
 
+        if(len(required_libs)):
+            import IPython; IPython.embed(); exit(0)
+
         location = os.path.dirname(file)
 
         for binary in elements['bin']:
@@ -226,6 +230,7 @@ def build_dependency_table(all_tree, repo_path):
             to_build[lib['target']] = {
                 'target': lib['target'],
                 'srcs': lib['srcs'],
+                'hdrs': lib['hdrs'],
                 'deps': required_libs,
                 'kind': 'lib',
                 'flags': elements['flags'],
@@ -254,6 +259,15 @@ def main():
         choices=Log.get_verbosities(),
         default='info'
     )
+
+    parser.add_argument(
+        "-t",
+        "--tool",
+        type=str,
+        choices=["bazel", "cmake"],
+        default='cmake'
+    )
+
     args = parser.parse_args()
     Log.set_verbosity(args.verbosity)
 
@@ -276,7 +290,11 @@ def main():
     for file in files:
         parsed_file_tree.update(parse_file(file))
     to_build = build_dependency_table(parsed_file_tree, path)
-    build_cmakes(to_build, path)
+
+    if args.tool == 'cmake':
+        build_cmakes(to_build, path)
+    elif args.tool == 'bazel':
+        build_bazel_build(to_build, path)
 
 
 if __name__ == '__main__':

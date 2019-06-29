@@ -104,3 +104,9 @@ def get_files(path, ignores_path=None, ignores=None):
         files_there = get_files(subdir_path, ignores=ignores)
         files_here.extend(files_there)
     return files_here
+
+
+def reduce_srcs(sources, base_directory, prejoin="${PROJECT_SOURCE_DIR}"):
+    # return map(lambda o: os.path.join(prejoin, o.replace(base_directory + '/', "")), sources)
+    # return map(lambda o: os.path.join(prejoin, o.replace(base_directory + '/', "")), sources)
+    return sources
