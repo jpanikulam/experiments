@@ -171,7 +171,8 @@ CharacterLibrary create_text_library() {
   JASSERT_EQ(FT_Init_FreeType(&ft), 0, "Failed initialize freetype");
 
   FT_Face face;
-  const std::string font = "/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf";
+  // const std::string font = "/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf";
+  const std::string font = "/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf";
   JASSERT_EQ(FT_New_Face(ft, font.c_str(), 0, &face), 0, "Failed to load freetype font");
 
   // Test Load
