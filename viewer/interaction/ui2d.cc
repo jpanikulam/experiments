@@ -3,6 +3,7 @@
 #include "viewer/projection.hh"
 
 #include <GL/glew.h>
+#include "viewer/gl_aliases.hh"
 
 namespace viewer {
 
@@ -38,11 +39,95 @@ void draw_pointer_targets(const std::vector<PointerTarget> &pointer_targets,
   glPopMatrix();
 }
 
+void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib) {
+  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
+
+  glTranslated(0.2, 0.2, 0.0);
+
+  glColor4d(0.6, 0.6, 0.6, 0.6);
+  glBegin(GL_QUADS);
+  const double field_y_max = 0.5;
+  const double field_y_min = -0.5;
+  const double field_x_min = 0.0;
+  const double field_x_max = 1.0;
+
+  glVertex3d(field_x_min, field_y_min, 0.9);
+  glVertex3d(field_x_max, field_y_min, 0.9);
+  glVertex3d(field_x_max, field_y_max, 0.9);
+  glVertex3d(field_x_min, field_y_max, 0.9);
+  glEnd();
+
+  double abs_y_max = 0.0;
+  double x_max = 0.0;
+  double x_min = 0.0;
+  for (const auto &subplot_pair : line_plot.subplots) {
+    const auto &subplot = subplot_pair.second;
+
+    for (const auto &pt : subplot.points) {
+      abs_y_max = std::max(abs_y_max, std::abs(pt.y()));
+      x_max = std::max(x_max, pt.x());
+      x_min = std::min(x_min, pt.x());
+    }
+  }
+  const double x_range = x_max - x_min;
+
+  glEnable(GL_LINE_STIPPLE);
+  for (const auto &subplot_pair : line_plot.subplots) {
+    const auto &subplot = subplot_pair.second;
+    glColor(subplot.color);
+
+    if (subplot.dotted) {
+      glLineStipple(1.0, 0x00FF);
+    } else {
+      glLineStipple(1.0, 0xFFFF);
+    }
+    glLineWidth(subplot.line_width);
+    glBegin(GL_LINE_STRIP);
+
+    for (const auto &pt : subplot.points) {
+      const double x_val = (pt.x() - x_min) / x_range;
+      const double y_val = field_y_max * pt.y() / abs_y_max;
+
+      glVertex(jcc::Vec2(x_val, y_val));
+    }
+
+    glEnd();
+  }
+
+  glLineStipple(1, 0x00FF);
+  glLineWidth(1.0);
+  glBegin(GL_LINES);
+  {
+    glColor4d(1.0, 0.0, 0.0, 0.8);
+    glVertex3d(field_x_min, 0.0, 0.5);
+    glVertex3d(field_x_max, 0.0, 0.5);
+
+    glColor4d(0.0, 1.0, 0.0, 0.8);
+    const double x_origin = (0.0 - x_min) / x_range;
+    glVertex3d(x_origin, field_y_min, 0.5);
+    glVertex3d(x_origin, field_y_max, 0.5);
+  }
+  glEnd();
+
+  glTranslated(0.0, field_y_max + 0.1, 0.0);
+  const std::string max_txt =
+      line_plot.plot_title + "\nMax: " + std::to_string(abs_y_max);
+  glScaled(0.0005, -0.0005, 0.0005);
+  write_string(max_txt, char_lib);
+
+  glPopAttrib();
+}
+
 }  // namespace
 
 void Ui2d::add_pointer_target(const PointerTarget &pointer_target) {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   back_buffer_.pointer_targets.push_back(pointer_target);
+}
+
+void Ui2d::add_lineplot(const LinePlot2d &line_plot) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.line_plots.push_back(line_plot);
 }
 
 void Ui2d::clear() {
@@ -62,6 +147,7 @@ void Ui2d::flush() {
   };
 
   insert(front_buffer_.pointer_targets, back_buffer_.pointer_targets);
+  insert(front_buffer_.line_plots, back_buffer_.line_plots);
 }
 
 void Ui2d::draw() const {
@@ -77,8 +163,6 @@ void Ui2d::draw() const {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  constexpr double NEAR_CLIP = 0.001;
-  constexpr double FAR_CLIP = 1000.0;
 
   const double width = static_cast<double>(proj.viewport_size().width);
   const double height = static_cast<double>(proj.viewport_size().height);
@@ -92,7 +176,6 @@ void Ui2d::draw() const {
   // Square: Fine
   // glOrtho(-1.0, 1.0, aspect_ratio, 1.0 * aspect_ratio, -1.0, 1.0);
 
-
   // glOrtho(-aspect_ratio, aspect_ratio, -1.0, 1.0, -1.0, 1.0);
 
   glMatrixMode(GL_MODELVIEW);
@@ -100,6 +183,9 @@ void Ui2d::draw() const {
   glLoadIdentity();
 
   draw_pointer_targets(front_buffer_.pointer_targets, proj, char_lib_);
+  for (const auto &line_plot : front_buffer_.line_plots) {
+    draw_lineplot(line_plot, char_lib_);
+  }
 
   // glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
