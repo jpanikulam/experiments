@@ -1,11 +1,11 @@
 #pragma once
 
-// For parametric ellipse
 #include "eigen.hh"
-#include "geometry/shapes/fit_ellipse.hh"
+// For parametric ellipse
+#include "geometry/shapes/ellipse.hh"
 
 namespace estimation {
-namespace sensors {
+namespace calibration {
 
 struct ImuIntrinsics {
   // A perfect IMU, if stationary, will measure "g" ~9.81 away from the
@@ -19,13 +19,18 @@ struct ImuIntrinsics {
 };
 
 class ImuModel {
-  ImuModel(const ImuIntrinsics& intrinsics);
+ public:
+  ImuModel(const ImuIntrinsics& intrinsics) : intrinsics_(intrinsics) {
+  }
 
   // Take an IMU observation, and transform it into a true acceleration
   jcc::Vec3 apply_calibration(const jcc::Vec3& observed) const;
+
+ private:
+  ImuIntrinsics intrinsics_;
 };
 
-ImuIntrinsics estimate_imu_intrinsics(const std::vector<jcc::Vec3>& measurements);
+ImuModel estimate_imu_intrinsics(const std::vector<jcc::Vec3>& measurements);
 
-}  // namespace sensors
+}  // namespace calibration
 }  // namespace estimation
