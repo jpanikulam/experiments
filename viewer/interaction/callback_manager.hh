@@ -1,7 +1,7 @@
 #pragma once
 
-#include "geometry/intersection/ray_closest_approach.hh"
 #include "geometry/shapes/line_segment.hh"
+#include "geometry/plane.hh"
 #include "geometry/shapes/ray.hh"
 
 #include "viewer/gl_types.hh"
@@ -27,40 +27,29 @@ class CallbackManager {
       int, double, const jcc::Vec3&, const jcc::Vec3&, const ViewportPoint&)>;
   void register_click_callback(
       const ClickCallback& callback,
-      const std::vector<geometry::shapes::LineSegment>& line_segments) {
-    callback_pairs_.push_back({callback, line_segments});
-  }
+      const std::vector<geometry::shapes::LineSegment>& line_segments);
+
+  void register_click_callback(const ClickCallback& callback,
+                               const geometry::Plane& plane);
 
   // TODO: Need to do some kind of screens-space solver
   // TODO: Decide whether to expose mouse position to the callback
-  void handle_callbacks(const geometry::Ray& ray, const ViewportPoint& mouse_pt) {
-    for (const auto& callback_pair : callback_pairs_) {
-      const int segments_ct = static_cast<int>(callback_pair.segments.size());
+  void handle_callbacks(const geometry::Ray& ray, const ViewportPoint& mouse_pt);
 
-      for (int segment_index = 0; segment_index < segments_ct; ++segment_index) {
-        const auto& segment = callback_pair.segments[segment_index];
-        const auto result = line_ray_closest_approach(ray, segment);
-        if (result) {
-          callback_pair.callback(segment_index,
-                                 result->squared_distance,
-                                 ray(result->along_ray),
-                                 result->on_line,
-                                 mouse_pt);
-        }
-      }
-    }
-  }
+  void handle_segment_callbacks(const geometry::Ray& ray, const ViewportPoint& mouse_pt);
 
-  void clear_callbacks() {
-    callback_pairs_.clear();
-  }
+  void handle_plane_callbacks(const geometry::Ray& ray, const ViewportPoint& mouse_pt);
+
+  void clear_callbacks();
 
  private:
+  template <typename Shape>
   struct CallbackPair {
     ClickCallback callback;
-    std::vector<geometry::shapes::LineSegment> segments;
+    std::vector<Shape> elements;
   };
-  std::vector<CallbackPair> callback_pairs_;
+  std::vector<CallbackPair<geometry::shapes::LineSegment>> segment_callback_pairs_;
+  std::vector<CallbackPair<geometry::Plane>> plane_callback_pairs_;
 };
 
 }  // namespace viewer
