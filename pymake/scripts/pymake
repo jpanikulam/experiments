@@ -208,9 +208,6 @@ def build_dependency_table(all_tree, repo_path):
         if len(required_libs):
             Log.debug('  needs: {}'.format(required_libs))
 
-        if(len(required_libs)):
-            import IPython; IPython.embed(); exit(0)
-
         location = os.path.dirname(file)
 
         for binary in elements['bin']:
