@@ -64,22 +64,27 @@ PlotRange compute_plot_range(const LinePlot2d &line_plot) {
   return range;
 }
 
-void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib) {
+void draw_lineplot(const LinePlot2d &line_plot,
+                   const Projection &proj,
+                   const CharacterLibrary &char_lib) {
   glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 
   glTranslated(0.2, 0.2, 0.0);
+
+  const double aspect =
+      static_cast<double>(proj.viewport_size().width) / proj.viewport_size().height;
 
   glColor4d(0.6, 0.6, 0.6, 0.6);
   glBegin(GL_QUADS);
   const double field_y_max = 0.5;
   const double field_y_min = -0.5;
   const double field_x_min = 0.0;
-  const double field_x_max = 1.0;
+  const double field_x_max = aspect;
 
-  glVertex3d(field_x_min, field_y_min, 0.9);
-  glVertex3d(field_x_max, field_y_min, 0.9);
-  glVertex3d(field_x_max, field_y_max, 0.9);
-  glVertex3d(field_x_min, field_y_max, 0.9);
+  glVertex3d(field_x_min, field_y_min, -0.9);
+  glVertex3d(field_x_max, field_y_min, -0.9);
+  glVertex3d(field_x_max, field_y_max, -0.9);
+  glVertex3d(field_x_min, field_y_max, -0.9);
   glEnd();
 
   const PlotRange range = compute_plot_range(line_plot);
@@ -100,7 +105,7 @@ void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib
     glBegin(GL_LINE_STRIP);
 
     for (const auto &pt : subplot.points) {
-      const double x_val = (pt.x() - range.x_min) / x_range;
+      const double x_val = field_x_max * (pt.x() - range.x_min) / x_range;
       const double y_val = field_y_max * pt.y() / abs_y_max;
 
       glVertex(jcc::Vec2(x_val, y_val));
@@ -132,6 +137,21 @@ void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib
   glPopAttrib();
 }
 
+void draw_image(const Image &image,
+                const Projection &proj,
+                const CharacterLibrary &char_lib) {
+
+  if (!image.texture.ready()) {
+    std::cout << "Preparing a texture" << std::endl;
+    const double aspect_ratio = image.image.cols / static_cast<double>(image.image.rows);
+    image.texture =
+        SmartTexture(jcc::Vec2(image.width_m * 1.0, image.width_m * aspect_ratio));
+    image.texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGB, image.image.cols,
+                               image.image.rows, 0, GL_BGR, GL_UNSIGNED_BYTE,
+                               image.image.data);
+  }
+  image.texture.draw();
+}
 }  // namespace
 
 void Ui2d::add_pointer_target(const PointerTarget &pointer_target) {
@@ -162,6 +182,7 @@ void Ui2d::flush() {
 
   insert(front_buffer_.pointer_targets, back_buffer_.pointer_targets);
   insert(front_buffer_.line_plots, back_buffer_.line_plots);
+  insert(front_buffer_.images, back_buffer_.images);
 }
 
 void Ui2d::draw() const {
@@ -189,10 +210,14 @@ void Ui2d::draw() const {
 
   draw_pointer_targets(front_buffer_.pointer_targets, proj, char_lib_);
   for (const auto &line_plot : front_buffer_.line_plots) {
-    draw_lineplot(line_plot, char_lib_);
+    draw_lineplot(line_plot, proj, char_lib_);
   }
 
-  // glMatrixMode(GL_MODELVIEW);
+  glEnable(GL_TEXTURE_2D);
+  for (const auto &image : front_buffer_.images) {
+    draw_image(image, proj, char_lib_);
+  }
+
   glPopMatrix();
 
   glMatrixMode(GL_PROJECTION);
