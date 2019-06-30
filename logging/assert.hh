@@ -35,7 +35,7 @@ inline std::stringstream binary_expector_string(const A& a,
   std::stringstream ss;
   ss << Format::yellow() << filename(file_name) << ":" << line_num << ": "
      << Format::red() << "Expected" << Format::reset() << ": " << to_expr(a, a_expr).str()
-     << operator_name << " " << to_expr(b, b_expr).str() << ": " << msg;
+     << " " << operator_name << " " << to_expr(b, b_expr).str() << ": " << msg;
   return ss;
 }
 
@@ -191,7 +191,7 @@ inline void assert_true(const bool& a,
   if (UNLIKELY(!a)) {
     std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
               << Format::red() << "Expected" << Format::reset() << ": " << a_expr
-              << std::boolalpha << a << ": " << msg << std::endl;
+              << std::boolalpha << " " << a << ": " << msg << std::endl;
 
     std::abort();
   }
@@ -205,7 +205,7 @@ inline void assert_false(const bool& a,
   if (UNLIKELY(a)) {
     std::cerr << Format::yellow() << filename(file_name) << ":" << line_num << ": "
               << Format::red() << "Expected" << Format::reset() << ": " << a_expr
-              << std::boolalpha << a << ": " << msg << std::endl;
+              << std::boolalpha << " " << a << ": " << msg << std::endl;
 
     std::abort();
   }
