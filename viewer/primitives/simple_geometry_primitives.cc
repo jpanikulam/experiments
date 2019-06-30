@@ -26,7 +26,6 @@ void draw_axes(const Axes &axes) {
     glLineStipple(1.0, 0x00FF);
   }
 
-
   glLineWidth(axes.line_width);
 
   glBegin(GL_LINES);
@@ -48,7 +47,7 @@ void draw_axes(const Axes &axes) {
   glPopAttrib();
 
   // if (axes.dotted) {
-    // glDisable(GL_LINE_STIPPLE);
+  // glDisable(GL_LINE_STIPPLE);
   // }
   glLineStipple(1.0, 0xFFFF);
 }
@@ -253,9 +252,18 @@ void draw_plane_grid(const Plane &plane) {
   }
 
   glEnd();
-  glLineWidth(8.0);
   glBegin(GL_LINES);
   {
+    glVertex(Vec3(Vec3::Zero()));
+    glVertex(Vec3(-x_offset));
+
+    glVertex(Vec3(Vec3::Zero()));
+    glVertex(Vec3(-y_offset));
+  }
+  glEnd();
+  glBegin(GL_LINES);
+  {
+    glLineWidth(8.0);
     glColor(Vec4(1.0, 0.0, 0.0, 0.8));
     glVertex(Vec3(x_offset));
     glVertex(Vec3(Vec3::Zero()));
