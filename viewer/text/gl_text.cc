@@ -162,9 +162,9 @@ CharacterLibrary create_text_library() {
 
   // Test Load
   JASSERT_EQ(FT_Set_Pixel_Sizes(face, 0, 48), 0, "Failed to set pixel sizes");
-  constexpr int DPI = 500;
+  constexpr int DPI = 1500;
   constexpr int FLG_MATCH_OTHER = 0;
-  JASSERT_EQ(FT_Set_Char_Size(face, 20 * 64, FLG_MATCH_OTHER, DPI, FLG_MATCH_OTHER),
+  JASSERT_EQ(FT_Set_Char_Size(face, 10 * 64, FLG_MATCH_OTHER, DPI, FLG_MATCH_OTHER),
              0,
              "Failed to set char size");
 
@@ -177,14 +177,16 @@ CharacterLibrary create_text_library() {
   return characters;
 }
 
-void write_string(const std::string& text, const CharacterLibrary& lib) {
+void write_string(const std::string& text,
+                  const CharacterLibrary& lib,
+                  const double size) {
   glPushAttrib(GL_ENABLE_BIT);
   glEnable(GL_TEXTURE_2D);
 
   glPushMatrix();
   double row_length = 0;
   double row_height = 0;
-  glScaled(1.0, -1.0, 1.0);
+  glScaled(size * 1.0, -size * 1.0, size * 1.0);
   for (std::size_t i = 0u; i < text.size(); ++i) {
     const char c = text[i];
 
@@ -193,7 +195,7 @@ void write_string(const std::string& text, const CharacterLibrary& lib) {
         break;
       }
 
-      glTranslated(-row_length, row_height + (0.0005 * 35.0), 0.0);
+      glTranslated(-row_length, row_height + (size * 0.0005 * 35.0), 0.0);
       row_length = 0;
       row_height = 0;
       continue;

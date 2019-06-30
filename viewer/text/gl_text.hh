@@ -60,6 +60,8 @@ struct GlCharacter {
 using CharacterLibrary = std::map<char, GlCharacter>;
 CharacterLibrary create_text_library();
 
-void write_string(const std::string& text, const CharacterLibrary& lib);
+void write_string(const std::string& text,
+                  const CharacterLibrary& lib,
+                  const double size = 1.0);
 
 }  // namespace viewer
