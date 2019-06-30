@@ -18,8 +18,13 @@ class TimeInterpolator {
   TimeInterpolator(const std::vector<TimeControlPoint>& control_points);
   jcc::Optional<jcc::Vec3> operator()(const estimation::TimePoint& time_stamp) const;
 
+  std::size_t count_between(const estimation::TimePoint& start,
+                            const estimation::TimePoint& end) const;
+
  private:
   double time_offset(const estimation::TimePoint& time_stamp) const;
+
+
   // This is only used to key the interpolator
   estimation::TimePoint first_time_;
 

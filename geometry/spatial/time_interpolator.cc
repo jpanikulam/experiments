@@ -31,5 +31,10 @@ jcc::Optional<jcc::Vec3> TimeInterpolator::operator()(
   return (*interpolator_)(t);
 }
 
+std::size_t TimeInterpolator::count_between(const estimation::TimePoint& start,
+                                            const estimation::TimePoint& end) const {
+  return interpolator_->count_between(time_offset(start), time_offset(end));
+}
+
 }  // namespace spatial
 }  // namespace geometry

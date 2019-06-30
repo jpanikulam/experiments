@@ -68,5 +68,16 @@ jcc::Optional<jcc::Vec3> LinearInterpolator::operator()(const double t) const {
   return lerp(interpolation_parameter, lower_bound->value, upper_bound->value);
 }
 
+std::size_t LinearInterpolator::count_between(const double start,
+                                              const double end) const {
+  std::size_t count = 0u;
+  for (const auto& pt : control_points_) {
+    if (pt.parameter >= start && pt.parameter <= end) {
+      count++;
+    }
+  }
+  return count;
+}
+
 }  // namespace spatial
 }  // namespace geometry
