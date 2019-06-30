@@ -181,16 +181,7 @@ void Ui2d::draw() const {
   const double width = static_cast<double>(proj.viewport_size().width);
   const double height = static_cast<double>(proj.viewport_size().height);
   const double aspect_ratio = width / height;
-
-  // Square: Fine
-  // Full-Screen: Text is the right size, point is in the wrong place
-  // glOrtho(-1.0, 1.0, -1.0 * 0.5 * aspect_ratio, 1.0 * 0.5 * aspect_ratio, -1.0, 1.0);
-
-  // This seems to be fine....wtf?? This is impossible
-  // Square: Fine
-  // glOrtho(-1.0, 1.0, aspect_ratio, 1.0 * aspect_ratio, -1.0, 1.0);
-
-  // glOrtho(-aspect_ratio, aspect_ratio, -1.0, 1.0, -1.0, 1.0);
+  glOrtho(-aspect_ratio, aspect_ratio, -1.0, 1.0, -1.0, 1.0);
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();

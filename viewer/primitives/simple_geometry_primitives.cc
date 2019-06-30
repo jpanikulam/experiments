@@ -258,11 +258,11 @@ void draw_plane_grid(const Plane &plane) {
   {
     glColor(Vec4(1.0, 0.0, 0.0, 0.8));
     glVertex(Vec3(x_offset));
-    glVertex(Vec3(-x_offset));
+    glVertex(Vec3(Vec3::Zero()));
 
     glColor(Vec4(0.0, 1.0, 0.0, 0.8));
     glVertex(Vec3(y_offset));
-    glVertex(Vec3(-y_offset));
+    glVertex(Vec3(Vec3::Zero()));
   }
   glEnd();
   glPopAttrib();
