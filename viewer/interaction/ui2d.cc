@@ -127,7 +127,6 @@ void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib
   glTranslated(0.0, field_y_max + 0.1, 0.0);
   const std::string max_txt =
       line_plot.plot_title + "\nMax: " + std::to_string(abs_y_max);
-  // glScaled(0.0005, -0.0005, 0.0005);
   write_string(max_txt, char_lib);
 
   glPopAttrib();
