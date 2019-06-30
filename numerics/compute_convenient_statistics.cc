@@ -5,8 +5,8 @@
 namespace numerics {
 
 ConvenientStatistics compute_convenient_statistics(const std::vector<double>& values) {
-  double max = std::numeric_limits<double>::max();
-  double min = std::numeric_limits<double>::min();
+  double max = std::numeric_limits<double>::min();
+  double min = std::numeric_limits<double>::max();
 
   const double n_values = static_cast<double>(values.size());
   double sum = 0.0;
@@ -26,7 +26,7 @@ ConvenientStatistics compute_convenient_statistics(const std::vector<double>& va
   const double variance = sum_of_sq_err / n_values;
 
   const ConvenientStatistics stats{
-      .max = max, .min = min, .mean = mean, .variance = variance};
+      .mean = mean, .max = max, .min = min, .variance = variance};
   return stats;
 }
 
