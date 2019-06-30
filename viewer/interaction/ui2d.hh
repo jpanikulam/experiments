@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util/optional.hh"
 #include "viewer/gl_types.hh"
 #include "viewer/primitives/primitive.hh"
 #include "viewer/text/gl_text.hh"
@@ -22,18 +23,29 @@ struct SubLinePlot2d {
   bool dotted = false;
 };
 
+struct PlotRange {
+  double x_min = 0.0;
+  double x_max = 0.0;
+  double y_min = 0.0;
+  double y_max = 0.0;
+};
 struct LinePlot2d {
   std::string plot_title;
   std::string x_label;
   std::string y_label;
   std::map<std::string, SubLinePlot2d> subplots;
+  PlotRange plot_range;
 };
 
 class SubLinePlotBuilder {
  public:
   SubLinePlotBuilder() = default;
-  SubLinePlotBuilder(const jcc::Vec4& color) {
+  SubLinePlotBuilder(const jcc::Vec4& color,
+                     const double width = 0.2,
+                     const bool dotted = false) {
     subplot_.color = color;
+    subplot_.line_width = width;
+    subplot_.dotted = dotted;
   }
   void operator<<(const jcc::Vec2& p) {
     subplot_.points.push_back(p);
@@ -56,8 +68,16 @@ class LinePlotBuilder {
     plot_.x_label = x_label;
     plot_.y_label = y_label;
   }
-  SubLinePlotBuilder& make_subplot(const std::string& name, const jcc::Vec4& color) {
-    builders_[name] = SubLinePlotBuilder(color);
+
+  void set_range(const PlotRange& range) {
+    plot_.plot_range = range;
+  }
+
+  SubLinePlotBuilder& make_subplot(const std::string& name,
+                                   const jcc::Vec4& color,
+                                   const double line_width = 0.2,
+                                   const bool dotted = false) {
+    builders_[name] = SubLinePlotBuilder(color, line_width, dotted);
     return builders_.at(name);
   }
 

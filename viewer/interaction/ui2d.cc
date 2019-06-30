@@ -33,10 +33,35 @@ void draw_pointer_targets(const std::vector<PointerTarget> &pointer_targets,
     glEnd();
 
     glTranslated(target.location.point.x(), target.location.point.y(), Z_DIST);
-    glScaled(0.0005, -0.0005, 0.0005);
     write_string(target.text, char_lib);
   }
   glPopMatrix();
+}
+
+PlotRange compute_plot_range(const LinePlot2d &line_plot) {
+  PlotRange range;
+  for (const auto &subplot_pair : line_plot.subplots) {
+    const auto &subplot = subplot_pair.second;
+
+    for (const auto &pt : subplot.points) {
+      range.y_max = std::max(range.y_max, pt.y());
+      range.y_min = std::min(range.y_min, pt.y());
+      range.x_max = std::max(range.x_max, pt.x());
+      range.x_min = std::min(range.x_min, pt.x());
+    }
+  }
+
+  if (line_plot.plot_range.x_max != line_plot.plot_range.x_min) {
+    range.x_max = line_plot.plot_range.x_max;
+    range.x_min = line_plot.plot_range.x_min;
+  }
+
+  if (line_plot.plot_range.y_max != line_plot.plot_range.y_min) {
+    range.y_max = line_plot.plot_range.y_max;
+    range.y_min = line_plot.plot_range.y_min;
+  }
+
+  return range;
 }
 
 void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib) {
@@ -57,19 +82,9 @@ void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib
   glVertex3d(field_x_min, field_y_max, 0.9);
   glEnd();
 
-  double abs_y_max = 0.0;
-  double x_max = 0.0;
-  double x_min = 0.0;
-  for (const auto &subplot_pair : line_plot.subplots) {
-    const auto &subplot = subplot_pair.second;
-
-    for (const auto &pt : subplot.points) {
-      abs_y_max = std::max(abs_y_max, std::abs(pt.y()));
-      x_max = std::max(x_max, pt.x());
-      x_min = std::min(x_min, pt.x());
-    }
-  }
-  const double x_range = x_max - x_min;
+  const PlotRange range = compute_plot_range(line_plot);
+  const double x_range = range.x_max - range.x_min;
+  const double abs_y_max = std::max(std::abs(range.y_min), std::abs(range.y_max));
 
   glEnable(GL_LINE_STIPPLE);
   for (const auto &subplot_pair : line_plot.subplots) {
@@ -85,7 +100,7 @@ void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib
     glBegin(GL_LINE_STRIP);
 
     for (const auto &pt : subplot.points) {
-      const double x_val = (pt.x() - x_min) / x_range;
+      const double x_val = (pt.x() - range.x_min) / x_range;
       const double y_val = field_y_max * pt.y() / abs_y_max;
 
       glVertex(jcc::Vec2(x_val, y_val));
@@ -103,7 +118,7 @@ void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib
     glVertex3d(field_x_max, 0.0, 0.5);
 
     glColor4d(0.0, 1.0, 0.0, 0.8);
-    const double x_origin = (0.0 - x_min) / x_range;
+    const double x_origin = (0.0 - range.x_min) / x_range;
     glVertex3d(x_origin, field_y_min, 0.5);
     glVertex3d(x_origin, field_y_max, 0.5);
   }
@@ -112,7 +127,7 @@ void draw_lineplot(const LinePlot2d &line_plot, const CharacterLibrary &char_lib
   glTranslated(0.0, field_y_max + 0.1, 0.0);
   const std::string max_txt =
       line_plot.plot_title + "\nMax: " + std::to_string(abs_y_max);
-  glScaled(0.0005, -0.0005, 0.0005);
+  // glScaled(0.0005, -0.0005, 0.0005);
   write_string(max_txt, char_lib);
 
   glPopAttrib();
