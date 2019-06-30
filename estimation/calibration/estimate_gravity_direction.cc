@@ -101,7 +101,7 @@ geometry::UnitVector3 estimate_from_bracket(const CalibrationMeasurements& measu
 
 }  // namespace
 
-geometry::UnitVector3 estimate_gravity_direction(
+GravityEstimationResult estimate_gravity_direction(
     const CalibrationMeasurements& measurements,
     const ImuModel& imu_model,
     const EstimationConfig& cfg) {
@@ -160,7 +160,14 @@ geometry::UnitVector3 estimate_gravity_direction(
   JASSERT(in_bracket, "Did not end inside a bracket, result is invalid.");
 
   const Bracket bracket{.start = bracket_start, .end = bracket_end};
-  return estimate_from_bracket(measurements, imu_model, cfg, bracket);
+
+  const auto direction = estimate_from_bracket(measurements, imu_model, cfg, bracket);
+
+  return GravityEstimationResult{
+      .direction = direction,
+      .time = (bracket.start +
+               estimation::to_duration(
+                   estimation::to_seconds(bracket.end - bracket.start) * 0.5))};
 }
 
 }  // namespace calibration
