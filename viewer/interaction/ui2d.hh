@@ -101,12 +101,11 @@ class Ui2d final : public Primitive {
 
   void add_pointer_target(const PointerTarget& pointer_target);
   void add_lineplot(const LinePlot2d& line_plot);
-  void add_lineplot(const LinePlotBuilder& line_plot) {
-    add_lineplot(line_plot.build());
+  void add_lineplot(const LinePlotBuilder& line_plot_builder) {
+    add_lineplot(line_plot_builder.build());
   }
 
   void clear();
-
   void flush();
   void flip();
 

@@ -7,6 +7,7 @@
 namespace estimation {
 namespace calibration {
 
+// One should typically expect to use the defaults.
 struct EstimationConfig {
   double max_speed_mps = 0.005;
   double max_fiducial_dt_sec = 0.2;
@@ -20,7 +21,7 @@ struct EstimationConfig {
 geometry::UnitVector3 estimate_gravity_direction(
     const CalibrationMeasurements& measurements,
     const ImuModel& imu_model,
-    const EstimationConfig& cfg);
+    const EstimationConfig& cfg = {});
 
 }  // namespace calibration
 }  // namespace estimation
