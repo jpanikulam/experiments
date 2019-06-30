@@ -54,7 +54,7 @@ struct GlCharacter {
   SmartTexture texture;
   jcc::Vec2 dimensions;  // Size of glyph
   jcc::Vec2 bearing;     // Offset from baseline to left/top of glyph
-  std::size_t advance;   // Offset to advance to next glyph
+  double advance;        // Offset to advance to next glyph
 };
 
 using CharacterLibrary = std::map<char, GlCharacter>;

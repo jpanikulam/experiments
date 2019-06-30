@@ -55,23 +55,6 @@ void SmartTexture::tex_image_2d(const GLenum target,
 void SmartTexture::draw() const {
   managed_texture_->bind();
 
-  /*  glColor3d(1.0, 1.0, 1.0);
-    glBegin(GL_QUADS);
-    {
-      glTexCoord2d(0.0, 0.0);
-      glVertex2d(0.0, 0.0);
-
-      glTexCoord2d(0.0, 1.0);
-      glVertex2d(0.0, size_.y());
-
-      glTexCoord2d(1.0, 1.0);
-      glVertex2d(size_.x(), size_.y());
-
-      glTexCoord2d(1.0, 0.0);
-      glVertex2d(size_.x(), 0.0);
-    }
-    glEnd();*/
-
   glColor3d(1.0, 1.0, 1.0);
   glBegin(GL_QUADS);
   {
@@ -125,7 +108,8 @@ CharacterLibrary create_font_textures(const FT_Face& face) {
     // TODO(jpanikulam): Understand this more clearly
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    const jcc::Vec2 dimensions = jcc::Vec2(cols_per_row, row_ct);
+    constexpr double SCALING_FACTOR = 0.0005;
+    const jcc::Vec2 dimensions = SCALING_FACTOR * jcc::Vec2(cols_per_row, row_ct);
     SmartTexture smart_tex(dimensions);
 
     // TODO(jpanikulam): Don't let the driver pick a format
@@ -146,13 +130,14 @@ CharacterLibrary create_font_textures(const FT_Face& face) {
     constexpr long int ADVANCE_PER_PX = 64;
     JASSERT_GT(
         face->glyph->advance.x, 0, "Jake assumed that 'advance' is strictly positive");
-    const auto advance =
-        static_cast<std::size_t>(face->glyph->advance.x / ADVANCE_PER_PX);
+    const double advance = static_cast<double>(face->glyph->advance.x) / ADVANCE_PER_PX;
+    // static_cast<std::size_t>(face->glyph->advance.x / ADVANCE_PER_PX);
     textures[character_id] = GlCharacter{
-        .texture = smart_tex,                                                     //
-        .dimensions = dimensions,                                                 //
-        .bearing = jcc::Vec2(face->glyph->bitmap_left, face->glyph->bitmap_top),  //
-        .advance = advance                                                        //
+        .texture = smart_tex,      //
+        .dimensions = dimensions,  //
+        .bearing = SCALING_FACTOR *
+                   jcc::Vec2(face->glyph->bitmap_left, face->glyph->bitmap_top),  //
+        .advance = SCALING_FACTOR * advance                                       //
     };
   }
 
@@ -196,8 +181,10 @@ void write_string(const std::string& text, const CharacterLibrary& lib) {
   glPushAttrib(GL_ENABLE_BIT);
   glEnable(GL_TEXTURE_2D);
 
+  glPushMatrix();
   double row_length = 0;
   double row_height = 0;
+  glScaled(1.0, -1.0, 1.0);
   for (std::size_t i = 0u; i < text.size(); ++i) {
     const char c = text[i];
 
@@ -206,7 +193,7 @@ void write_string(const std::string& text, const CharacterLibrary& lib) {
         break;
       }
 
-      glTranslated(-row_length, row_height + 35, 0.0);
+      glTranslated(-row_length, row_height + (0.0005 * 35.0), 0.0);
       row_length = 0;
       row_height = 0;
       continue;
@@ -220,6 +207,7 @@ void write_string(const std::string& text, const CharacterLibrary& lib) {
     row_height = std::max(row_height, character.dimensions.y());
   }
   glPopAttrib();
+  glPopMatrix();
 }
 
 }  // namespace viewer
