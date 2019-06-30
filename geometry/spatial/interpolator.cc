@@ -72,7 +72,7 @@ std::size_t LinearInterpolator::count_between(const double start,
                                               const double end) const {
   std::size_t count = 0u;
   for (const auto& pt : control_points_) {
-    if (pt.parameter >= start && pt.parameter <= end) {
+    if ((pt.parameter >= start) && (pt.parameter <= end)) {
       count++;
     }
   }
