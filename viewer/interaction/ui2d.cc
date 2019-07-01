@@ -1,5 +1,6 @@
 #include "viewer/interaction/ui2d.hh"
 
+#include "logging/assert.hh"
 #include "viewer/projection.hh"
 
 #include <GL/glew.h>
@@ -158,6 +159,7 @@ void draw_image(const Image &image,
                                image.image.rows, 0, GL_BGR, GL_UNSIGNED_BYTE,
                                image.image.data);
   }
+  glTranslated(0.0, 0.0, -0.8);
   image.texture.draw();
 
   glDisable(GL_TEXTURE_2D);
@@ -177,6 +179,60 @@ void draw_points(const std::vector<Point2d> points,
   }
   glPopAttrib();
 }
+
+void draw_grid_mesh(const GridMesh &mesh) {
+  glPushAttrib(GL_CURRENT_BIT);
+  const auto &pts = mesh.vertices;
+  const int width = mesh.width;
+  constexpr double Z_DIST = -0.1;
+  constexpr double Z_DIST_OUTLINE = 0.1;
+
+  const int cols_per_row = mesh.vertices.size() / width;
+  const int rows = width;
+
+  glColor(mesh.color);
+  glBegin(GL_QUADS);
+  {
+    for (int r = 0; r < rows - 1; ++r) {
+      for (int c = 0; c < cols_per_row - 1; ++c) {
+        const int tl = c + (r * cols_per_row);
+        const int tr = c + 1 + (r * cols_per_row);
+        const int br = c + 1 + ((r + 1) * cols_per_row);
+        const int bl = c + ((r + 1) * cols_per_row);
+
+        glVertex3d(pts[tl].x(), pts[tl].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[tr].x(), pts[tr].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[br].x(), pts[br].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[bl].x(), pts[bl].y(), Z_DIST_OUTLINE);
+      }
+    }
+    glEnd();
+  }
+
+  {
+    glColor4d(0.1, 0.8, 0.1, 0.8);
+    glLineWidth(1.0);
+
+    for (int r = 0; r < rows - 1; ++r) {
+      for (int c = 0; c < cols_per_row - 1; ++c) {
+        const int tl = c + (r * cols_per_row);
+        const int tr = c + 1 + (r * cols_per_row);
+        const int br = c + 1 + ((r + 1) * cols_per_row);
+        const int bl = c + ((r + 1) * cols_per_row);
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3d(pts[tl].x(), pts[tl].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[tr].x(), pts[tr].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[br].x(), pts[br].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[bl].x(), pts[bl].y(), Z_DIST_OUTLINE);
+        glEnd();
+      }
+    }
+  }
+
+  glPopAttrib();
+}
+
 }  // namespace
 
 void Ui2d::add_pointer_target(const PointerTarget &pointer_target) {
@@ -187,6 +243,15 @@ void Ui2d::add_pointer_target(const PointerTarget &pointer_target) {
 void Ui2d::add_lineplot(const LinePlot2d &line_plot) {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   back_buffer_.line_plots.push_back(line_plot);
+}
+
+void Ui2d::add_grid_mesh(const GridMesh &grid_mesh) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  JASSERT_GT(grid_mesh.width, 1, "Grid width must be greater 1");
+  JASSERT_FALSE(grid_mesh.vertices.empty(), "Grid cannot be empty.");
+  JASSERT_EQ(grid_mesh.vertices.size() % grid_mesh.width, 0u,
+             "Grid size must be divisible by width");
+  back_buffer_.grid_meshes.push_back(grid_mesh);
 }
 
 void Ui2d::clear() {
@@ -209,6 +274,7 @@ void Ui2d::flush() {
   insert(front_buffer_.line_plots, back_buffer_.line_plots);
   insert(front_buffer_.images, back_buffer_.images);
   insert(front_buffer_.points, back_buffer_.points);
+  insert(front_buffer_.grid_meshes, back_buffer_.grid_meshes);
 }
 
 void Ui2d::draw() const {
@@ -243,6 +309,10 @@ void Ui2d::draw() const {
 
   for (const auto &image : front_buffer_.images) {
     draw_image(image, proj, char_lib_);
+  }
+
+  for (const auto &mesh : front_buffer_.grid_meshes) {
+    draw_grid_mesh(mesh);
   }
 
   glPopMatrix();

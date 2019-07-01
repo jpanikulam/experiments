@@ -33,6 +33,13 @@ struct Point2d {
   double size = 1.0;
 };
 
+struct GridMesh {
+  int width;
+  std::vector<jcc::Vec2> vertices;
+  jcc::Vec4 color = jcc::Vec4(1.0, 1.0, 1.0, 0.3);
+  double line_width = 1.0;
+};
+
 class Ui2d final : public Primitive {
  public:
   Ui2d() = default;
@@ -54,6 +61,8 @@ class Ui2d final : public Primitive {
     back_buffer_.points.push_back(point);
   }
 
+  void add_grid_mesh(const GridMesh& grid_mesh);
+
   void clear();
   void flush();
   void flip();
@@ -64,12 +73,14 @@ class Ui2d final : public Primitive {
     std::vector<LinePlot2d> line_plots;
     std::vector<Image> images;
     std::vector<Point2d> points;
+    std::vector<GridMesh> grid_meshes;
 
     void clear() {
       pointer_targets.clear();
       line_plots.clear();
       images.clear();
       points.clear();
+      grid_meshes.clear();
     }
   };
 
