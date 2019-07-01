@@ -8,9 +8,9 @@ namespace slam {
 
 class CameraModel {
  public:
-  using Vec2    = Eigen::Vector2d;
-  using Vec3    = Eigen::Vector3d;
-  using Vec4    = Eigen::Vector4d;
+  using Vec2 = Eigen::Vector2d;
+  using Vec3 = Eigen::Vector3d;
+  using Vec4 = Eigen::Vector4d;
   using ProjMat = Eigen::Matrix<double, 3, 3>;
 
   CameraModel(const ProjMat& K) : K_(K){};
@@ -31,7 +31,7 @@ class CameraModel {
   // @returns The point projected into image space
   Vec2 project(const Vec3& camera_point) const {
     const Vec3 projected_h = K_ * camera_point;
-    const Vec2 projected   = projected_h.head<2>() / projected_h(2);
+    const Vec2 projected = projected_h.head<2>() / projected_h(2);
     return projected;
   }
 
@@ -44,12 +44,15 @@ class CameraModel {
 
     const Vec3 image_point_h = Vec3(image_point.x(), image_point.y(), 1.0);
     // const Vec3 soln          = K_inv.solve(K_.transpose() * image_point_h);
-    const Vec3 soln        = K_inv.solve(image_point_h);
+    const Vec3 soln = K_inv.solve(image_point_h);
     const Vec3 unprojected = soln;
     // std::cout << "upj : " << unprojected.norm() << std::endl;
-    // const geometry::Ray unprojected_ray{.origin = Vec3::Zero(), .direction = unprojected};
-    const geometry::Ray unprojected_ray{.origin = Vec3::Zero(), .direction = unprojected.normalized()};
-    // const geometry::Ray unprojected_ray{.origin = Vec3::Zero(), .direction = unprojected_fx.normalized()};
+    // const geometry::Ray unprojected_ray{.origin = Vec3::Zero(), .direction =
+    // unprojected};
+    const geometry::Ray unprojected_ray{.origin = Vec3::Zero(),
+                                        .direction = unprojected.normalized()};
+    // const geometry::Ray unprojected_ray{.origin = Vec3::Zero(), .direction =
+    // unprojected_fx.normalized()};
     return unprojected_ray;
   }
 
@@ -60,7 +63,7 @@ class CameraModel {
   const Eigen::PartialPivLU<ProjMat>& get_k_inv() const {
     if (!inv_set_) {
       // const ProjMat ktk = K_.transpose() * K_;
-      K_inv_   = Eigen::PartialPivLU<ProjMat>(K_);
+      K_inv_ = Eigen::PartialPivLU<ProjMat>(K_);
       inv_set_ = true;
     }
     return K_inv_;
@@ -70,7 +73,7 @@ class CameraModel {
   ProjMat K_;
 
   // Inversion cache
-  mutable bool                         inv_set_ = false;
+  mutable bool inv_set_ = false;
   mutable Eigen::PartialPivLU<ProjMat> K_inv_;
 };
-}
+}  // namespace slam
