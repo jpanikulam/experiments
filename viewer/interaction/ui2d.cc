@@ -145,11 +145,15 @@ void draw_image(const Image &image,
   glPushMatrix();
   glEnable(GL_TEXTURE_2D);
   if (!image.texture.ready()) {
-    // glTranslated(0.0, 0.0, 0.5);
-    // glScaled(1.0, -1.0, 1.0);
-    const double aspect_ratio = image.image.cols / static_cast<double>(image.image.rows);
-    image.texture =
-        SmartTexture(jcc::Vec2(image.width_m * 1.0, image.width_m * aspect_ratio));
+    //
+    // We want the *height* of the texture to be 1.0
+    //
+    const double width_per_height =
+        image.image.cols / static_cast<double>(image.image.rows);
+
+    const jcc::Vec2 size(width_per_height, 1.0);
+
+    image.texture = SmartTexture(size);
     image.texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGB, image.image.cols,
                                image.image.rows, 0, GL_BGR, GL_UNSIGNED_BYTE,
                                image.image.data);
@@ -164,13 +168,13 @@ void draw_points(const std::vector<Point2d> points,
                  const Projection &proj,
                  const CharacterLibrary &char_lib) {
   glPushAttrib(GL_CURRENT_BIT);
-  glPointSize(3.0);
-  glBegin(GL_POINTS);
   for (const auto &pt : points) {
+    glPointSize(pt.size);
+    glBegin(GL_POINTS);
     glColor(pt.color);
     glVertex3d(pt.point.x(), pt.point.y(), -0.0);
+    glEnd();
   }
-  glEnd();
   glPopAttrib();
 }
 }  // namespace
@@ -247,4 +251,4 @@ void Ui2d::draw() const {
   glPopMatrix();
 }
 
-}  // namespace
+}  // namespace viewer
