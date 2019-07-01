@@ -76,7 +76,7 @@ geometry::UnitVector3 estimate_from_bracket(const CalibrationMeasurements& measu
   }
 
   JASSERT_GT(bracket_accel.size(),
-             40u,
+             100u,
              "Should have gotten at least 80 imu measurements in the window");
 
   // These are not independent samples, but let's just work with it
@@ -85,7 +85,7 @@ geometry::UnitVector3 estimate_from_bracket(const CalibrationMeasurements& measu
              cfg.max_accel_range_mpss,
              "Accelerometer measurement range must be small");
 
-  JASSERT_LT(std::abs(stats.mean - G_MPSS),
+  JASSERT_LE(std::abs(stats.mean - G_MPSS),
              cfg.max_g_defect,
              "Mean was too far from g to be comfortable!");
 
