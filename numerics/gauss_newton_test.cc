@@ -30,28 +30,48 @@ OutVec error_fcn(const InVec& x, ErrorJacobian* jac) {
 }
 
 TEST(GaussNewton, error_printouts) {
-  const VecNd<IN_DIM> init = VecNd<IN_DIM>::Random();
+  const VecNd<IN_DIM> init = VecNd<IN_DIM>(1.0, 2.0, 3.0);
 
   const OptimizationConfiguration config;
 
-  using ThisError = ErrorFunction<IN_DIM, OUT_DIM>;
+  using ThisError = ErrorFunctionDifferentials<IN_DIM, OUT_DIM>;
   const auto erf_casted = static_cast<ThisError>(error_fcn);
   const std::vector<ThisError> errors{erf_casted};
   const auto result = gauss_newton_minimize(errors, init, config);
+
   std::cout << std::boolalpha << result.success << std::endl;
   std::cout << "soln : " << result.solution.transpose() << std::endl;
   std::cout << "res  : " << result.terminal_error.transpose() << std::endl;
 }
 
-using ThisError = ErrorFunction<IN_DIM, OUT_DIM>;
-void add_constraint(const double weight, const Eigen::Vector3d constraint_normal, Out<std::vector<ThisError>> errors) {
+TEST(GaussNewton, error_printouts_special) {
+  const VecNd<IN_DIM> init = VecNd<IN_DIM>(1.0, 2.0, 3.0);
+
+  const OptimizationConfiguration config;
+
+  using ThisError = ErrorFunction<IN_DIM, OUT_DIM>;
+  // const auto erf_casted = static_cast<ThisError>(pure_error_fcn);
+  // const std::vector<ThisError> errors{erf_casted};
+  const auto result =
+      gauss_newton_minimize(static_cast<ThisError>(pure_error_fcn), init, config);
+
+  std::cout << std::boolalpha << result.success << std::endl;
+  std::cout << "soln : " << result.solution.transpose() << std::endl;
+  std::cout << "res  : " << result.terminal_error.transpose() << std::endl;
+}
+/*
+using ThisError = ErrorFunctionDifferentials<IN_DIM, OUT_DIM>;
+void add_constraint(const double weight,
+                    const Eigen::Vector3d constraint_normal,
+                    Out<std::vector<ThisError>> errors) {
   const auto constraint = [constraint_normal](const InVec& x) {
     OutVec v = OutVec::Zero();
     v.tail<1>() = VecNd<1>(5.0 - constraint_normal.dot(x));
     return v;
   };
 
-  const ThisError constraint_with_jacobian = [weight, constraint](const InVec& x, ErrorJacobian* jac) {
+  const ThisError constraint_with_jacobian = [weight, constraint](const InVec& x,
+                                                                  ErrorJacobian* jac) {
     if (jac) {
       const auto J = numerical_jacobian<OUT_DIM>(x, constraint);
       *jac += (weight * J);
@@ -81,9 +101,11 @@ TEST(PenaltyMethodGaussNewton, constraints) {
     std::cout << "\n--" << std::endl;
     std::cout << "done : " << std::boolalpha << result.success << std::endl;
     std::cout << "soln : " << result.solution.transpose() << std::endl;
-    std::cout << "viol1 : " << errors.at(1)(result.solution, nullptr).transpose() << std::endl;
-    // std::cout << "viol2 : " << constraint_normal2.transpose() * result.solution << std::endl;
+    std::cout << "viol1 : " << errors.at(1)(result.solution, nullptr).transpose()
+              << std::endl;
+    // std::cout << "viol2 : " << constraint_normal2.transpose() * result.solution <<
+    // std::endl;
     std::cout << "res  : " << result.terminal_error.transpose() << std::endl;
   }
-}
+}*/
 }  // namespace numerics

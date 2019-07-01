@@ -2,13 +2,11 @@
 
 #include "eigen.hh"
 
-#include <iostream>
+#include "numerics/optimization/error_function.hh"
+
 #include <vector>
 
 namespace numerics {
-
-template <int dim_in, int dim_out>
-using ErrorFunction = std::function<VecNd<dim_out>(const VecNd<dim_in> &, MatNd<dim_out, dim_in> *)>;
 
 template <int dim_in, int dim_out>
 struct MinimizationResult {
@@ -25,9 +23,10 @@ struct OptimizationConfiguration {
 };
 
 template <int dim_in, int dim_out>
-MinimizationResult<dim_in, dim_out> gauss_newton_minimize(const std::vector<ErrorFunction<dim_in, dim_out>> &funcs,
-                                                          const VecNd<dim_in> &initialization,
-                                                          const OptimizationConfiguration &opt_cfg) {
+MinimizationResult<dim_in, dim_out> gauss_newton_minimize(
+    const std::vector<ErrorFunctionDifferentials<dim_in, dim_out>> &funcs,
+    const VecNd<dim_in> &initialization,
+    const OptimizationConfiguration &opt_cfg) {
   using OutVec = VecNd<dim_out>;
   using InVec = VecNd<dim_in>;
   using Information = MatNd<dim_in, dim_in>;
@@ -50,7 +49,8 @@ MinimizationResult<dim_in, dim_out> gauss_newton_minimize(const std::vector<Erro
       result.terminal_error += innovation;
     }
 
-    const Eigen::LLT<Information> llt_jtj(jtj);
+    const Eigen::LLT<Information> llt_jtj(opt_cfg.levenberg_mu * Information::Identity() +
+                                          jtj);
     if (llt_jtj.info() != Eigen::Success) {
       result.success = false;
       break;
@@ -67,4 +67,16 @@ MinimizationResult<dim_in, dim_out> gauss_newton_minimize(const std::vector<Erro
 
   return result;
 }
+
+template <int dim_in, int dim_out>
+MinimizationResult<dim_in, dim_out> gauss_newton_minimize(
+    const ErrorFunction<dim_in, dim_out> &func,
+    const VecNd<dim_in> &initialization,
+    const OptimizationConfiguration &opt_cfg = {}) {
+  const std::vector<ErrorFunctionDifferentials<dim_in, dim_out>> fncs = {
+      wrap_numerical_diff(func)};
+  const auto result = gauss_newton_minimize(fncs, initialization, opt_cfg);
+  return result;
 }
+
+}  // namespace numerics

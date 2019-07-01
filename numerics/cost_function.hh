@@ -14,5 +14,5 @@ using CostFunction =                                    //
                          detail::Vecx* const gradient,  // Optional
                          detail::Matx* const hessian    // Optional
                          )>;
-//
+
 }  // namespace numerics
