@@ -27,6 +27,12 @@ struct Image {
   mutable SmartTexture texture;
 };
 
+struct Point2d {
+  jcc::Vec2 point;
+  jcc::Vec4 color = jcc::Vec4(1.0, 1.0, 1.0, 0.8);
+  double size = 1.0;
+};
+
 class Ui2d final : public Primitive {
  public:
   Ui2d() = default;
@@ -43,6 +49,11 @@ class Ui2d final : public Primitive {
     back_buffer_.images.push_back({image, width_m});
   }
 
+  void add_point(const Point2d& point) {
+    const std::lock_guard<std::mutex> lk(draw_mutex_);
+    back_buffer_.points.push_back(point);
+  }
+
   void clear();
   void flush();
   void flip();
@@ -52,11 +63,13 @@ class Ui2d final : public Primitive {
     std::vector<PointerTarget> pointer_targets;
     std::vector<LinePlot2d> line_plots;
     std::vector<Image> images;
+    std::vector<Point2d> points;
 
     void clear() {
       pointer_targets.clear();
       line_plots.clear();
       images.clear();
+      points.clear();
     }
   };
 
