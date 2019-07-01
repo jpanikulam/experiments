@@ -13,9 +13,12 @@ struct Ray {
   Vec3 direction;
 
   Vec3 operator()(const double t) const {
+    return at(t);
+  }
+  Vec3 at(const double t) const {
     return origin + (t * direction);
   }
 };
 
 Ray operator*(const SE3& destination_from_source, const Ray& ray);
-}
+}  // namespace geometry
