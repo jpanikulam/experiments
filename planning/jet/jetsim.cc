@@ -14,7 +14,6 @@
 #include "viewer/primitives/image.hh"
 
 #include "estimation/vision/calibration.hh"
-#include "estimation/vision/fiducial_pose.hh"
 
 #include "util/environment.hh"
 
@@ -68,7 +67,7 @@ void put_camera_projection(viewer::SimpleGeometry& geo, const viewer::Camera& ca
   geo.add_line({bottom_right_ray(length), bottom_left_ray(length), red});
 }
 
-void draw_fidudical_detections(const cv::Mat localization_camera_image_rgb,
+/*void draw_fidudical_detections(const cv::Mat localization_camera_image_rgb,
                                const SE3 world_from_opengl_camera,
                                std::shared_ptr<viewer::SimpleGeometry> geo) {
   const auto opengl_camera_from_opencv_camera =
@@ -84,7 +83,8 @@ void draw_fidudical_detections(const cv::Mat localization_camera_image_rgb,
                    marker_detection_world_space.world_from_marker.translation(),
                    jcc::Vec4(1.0, 0.1, 0.7, 1), 5.0});
   }
-
+}
+*/
 }  // namespace
 
 void go() {
@@ -255,9 +255,8 @@ void go() {
 
     const cv::Mat camera_image_rgb = camera->extract_image();
 
-    draw_fidudical_detections(camera_image_rgb, world_from_jet * jet_from_camera,
-                              jet_geo);
-
+    // draw_fidudical_detections(camera_image_rgb, world_from_jet * jet_from_camera,
+    //                           jet_geo);
 
     if (SHOW_CAMERA) {
       cv::imshow("Localization Camera", camera_image_rgb);
@@ -291,8 +290,6 @@ void go() {
 
   cv::destroyAllWindows();
 }
-
-}  // namespace
 
 }  // namespace jet
 }  // namespace planning

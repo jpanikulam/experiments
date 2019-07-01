@@ -174,7 +174,7 @@ void draw_points(const std::vector<Point2d> points,
     glPointSize(pt.size);
     glBegin(GL_POINTS);
     glColor(pt.color);
-    glVertex3d(pt.point.x(), pt.point.y(), -0.0);
+    glVertex3d(pt.point.x(), 1.0 - pt.point.y(), -0.0);
     glEnd();
   }
   glPopAttrib();
