@@ -41,11 +41,7 @@ TEST(CameraModel, principal_point) {
   const ProjectionCoefficients coeffs{
       .fx = 1.0, .fy = 1.0, .cx = -1600 * 0.5, .cy = -1067 * 0.5};
 
-  constexpr double FX = 1.0;
-  constexpr double FY = 1.0;
-  constexpr double CX = -1600 * 0.5;
-  constexpr double CY = -1067 * 0.5;
-  const CameraModel model(FX, FY, CX, CY);
+  const CameraModel model(coeffs);
 
   const Vec3 pt(1600.0, 1067.0, 1.0);
   std::cout << model.project(pt).transpose() << std::endl;
