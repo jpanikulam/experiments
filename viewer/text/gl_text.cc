@@ -121,7 +121,6 @@ void write_string(const std::string& text,
   glPushMatrix();
   double row_length = 0;
   double row_height = 0;
-  glScaled(size * 1.0, -size * 1.0, size * 1.0);
   for (std::size_t i = 0u; i < text.size(); ++i) {
     const char c = text[i];
 
