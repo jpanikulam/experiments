@@ -67,6 +67,7 @@ PlotRange compute_plot_range(const LinePlot2d &line_plot) {
 void draw_lineplot(const LinePlot2d &line_plot,
                    const Projection &proj,
                    const CharacterLibrary &char_lib) {
+  glPushMatrix();
   glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 
   glTranslated(0.2, 0.2, 0.0);
@@ -135,13 +136,17 @@ void draw_lineplot(const LinePlot2d &line_plot,
   write_string(max_txt, char_lib, 0.5);
 
   glPopAttrib();
+  glPopMatrix();
 }
 
 void draw_image(const Image &image,
                 const Projection &proj,
                 const CharacterLibrary &char_lib) {
+  glPushMatrix();
   glEnable(GL_TEXTURE_2D);
   if (!image.texture.ready()) {
+    // glTranslated(0.0, 0.0, 0.5);
+    // glScaled(1.0, -1.0, 1.0);
     const double aspect_ratio = image.image.cols / static_cast<double>(image.image.rows);
     image.texture =
         SmartTexture(jcc::Vec2(image.width_m * 1.0, image.width_m * aspect_ratio));
@@ -152,6 +157,21 @@ void draw_image(const Image &image,
   image.texture.draw();
 
   glDisable(GL_TEXTURE_2D);
+  glPopMatrix();
+}
+
+void draw_points(const std::vector<Point2d> points,
+                 const Projection &proj,
+                 const CharacterLibrary &char_lib) {
+  glPushAttrib(GL_CURRENT_BIT);
+  glPointSize(3.0);
+  glBegin(GL_POINTS);
+  for (const auto &pt : points) {
+    glColor(pt.color);
+    glVertex3d(pt.point.x(), pt.point.y(), -0.0);
+  }
+  glEnd();
+  glPopAttrib();
 }
 }  // namespace
 
@@ -215,6 +235,8 @@ void Ui2d::draw() const {
     draw_lineplot(line_plot, proj, char_lib_);
   }
 
+  draw_points(front_buffer_.points, proj, char_lib_);
+
   for (const auto &image : front_buffer_.images) {
     draw_image(image, proj, char_lib_);
   }
@@ -225,4 +247,4 @@ void Ui2d::draw() const {
   glPopMatrix();
 }
 
-}  // namespace viewer
+}  // namespace
