@@ -18,7 +18,7 @@ using Vec6 = VecNd<6>;
 
 BootstrapResult compute_nonmetric_pose(const std::vector<Vec2>& image_points_a,
                                        const std::vector<Vec2>& image_points_b,
-                                       const CameraModel&       camera_model,
+                                       const estimation::CameraModel&       camera_model,
                                        const SE3&               initial_view_b_from_a) {
   // Primer /////////////////////////////////////////////////////////////////////////////////////
   // To do this, we must assume a scene scale, and then simultaneously estimate *all* of the structure parameters, and

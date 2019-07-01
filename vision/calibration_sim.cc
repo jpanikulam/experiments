@@ -26,7 +26,7 @@ constexpr double DISTANCE = 500.0;
 
 namespace slam {
 
-std::vector<Vec2> view_object_from_pose(const CameraModel&       cam_model,
+std::vector<Vec2> view_object_from_pose(const estimation::CameraModel&       cam_model,
                                         const std::vector<Vec3>& points_object_frame,
                                         const SE3&               camera_from_object) {
   std::vector<Vec2> projected_points(points_object_frame.size());
@@ -60,7 +60,7 @@ std::vector<Vec32i> compute_orb_features(const cv::Mat& image, Out<std::vector<c
   return eigenize_descriptors(descriptors);
 }
 
-void estimate_camera_pose(const CameraModel&       model,
+void estimate_camera_pose(const estimation::CameraModel&       model,
                           const std::vector<Vec2>& observed_pts,
                           const std::vector<Vec3>& calibration_pts) {
   if (observed_pts.size() < 5u) {
@@ -95,7 +95,7 @@ void simulate_views(const std::vector<cv::KeyPoint>& calibration_key_points) {
   constexpr double  FY = 1067.0;
   constexpr double  CX = -1600 * 0.5;
   constexpr double  CY = -1067 * 0.5;
-  const CameraModel cam_model(FX, FY, CX, CY);
+  const estimation::CameraModel cam_model(FX, FY, CX, CY);
 
   // Simulate a view
   std::vector<Vec3> object_points;

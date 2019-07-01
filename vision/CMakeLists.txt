@@ -9,7 +9,6 @@ add_library(features features.cc)
 target_link_libraries(features ${OpenCV_LIBS})
 add_test(features_test features_test.cc features ${OpenCV_LIBS})
 
-add_test(camera_model_test camera_model_test.cc ${OpenCV_LIBS})
 add_test(robust_estimator_test robust_estimator_test.cc "")
 
 add_library(visualization visualization.cc)

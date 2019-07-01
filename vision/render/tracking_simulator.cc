@@ -6,7 +6,7 @@
 #include "viewer/window.hh"
 
 #include "vision/block_transform.hh"
-#include "vision/camera_model.hh"
+#include "estimation/calibration/camera_model.hh"
 #include "vision/features.hh"
 #include "vision/render/render_from_pose.hh"
 
@@ -103,7 +103,7 @@ void run() {
   constexpr double  FY = 1067.0;
   constexpr double  CX = 0.0;
   constexpr double  CY = 0.0;
-  const CameraModel cam_model(FX, FY, CX, CY);
+  const estimation::CameraModel cam_model(FX, FY, CX, CY);
 
   for (int k = 1; k < 45; ++k) {
     SE3 image_from_camera;

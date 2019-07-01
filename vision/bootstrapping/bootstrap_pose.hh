@@ -7,7 +7,7 @@
 #include "out.hh"
 #include "sophus.hh"
 
-#include "vision/camera_model.hh"
+#include "estimation/calibration/camera_model.hh"
 
 namespace slam {
 
@@ -26,6 +26,6 @@ struct BootstrapResult {
 // image_points_a and image_points_b must be of the same size
 BootstrapResult compute_nonmetric_pose(const std::vector<Eigen::Vector2d>& image_points_a,
                                        const std::vector<Eigen::Vector2d>& image_points_b,
-                                       const CameraModel&                  camera_model,
+                                       const estimation::CameraModel&                  camera_model,
                                        const SE3&                          initial_view_b_from_a);
 }

@@ -47,14 +47,14 @@ class ImageAligner {
 
   // Solve pnp
   // todo: cool kids solve p3p in closed form
-  ImageAlignmentResult perspective_npoint(const CameraModel&         cam_model,
+  ImageAlignmentResult perspective_npoint(const estimation::CameraModel&         cam_model,
                                           const SE3&                 initial_camera_from_object,
                                           const std::vector<Vec2>&   observed,
                                           const std::vector<Vec3>&   object,
                                           const RobustEstimator&     estimator,
                                           Out<ImageAlignmentContext> ctx) const;
 
-  ImageAlignmentResult standard_align(const CameraModel&       cam_model,
+  ImageAlignmentResult standard_align(const estimation::CameraModel&       cam_model,
                                       const SE3&               initial_camera_from_object,
                                       const std::vector<Vec2>& observed,
                                       const std::vector<Vec3>& object) const;

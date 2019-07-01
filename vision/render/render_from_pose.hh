@@ -3,7 +3,7 @@
 #include "out.hh"
 #include "sophus.hh"
 
-#include "vision/camera_model.hh"
+#include "estimation/calibration/camera_model.hh"
 
 #include "eigen.hh"
 #include <opencv2/opencv.hpp>
@@ -19,6 +19,6 @@ namespace render {
 // @param cam_model The camera model
 // @param image_from_camera A member of SE(3) taking the camera from to the image frame
 // @returns The rendered image
-cv::Mat render_from_pose(const cv::Mat& ref_image, const CameraModel& cam_model, const SE3& image_from_camera);
+cv::Mat render_from_pose(const cv::Mat& ref_image, const estimation::CameraModel& cam_model, const SE3& image_from_camera);
 }
 }

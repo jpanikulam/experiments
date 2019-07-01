@@ -6,7 +6,7 @@
 
 namespace slam {
 
-ImageAlignmentResult ImageAligner::perspective_npoint(const CameraModel&         cam_model,
+ImageAlignmentResult ImageAligner::perspective_npoint(const estimation::CameraModel&         cam_model,
                                                       const SE3&                 initial_camera_from_object,
                                                       const std::vector<Vec2>&   observed,
                                                       const std::vector<Vec3>&   object,
@@ -84,7 +84,7 @@ ImageAlignmentResult ImageAligner::perspective_npoint(const CameraModel&        
   return result;
 }
 
-ImageAlignmentResult ImageAligner::standard_align(const CameraModel&       cam_model,
+ImageAlignmentResult ImageAligner::standard_align(const estimation::CameraModel&       cam_model,
                                                   const SE3&               initial_camera_from_object,
                                                   const std::vector<Vec2>& observed,
                                                   const std::vector<Vec3>& object) const {

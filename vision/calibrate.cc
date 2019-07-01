@@ -104,7 +104,7 @@ void try_align(const std::vector<cv::KeyPoint>&   observed_pts,
   // constexpr double CX = 0.0;
   // constexpr double CY = 0.0;
 
-  const CameraModel model(FX, FY, CX, CY);
+  const estimation::CameraModel model(FX, FY, CX, CY);
 
   if (observed_pts.size() < 5u) {
     return;

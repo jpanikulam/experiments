@@ -5,7 +5,7 @@
 #include "out.hh"
 #include "sophus.hh"
 
-#include "vision/camera_model.hh"
+#include "estimation/calibration/camera_model.hh"
 
 #include "eigen.hh"
 #include <opencv2/opencv.hpp>
@@ -24,9 +24,9 @@ class RenderFromPoseTest : public ::testing::Test {
     constexpr double CX = 0.0;
     constexpr double CY = 0.0;
 
-    cam_model_ = CameraModel(FX, FY, CX, CY);
+    cam_model_ = estimation::CameraModel(FX, FY, CX, CY);
   }
-  CameraModel cam_model_ = CameraModel(Eigen::Matrix3d::Identity());
+  estimation::CameraModel cam_model_ = estimation::CameraModel(Eigen::Matrix3d::Identity());
 };
 
 TEST_F(RenderFromPoseTest, render_from_pose) {

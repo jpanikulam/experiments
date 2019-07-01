@@ -31,7 +31,7 @@ uint8_t sample_image(const cv::Mat& ref_image, const Vec2& image_point) {
 }
 }
 
-cv::Mat render_from_pose(const cv::Mat& ref_image, const CameraModel& cam_model, const SE3& image_from_camera) {
+cv::Mat render_from_pose(const cv::Mat& ref_image, const estimation::CameraModel& cam_model, const SE3& image_from_camera) {
   cv::Mat rendered_image(ref_image.size(), ref_image.type());
 
   const Vec3   image_normal_camera_frame = image_from_camera.so3().inverse() * Vec3::UnitZ();

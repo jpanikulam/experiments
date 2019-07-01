@@ -23,7 +23,7 @@ TEST(ImageAlign, do_nothing_if_aligned) {
   constexpr double  FY = 10.0;
   constexpr double  CX = 0.0;
   constexpr double  CY = 0.0;
-  const CameraModel model(FX, FY, CX, CY);
+  const estimation::CameraModel model(FX, FY, CX, CY);
 
   const SE3 camera_from_object(SO3::exp(Vec3(0.0, 0.0, 0.0)), Vec3(0.0, 0.0, 0.0));
 
@@ -56,7 +56,7 @@ TEST(ImageAlign, do_something_if_unaligned) {
   constexpr double  FY = 10.0;
   constexpr double  CX = 0.0;
   constexpr double  CY = 0.0;
-  const CameraModel model(FX, FY, CX, CY);
+  const estimation::CameraModel model(FX, FY, CX, CY);
 
   const SE3 camera_from_object(SO3::exp(Vec3(0.3, 0.0, 0.1)), Vec3(1.0, 0.0, 0.1));
 
@@ -98,7 +98,7 @@ TEST(ImageAlign, align_with_outliers) {
   constexpr double  FY = 10.0;
   constexpr double  CX = 0.0;
   constexpr double  CY = 0.0;
-  const CameraModel model(FX, FY, CX, CY);
+  const estimation::CameraModel model(FX, FY, CX, CY);
 
   const SE3 camera_from_object(SO3::exp(Vec3(0.3, 0.0, 0.1)), Vec3(1.0, 0.0, 0.1));
 

@@ -13,7 +13,7 @@ class BootstrapPoseTest : public ::testing::Test {
     constexpr double FY = 100;
     constexpr double CX = 50.0;
     constexpr double CY = 50.0;
-    cam_model_          = CameraModel(FX, FY, CX, CY);
+    cam_model_          = estimation::CameraModel(FX, FY, CX, CY);
   }
 
   std::vector<Vec3> generate_object(const int num_pts) {
@@ -34,7 +34,7 @@ class BootstrapPoseTest : public ::testing::Test {
     return projected_points;
   }
 
-  CameraModel cam_model_ = CameraModel(Eigen::Matrix3d::Identity());
+  estimation::CameraModel cam_model_ = estimation::CameraModel(Eigen::Matrix3d::Identity());
 };
 
 TEST_F(BootstrapPoseTest, can_bootstrap) {
