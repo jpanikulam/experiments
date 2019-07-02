@@ -6,7 +6,6 @@
 
 namespace estimation {
 namespace calibration {
-//
 
 template <typename MeasurementType>
 struct TimedMeasurement {

@@ -1,6 +1,7 @@
 #include "estimation/calibration/estimate_gravity_direction.hh"
 
-#include "geometry/spatial/time_interpolator.hh"
+#include "estimation/sensors/make_interpolator.hh"
+
 #include "numerics/compute_convenient_statistics.hh"
 #include "numerics/compute_mean.hh"
 
@@ -10,19 +11,6 @@ namespace estimation {
 namespace calibration {
 
 namespace {
-geometry::spatial::TimeInterpolator make_accel_interpolator(
-    const std::vector<TimedMeasurement<jet_filter::AccelMeasurement>>& accel_meas,
-    const ImuModel& imu_model) {
-  std::vector<geometry::spatial::TimeControlPoint> points;
-
-  for (const auto& accel : accel_meas) {
-    const jcc::Vec3 corrected_accel =
-        imu_model.apply_calibration(accel.measurement.observed_acceleration);
-    points.push_back({accel.timestamp, corrected_accel});
-  }
-  const geometry::spatial::TimeInterpolator interp(points);
-  return interp;
-}
 
 jcc::Vec3 compute_biggest_difference(const std::vector<jcc::Vec3>& vecs) {
   double biggest_cross = 0.0;
