@@ -49,13 +49,30 @@ NonlinearCameraModel::NonlinearCameraModel(const ProjectionCoefficients& proj)
     : linear_model_(proj), proj_(proj) {
   JASSERT_GT(proj.fx, 0.0, "Focal length must be positive");
   JASSERT_GT(proj.fy, 0.0, "Focal length must be positive");
+  JASSERT_GT(proj.cols, 0, "Cols must be positive");
+  JASSERT_GT(proj.rows, 0, "Rows must be positive");
 }
 
-jcc::Vec2 NonlinearCameraModel::project(const jcc::Vec3& camera_point) const {
-  return apply_projection_and_distortion(proj_, camera_point);
+jcc::Vec2 NonlinearCameraModel::project_unchecked(const jcc::Vec3& camera_point) const {
+  const jcc::Vec2 projection = apply_projection_and_distortion(proj_, camera_point);
+  return projection;
 }
 
-jcc::Optional<geometry::Ray> NonlinearCameraModel::unproject(const jcc::Vec2& image_point) const {
+jcc::Optional<jcc::Vec2> NonlinearCameraModel::project(
+    const jcc::Vec3& camera_point) const {
+  const jcc::Vec2 projection = apply_projection_and_distortion(proj_, camera_point);
+
+  const bool in_image = (projection.x() >= 0 && projection.x() <= proj_.cols) &&  //
+                        (projection.y() >= 0 && projection.y() <= proj_.rows);
+  if (in_image) {
+    return projection;
+  } else {
+    return {};
+  }
+}
+
+jcc::Optional<geometry::Ray> NonlinearCameraModel::unproject(
+    const jcc::Vec2& image_point) const {
   const jcc::Vec2 focal_scaling = jcc::Vec2(proj_.fx, proj_.fy);
   const jcc::Vec2 principal_point(proj_.cx, proj_.cy);
 
@@ -78,9 +95,16 @@ jcc::Optional<geometry::Ray> NonlinearCameraModel::unproject(const jcc::Vec2& im
     const geometry::Ray ray{jcc::Vec3::Zero(), world_point.normalized()};
     return {ray};
   } else {
-    std::cout << "Error:" << soln.terminal_error.norm() << std::endl;
     return {};
   }
+}
+
+int NonlinearCameraModel::rows() const {
+  return proj_.rows;
+}
+
+int NonlinearCameraModel::cols() const {
+  return proj_.cols;
 }
 
 }  // namespace estimation

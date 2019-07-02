@@ -24,22 +24,8 @@ struct ProjectionCoefficients {
   double k2;
   double k3;
 
-  static constexpr int DIM = 9;
-  VecNd<DIM> to_vector() const {
-    return (VecNd<DIM>() << fx, fy, cx, cy, p1, p2, k1, k2, k3).finished();
-  }
-
-  static ProjectionCoefficients from_vector(const VecNd<DIM>& vec) {
-    return ProjectionCoefficients{.fx = vec(0),
-                                  .fy = vec(1),
-                                  .cx = vec(2),
-                                  .cy = vec(3),
-                                  .p1 = vec(4),
-                                  .p2 = vec(5),
-                                  .k1 = vec(6),
-                                  .k2 = vec(7),
-                                  .k3 = vec(8)};
-  }
+  int rows;
+  int cols;
 };
 
 }  // namespace estimation
