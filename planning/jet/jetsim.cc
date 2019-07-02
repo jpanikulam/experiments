@@ -23,7 +23,7 @@
 namespace planning {
 namespace jet {
 
-constexpr bool SHOW_CAMERA = true;
+constexpr bool SHOW_CAMERA = false;
 constexpr bool SHOW_CAMERA_PROJECTION = true;
 constexpr bool WRITE_IMAGES = false;
 constexpr bool PRINT_STATE = true;
