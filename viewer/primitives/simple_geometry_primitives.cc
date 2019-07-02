@@ -12,9 +12,6 @@ using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
 
 void draw_axes(const Axes &axes) {
-  // glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
-
-  // glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glTransform(axes.world_from_axes);
   glScaled(axes.scale, axes.scale, axes.scale);
@@ -45,7 +42,6 @@ void draw_axes(const Axes &axes) {
 
   glLineStipple(1.0, 0xFFFF);
   glPopMatrix();
-  // glPopAttrib();
 
   // if (axes.dotted) {
   // glDisable(GL_LINE_STIPPLE);
@@ -53,8 +49,6 @@ void draw_axes(const Axes &axes) {
 }
 
 void draw_lines(const std::vector<Line> &lines) {
-  // glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
-
   for (const auto &line : lines) {
     glLineWidth(line.width);
     glColor(line.color);
@@ -65,15 +59,12 @@ void draw_lines(const std::vector<Line> &lines) {
     }
     glEnd();
   }
-
-  // glPopAttrib();
 }
 
 void draw_polygon(const Polygon &polygon) {
   const int n_points = static_cast<int>(polygon.points.size());
   const Eigen::Vector3d offset(0.0, 0.0, polygon.height);
 
-  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
   glLineWidth(polygon.width);
   // Draw the height of the poly
   /*
@@ -127,8 +118,6 @@ void draw_polygon(const Polygon &polygon) {
     }
     glEnd();
   }
-
-  glPopAttrib();
 }
 
 void draw_points(const Points &points) {

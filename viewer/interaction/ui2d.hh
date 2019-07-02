@@ -37,7 +37,7 @@ struct Line2d {
   jcc::Vec2 start;
   jcc::Vec2 end;
   jcc::Vec4 color = jcc::Vec4(1.0, 1.0, 1.0, 0.8);
-  double size = 1.0;
+  double line_width = 1.0;
 };
 
 struct GridMesh {

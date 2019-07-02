@@ -179,6 +179,19 @@ void draw_points(const std::vector<Point2d> points,
   }
 }
 
+void draw_lines(const std::vector<Line2d> &lines,
+                const Projection &proj,
+                const CharacterLibrary &char_lib) {
+  for (const auto &line : lines) {
+    glLineWidth(line.line_width);
+    glColor(line.color);
+    glBegin(GL_LINES);
+    glVertex3d(line.start.x(), 1.0 - line.start.y(), -0.2);
+    glVertex3d(line.end.x(), 1.0 - line.end.y(), -0.2);
+    glEnd();
+  }
+}
+
 void draw_grid_mesh(const GridMesh &mesh) {
   const auto &pts = mesh.vertices;
   const int width = mesh.width;
@@ -271,6 +284,7 @@ void Ui2d::flush() {
   insert(front_buffer_.images, back_buffer_.images);
   insert(front_buffer_.points, back_buffer_.points);
   insert(front_buffer_.grid_meshes, back_buffer_.grid_meshes);
+  insert(front_buffer_.lines, back_buffer_.lines);
 }
 
 void Ui2d::draw() const {
@@ -302,6 +316,7 @@ void Ui2d::draw() const {
   }
 
   draw_points(front_buffer_.points, proj, char_lib_);
+  draw_lines(front_buffer_.lines, proj, char_lib_);
 
   for (const auto &image : front_buffer_.images) {
     draw_image(image, proj, char_lib_);
@@ -310,6 +325,7 @@ void Ui2d::draw() const {
   for (const auto &mesh : front_buffer_.grid_meshes) {
     draw_grid_mesh(mesh);
   }
+
 
   glPopMatrix();
 
