@@ -12,9 +12,9 @@ using Vec3 = Eigen::Vector3d;
 using Vec4 = Eigen::Vector4d;
 
 void draw_axes(const Axes &axes) {
-  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
+  // glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 
-  glMatrixMode(GL_MODELVIEW);
+  // glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glTransform(axes.world_from_axes);
   glScaled(axes.scale, axes.scale, axes.scale);
@@ -43,28 +43,30 @@ void draw_axes(const Axes &axes) {
   glVertex(Vec3::Zero().eval());
   glEnd();
 
+  glLineStipple(1.0, 0xFFFF);
   glPopMatrix();
-  glPopAttrib();
+  // glPopAttrib();
 
   // if (axes.dotted) {
   // glDisable(GL_LINE_STIPPLE);
   // }
-  glLineStipple(1.0, 0xFFFF);
 }
 
 void draw_lines(const std::vector<Line> &lines) {
-  glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
+  // glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 
   for (const auto &line : lines) {
     glLineWidth(line.width);
     glColor(line.color);
     glBegin(GL_LINES);
-    glVertex(line.start);
-    glVertex(line.end);
+    {
+      glVertex(line.start);
+      glVertex(line.end);
+    }
     glEnd();
   }
 
-  glPopAttrib();
+  // glPopAttrib();
 }
 
 void draw_polygon(const Polygon &polygon) {
@@ -277,7 +279,7 @@ void draw_plane_grid(const Plane &plane) {
 }
 
 void draw_point(const Point &point) {
-  glPushAttrib(GL_POINT_BIT | GL_CURRENT_BIT);
+  // glPushAttrib(GL_POINT_BIT | GL_CURRENT_BIT);
   glPointSize(point.size);
   glColor(point.color);
 
@@ -285,7 +287,7 @@ void draw_point(const Point &point) {
   glVertex(point.point);
   glEnd();
 
-  glPopAttrib();
+  // glPopAttrib();
 }
 
 void draw_trimesh(const TriMesh &trimesh) {

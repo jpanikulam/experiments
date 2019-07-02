@@ -71,7 +71,8 @@ void draw_lineplot(const LinePlot2d &line_plot,
   glPushMatrix();
   glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 
-  glTranslated(0.2, 0.2, 0.0);
+  constexpr double X_OFFSET = 0.2;
+  glTranslated(X_OFFSET, 0.2, 0.0);
 
   const double aspect =
       static_cast<double>(proj.viewport_size().width) / proj.viewport_size().height;
@@ -81,7 +82,7 @@ void draw_lineplot(const LinePlot2d &line_plot,
   const double field_y_max = 0.5;
   const double field_y_min = -0.5;
   const double field_x_min = 0.0;
-  const double field_x_max = aspect;
+  const double field_x_max = (aspect - X_OFFSET);
 
   glVertex3d(field_x_min, field_y_min, -0.9);
   glVertex3d(field_x_max, field_y_min, -0.9);
@@ -169,19 +170,16 @@ void draw_image(const Image &image,
 void draw_points(const std::vector<Point2d> points,
                  const Projection &proj,
                  const CharacterLibrary &char_lib) {
-  glPushAttrib(GL_CURRENT_BIT);
   for (const auto &pt : points) {
     glPointSize(pt.size);
     glBegin(GL_POINTS);
     glColor(pt.color);
-    glVertex3d(pt.point.x(), 1.0 - pt.point.y(), -0.0);
+    glVertex3d(pt.point.x(), 1.0 - pt.point.y(), -0.1);
     glEnd();
   }
-  glPopAttrib();
 }
 
 void draw_grid_mesh(const GridMesh &mesh) {
-  glPushAttrib(GL_CURRENT_BIT);
   const auto &pts = mesh.vertices;
   const int width = mesh.width;
   constexpr double Z_DIST = -0.1;
@@ -200,10 +198,10 @@ void draw_grid_mesh(const GridMesh &mesh) {
         const int br = c + 1 + ((r + 1) * cols_per_row);
         const int bl = c + ((r + 1) * cols_per_row);
 
-        glVertex3d(pts[tl].x(), pts[tl].y(), Z_DIST_OUTLINE);
-        glVertex3d(pts[tr].x(), pts[tr].y(), Z_DIST_OUTLINE);
-        glVertex3d(pts[br].x(), pts[br].y(), Z_DIST_OUTLINE);
-        glVertex3d(pts[bl].x(), pts[bl].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[tl].x(), pts[tl].y(), Z_DIST);
+        glVertex3d(pts[tr].x(), pts[tr].y(), Z_DIST);
+        glVertex3d(pts[br].x(), pts[br].y(), Z_DIST);
+        glVertex3d(pts[bl].x(), pts[bl].y(), Z_DIST);
       }
     }
     glEnd();
@@ -229,8 +227,6 @@ void draw_grid_mesh(const GridMesh &mesh) {
       }
     }
   }
-
-  glPopAttrib();
 }
 
 }  // namespace
