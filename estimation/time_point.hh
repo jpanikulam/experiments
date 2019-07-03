@@ -21,6 +21,12 @@ constexpr double to_seconds(const TimeDuration& t) {
   return microseconds * SECONDS_PER_MICROSECOND;
 }
 
+constexpr TimePoint average(const TimePoint& t0, const TimePoint& t1) {
+  const double diff = to_seconds(t1 - t0);
+  const auto t_avg = t0 + to_duration(diff * 0.5);
+  return t_avg;
+}
+
 }  // namespace estimation
 
 namespace jcc {

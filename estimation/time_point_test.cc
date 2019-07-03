@@ -41,4 +41,16 @@ TEST(TimePointTest, sortable) {
   EXPECT_DOUBLE_EQ(to_seconds(heap.pop() - start), 0.1);
 }
 
+TEST(TimePointTest, average) {
+
+  const TimePoint t0 = TimePoint{};
+  const TimePoint a = (t0 + to_duration(0.5));
+  const TimePoint b = (t0 + to_duration(1.5));
+
+  const auto avg1 = average(a, b);
+  const auto avg2 = average(b, a);
+  EXPECT_EQ(avg1, avg2);
+  EXPECT_EQ(avg1, t0 + to_duration(1.0));
+}
+
 }  // namespace estimation
