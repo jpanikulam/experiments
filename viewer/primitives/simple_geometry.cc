@@ -178,6 +178,7 @@ void SimpleGeometry::add_box(const AxisAlignedBox &box) {
 
 void SimpleGeometry::draw() const {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
+  glMatrixMode(GL_MODELVIEW);
 
   for (const auto &axes : front_buffer_.axes) {
     draw_axes(axes);

@@ -136,9 +136,9 @@ void write_string(const std::string& text,
     }
 
     const auto character = lib.at(c);
-    glTranslated(character.bearing.x(), -character.bearing.y(), 0.0);
+    glTranslated(character.bearing.x(), -(character.dimensions.y() - character.bearing.y()), 0.0);
     character.texture.draw();
-    glTranslated(character.advance - character.bearing.x(), character.bearing.y(), 0.0);
+    glTranslated(character.advance - character.bearing.x(), (character.dimensions.y() - character.bearing.y()), 0.0);
     row_length += character.advance;
     row_height = std::max(row_height, character.dimensions.y());
   }
