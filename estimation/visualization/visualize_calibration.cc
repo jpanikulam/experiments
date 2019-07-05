@@ -163,14 +163,14 @@ void visualize_imu_data_with_intrinsics(
   viewer::PlotRange range;
   range.x_min = 0.0;
   range.x_max = to_seconds(measurements.last() - first);
-  range.y_min = -1.5;
-  range.y_max = 1.5;
+  // range.y_min = -1.5;
+  // range.y_max = 1.5;
 
   builder.set_range(range);
 
-  auto& imu_x = builder.make_subplot("imu_x", jcc::Vec4(1.0, 0.0, 0.0, 0.0), 0.5);
-  auto& imu_y = builder.make_subplot("imu_y", jcc::Vec4(0.0, 1.0, 0.0, 0.0), 0.5);
-  auto& imu_z = builder.make_subplot("imu_z", jcc::Vec4(0.0, 0.0, 1.0, 0.0), 0.5);
+  auto& imu_x = builder.make_subplot("imu_x", jcc::Vec4(1.0, 0.0, 0.0, 1.0), 0.5);
+  auto& imu_y = builder.make_subplot("imu_y", jcc::Vec4(0.0, 1.0, 0.0, 1.0), 0.5);
+  auto& imu_z = builder.make_subplot("imu_z", jcc::Vec4(0.0, 0.0, 1.0, 1.0), 0.5);
   auto& norm_uncorrected =
       builder.make_subplot("norm_uncorrected", jcc::Vec4(0.0, 1.0, 1.0, 0.8), 0.5);
   auto& norm = builder.make_subplot("norm", jcc::Vec4(0.0, 1.0, 1.0, 0.8), 0.5);
@@ -179,7 +179,7 @@ void visualize_imu_data_with_intrinsics(
     const jcc::Vec3 observed_acceleration = accel_meas.measurement.observed_acceleration;
     geo->add_point({observed_acceleration, jcc::Vec4(1.0, 0.1, 0.1, 1.0)});
 
-    const jcc::Vec3 corrected = imu_model.correct_measured_mag(observed_acceleration);
+    const jcc::Vec3 corrected = imu_model.correct_measured_accel(observed_acceleration);
     geo->add_point({corrected, jcc::Vec4(0.1, 1.0, 0.1, 1.0)});
 
     const double t = to_seconds(accel_meas.timestamp - first);
@@ -526,10 +526,10 @@ OptimizationVisitor create_gyro_orientation_optimization_visitor(
       if (average_error > 0.5) {
         jcc::Warning() << "[Camera->IMU] Average error: " << average_error << std::endl;
       } else {
-        jcc::Success() << "[Camera->IMU] Aligned Successfully" << std::endl;
+        jcc::Success() << "[Camera->IMU] Aligned Successfully, average error:"
+                       << average_error << std::endl;
       }
     }
-    std::cout << "Error: " << average_error << std::endl;
     view->spin_until_step();
     ui2d->clear();
   };
