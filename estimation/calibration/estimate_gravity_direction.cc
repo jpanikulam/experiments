@@ -53,7 +53,7 @@ geometry::UnitVector3 estimate_from_bracket(const CalibrationMeasurements& measu
   for (const auto& accel : measurements.accel_meas) {
     if (accel.timestamp >= bracket.start && accel.timestamp <= bracket.end) {
       const jcc::Vec3 corrected_accel =
-          imu_model.apply_calibration(accel.measurement.observed_acceleration);
+          imu_model.correct_measured_accel(accel.measurement.observed_acceleration);
 
       if (std::abs(corrected_accel.norm() - G_MPSS) > cfg.max_g_defect) {
         continue;

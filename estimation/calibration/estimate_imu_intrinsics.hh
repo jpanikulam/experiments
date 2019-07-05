@@ -4,6 +4,8 @@
 // For parametric ellipse
 #include "geometry/shapes/ellipse.hh"
 
+#include "estimation/calibration/calibration_dataset.hh"
+
 namespace estimation {
 namespace calibration {
 
@@ -25,13 +27,15 @@ class ImuModel {
   }
 
   // Take an IMU observation, and transform it into a true acceleration
-  jcc::Vec3 apply_calibration(const jcc::Vec3& observed_accel) const;
+  jcc::Vec3 correct_measured_accel(const jcc::Vec3& observed_accel) const;
+
+  jcc::Vec3 correct_measured_mag(const jcc::Vec3& raw_measurement) const;
 
  private:
   ImuIntrinsics intrinsics_;
 };
 
-ImuModel estimate_imu_intrinsics(const std::vector<jcc::Vec3>& measurements);
+ImuModel estimate_imu_intrinsics(const ImuCalibrationMeasurements& imu_meas);
 
 }  // namespace calibration
 }  // namespace estimation
