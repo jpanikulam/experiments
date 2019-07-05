@@ -3,6 +3,7 @@
 #include "logging/assert.hh"
 
 #include "eigen.hh"
+#include "sophus.hh"
 
 namespace geometry {
 
@@ -10,7 +11,7 @@ template <int N>
 class UnitVector {
  public:
   using Vec = VecNd<N>;
-  // We are using dependent types *partly* to be performance
+  // We are using dependent types *partly* to be performant
   // So this is default uninitialized
   UnitVector() = default;
 
@@ -22,7 +23,6 @@ class UnitVector {
     static_assert(N == 2);
     return UnitVector<2>::bless(VecNd<2>(std::cos(theta), std::sin(theta)));
   }
-
 
   // For now, the below "sinful" operations shall remain in cold storage
   /*
@@ -37,8 +37,17 @@ class UnitVector {
   }
   */
 
+  // TODO deprecate
   const Vec& vector() const {
     return v_;
+  }
+
+  const Vec& vec() const {
+    return v_;
+  }
+
+  const double project(const Vec& v) {
+    return v_.dot(v);
   }
 
   static UnitVector normalize(const Vec& v) {
@@ -57,11 +66,31 @@ class UnitVector {
     return vv;
   }
 
+  static UnitVector UnitX() {
+    return UnitVector(Vec::UnitX());
+  }
+  static UnitVector UnitY() {
+    return UnitVector(Vec::UnitY());
+  }
+  static UnitVector UnitZ() {
+    return UnitVector(Vec::UnitZ());
+  }
+
  private:
   Vec v_;
 };
 
 using UnitVector3 = UnitVector<3>;
+inline UnitVector3 operator*(const SE3& destination_from_source, const UnitVector3& source) {
+  return UnitVector3::bless(destination_from_source.so3() * source.vec());
+}
+
+using UnitVector3 = UnitVector<3>;
+inline UnitVector3 operator*(const SO3& destination_from_source, const UnitVector3& source) {
+  return UnitVector3::bless(destination_from_source * source.vec());
+}
+
+using Unit3 = UnitVector3;
 using UnitVector2 = UnitVector<2>;
 
 }  // namespace geometry
