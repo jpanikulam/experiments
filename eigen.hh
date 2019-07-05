@@ -26,4 +26,8 @@ using Vec4 = Eigen::Vector4d;
 using Vec5 = VecNd<5>;
 using Vec6 = VecNd<6>;
 
+using Vec2i = Eigen::Matrix<int, 2, 1>;
+using Vec3i = Eigen::Matrix<int, 3, 1>;
+using Vec4i = Eigen::Matrix<int, 4, 1>;
+
 }  // namespace jcc
