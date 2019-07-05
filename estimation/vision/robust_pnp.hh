@@ -18,7 +18,7 @@ struct SolvePnpResult {
 struct ObjectImageAssociations {
   jcc::Vec2 point_image;
   jcc::Vec3 point_object_frame;
-}
+};
 
 using SolvePnpVisitor = std::function<void(const SolvePnpResult& result)>;
 SolvePnpVisitor make_pnp_visitor(const estimation::NonlinearCameraModel& model,
