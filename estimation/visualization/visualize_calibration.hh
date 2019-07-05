@@ -11,61 +11,55 @@
 #include "viewer/interaction/ui2d.hh"
 #include "viewer/primitives/simple_geometry.hh"
 
-namespace jet {
-namespace filtering {
+namespace estimation {
 
-void visualize_mag_data(
-    const estimation::calibration::ImuModel& imu_model,
-    const estimation::calibration::ImuCalibrationMeasurements& measurements,
-    const std::shared_ptr<viewer::SimpleGeometry> geo,
-    const std::shared_ptr<viewer::Ui2d> ui2d);
+void visualize_mag_data(const calibration::ImuModel& imu_model,
+                        const calibration::ImuCalibrationMeasurements& measurements,
+                        const std::shared_ptr<viewer::SimpleGeometry> geo,
+                        const std::shared_ptr<viewer::Ui2d> ui2d);
 
-void visualize_gyro_data(
-    const estimation::calibration::ImuModel& imu_model,
-    const estimation::calibration::ImuCalibrationMeasurements& measurements,
-    const std::shared_ptr<viewer::SimpleGeometry> geo,
-    const std::shared_ptr<viewer::Ui2d> ui2d);
+void visualize_gyro_data(const calibration::ImuModel& imu_model,
+                         const calibration::ImuCalibrationMeasurements& measurements,
+                         const std::shared_ptr<viewer::SimpleGeometry> geo,
+                         const std::shared_ptr<viewer::Ui2d> ui2d);
 
 void visualize_fwd_difference_angular(
-    const estimation::calibration::CalibrationMeasurements& measurements,
+    const calibration::CalibrationMeasurements& measurements,
     const std::shared_ptr<viewer::SimpleGeometry> geo,
     const std::shared_ptr<viewer::Ui2d> ui2d);
 
 void visualize_imu_data_with_intrinsics(
-    const estimation::calibration::ImuModel& imu_model,
-    const estimation::calibration::ImuCalibrationMeasurements& measurements,
+    const calibration::ImuModel& imu_model,
+    const calibration::ImuCalibrationMeasurements& measurements,
     const geometry::UnitVector3& g_direction,
     const std::shared_ptr<viewer::SimpleGeometry> geo,
     const std::shared_ptr<viewer::Ui2d> ui2d);
 
-void visualize_fwd_difference(
-    const estimation::calibration::CalibrationMeasurements& measurements,
-    const std::shared_ptr<viewer::SimpleGeometry> geo,
-    const std::shared_ptr<viewer::Ui2d> ui2d);
+void visualize_fwd_difference(const calibration::CalibrationMeasurements& measurements,
+                              const std::shared_ptr<viewer::SimpleGeometry> geo,
+                              const std::shared_ptr<viewer::Ui2d> ui2d);
 
-void visualize_fwd_acceleration(
-    const estimation::calibration::CalibrationMeasurements& measurements,
-    const std::shared_ptr<viewer::SimpleGeometry> geo,
-    const std::shared_ptr<viewer::Ui2d> ui2d);
+void visualize_fwd_acceleration(const calibration::CalibrationMeasurements& measurements,
+                                const std::shared_ptr<viewer::SimpleGeometry> geo,
+                                const std::shared_ptr<viewer::Ui2d> ui2d);
 
 void visualize_camera_distortion(const std::shared_ptr<viewer::Ui2d>& ui2d,
                                  const ImageMeasurement& image,
-                                 const estimation::NonlinearCameraModel& model);
+                                 const NonlinearCameraModel& model);
 
 void visualize_camera_frustum(const std::shared_ptr<viewer::SimpleGeometry>& geo,
                               const std::shared_ptr<viewer::Ui2d>& ui2d,
                               const ImageMeasurement& image,
-                              const estimation::NonlinearCameraModel& model);
+                              const NonlinearCameraModel& model);
 
 void visualize_fiducial_detection(
     const std::shared_ptr<viewer::SimpleGeometry>& geo,
     const std::shared_ptr<viewer::Ui2d>& ui2d,
-    const estimation::NonlinearCameraModel& model,
+    const NonlinearCameraModel& model,
     const SE3& fiducial_from_camera,
     const std::vector<ObjectImageAssociations>& obj_pt_associations);
 
-estimation::OptimizationVisitor create_gyro_orientation_optimization_visitor(
+OptimizationVisitor create_gyro_orientation_optimization_visitor(
     const std::vector<jcc::Vec3>& w_gyro_at_t, const std::vector<jcc::Vec3>& w_cam_at_t);
 
-}  // namespace filtering
-}  // namespace jet
+}  // namespace estimation

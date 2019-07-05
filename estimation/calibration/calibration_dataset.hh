@@ -6,6 +6,7 @@
 #include "estimation/time_point.hh"
 
 #include <map>
+#include <opencv2/opencv.hpp>
 
 namespace estimation {
 namespace calibration {
@@ -55,6 +56,15 @@ struct CalibrationMeasurements {
     return fiducial_meas.back().timestamp;
   }
 };
-
 }  // namespace calibration
+
+// Hate.
+// Hate.
+// Hate.
+struct ImageMeasurement {
+  estimation::TimePoint time;
+  cv::Mat image;
+  std::string serial_number;
+};
+
 }  // namespace estimation

@@ -16,12 +16,12 @@ void warn_sensor_rates(
       const double total_time = estimation::to_seconds(
           imu_meas.accel_meas.back().timestamp - imu_meas.accel_meas.front().timestamp);
       const double avg_rate_hz = imu_meas.accel_meas.size() / total_time;
-      if (avg_rate_hz < 100) {
-        jcc::Warning() << imu_lead << " Accel recording rate was low: " << avg_rate_hz
-                       << " Hz" << std::endl;
-      } else if (avg_rate_hz < 80) {
+      if (avg_rate_hz < 80) {
         jcc::Error() << imu_lead << " Accel recording rate was very low: " << avg_rate_hz
                      << " Hz" << std::endl;
+      } else if (avg_rate_hz < 100) {
+        jcc::Warning() << imu_lead << " Accel recording rate was low: " << avg_rate_hz
+                       << " Hz" << std::endl;
       } else {
         jcc::Success() << imu_lead << " Accel recording rate was good: " << avg_rate_hz
                        << " Hz" << std::endl;
@@ -34,12 +34,12 @@ void warn_sensor_rates(
       const double total_time = estimation::to_seconds(
           imu_meas.gyro_meas.back().timestamp - imu_meas.gyro_meas.front().timestamp);
       const double avg_rate_hz = imu_meas.gyro_meas.size() / total_time;
-      if (avg_rate_hz < 100) {
-        jcc::Warning() << imu_lead << " Gyro recording rate was low: " << avg_rate_hz
-                       << " Hz" << std::endl;
-      } else if (avg_rate_hz < 80) {
+      if (avg_rate_hz < 80) {
         jcc::Error() << imu_lead << " Gyro recording rate was very low: " << avg_rate_hz
                      << " Hz" << std::endl;
+      } else if (avg_rate_hz < 100) {
+        jcc::Warning() << imu_lead << " Gyro recording rate was low: " << avg_rate_hz
+                       << " Hz" << std::endl;
       } else {
         jcc::Success() << imu_lead << " Gyro recording rate was good: " << avg_rate_hz
                        << " Hz" << std::endl;
@@ -52,14 +52,14 @@ void warn_sensor_rates(
       const double total_time = estimation::to_seconds(
           imu_meas.mag_meas.back().timestamp - imu_meas.mag_meas.front().timestamp);
       const double avg_rate_hz = imu_meas.mag_meas.size() / total_time;
-      if (avg_rate_hz < 100) {
-        jcc::Warning() << imu_lead
-                       << " Magnetometer recording rate was low: " << avg_rate_hz << " Hz"
-                       << std::endl;
-      } else if (avg_rate_hz < 80) {
+      if (avg_rate_hz < 80) {
         jcc::Error() << imu_lead
                      << " Magnetometer recording rate was very low: " << avg_rate_hz
                      << " Hz" << std::endl;
+      } else if (avg_rate_hz < 100) {
+        jcc::Warning() << imu_lead
+                       << " Magnetometer recording rate was low: " << avg_rate_hz << " Hz"
+                       << std::endl;
       } else {
         jcc::Success() << imu_lead
                        << " Magnetometer recording rate was good: " << avg_rate_hz
@@ -74,12 +74,12 @@ void warn_sensor_rates(
         estimation::to_seconds(cal_measurements.fiducial_meas.back().timestamp -
                                cal_measurements.fiducial_meas.front().timestamp);
     const double avg_rate_hz = cal_measurements.fiducial_meas.size() / total_time;
-    if (avg_rate_hz < 11) {
-      jcc::Warning() << "[Camera] Fiducial recording rate was low: " << avg_rate_hz
-                     << " Hz" << std::endl;
-    } else if (avg_rate_hz < 6) {
+    if (avg_rate_hz < 6) {
       jcc::Error() << "[Camera] Fiducial recording rate was very low: " << avg_rate_hz
                    << " Hz" << std::endl;
+    } else if (avg_rate_hz < 11) {
+      jcc::Warning() << "[Camera] Fiducial recording rate was low: " << avg_rate_hz
+                     << " Hz" << std::endl;
     } else {
       jcc::Success() << "[Camera] Fiducial recording rate was good: " << avg_rate_hz
                    << " Hz" << std::endl;

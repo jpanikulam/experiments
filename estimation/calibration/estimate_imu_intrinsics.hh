@@ -1,9 +1,7 @@
 #pragma once
 
 #include "eigen.hh"
-// For parametric ellipse
 #include "geometry/shapes/ellipse.hh"
-
 #include "estimation/calibration/calibration_dataset.hh"
 
 namespace estimation {

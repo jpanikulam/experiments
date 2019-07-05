@@ -1,6 +1,6 @@
 #include "estimation/calibration/estimate_imu_intrinsics.hh"
-#include "geometry/shapes/fit_ellipse.hh"
 
+#include "geometry/shapes/fit_ellipse.hh"
 #include "logging/assert.hh"
 
 #include <cmath>
