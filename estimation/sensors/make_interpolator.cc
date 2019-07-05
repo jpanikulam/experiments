@@ -9,7 +9,7 @@ geometry::spatial::TimeInterpolator make_accel_interpolator(
 
   for (const auto& accel : accel_meas) {
     const jcc::Vec3 corrected_accel =
-        imu_model.apply_calibration(accel.measurement.observed_acceleration);
+        imu_model.correct_measured_accel(accel.measurement.observed_acceleration);
     points.push_back({accel.timestamp, corrected_accel});
   }
   const geometry::spatial::TimeInterpolator interp(points);
