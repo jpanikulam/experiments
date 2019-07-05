@@ -1,5 +1,6 @@
 #include "geometry/shapes/fit_ellipse.hh"
 
+#include "numerics/compute_mean.hh"
 #include "numerics/numdiff.hh"
 
 #include "logging/assert.hh"
@@ -22,7 +23,8 @@ double monotonic_sqd_ellipse(const Eigen::Vector3d& point, const Ellipse& ellips
 }
 
 // Create a reasonable initialization
-ParamVec create_reasonable_initialization() {
+ParamVec create_reasonable_initialization(const std::vector<jcc::Vec3>& pts) {
+  const jcc::Vec3 mean = numerics::compute_mean(pts);
   ParamVec params;
   params[0] = 1.0;
   params[1] = 1.0;
@@ -30,9 +32,9 @@ ParamVec create_reasonable_initialization() {
   params[3] = 0.0;
   params[4] = 0.0;
   params[5] = 0.0;
-  params[6] = 0.0;
-  params[7] = 0.0;
-  params[8] = 0.0;
+  params[6] = mean.x();
+  params[7] = mean.y();
+  params[8] = mean.z();
   return params;
 }
 
@@ -69,7 +71,7 @@ EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor
   using JtJMat = MatNd<PARAM_DIM, PARAM_DIM>;
   using JtvMat = MatNd<PARAM_DIM, OBS_DIM>;
 
-  ParamVec params = create_reasonable_initialization();
+  ParamVec params = create_reasonable_initialization(pts);
 
   double last_avg_error = -1.0;
   for (int k = 0; k < MAX_ITERS; ++k) {
