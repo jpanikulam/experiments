@@ -5,6 +5,8 @@
 #include "estimation/sensors/magnetometer_measurement.hh"
 #include "estimation/time_point.hh"
 
+#include <map>
+
 namespace estimation {
 namespace calibration {
 
@@ -18,17 +20,38 @@ struct ImuCalibrationMeasurements {
   std::vector<TimedMeasurement<jet_filter::AccelMeasurement>> accel_meas;
   std::vector<TimedMeasurement<jet_filter::GyroMeasurement>> gyro_meas;
   std::vector<TimedMeasurement<MagnetometerMeasurement>> mag_meas;
-}
+
+  int imu_id;
+
+  TimePoint first() const {
+    return first_;
+  }
+
+  TimePoint last() const {
+    return last_;
+  }
+
+  void set_first(const TimePoint& first) {
+    first_ = first;
+  }
+  void set_last(const TimePoint& last) {
+    last_ = last;
+  }
+
+ private:
+  TimePoint first_;
+  TimePoint last_;
+};
 
 struct CalibrationMeasurements {
   std::map<int, ImuCalibrationMeasurements> imu_cal;
   std::vector<TimedMeasurement<jet_filter::FiducialMeasurement>> fiducial_meas;
 
-  estimation::TimePoint first() const {
+  TimePoint first() const {
     return fiducial_meas.front().timestamp;
   }
 
-  estimation::TimePoint last() const {
+  TimePoint last() const {
     return fiducial_meas.back().timestamp;
   }
 };

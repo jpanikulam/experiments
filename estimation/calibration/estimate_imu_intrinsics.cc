@@ -1,6 +1,8 @@
 #include "estimation/calibration/estimate_imu_intrinsics.hh"
 #include "geometry/shapes/fit_ellipse.hh"
 
+#include "logging/assert.hh"
+
 #include <cmath>
 
 namespace estimation {
@@ -37,9 +39,9 @@ ImuModel estimate_imu_intrinsics(const ImuCalibrationMeasurements& imu_meas) {
       // This is because the IMU will be moved during the measurement process
       //
       const double error_fraction =
-          std::abs(meas.measurement.observed_accel.norm() - G_MPSS) / G_MPSS;
+          std::abs(meas.measurement.observed_acceleration.norm() - G_MPSS) / G_MPSS;
       if (error_fraction < MAX_G_DEFECT_FRACTION) {
-        accel_to_fit.push_back(meas);
+       accel_to_fit.push_back(meas.measurement.observed_acceleration);
       }
     }
   }
@@ -47,8 +49,8 @@ ImuModel estimate_imu_intrinsics(const ImuCalibrationMeasurements& imu_meas) {
 
   std::vector<jcc::Vec3> mag_to_fit;
   {
-    mag_to_fit.reserve(imu_meas.accel_meas.size());
-    for (const auto& meas : imu_meas.accel_meas) {
+    mag_to_fit.reserve(imu_meas.mag_meas.size());
+    for (const auto& meas : imu_meas.mag_meas) {
       mag_to_fit.push_back(meas.measurement.observed_bfield);
     }
   }

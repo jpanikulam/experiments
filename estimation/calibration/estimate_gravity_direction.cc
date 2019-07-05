@@ -34,10 +34,11 @@ struct Bracket {
   TimePoint end;
 };
 
-geometry::UnitVector3 estimate_from_bracket(const CalibrationMeasurements& measurements,
-                                            const ImuModel& imu_model,
-                                            const EstimationConfig& cfg,
-                                            const Bracket& bracket) {
+geometry::UnitVector3 estimate_from_bracket(
+    const ImuCalibrationMeasurements& measurements,
+    const ImuModel& imu_model,
+    const EstimationConfig& cfg,
+    const Bracket& bracket) {
   constexpr double G_MPSS = 9.81;
 
   JASSERT_GT(
@@ -45,7 +46,6 @@ geometry::UnitVector3 estimate_from_bracket(const CalibrationMeasurements& measu
       cfg.min_stationary_time_sec,
       "Could not find a time bracket where the vehicle is stationary and pointed at "
       "the fiducial for sufficiently long");
-
 
   std::vector<double> bracket_norm_accel;
   std::vector<jcc::Vec3> bracket_accel;
@@ -92,10 +92,11 @@ geometry::UnitVector3 estimate_from_bracket(const CalibrationMeasurements& measu
 
 GravityEstimationResult estimate_gravity_direction(
     const CalibrationMeasurements& measurements,
+    const ImuCalibrationMeasurements& imu_measurements,
     const ImuModel& imu_model,
     const EstimationConfig& cfg) {
-  const auto accel_interp = make_accel_interpolator(measurements.accel_meas, imu_model);
-  JASSERT_GT(measurements.accel_meas.size(),
+  const auto accel_interp = make_accel_interpolator(imu_measurements.accel_meas, imu_model);
+  JASSERT_GT(imu_measurements.accel_meas.size(),
              1000u,
              "Should have at least 1000 accel measurements");
 
@@ -150,7 +151,7 @@ GravityEstimationResult estimate_gravity_direction(
 
   const Bracket bracket{.start = bracket_start, .end = bracket_end};
 
-  const auto direction = estimate_from_bracket(measurements, imu_model, cfg, bracket);
+  const auto direction = estimate_from_bracket(imu_measurements, imu_model, cfg, bracket);
 
   return GravityEstimationResult{
       .direction = direction,

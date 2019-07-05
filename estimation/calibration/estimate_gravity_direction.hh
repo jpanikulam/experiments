@@ -18,13 +18,14 @@ struct EstimationConfig {
   double max_accel_range_mpss = 0.1;
 };
 
-struct GravityEstimationResult{
+struct GravityEstimationResult {
   geometry::UnitVector3 direction;
   TimePoint time;
 };
 
 GravityEstimationResult estimate_gravity_direction(
     const CalibrationMeasurements& measurements,
+    const ImuCalibrationMeasurements& imu_measurements,
     const ImuModel& imu_model,
     const EstimationConfig& cfg = {});
 
