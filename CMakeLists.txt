@@ -18,6 +18,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 # OpenCV
 #
 find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 #########################
 # OpenGL
