@@ -1,3 +1,5 @@
+#pragma once
+
 #include "eigen.hh"
 #include "geometry/types/unit_vector.hh"
 

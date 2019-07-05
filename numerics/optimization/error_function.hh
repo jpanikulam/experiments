@@ -1,3 +1,4 @@
+#pragma once
 #include "numerics/numdiff.hh"
 
 namespace numerics {
