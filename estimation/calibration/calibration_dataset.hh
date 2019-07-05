@@ -14,14 +14,22 @@ struct TimedMeasurement {
   TimePoint timestamp;
 };
 
-struct CalibrationMeasurements {
+struct ImuCalibrationMeasurements {
   std::vector<TimedMeasurement<jet_filter::AccelMeasurement>> accel_meas;
   std::vector<TimedMeasurement<jet_filter::GyroMeasurement>> gyro_meas;
   std::vector<TimedMeasurement<MagnetometerMeasurement>> mag_meas;
+}
+
+struct CalibrationMeasurements {
+  std::map<int, ImuCalibrationMeasurements> imu_cal;
   std::vector<TimedMeasurement<jet_filter::FiducialMeasurement>> fiducial_meas;
 
   estimation::TimePoint first() const {
     return fiducial_meas.front().timestamp;
+  }
+
+  estimation::TimePoint last() const {
+    return fiducial_meas.back().timestamp;
   }
 };
 
