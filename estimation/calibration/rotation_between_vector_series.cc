@@ -18,7 +18,8 @@ RotationBetweenVectorSeries rotation_between_vector_series(
 
   const auto est = slam::HuberCost(0.4);
 
-  series.b_from_a = SO3::exp(jcc::Vec3(M_PI, 0.1, -0.4));
+  series.b_from_a =
+      (SO3::exp(jcc::Vec3(0.0, M_PI, 0.0)) * SO3::exp(jcc::Vec3(M_PI / 2, 0.0, 0.0))).inverse();
 
   double prev_avg_error_sq = std::numeric_limits<double>::max();
   for (int iter = 0; iter < 500; ++iter) {
@@ -33,12 +34,12 @@ RotationBetweenVectorSeries rotation_between_vector_series(
       const auto a_i = a[i];
       const auto b_i = b[i];
 
-      const auto error_fcn = [&R_b_from_a = series.b_from_a, &a_i, &b_i](
-                                 const jcc::Vec3& w) {
-        const jcc::Vec3 v =
-            b_i.normalized() - ((SO3::exp(w) * R_b_from_a) * a_i.normalized());
-        return v;
-      };
+      const auto error_fcn =
+          [& R_b_from_a = series.b_from_a, &a_i, &b_i](const jcc::Vec3& w) {
+            const jcc::Vec3 v =
+                b_i.normalized() - ((SO3::exp(w) * R_b_from_a) * a_i.normalized());
+            return v;
+          };
       const auto J_i =
           numerics::numerical_jacobian<3, 3>(jcc::Vec3::Zero(), error_fcn, 1e-6);
 
@@ -54,7 +55,7 @@ RotationBetweenVectorSeries rotation_between_vector_series(
 
     series.average_error /= a.size();
 
-    constexpr double MARQUARDT_LAMBDA = 1e1;
+    constexpr double MARQUARDT_LAMBDA = 1e-1;
     const MatNd<3, 3> marquardt = (JtJ.diagonal() * MARQUARDT_LAMBDA).asDiagonal();
     const Eigen::LDLT<MatNd<3, 3>> ldlt(marquardt + JtJ);
     JASSERT_EQ(ldlt.info(), Eigen::Success, "LDLT must not fail");
@@ -63,7 +64,7 @@ RotationBetweenVectorSeries rotation_between_vector_series(
     series.b_from_a = SO3::exp(delta) * series.b_from_a;
 
     const double average_error_norm_sq = series.average_error.dot(series.average_error);
-    if (std::abs(average_error_norm_sq - prev_avg_error_sq) < 0.000001) {
+    if (std::abs(average_error_norm_sq - prev_avg_error_sq) < 0.00000001) {
       break;
     }
 

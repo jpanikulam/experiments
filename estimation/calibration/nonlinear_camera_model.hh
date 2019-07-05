@@ -28,6 +28,10 @@ class NonlinearCameraModel {
   // @returns ray passing through the image point, originating at the center of projection
   jcc::Optional<geometry::Ray> unproject(const jcc::Vec2& image_point) const;
 
+  const CameraModel& linear_model() const {
+    return linear_model_;
+  }
+
   int rows() const;
   int cols() const;
 

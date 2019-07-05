@@ -16,6 +16,7 @@ struct ImuIntrinsics {
   // to deform this ellipse to a sphere of radius g.
   //
   geometry::shapes::Ellipse imu_gains;
+  geometry::shapes::Ellipse magnetometer_gains;
 };
 
 class ImuModel {
@@ -24,7 +25,7 @@ class ImuModel {
   }
 
   // Take an IMU observation, and transform it into a true acceleration
-  jcc::Vec3 apply_calibration(const jcc::Vec3& observed) const;
+  jcc::Vec3 apply_calibration(const jcc::Vec3& observed_accel) const;
 
  private:
   ImuIntrinsics intrinsics_;

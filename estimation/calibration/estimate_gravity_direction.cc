@@ -46,6 +46,7 @@ geometry::UnitVector3 estimate_from_bracket(const CalibrationMeasurements& measu
       "Could not find a time bracket where the vehicle is stationary and pointed at "
       "the fiducial for sufficiently long");
 
+
   std::vector<double> bracket_norm_accel;
   std::vector<jcc::Vec3> bracket_accel;
 
