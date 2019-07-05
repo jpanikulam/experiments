@@ -9,6 +9,6 @@
 namespace estimation {
 
 CameraModel camera_model_from_opencv(const cv::Mat camera_matrix,
-                                           const cv::Mat distortion_coefficients);
+                                     const cv::Mat distortion_coefficients);
 
 }  // namespace estimation
