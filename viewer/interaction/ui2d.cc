@@ -265,6 +265,7 @@ void Ui2d::add_grid_mesh(const GridMesh &grid_mesh) {
 
 void Ui2d::clear() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.clear();
   front_buffer_.clear();
 }
 

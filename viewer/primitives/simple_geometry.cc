@@ -59,6 +59,7 @@ void SimpleGeometry::add_triangle_mesh(const TriMesh &mesh) {
 
 void SimpleGeometry::clear() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
+  back_buffer_.clear();
   front_buffer_.clear();
 }
 
