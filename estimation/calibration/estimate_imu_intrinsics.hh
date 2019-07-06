@@ -21,6 +21,7 @@ struct ImuIntrinsics {
 
 class ImuModel {
  public:
+  ImuModel() = default;
   ImuModel(const ImuIntrinsics& intrinsics) : intrinsics_(intrinsics) {
   }
 

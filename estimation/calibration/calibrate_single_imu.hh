@@ -17,8 +17,8 @@ struct SingleImuCalibration {
 
 struct CreateSingleImuModelConfig {
   bool visualize_imu_model = true;
-  bool visualize_gyro = true;
-  bool visualize_magnetometer = true;
+  bool visualize_gyro = false;
+  bool visualize_magnetometer = false;
 };
 
 SingleImuCalibration create_single_imu_model(

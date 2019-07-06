@@ -49,10 +49,27 @@ SO3 estimate_camera_from_gyro(
       visualize ? create_gyro_orientation_optimization_visitor(w_gyro_at_t, w_cam_at_t)
                 : estimation::OptimizationVisitor{};
 
-  const auto pp =
+  const auto result =
       estimation::rotation_between_vector_series(w_gyro_at_t, w_cam_at_t, visitor);
 
-  return pp.b_from_a;
+  const double average_error = std::sqrt(result.average_error.norm());
+
+  std::stringstream imu_lead_ss;
+  { imu_lead_ss << "[IMU-" << imu_measurements.imu_id << "]"; }
+  const std::string imu_lead = imu_lead_ss.str();
+
+  if (result.success) {
+    if (average_error > 0.5) {
+      jcc::Warning() << imu_lead
+                     << " [Camera->IMU] Aligned Poorly, average error: " << average_error
+                     << std::endl;
+    } else {
+      jcc::Success() << imu_lead << " [Camera->IMU] Aligned Successfully, average error: "
+                     << average_error << std::endl;
+    }
+  }
+
+  return result.b_from_a;
 }
 
 }  // namespace
@@ -61,11 +78,16 @@ SingleImuCalibration create_single_imu_model(
     const estimation::calibration::CalibrationMeasurements& all_cal_measurements,
     const estimation::calibration::ImuCalibrationMeasurements& imu_cal_measurements,
     const CreateSingleImuModelConfig& cfg) {
-  jcc::Success() << "[IMU] Estimating intrinsics..." << std::endl;
+  std::stringstream imu_lead_ss;
+  { imu_lead_ss << "[IMU-" << imu_cal_measurements.imu_id << "]"; }
+  const std::string imu_lead = imu_lead_ss.str();
 
+  jcc::Success() << imu_lead << " Estimating accelerometer/magnetometer intrinsics..."
+                 << std::endl;
   const auto imu_model =
       estimation::calibration::estimate_imu_intrinsics(imu_cal_measurements);
-  jcc::Success() << "[IMU] Estimating sensor-frame direction of gravity..." << std::endl;
+  jcc::Success() << imu_lead << " Estimating sensor-frame direction of gravity..."
+                 << std::endl;
   const auto g_estimate = estimate_gravity_direction(
       all_cal_measurements, imu_cal_measurements, imu_model, {});
 
@@ -73,7 +95,7 @@ SingleImuCalibration create_single_imu_model(
   // IMU Visualization
   //
   if (cfg.visualize_imu_model || cfg.visualize_gyro || cfg.visualize_magnetometer) {
-    jcc::Success() << "[IMU] Visualizing for validation..." << std::endl;
+    jcc::Success() << imu_lead << " Visualizing for validation..." << std::endl;
     const auto view = viewer::get_window3d("Calibration");
     const auto geo = view->add_primitive<viewer::SimpleGeometry>();
     const auto ui2d = view->add_primitive<viewer::Ui2d>();
@@ -143,16 +165,18 @@ SingleImuCalibration create_single_imu_model(
       view->spin_until_step();
       geo->clear();
       ui2d->clear();
+      view->clear_toggle_callbacks("visualize_imu_data");
     }
-    jcc::Success() << "[IMU] Done Visualizing" << std::endl;
+    jcc::Success() << imu_lead << " Done Visualizing" << std::endl;
   }
-  jcc::Success() << "[IMU] Done Calibration IMU" << std::endl;
+  jcc::Success() << imu_lead << " Calibrated intrinsics" << std::endl;
 
   //
   // Calibrate camera->imu extrinsics
   //
 
-  jcc::Success() << "[Camera->IMU] Estimating IMU->Camera Extrinsics (Rotation)"
+  jcc::Success() << imu_lead
+                 << " [Camera->IMU] Estimating IMU->Camera Extrinsics (Rotation)"
                  << std::endl;
   const SO3 camera_from_gyro = estimate_camera_from_gyro(
       all_cal_measurements, imu_cal_measurements, cfg.visualize_gyro);
