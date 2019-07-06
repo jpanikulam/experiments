@@ -109,8 +109,10 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
                "A very long time has passed between measurements, "
                "the filter has almost certainly already diverged");
 
-    const auto x_hat_t = dynamics_until(x_hat0, meas.time_of_validity);
-    JASSERT_EQ(x_hat_t.time_of_validity, meas.time_of_validity, "Must simulate up to time of measurement");
+    const auto x_hat_t =
+        dt_sec > 0.0 ? dynamics_until(x_hat0, meas.time_of_validity) : x_hat0;
+    JASSERT_EQ(x_hat_t.time_of_validity, meas.time_of_validity,
+               "Must simulate up to time of measurement");
 
     const int i = meas.type;
 
