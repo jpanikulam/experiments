@@ -32,6 +32,9 @@ ParamVec create_reasonable_initialization(const std::vector<jcc::Vec3>& pts) {
   params[3] = 0.0;
   params[4] = 0.0;
   params[5] = 0.0;
+
+  // Initialize with the mean of the points
+  // The mean will always be within the ellipse
   params[6] = mean.x();
   params[7] = mean.y();
   params[8] = mean.z();

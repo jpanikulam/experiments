@@ -1,6 +1,7 @@
 #pragma once
 
 #include "eigen.hh"
+// TODO Make this unitvector
 
 namespace geometry {
 
