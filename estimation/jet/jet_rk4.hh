@@ -30,12 +30,13 @@ struct StateDelta {
   static StateDelta from_vector(const VecNd<24> &in_vec);
 };
 struct Parameters {
+  SE3 T_imu2_from_vehicle = SE3();
   double acceleration_damping = 0.0;
   SE3 T_imu1_from_vehicle = SE3();
   SE3 T_world_from_fiducial = SE3();
-  static constexpr int DIM = 13;
-  static VecNd<13> compute_delta(const Parameters &a, const Parameters &b);
-  static Parameters apply_delta(const Parameters &a, const VecNd<13> &delta);
+  static constexpr int DIM = 19;
+  static VecNd<19> compute_delta(const Parameters &a, const Parameters &b);
+  static Parameters apply_delta(const Parameters &a, const VecNd<19> &delta);
 };
 struct GyroMeasurementDelta {
   VecNd<3> observed_w_error = VecNd<3>::Zero();
@@ -50,10 +51,8 @@ struct GyroMeasurement {
   static constexpr int observed_w_ind = 0;
   static constexpr int observed_w_dim = 3;
   static constexpr int DIM = 3;
-  static VecNd<3> compute_delta(const GyroMeasurement &a,
-                                const GyroMeasurement &b);
-  static GyroMeasurement apply_delta(const GyroMeasurement &a,
-                                     const VecNd<3> &delta);
+  static VecNd<3> compute_delta(const GyroMeasurement &a, const GyroMeasurement &b);
+  static GyroMeasurement apply_delta(const GyroMeasurement &a, const VecNd<3> &delta);
 };
 struct State {
   VecNd<6> eps_ddot = VecNd<6>::Zero();
@@ -71,10 +70,8 @@ struct AccelMeasurement {
   static constexpr int observed_acceleration_ind = 0;
   static constexpr int observed_acceleration_dim = 3;
   static constexpr int DIM = 3;
-  static VecNd<3> compute_delta(const AccelMeasurement &a,
-                                const AccelMeasurement &b);
-  static AccelMeasurement apply_delta(const AccelMeasurement &a,
-                                      const VecNd<3> &delta);
+  static VecNd<3> compute_delta(const AccelMeasurement &a, const AccelMeasurement &b);
+  static AccelMeasurement apply_delta(const AccelMeasurement &a, const VecNd<3> &delta);
 };
 struct StateDot {
   VecNd<6> damped_eps_ddot = VecNd<6>::Zero();
@@ -98,12 +95,13 @@ struct StateDot {
   static constexpr int DIM = 24;
 };
 struct ParametersDelta {
+  VecNd<6> T_imu2_from_vehicle_error_log = VecNd<6>::Zero();
   double acceleration_damping_error = 0.0;
   VecNd<6> T_imu1_from_vehicle_error_log = VecNd<6>::Zero();
   VecNd<6> T_world_from_fiducial_error_log = VecNd<6>::Zero();
-  static constexpr int DIM = 13;
-  static VecNd<13> to_vector(const ParametersDelta &in_grp);
-  static ParametersDelta from_vector(const VecNd<13> &in_vec);
+  static constexpr int DIM = 19;
+  static VecNd<19> to_vector(const ParametersDelta &in_grp);
+  static ParametersDelta from_vector(const VecNd<19> &in_vec);
 };
 struct AccelMeasurementDelta {
   VecNd<3> observed_acceleration_error = VecNd<3>::Zero();
@@ -115,13 +113,22 @@ struct AccelMeasurementDelta {
 };
 State rk4_integrate(const State &Q, const Parameters &Z, const double h);
 GyroMeasurement observe_gyro(const State &state, const Parameters &parameters);
-AccelMeasurement observe_accel(const State &state,
-                               const Parameters &parameters);
+AccelMeasurement observe_accel(const State &state, const Parameters &parameters);
 VecNd<3> observe_accel_error_model(const State &state,
                                    const AccelMeasurement &meas,
                                    const Parameters &parameters);
 VecNd<3> observe_gyro_error_model(const State &state,
                                   const GyroMeasurement &meas,
                                   const Parameters &parameters);
-} // namespace jet_filter
-} // namespace estimation
+
+GyroMeasurement observe_gyro_2(const State &state, const Parameters &parameters);
+AccelMeasurement observe_accel_2(const State &state, const Parameters &parameters);
+VecNd<3> observe_accel_2_error_model(const State &state,
+                                     const AccelMeasurement &meas,
+                                     const Parameters &parameters);
+VecNd<3> observe_gyro_2_error_model(const State &state,
+                                    const GyroMeasurement &meas,
+                                    const Parameters &parameters);
+
+}  // namespace jet_filter
+}  // namespace estimation

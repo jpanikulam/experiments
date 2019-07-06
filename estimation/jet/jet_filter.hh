@@ -29,9 +29,8 @@ class JetFilter {
     return initialized_;
   }
 
-  void measure_imu(const AccelMeasurement& meas, const TimePoint& t);
-
-  void measure_gyro(const GyroMeasurement& meas, const TimePoint& t);
+  void measure_imu(const AccelMeasurement& meas, const TimePoint& t, bool imu2 = false);
+  void measure_gyro(const GyroMeasurement& meas, const TimePoint& t, bool imu2 = false);
 
   void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t);
 
@@ -58,14 +57,17 @@ class JetFilter {
   void setup_models();
 
   JetFilterState xp_;
-  JetEkf ekf_;
   Parameters parameters_;
+  JetEkf ekf_;
 
   bool initialized_ = false;
 
   int imu_id_ = -1;
   int fiducial_id_ = -1;
   int gyro_id_ = -1;
+
+  int imu_2_id_ = -1;
+  int gyro_2_id_ = -1;
 };
 
 }  // namespace jet_filter

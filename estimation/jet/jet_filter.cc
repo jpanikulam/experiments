@@ -109,16 +109,22 @@ void JetFilter::setup_models() {
   MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;
   fiducial_cov.setZero();
   {
-    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.025;
-    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.0076;
+    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.25;
+    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.076;
   }
 
   imu_id_ = ekf_.add_model(
       bind_parameters<AccelMeasurement>(observe_accel_error_model, parameters_),
       accel_cov);
   gyro_id_ = ekf_.add_model(
-      bind_parameters<GyroMeasurement>(observe_gyro_error_model, parameters_),
-      gyro_cov);
+      bind_parameters<GyroMeasurement>(observe_gyro_error_model, parameters_), gyro_cov);
+
+  imu_2_id_ = ekf_.add_model(
+      bind_parameters<AccelMeasurement>(observe_accel_2_error_model, parameters_),
+      accel_cov);
+
+  gyro_2_id_ = ekf_.add_model(
+      bind_parameters<GyroMeasurement>(observe_gyro_2_error_model, parameters_), gyro_cov);
 
   fiducial_id_ = ekf_.add_model(
       bind_parameters<FiducialMeasurement>(fiducial_error_model, parameters_),
@@ -131,12 +137,20 @@ JetFilter::JetFilter(const JetFilterState& xp, const Parameters& parameters)
   initialized_ = true;
 }
 
-void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t) {
-  ekf_.measure(meas, t, imu_id_);
+void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t, bool imu2) {
+  if (imu2) {
+    ekf_.measure(meas, t, imu_2_id_);
+  } else {
+    ekf_.measure(meas, t, imu_id_);
+  }
 }
 
-void JetFilter::measure_gyro(const GyroMeasurement& meas, const TimePoint& t) {
-  ekf_.measure(meas, t, gyro_id_);
+void JetFilter::measure_gyro(const GyroMeasurement& meas, const TimePoint& t, bool imu2) {
+  if (imu2) {
+    ekf_.measure(meas, t, gyro_2_id_);
+  } else {
+    ekf_.measure(meas, t, gyro_id_);
+  }
 }
 
 void JetFilter::measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t) {

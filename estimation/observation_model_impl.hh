@@ -60,7 +60,6 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
   // const double log_likelihood = innovation.dot(S_inv * innovation);
 
   const double log_likelihood = compute_likelihood(S_inv, innovation);
-  // jcc::Debug() << "Likelihood: " << log_likelihood << std::endl;
 
   // const slam::HuberCost hc(0.2);
   // const auto cw = hc((innovation.transpose() * S_inv).dot(innovation));
