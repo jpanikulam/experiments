@@ -10,25 +10,11 @@ namespace estimation {
 namespace jet_filter {
 namespace {
 
-Parameters get_parameters() {
-  // Jake Test stand
-  // const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0281067, 0.140086, 0.317844);
-  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-3.05586, -0.0352836, -0.00210199));
-
-  // Jet rotation
-  const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0, 0.0, 0.0);
-  const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-2.75553, 0.0790927, -0.0549754));
-
-  const SE3 imu_from_vehicle(R_imu_from_vehicle, trans_imu_from_vehicle);
-
-  Parameters p;
-  p.T_imu_from_vehicle = imu_from_vehicle;
-  return p;
-}
-
-State dynamics(const State& x, const double h) {
-  const Parameters p = get_parameters();
-  return rk4_integrate(x, p, h);
+auto make_dynamics(const Parameters& p) {
+  return [p](const State& x, const double h) {
+    //
+    return rk4_integrate(x, p, h);
+  };
 }
 
 template <typename Meas>
@@ -71,14 +57,15 @@ MatNd<State::DIM, State::DIM> make_cov() {
 
 }  // namespace
 
-FilterState<State> JetFilter::reasonable_initial_state() {
+FilterState<State> JetFilter::reasonable_initial_state(const TimePoint& t) {
   FilterState<State> xp0;
+  xp0.time_of_validity = t;
   MatNd<State::DIM, State::DIM> state_cov;
   state_cov.setZero();
   numerics::set_diag_to_value<StateDelta::accel_bias_error_dim,
-                              StateDelta::accel_bias_error_ind>(state_cov, 0.001);
+                              StateDelta::accel_bias_error_ind>(state_cov, 0.0001);
   numerics::set_diag_to_value<StateDelta::gyro_bias_error_dim,
-                              StateDelta::gyro_bias_error_ind>(state_cov, 0.001);
+                              StateDelta::gyro_bias_error_ind>(state_cov, 0.0001);
   numerics::set_diag_to_value<StateDelta::eps_dot_error_dim,
                               StateDelta::eps_dot_error_ind>(state_cov, 0.0001);
   numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
@@ -95,42 +82,53 @@ FilterState<State> JetFilter::reasonable_initial_state() {
   return xp0;
 }
 
+Parameters JetFilter::reasonable_parameters() {
+  const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0, 0.0, 0.0);
+  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-2.75553, 0.0790927, -0.0549754));
+
+  const SO3 R_imu_from_vehicle;
+  const SE3 imu_from_vehicle(R_imu_from_vehicle, trans_imu_from_vehicle);
+
+  Parameters p;
+  p.T_imu1_from_vehicle = imu_from_vehicle;
+  p.acceleration_damping = -0.99;
+  return p;
+}
+
 void JetFilter::setup_models() {
   MatNd<AccelMeasurement::DIM, AccelMeasurement::DIM> accel_cov;
   accel_cov.setZero();
   {
     numerics::set_diag_to_value<AccelMeasurementDelta::observed_acceleration_error_dim,
                                 AccelMeasurementDelta::observed_acceleration_error_ind>(
-        accel_cov, 0.01);
+        accel_cov, 0.1);
   }
+
+  const MatNd<GyroMeasurement::DIM, GyroMeasurement::DIM> gyro_cov = 0.1 * accel_cov;
 
   MatNd<FiducialMeasurement::DIM, FiducialMeasurement::DIM> fiducial_cov;
   fiducial_cov.setZero();
   {
-    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.0025;
-    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.00076;
+    fiducial_cov.block<3, 3>(0, 0) = MatNd<3, 3>::Identity() * 0.025;
+    fiducial_cov.block<3, 3>(3, 3) = MatNd<3, 3>::Identity() * 0.0076;
   }
 
-  parameters_ = get_parameters();
   imu_id_ = ekf_.add_model(
       bind_parameters<AccelMeasurement>(observe_accel_error_model, parameters_),
       accel_cov);
   gyro_id_ = ekf_.add_model(
-      bind_parameters<GyroMeasurement>(observe_gyro_error_model, parameters_), accel_cov);
+      bind_parameters<GyroMeasurement>(observe_gyro_error_model, parameters_),
+      gyro_cov);
 
   fiducial_id_ = ekf_.add_model(
       bind_parameters<FiducialMeasurement>(fiducial_error_model, parameters_),
       fiducial_cov);
 }
 
-JetFilter::JetFilter(const JetFilterState& xp0) : xp_(xp0), ekf_(dynamics, make_cov()) {
+JetFilter::JetFilter(const JetFilterState& xp, const Parameters& parameters)
+    : xp_(xp), parameters_(parameters), ekf_(make_dynamics(parameters), make_cov()) {
   setup_models();
   initialized_ = true;
-}
-
-JetFilter::JetFilter() : ekf_(dynamics, make_cov()) {
-  setup_models();
-  initialized_ = false;
 }
 
 void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t) {

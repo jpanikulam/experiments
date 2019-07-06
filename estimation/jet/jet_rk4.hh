@@ -7,22 +7,22 @@
 namespace estimation {
 namespace jet_filter {
 struct StateDelta {
-  VecNd<3> gyro_bias_error = VecNd<3>::Zero();
   VecNd<6> eps_ddot_error = VecNd<6>::Zero();
   VecNd<6> eps_dot_error = VecNd<6>::Zero();
-  VecNd<3> R_world_from_body_error_log = VecNd<3>::Zero();
   VecNd<3> accel_bias_error = VecNd<3>::Zero();
+  VecNd<3> gyro_bias_error = VecNd<3>::Zero();
+  VecNd<3> R_world_from_body_error_log = VecNd<3>::Zero();
   VecNd<3> x_world_error = VecNd<3>::Zero();
-  static constexpr int gyro_bias_error_ind = 0;
-  static constexpr int gyro_bias_error_dim = 3;
-  static constexpr int eps_ddot_error_ind = 3;
+  static constexpr int eps_ddot_error_ind = 0;
   static constexpr int eps_ddot_error_dim = 6;
-  static constexpr int eps_dot_error_ind = 9;
+  static constexpr int eps_dot_error_ind = 6;
   static constexpr int eps_dot_error_dim = 6;
-  static constexpr int R_world_from_body_error_log_ind = 15;
-  static constexpr int R_world_from_body_error_log_dim = 3;
-  static constexpr int accel_bias_error_ind = 18;
+  static constexpr int accel_bias_error_ind = 12;
   static constexpr int accel_bias_error_dim = 3;
+  static constexpr int gyro_bias_error_ind = 15;
+  static constexpr int gyro_bias_error_dim = 3;
+  static constexpr int R_world_from_body_error_log_ind = 18;
+  static constexpr int R_world_from_body_error_log_dim = 3;
   static constexpr int x_world_error_ind = 21;
   static constexpr int x_world_error_dim = 3;
   static constexpr int DIM = 24;
@@ -30,10 +30,12 @@ struct StateDelta {
   static StateDelta from_vector(const VecNd<24> &in_vec);
 };
 struct Parameters {
-  SE3 T_imu_from_vehicle = SE3();
-  static constexpr int DIM = 6;
-  static VecNd<6> compute_delta(const Parameters &a, const Parameters &b);
-  static Parameters apply_delta(const Parameters &a, const VecNd<6> &delta);
+  double acceleration_damping = 0.0;
+  SE3 T_imu1_from_vehicle = SE3();
+  SE3 T_world_from_fiducial = SE3();
+  static constexpr int DIM = 13;
+  static VecNd<13> compute_delta(const Parameters &a, const Parameters &b);
+  static Parameters apply_delta(const Parameters &a, const VecNd<13> &delta);
 };
 struct GyroMeasurementDelta {
   VecNd<3> observed_w_error = VecNd<3>::Zero();
@@ -54,11 +56,11 @@ struct GyroMeasurement {
                                      const VecNd<3> &delta);
 };
 struct State {
-  VecNd<3> gyro_bias = VecNd<3>::Zero();
   VecNd<6> eps_ddot = VecNd<6>::Zero();
   VecNd<6> eps_dot = VecNd<6>::Zero();
-  SO3 R_world_from_body = SO3();
   VecNd<3> accel_bias = VecNd<3>::Zero();
+  VecNd<3> gyro_bias = VecNd<3>::Zero();
+  SO3 R_world_from_body = SO3();
   VecNd<3> x_world = VecNd<3>::Zero();
   static constexpr int DIM = 24;
   static VecNd<24> compute_delta(const State &a, const State &b);
@@ -75,33 +77,33 @@ struct AccelMeasurement {
                                       const VecNd<3> &delta);
 };
 struct StateDot {
-  VecNd<3> gyro_bias_dot = VecNd<3>::Zero();
-  VecNd<6> eps_ddot_dot = VecNd<6>::Zero();
+  VecNd<6> damped_eps_ddot = VecNd<6>::Zero();
   VecNd<6> eps_ddot = VecNd<6>::Zero();
-  VecNd<3> w = VecNd<3>::Zero();
   VecNd<3> accel_bias_dot = VecNd<3>::Zero();
+  VecNd<3> gyro_bias_dot = VecNd<3>::Zero();
+  VecNd<3> w = VecNd<3>::Zero();
   VecNd<3> v = VecNd<3>::Zero();
-  static constexpr int gyro_bias_dot_ind = 0;
-  static constexpr int gyro_bias_dot_dim = 3;
-  static constexpr int eps_ddot_dot_ind = 3;
-  static constexpr int eps_ddot_dot_dim = 6;
-  static constexpr int eps_ddot_ind = 9;
+  static constexpr int damped_eps_ddot_ind = 0;
+  static constexpr int damped_eps_ddot_dim = 6;
+  static constexpr int eps_ddot_ind = 6;
   static constexpr int eps_ddot_dim = 6;
-  static constexpr int w_ind = 15;
-  static constexpr int w_dim = 3;
-  static constexpr int accel_bias_dot_ind = 18;
+  static constexpr int accel_bias_dot_ind = 12;
   static constexpr int accel_bias_dot_dim = 3;
+  static constexpr int gyro_bias_dot_ind = 15;
+  static constexpr int gyro_bias_dot_dim = 3;
+  static constexpr int w_ind = 18;
+  static constexpr int w_dim = 3;
   static constexpr int v_ind = 21;
   static constexpr int v_dim = 3;
   static constexpr int DIM = 24;
 };
 struct ParametersDelta {
-  VecNd<6> T_imu_from_vehicle_error_log = VecNd<6>::Zero();
-  static constexpr int T_imu_from_vehicle_error_log_ind = 0;
-  static constexpr int T_imu_from_vehicle_error_log_dim = 6;
-  static constexpr int DIM = 6;
-  static VecNd<6> to_vector(const ParametersDelta &in_grp);
-  static ParametersDelta from_vector(const VecNd<6> &in_vec);
+  double acceleration_damping_error = 0.0;
+  VecNd<6> T_imu1_from_vehicle_error_log = VecNd<6>::Zero();
+  VecNd<6> T_world_from_fiducial_error_log = VecNd<6>::Zero();
+  static constexpr int DIM = 13;
+  static VecNd<13> to_vector(const ParametersDelta &in_grp);
+  static ParametersDelta from_vector(const VecNd<13> &in_vec);
 };
 struct AccelMeasurementDelta {
   VecNd<3> observed_acceleration_error = VecNd<3>::Zero();

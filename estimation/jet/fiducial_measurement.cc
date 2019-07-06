@@ -4,7 +4,8 @@ namespace estimation {
 namespace jet_filter {
 
 FiducialMeasurement observe_fiducial(const State& x, const Parameters& p) {
-  const SE3 fiducial_1_from_world;
+  // const SE3 fiducial_1_from_world;
+  const SE3 fiducial_1_from_world = p.T_world_from_fiducial.inverse();
 
   FiducialMeasurement meas;
   // const SE3 T_camera_from_world = p.T_camera_from_body * x.T_body_from_world;

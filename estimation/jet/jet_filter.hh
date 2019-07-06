@@ -15,10 +15,10 @@ class JetFilter {
   using JetFilterState = FilterState<State>;
 
  public:
-  static JetFilterState reasonable_initial_state();
+  static JetFilterState reasonable_initial_state(const TimePoint& t);
+  static Parameters reasonable_parameters();
 
-  JetFilter(const JetFilterState& xp);
-  JetFilter();
+  JetFilter(const JetFilterState& xp, const Parameters& parameters);
 
   void reset(const JetFilterState& xp) {
     xp_ = xp;
@@ -44,6 +44,10 @@ class JetFilter {
 
   const Parameters& parameters() const {
     return parameters_;
+  }
+
+  void set_parameters(const Parameters& p) {
+    parameters_ = p;
   }
 
   const JetFilterState& state() const {
