@@ -43,14 +43,16 @@ ParamVec create_reasonable_initialization(const std::vector<jcc::Vec3>& pts) {
 
 }  // namespace
 
-EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor) {
+EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts,
+                       const bool ignore_bias,
+                       const Visitor& visitor) {
   JASSERT_GE(pts.size(), 6u, "Cannot fit an ellipse with fewer than 6 points");
 
   //
   // Create function mapping parameter vector to an ellipse
   //
 
-  const auto ellipse_from_params = [](const ParamVec& v) {
+  const auto ellipse_from_params = [ignore_bias](const ParamVec& v) {
     MatNd<3, 3> L;
 
     // clang-format off
@@ -59,7 +61,8 @@ EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor
          v[4],  v[5],  v[2];
     // clang-format on
 
-    const jcc::Vec3 p = (jcc::Vec3() << v[6], v[7], v[8]).finished();
+    const jcc::Vec3 p =
+        ignore_bias ? jcc::Vec3::Zero() : (jcc::Vec3() << v[6], v[7], v[8]).finished();
     return Ellipse{L, p};
   };
 

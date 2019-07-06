@@ -24,7 +24,9 @@ using Visitor = std::function<void(const EllipseFit& fit)>;
 //      NOTE: Must contain at *least* 6 points.
 // [visitor]: A function that will be called on the current state of
 //            the optimization at each iteration
-EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts, const Visitor& visitor = {});
+EllipseFit fit_ellipse(const std::vector<jcc::Vec3>& pts,
+                       bool ignore_bias = false,
+                       const Visitor& visitor = {});
 
 }  // namespace shapes
 }  // namespace geometry
