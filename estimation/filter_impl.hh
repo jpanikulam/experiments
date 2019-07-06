@@ -102,15 +102,16 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
   if (!measurements_.empty()) {
     const Measurement meas = measurements_.top();
 
-    const double dt_sec = to_seconds(meas.time_of_validity - x_hat0.time_of_validity);
+    const auto dt = meas.time_of_validity - x_hat0.time_of_validity;
+    // const double dt_sec = to_seconds(dt);
 
-    JASSERT_GE(dt_sec, 0.0, "Time moved backwards");
-    JASSERT_LE(dt_sec, 0.5,
+    JASSERT_GE(dt, to_duration(0.0), "Time moved backwards");
+    JASSERT_LE(dt, to_duration(0.5),
                "A very long time has passed between measurements, "
                "the filter has almost certainly already diverged");
 
     const auto x_hat_t =
-        dt_sec > 0.0 ? dynamics_until(x_hat0, meas.time_of_validity) : x_hat0;
+        (dt > to_duration(0.0)) ? dynamics_until(x_hat0, meas.time_of_validity) : x_hat0;
     JASSERT_EQ(x_hat_t.time_of_validity, meas.time_of_validity,
                "Must simulate up to time of measurement");
 
