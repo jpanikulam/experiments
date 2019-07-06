@@ -55,6 +55,7 @@ geometry::UnitVector3 estimate_from_bracket(
       const jcc::Vec3 corrected_accel =
           imu_model.correct_measured_accel(accel.measurement.observed_acceleration);
 
+
       if (std::abs(corrected_accel.norm() - G_MPSS) > cfg.max_g_defect) {
         continue;
       }
@@ -121,7 +122,7 @@ GravityEstimationResult estimate_gravity_direction(
 
     const double dt = to_seconds(t1 - t0);
     const jcc::Vec3 dx_dt = camera_1_from_camera_0.translation() / dt;
-    const auto t = t0 + estimation::to_duration(dt * 0.5);
+    const auto t = average(t0, t1);
 
     const auto accel = accel_interp(t);
     const bool valid = (dt < cfg.max_fiducial_dt_sec) &&      //

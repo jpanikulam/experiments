@@ -45,7 +45,8 @@ ImuModel estimate_imu_intrinsics(const ImuCalibrationMeasurements& imu_meas) {
       }
     }
   }
-  const auto accel_correction = geometry::shapes::fit_ellipse(accel_to_fit);
+  constexpr bool IGNORE_BIAS = true;
+  const auto accel_correction = geometry::shapes::fit_ellipse(accel_to_fit, IGNORE_BIAS);
 
   std::vector<jcc::Vec3> mag_to_fit;
   {
@@ -58,6 +59,7 @@ ImuModel estimate_imu_intrinsics(const ImuCalibrationMeasurements& imu_meas) {
 
   const ImuIntrinsics intrinsics{.imu_gains = accel_correction.ellipse,
                                  .magnetometer_gains = mag_correction.ellipse};
+
   return ImuModel(intrinsics);
 }
 
