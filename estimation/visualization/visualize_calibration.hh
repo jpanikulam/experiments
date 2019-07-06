@@ -44,12 +44,10 @@ void visualize_fwd_acceleration(const calibration::CalibrationMeasurements& meas
                                 const std::shared_ptr<viewer::Ui2d> ui2d);
 
 void visualize_camera_distortion(const std::shared_ptr<viewer::Ui2d>& ui2d,
-                                 const ImageMeasurement& image,
                                  const NonlinearCameraModel& model);
 
 void visualize_camera_frustum(const std::shared_ptr<viewer::SimpleGeometry>& geo,
                               const std::shared_ptr<viewer::Ui2d>& ui2d,
-                              const ImageMeasurement& image,
                               const NonlinearCameraModel& model);
 
 void visualize_fiducial_detection(

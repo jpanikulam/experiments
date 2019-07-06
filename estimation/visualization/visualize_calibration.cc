@@ -14,7 +14,7 @@ void visualize_mag_data(const calibration::ImuModel& imu_model,
   ui2d->clear();
   const auto first = measurements.first();
 
-  viewer::LinePlotBuilder builder("Magnetometer");
+  viewer::LinePlotBuilder builder("Magnetometer (utesla)");
   viewer::PlotRange range;
   builder.set_range(range);
 
@@ -23,8 +23,8 @@ void visualize_mag_data(const calibration::ImuModel& imu_model,
   auto& mag_z = builder.make_subplot("mag_z", jcc::Vec4(0.0, 0.0, 1.0, 1.0), 0.5);
   auto& g_alignment =
       builder.make_subplot("g_alignment", jcc::Vec4(0.0, 1.0, 1.0, 1.0), 0.5);
-  int k = 0;
 
+  int k = 0;
   for (const auto& mag : measurements.mag_meas) {
     const auto t = to_seconds(mag.timestamp - first);
     const jcc::Vec3 mag_utesla = mag.measurement.observed_bfield;
@@ -42,6 +42,7 @@ void visualize_mag_data(const calibration::ImuModel& imu_model,
 
     const double angle =
         std::acos(corrected_mag.normalized().dot(corrected_accel.normalized()));
+    g_alignment << jcc::Vec2(t, angle);
 
     ++k;
   }
@@ -61,7 +62,7 @@ void visualize_gyro_data(const calibration::ImuModel& imu_model,
   ui2d->clear();
   const auto first = measurements.first();
 
-  viewer::LinePlotBuilder builder("Gyro Readings");
+  viewer::LinePlotBuilder builder("Gyro Measurements (rad/s)");
   viewer::PlotRange range;
   range.x_min = 0.0;
   range.x_max = to_seconds(measurements.last() - first);
@@ -101,7 +102,7 @@ void visualize_fwd_difference_angular(
   ui2d->clear();
   const auto first = measurements.first();
 
-  viewer::LinePlotBuilder builder("w (rad/s)");
+  viewer::LinePlotBuilder builder("Camera Estimated: w (rad/s)");
   viewer::PlotRange range;
   range.x_min = 0.0;
   range.x_max = to_seconds(measurements.last() - first);
@@ -159,12 +160,12 @@ void visualize_imu_data_with_intrinsics(
   ui2d->clear();
   const auto first = measurements.first();
 
-  viewer::LinePlotBuilder builder("IMU Readings");
+  viewer::LinePlotBuilder builder("Accelerometer Measurements (m/s^2)");
   viewer::PlotRange range;
   range.x_min = 0.0;
   range.x_max = to_seconds(measurements.last() - first);
-  // range.y_min = -1.5;
-  // range.y_max = 1.5;
+  range.y_min = -1.5;
+  range.y_max = 1.5;
 
   builder.set_range(range);
 
@@ -213,7 +214,7 @@ void visualize_fwd_difference(const calibration::CalibrationMeasurements& measur
   ui2d->clear();
   const auto first = measurements.first();
 
-  viewer::LinePlotBuilder builder("Velocity");
+  viewer::LinePlotBuilder builder("Camera Estimated Velocity: m/s");
   viewer::PlotRange range;
   range.x_min = 0.0;
   range.x_max = to_seconds(measurements.last() - first);
@@ -264,7 +265,7 @@ void visualize_fwd_acceleration(const calibration::CalibrationMeasurements& meas
   ui2d->clear();
   const auto first = measurements.first();
 
-  viewer::LinePlotBuilder builder("Velocity");
+  viewer::LinePlotBuilder builder("Camera Estimated Acceleration (m/s^2)");
   viewer::PlotRange range;
   range.x_min = 0.0;
   range.x_max = to_seconds(measurements.last() - first);
@@ -300,7 +301,7 @@ void visualize_fwd_acceleration(const calibration::CalibrationMeasurements& meas
       const SE3 camera_cur_from_camera_prev =
           fiducial_from_camera_cur.inverse() * fiducial_from_camera_prev;
       const double dt = to_seconds(t_cur - t_prev);
-      dx_dt_1 = camera_cur_from_camera_prev.translation() / dt;
+      dx_dt_1 = -camera_cur_from_camera_prev.translation() / dt;
     }
 
     jcc::Vec3 dx_dt_2 = jcc::Vec3::Zero();
@@ -308,7 +309,7 @@ void visualize_fwd_acceleration(const calibration::CalibrationMeasurements& meas
       const SE3 camera_next_from_camera_cur =
           fiducial_from_camera_next.inverse() * fiducial_from_camera_cur;
       const double dt = to_seconds(t_next - t_cur);
-      dx_dt_2 = camera_next_from_camera_cur.translation() / dt;
+      dx_dt_2 = -camera_next_from_camera_cur.translation() / dt;
     }
 
     const auto t1 = average(t_prev, t_cur);
@@ -334,7 +335,6 @@ void visualize_fwd_acceleration(const calibration::CalibrationMeasurements& meas
 }
 
 void visualize_camera_distortion(const std::shared_ptr<viewer::Ui2d>& ui2d,
-                                 const ImageMeasurement& image,
                                  const NonlinearCameraModel& model) {
   const auto bottom_left = *model.unproject(jcc::Vec2(0.0, 0.0));
   const auto bottom_right = *model.unproject(jcc::Vec2(model.cols(), 0.0));
@@ -368,7 +368,6 @@ void visualize_camera_distortion(const std::shared_ptr<viewer::Ui2d>& ui2d,
 
 void visualize_camera_frustum(const std::shared_ptr<viewer::SimpleGeometry>& geo,
                               const std::shared_ptr<viewer::Ui2d>& ui2d,
-                              const ImageMeasurement& image,
                               const NonlinearCameraModel& model) {
   const std::vector<jcc::Vec2> image_pts = {
       jcc::Vec2(0.0, model.rows()),           //
@@ -478,61 +477,54 @@ OptimizationVisitor create_gyro_orientation_optimization_visitor(
   const auto view = viewer::get_window3d("Calibration");
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
 
-  const auto visitor = [view, ui2d, w_cam_at_t, w_gyro_at_t](
-                           const RotationBetweenVectorSeries& result) {
-    viewer::LinePlotBuilder builder("Gyro Optimization");
+  const auto visitor =
+      [view, ui2d, w_cam_at_t, w_gyro_at_t](const RotationBetweenVectorSeries& result) {
+        viewer::LinePlotBuilder builder("Gyro->Camera Rotation Optimization");
 
-    const double xyz_alpha = 1.0;
-    auto& gyro_x =
-        builder.make_subplot("gyro_x", jcc::Vec4(1.0, 0.0, 0.0, xyz_alpha), 0.3);
-    auto& gyro_y =
-        builder.make_subplot("gyro_y", jcc::Vec4(0.0, 1.0, 0.0, xyz_alpha), 0.3);
-    auto& gyro_z =
-        builder.make_subplot("gyro_z", jcc::Vec4(0.0, 0.0, 1.0, xyz_alpha), 0.3);
-    auto& camera_w_x = builder.make_subplot(
-        "camera_w_x", jcc::Vec4(1.0, 0.0, 0.0, xyz_alpha), 0.3, true);
-    auto& camera_w_y = builder.make_subplot(
-        "camera_w_y", jcc::Vec4(0.0, 1.0, 0.0, xyz_alpha), 0.3, true);
-    auto& camera_w_z = builder.make_subplot(
-        "camera_w_z", jcc::Vec4(0.0, 0.0, 1.0, xyz_alpha), 0.3, true);
+        const double xyz_alpha = 1.0;
+        auto& gyro_x =
+            builder.make_subplot("gyro_x", jcc::Vec4(1.0, 0.0, 0.0, xyz_alpha), 0.3);
+        auto& gyro_y =
+            builder.make_subplot("gyro_y", jcc::Vec4(0.0, 1.0, 0.0, xyz_alpha), 0.3);
+        auto& gyro_z =
+            builder.make_subplot("gyro_z", jcc::Vec4(0.0, 0.0, 1.0, xyz_alpha), 0.3);
+        auto& camera_w_x = builder.make_subplot(
+            "camera_w_x", jcc::Vec4(1.0, 0.0, 0.0, xyz_alpha), 0.3, true);
+        auto& camera_w_y = builder.make_subplot(
+            "camera_w_y", jcc::Vec4(0.0, 1.0, 0.0, xyz_alpha), 0.3, true);
+        auto& camera_w_z = builder.make_subplot(
+            "camera_w_z", jcc::Vec4(0.0, 0.0, 1.0, xyz_alpha), 0.3, true);
 
-    auto& dot_product =
-        builder.make_subplot("dot_product", jcc::Vec4(1.0, 0.0, 1.0, 1.0), 0.3);
-    auto& weight = builder.make_subplot("weight", jcc::Vec4(0.0, 1.0, 1.0, 1.0), 0.9);
+        auto& dot_product =
+            builder.make_subplot("dot_product", jcc::Vec4(1.0, 0.0, 1.0, 1.0), 0.3);
+        auto& weight = builder.make_subplot("weight", jcc::Vec4(0.0, 1.0, 1.0, 1.0), 0.9);
 
-    for (std::size_t k = 0; k < w_cam_at_t.size(); ++k) {
-      const auto& gyro_w = w_gyro_at_t.at(k);
-      const auto& cam_w = w_cam_at_t.at(k);
-      const double t = static_cast<double>(k) / 20.0;
+        for (std::size_t k = 0; k < w_cam_at_t.size(); ++k) {
+          const auto& gyro_w = w_gyro_at_t.at(k);
+          const auto& cam_w = w_cam_at_t.at(k);
+          const double t = static_cast<double>(k) / 20.0;
 
-      const jcc::Vec3 gyro_w_camera_frame = result.b_from_a * gyro_w;
+          const jcc::Vec3 gyro_w_camera_frame = result.b_from_a * gyro_w;
 
-      gyro_x << jcc::Vec2(t, gyro_w_camera_frame.normalized().x());
-      gyro_y << jcc::Vec2(t, gyro_w_camera_frame.normalized().y());
-      gyro_z << jcc::Vec2(t, gyro_w_camera_frame.normalized().z());
-      camera_w_x << jcc::Vec2(t, cam_w.normalized().x());
-      camera_w_y << jcc::Vec2(t, cam_w.normalized().y());
-      camera_w_z << jcc::Vec2(t, cam_w.normalized().z());
-      weight << jcc::Vec2(t, result.weights[k]);
+          gyro_x << jcc::Vec2(t, gyro_w_camera_frame.normalized().x());
+          gyro_y << jcc::Vec2(t, gyro_w_camera_frame.normalized().y());
+          gyro_z << jcc::Vec2(t, gyro_w_camera_frame.normalized().z());
+          camera_w_x << jcc::Vec2(t, cam_w.normalized().x());
+          camera_w_y << jcc::Vec2(t, cam_w.normalized().y());
+          camera_w_z << jcc::Vec2(t, cam_w.normalized().z());
+          weight << jcc::Vec2(t, result.weights[k]);
 
-      dot_product << jcc::Vec2(t,
-                               gyro_w_camera_frame.normalized().dot(cam_w.normalized()));
-    }
+          dot_product << jcc::Vec2(
+              t, gyro_w_camera_frame.normalized().dot(cam_w.normalized()));
+        }
 
-    ui2d->add_lineplot(builder);
-    ui2d->flip();
-    const double average_error = std::sqrt(result.average_error.norm());
-    if (result.success) {
-      if (average_error > 0.5) {
-        jcc::Warning() << "[Camera->IMU] Average error: " << average_error << std::endl;
-      } else {
-        jcc::Success() << "[Camera->IMU] Aligned Successfully, average error:"
-                       << average_error << std::endl;
-      }
-    }
-    view->spin_until_step();
-    ui2d->clear();
-  };
+        ui2d->add_lineplot(builder);
+        ui2d->flip();
+        const double average_error = std::sqrt(result.average_error.norm());
+        (void)average_error;
+        view->spin_until_step();
+        ui2d->clear();
+      };
   return visitor;
 }
 
