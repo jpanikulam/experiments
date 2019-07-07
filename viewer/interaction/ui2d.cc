@@ -174,7 +174,7 @@ void draw_points(const std::vector<Point2d> points,
     glPointSize(pt.size);
     glBegin(GL_POINTS);
     glColor(pt.color);
-    glVertex3d(pt.point.x(), 1.0 - pt.point.y(), -0.1);
+    glVertex3d(pt.point.x(), 1.0 - pt.point.y(), 0.1);
     glEnd();
   }
 }
@@ -211,10 +211,10 @@ void draw_grid_mesh(const GridMesh &mesh) {
         const int br = c + 1 + ((r + 1) * cols_per_row);
         const int bl = c + ((r + 1) * cols_per_row);
 
-        glVertex3d(pts[tl].x(), pts[tl].y(), Z_DIST);
-        glVertex3d(pts[tr].x(), pts[tr].y(), Z_DIST);
-        glVertex3d(pts[br].x(), pts[br].y(), Z_DIST);
-        glVertex3d(pts[bl].x(), pts[bl].y(), Z_DIST);
+        glVertex3d(pts[tl].x(), 1.0 - pts[tl].y(), Z_DIST);
+        glVertex3d(pts[tr].x(), 1.0 - pts[tr].y(), Z_DIST);
+        glVertex3d(pts[br].x(), 1.0 - pts[br].y(), Z_DIST);
+        glVertex3d(pts[bl].x(), 1.0 - pts[bl].y(), Z_DIST);
       }
     }
     glEnd();
@@ -232,10 +232,10 @@ void draw_grid_mesh(const GridMesh &mesh) {
         const int bl = c + ((r + 1) * cols_per_row);
 
         glBegin(GL_LINE_LOOP);
-        glVertex3d(pts[tl].x(), pts[tl].y(), Z_DIST_OUTLINE);
-        glVertex3d(pts[tr].x(), pts[tr].y(), Z_DIST_OUTLINE);
-        glVertex3d(pts[br].x(), pts[br].y(), Z_DIST_OUTLINE);
-        glVertex3d(pts[bl].x(), pts[bl].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[tl].x(), 1.0 - pts[tl].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[tr].x(), 1.0 - pts[tr].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[br].x(), 1.0 - pts[br].y(), Z_DIST_OUTLINE);
+        glVertex3d(pts[bl].x(), 1.0 - pts[bl].y(), Z_DIST_OUTLINE);
         glEnd();
       }
     }
@@ -319,14 +319,13 @@ void Ui2d::draw() const {
   draw_points(front_buffer_.points, proj, char_lib_);
   draw_lines(front_buffer_.lines, proj, char_lib_);
 
-  for (const auto &image : front_buffer_.images) {
-    draw_image(image, proj, char_lib_);
-  }
-
   for (const auto &mesh : front_buffer_.grid_meshes) {
     draw_grid_mesh(mesh);
   }
 
+  for (const auto &image : front_buffer_.images) {
+    draw_image(image, proj, char_lib_);
+  }
 
   glPopMatrix();
 
