@@ -37,7 +37,8 @@ void demo() {
     ell_geo->flip();
     view->spin_until_step();
   };
-  const auto result = fit_ellipse(points, visitor);
+  constexpr bool INCLUDE_BIAS = true;
+  const auto result = fit_ellipse(points, INCLUDE_BIAS,visitor);
 
   ell_geo->add_ellipsoid({result.ellipse, jcc::Vec4(0.2, 1.0, 0.2, 1.0), 4.0});
   ell_geo->flip();

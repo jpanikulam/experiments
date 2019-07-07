@@ -28,7 +28,7 @@ Parameters mock_parameters() {
       // SO3::exp(jcc::Vec3(-3.10341, -0.0387912, -0.00578994));
 
   const SE3 sensor_from_body(r_vehicle_from_sensor, t);
-  p.T_imu_from_vehicle = sensor_from_body;
+  p.T_imu1_from_vehicle = sensor_from_body;
   return p;
 }
 
@@ -85,7 +85,7 @@ void run_filter() {
 
   JetOptimizer jet_opt;
 
-  FilterState<State> xp0 = JetFilter::reasonable_initial_state();
+  FilterState<State> xp0 = JetFilter::reasonable_initial_state(TimePoint::min());
   xp0.x.R_world_from_body = SO3::exp(jcc::Vec3::UnitX() * M_PI * 0.5);
 
   xp0.time_of_validity = {};
@@ -104,7 +104,7 @@ void run_filter() {
   // true_x.eps_ddot[5] = 0.01;
   // true_x.eps_ddot[3] = 0.02;
 
-  JetFilter jf(xp0);
+  JetFilter jf(xp0, true_params);
 
   setup();
   const auto view = viewer::get_window3d("Mr. Filter, filters");
@@ -160,7 +160,7 @@ void run_filter() {
 
       const SE3 world_from_body = get_world_from_body(jf.state().x);
       const jcc::Vec3 observed_accel_world_frame =
-          (world_from_body.so3() * true_params.T_imu_from_vehicle.so3().inverse() *
+          (world_from_body.so3() * true_params.T_imu1_from_vehicle.so3().inverse() *
            imu_meas.observed_acceleration);
 
       obs_geo->add_line(
@@ -194,7 +194,7 @@ void run_filter() {
 
       const SE3 world_from_body = get_world_from_body(jf.state().x);
       const jcc::Vec3 observed_w_world_frame =
-          (world_from_body.so3() * true_params.T_imu_from_vehicle.so3().inverse() *
+          (world_from_body.so3() * true_params.T_imu1_from_vehicle.so3().inverse() *
            gyro_meas.observed_w);
 
       obs_geo->add_line({world_from_body.translation(),
@@ -260,9 +260,9 @@ void run_filter() {
     visitor_geo->clear();
     draw_states(*visitor_geo, soln.x, false);
     visitor_geo->flip();
-    std::cout << "\tOptimized T_imu_from_vehicle: "
-              << soln.p.T_imu_from_vehicle.translation().transpose() << "; "
-              << soln.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
+    std::cout << "\tOptimized T_imu1_from_vehicle: "
+              << soln.p.T_imu1_from_vehicle.translation().transpose() << "; "
+              << soln.p.T_imu1_from_vehicle.so3().log().transpose() << std::endl;
     view->spin_until_step();
   };
 
@@ -276,9 +276,9 @@ void run_filter() {
     std::cout << "\\\\\\\\\\\\" << std::endl;
     print_state(ground_truth.at(k).x);
   }
-  std::cout << "Optimized T_imu_from_vehicle: "
-            << solution.p.T_imu_from_vehicle.translation().transpose() << "; "
-            << solution.p.T_imu_from_vehicle.so3().log().transpose() << std::endl;
+  std::cout << "Optimized T_imu1_from_vehicle: "
+            << solution.p.T_imu1_from_vehicle.translation().transpose() << "; "
+            << solution.p.T_imu1_from_vehicle.so3().log().transpose() << std::endl;
 
   draw_states(*geo, solution.x, false);
 

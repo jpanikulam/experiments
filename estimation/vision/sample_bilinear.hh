@@ -2,6 +2,8 @@
 
 #include "eigen.hh"
 
+//%ignore
+
 #include <opencv2/opencv.hpp>
 
 namespace estimation {
