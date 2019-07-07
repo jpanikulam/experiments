@@ -20,6 +20,15 @@ If you found the above "cool", great. Most reasonable people do. But it's just a
 * If you're using OpenCV, allocate time for dealing with failed calibrations
 * If you have multiple sensors, this is going to be hard and you need to think hard about it
 
+# Human Processes
+Here, a "process" is some procedure that a _human being_ executes, reading from a list of instructions
+* The First Law of Human Processes: A process involving a human with more than two steps is subtly broken.
+* The Second Law of Human Processes: A process involving more than 3 steps is broken in some fundamental way
+
+* Observation: The performance of an autonomous system with human supervisors will increase with time, despite no software or hardware changes
+    * Conclusion 1: Human operators will accumulate knoweldge about how to coerce the system in a working state
+    * Conclusion 2: Often, they won't realize it, and that knowledge won't propagate throughout the organization
+
 
 # Deep Learning
 * A good DL model looks like the code you would have hand-written, making the heuristics optimizable
