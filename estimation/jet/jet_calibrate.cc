@@ -23,40 +23,6 @@ const cv::Size get_chess_size() {
   return board_size;
 }
 
-struct ProjectionModel {
-  double fx;
-  double fy;
-  double cx;
-  double cy;
-
-  double p1;
-  double p2;
-
-  double k1;
-  double k2;
-  double k3;
-};
-
-jcc::Vec2 distort(const ProjectionModel& proj, const jcc::Vec3& world_point) {
-  const jcc::Vec2 distorted_point = world_point.head<2>() / world_point.z();
-
-  const double r2 = distorted_point.squaredNorm();
-  const double x = distorted_point.x();
-  const double y = distorted_point.y();
-  const double xy = x * y;
-
-  const double x_tan_offset = (2.0 * proj.p1 * xy) + (proj.p2 * (r2 + (2.0 * x * x)));
-  const double y_tan_offset = (2.0 * proj.p2 * xy) + (proj.p1 * (r2 + (2.0 * y * y)));
-
-  const double r4 = r2 * r2;
-  const double r6 = r2 * r4;
-
-  const double radial_distortion = (proj.k1 * r2) + (proj.k2 * r4) + (proj.k3 * r6);
-  const double x_prime = x * (1.0 + radial_distortion) + x_tan_offset;
-  const double y_prime = y * (1.0 + radial_distortion) + y_tan_offset;
-  return jcc::Vec2(x_prime, y_prime);
-}
-
 void setup() {
   const auto view = viewer::get_window3d("ImageView");
 

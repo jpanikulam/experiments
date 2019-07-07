@@ -1,5 +1,7 @@
 #pragma once
 
+//%ignore()
+
 #include "estimation/jet/jet_optimizer.hh"
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
