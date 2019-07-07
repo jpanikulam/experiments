@@ -55,7 +55,6 @@ geometry::UnitVector3 estimate_from_bracket(
       const jcc::Vec3 corrected_accel =
           imu_model.correct_measured_accel(accel.measurement.observed_acceleration);
 
-
       if (std::abs(corrected_accel.norm() - G_MPSS) > cfg.max_g_defect) {
         continue;
       }
@@ -96,7 +95,8 @@ GravityEstimationResult estimate_gravity_direction(
     const ImuCalibrationMeasurements& imu_measurements,
     const ImuModel& imu_model,
     const EstimationConfig& cfg) {
-  const auto accel_interp = make_accel_interpolator(imu_measurements.accel_meas, imu_model);
+  const auto accel_interp =
+      make_accel_interpolator(imu_measurements.accel_meas, imu_model);
   JASSERT_GT(imu_measurements.accel_meas.size(),
              1000u,
              "Should have at least 1000 accel measurements");
@@ -124,10 +124,12 @@ GravityEstimationResult estimate_gravity_direction(
     const jcc::Vec3 dx_dt = camera_1_from_camera_0.translation() / dt;
     const auto t = average(t0, t1);
 
-    const auto accel = accel_interp(t);
-    const bool valid = (dt < cfg.max_fiducial_dt_sec) &&      //
-                       (dx_dt.norm() < cfg.max_speed_mps) &&  //
-                       accel;
+    const bool accel_available = static_cast<bool>(accel_interp(t));
+    const bool dt_small_enough = dt < cfg.max_fiducial_dt_sec;
+    const bool estimated_speed_small_enough = dx_dt.norm() < cfg.max_speed_mps;
+    const bool valid = dt_small_enough &&               //
+                       estimated_speed_small_enough &&  //
+                       accel_available;
 
     if (valid) {
       if (in_bracket) {

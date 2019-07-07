@@ -9,7 +9,7 @@ namespace calibration {
 
 // One should typically expect to use the defaults.
 struct EstimationConfig {
-  double max_speed_mps = 0.005;
+  double max_speed_mps = 0.1;
   double max_fiducial_dt_sec = 0.2;
   double min_stationary_time_sec = 6.0;
   double max_g_defect = 0.02;

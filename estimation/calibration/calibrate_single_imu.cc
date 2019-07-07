@@ -59,13 +59,15 @@ SO3 estimate_camera_from_gyro(
   const std::string imu_lead = imu_lead_ss.str();
 
   if (result.success) {
-    if (average_error > 0.5) {
+    if (!std::isfinite(average_error)) {
+      jcc::Error() << imu_lead << " [Camera->IMU] Total failure to align" << std::endl;
+    } else if (average_error < 0.5) {
+      jcc::Success() << imu_lead << " [Camera->IMU] Aligned Successfully, average error: "
+                     << average_error << std::endl;
+    } else {
       jcc::Warning() << imu_lead
                      << " [Camera->IMU] Aligned Poorly, average error: " << average_error
                      << std::endl;
-    } else {
-      jcc::Success() << imu_lead << " [Camera->IMU] Aligned Successfully, average error: "
-                     << average_error << std::endl;
     }
   }
 
@@ -88,6 +90,7 @@ SingleImuCalibration create_single_imu_model(
       estimation::calibration::estimate_imu_intrinsics(imu_cal_measurements);
   jcc::Success() << imu_lead << " Estimating sensor-frame direction of gravity..."
                  << std::endl;
+
   const auto g_estimate = estimate_gravity_direction(
       all_cal_measurements, imu_cal_measurements, imu_model, {});
 
@@ -186,5 +189,5 @@ SingleImuCalibration create_single_imu_model(
       .g_estimate = g_estimate,             //
       .camera_from_gyro = camera_from_gyro  //
   };
-}
+}  // namespace estimation
 }  // namespace estimation

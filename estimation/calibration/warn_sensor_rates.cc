@@ -82,8 +82,24 @@ void warn_sensor_rates(
                      << " Hz" << std::endl;
     } else {
       jcc::Success() << "[Camera] Fiducial recording rate was good: " << avg_rate_hz
-                   << " Hz" << std::endl;
+                     << " Hz" << std::endl;
     }
+
+    TimePoint prev_time = TimePoint::min();
+    int num_repeated = 0;
+    for (const auto& measurement : cal_measurements.fiducial_meas) {
+      if (measurement.timestamp <= prev_time) {
+        num_repeated++;
+      }
+      prev_time = measurement.timestamp;
+    }
+    if (num_repeated > 0) {
+      jcc::Warning() << "[Camera] There were " << num_repeated
+                     << "fiducial messages with non-monotonic timestamps. Calibration is "
+                        "unlikely to succeed"
+                     << std::endl;
+    }
+
   } else {
     jcc::Error() << "[Camera] No fiducial measurements" << std::endl;
   }
