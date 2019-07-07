@@ -243,6 +243,8 @@ void visualize_fwd_difference(const calibration::CalibrationMeasurements& measur
 
     const double t = to_seconds(t0 - first);
 
+    std::cout << "t: " << t << std::endl;
+
     constexpr double MAX_DT_SEC = 0.2;
     dt_plt << jcc::Vec2(t, dt);
     if (dt < MAX_DT_SEC) {
@@ -341,29 +343,40 @@ void visualize_camera_distortion(const std::shared_ptr<viewer::Ui2d>& ui2d,
   const auto top_left = *model.unproject(jcc::Vec2(0.0, model.rows()));
   const auto top_right = *model.unproject(jcc::Vec2(model.cols(), model.rows()));
 
-  const double z_dist = 3.0;
+  const double sample_z_dist = 3.0;
   std::vector<jcc::Vec2> mesh_vertices;
 
-  const int num_rows = 32;
-  const double scaling = 1.4;
+  const int num_cells = 32;
+  const double scaling = 1.2;
 
-  const double x_min = bottom_left(z_dist).x() * scaling;
-  const double x_max = bottom_right(z_dist).x() * scaling;
-  const double y_min = bottom_left(z_dist).y() * scaling;
-  const double y_max = top_left(z_dist).y() * scaling;
+  //
+  // Range for min/max
+  //
+  const jcc::Vec3 bottom_left_at_z = bottom_left(sample_z_dist);
+  const double x_min = bottom_left_at_z.x() * scaling;
+  const double x_max = bottom_right(sample_z_dist).x() * scaling;
+  const double y_min = bottom_left(sample_z_dist).y() * scaling;
+  const double y_max = top_left(sample_z_dist).y() * scaling;
 
-  const double range_m = x_max - x_min;
-  const double space_per_increment = range_m / num_rows;
+  const double z_dist = bottom_left_at_z.z();
 
-  for (double x = x_min; x <= x_max; x += space_per_increment) {
-    for (double y = y_min; y <= y_max; y += space_per_increment) {
+  const double x_range_m = x_max - x_min;
+  const double increment_x_m = x_range_m / num_cells;
+
+  const double y_range_m = y_max - y_min;
+  const double increment_y_m = y_range_m / num_cells;
+
+  for (int i = 0; i <= num_cells; ++i) {
+    for (int j = 0; j <= num_cells; ++j) {
+      const double x = (i * increment_x_m) + x_min;
+      const double y = (j * increment_y_m) + y_min;
       const jcc::Vec3 camera_frame_pt(x, y, z_dist);
       const jcc::Vec2 projected = model.project_unchecked(camera_frame_pt);
       mesh_vertices.push_back(projected / model.rows());
     }
   }
 
-  ui2d->add_grid_mesh({num_rows, mesh_vertices});
+  ui2d->add_grid_mesh({num_cells + 1, mesh_vertices});
 }
 
 void visualize_camera_frustum(const std::shared_ptr<viewer::SimpleGeometry>& geo,
@@ -481,7 +494,7 @@ OptimizationVisitor create_gyro_orientation_optimization_visitor(
       [view, ui2d, w_cam_at_t, w_gyro_at_t](const RotationBetweenVectorSeries& result) {
         viewer::LinePlotBuilder builder("Gyro->Camera Rotation Optimization");
 
-        const double xyz_alpha = 1.0;
+        const double xyz_alpha = 0.0;
         auto& gyro_x =
             builder.make_subplot("gyro_x", jcc::Vec4(1.0, 0.0, 0.0, xyz_alpha), 0.3);
         auto& gyro_y =
