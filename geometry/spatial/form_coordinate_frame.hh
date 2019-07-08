@@ -6,6 +6,7 @@ namespace geometry {
 namespace spatial {
 
 // Form a coordinate frame that takes Z to provided zhat
+// Returns z_from_zhat
 SO3 form_coordinate_frame_from_zhat(const Unit3& zhat);
 
 // Forms a coordinate frame that takes Z to provided zhat,

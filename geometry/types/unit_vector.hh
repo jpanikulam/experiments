@@ -46,8 +46,17 @@ class UnitVector {
     return v_;
   }
 
-  const double project(const Vec& v) {
+  const Vec project(const Vec& v) const {
+    return v_ * v_.dot(v);
+  }
+
+  double dot(const Vec& v) const {
     return v_.dot(v);
+  }
+
+  UnitVector unit_cross(const UnitVector& v) const {
+    static_assert(N == 3, "Must have dimension 3");
+    return UnitVector(Vec(v_.cross(v.vec())));
   }
 
   static UnitVector normalize(const Vec& v) {
@@ -81,12 +90,14 @@ class UnitVector {
 };
 
 using UnitVector3 = UnitVector<3>;
-inline UnitVector3 operator*(const SE3& destination_from_source, const UnitVector3& source) {
+inline UnitVector3 operator*(const SE3& destination_from_source,
+                             const UnitVector3& source) {
   return UnitVector3::bless(destination_from_source.so3() * source.vec());
 }
 
 using UnitVector3 = UnitVector<3>;
-inline UnitVector3 operator*(const SO3& destination_from_source, const UnitVector3& source) {
+inline UnitVector3 operator*(const SO3& destination_from_source,
+                             const UnitVector3& source) {
   return UnitVector3::bless(destination_from_source * source.vec());
 }
 
