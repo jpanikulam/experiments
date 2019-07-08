@@ -94,9 +94,10 @@ tokens = {
     '#include "': partial(grab_include, incl_type="local"),
     'int main(': make_flagger('has_main'),
     'void main(': make_flagger('has_main'),
+    'void main(': make_flagger('has_main'),
     '//%ignore': make_flagger('ignore'),
     '#include "testing/gtest.hh"': make_flagger('is_test'),
-    # '//%hdrlib': grab_hdr_lib,
+    '//%test': make_flagger('is_test'),
 }
 
 
