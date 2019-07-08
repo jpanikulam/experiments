@@ -184,10 +184,9 @@ SingleImuCalibration create_single_imu_model(
   const SO3 camera_from_gyro = estimate_camera_from_gyro(
       all_cal_measurements, imu_cal_measurements, cfg.visualize_gyro);
 
-  return SingleImuCalibration{
-      .imu_model = imu_model,               //
-      .g_estimate = g_estimate,             //
-      .camera_from_gyro = camera_from_gyro  //
-  };
+  return SingleImuCalibration{.imu_model = imu_model,                //
+                              .g_estimate = g_estimate,              //
+                              .camera_from_gyro = camera_from_gyro,  //
+                              .imu_id = imu_cal_measurements.imu_id};
 }  // namespace estimation
 }  // namespace estimation

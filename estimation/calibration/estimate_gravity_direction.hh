@@ -21,6 +21,9 @@ struct EstimationConfig {
 struct GravityEstimationResult {
   geometry::UnitVector3 direction;
   TimePoint time;
+  // TODO: (Instead of asserting)
+  // std::vector<std::string> warning
+  // bool success;
 };
 
 GravityEstimationResult estimate_gravity_direction(

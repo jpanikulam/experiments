@@ -41,13 +41,6 @@ MatNd<State::DIM, State::DIM> make_cov() {
   numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind>(state_cov, 0.5);
   numerics::set_diag_to_value<3, StateDelta::eps_ddot_error_ind + 3>(state_cov, 0.5);
 
-  // numerics::set_diag_to_value<3,
-  // StateDelta::T_body_from_world_error_log_ind>(state_cov,
-  //                                                                             0.001);
-
-  // numerics::set_diag_to_value<3, StateDelta::T_body_from_world_error_log_ind + 3>(
-  //     state_cov, 0.001)
-  ;
   numerics::set_diag_to_value<3, StateDelta::R_world_from_body_error_log_ind>(state_cov,
                                                                               0.01);
   numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.01);
@@ -71,9 +64,6 @@ FilterState<State> JetFilter::reasonable_initial_state(const TimePoint& t) {
   numerics::set_diag_to_value<StateDelta::eps_ddot_error_dim,
                               StateDelta::eps_ddot_error_ind>(state_cov, 0.001);
 
-  // numerics::set_diag_to_value<StateDelta::T_body_from_world_error_log_dim,
-  //                             StateDelta::T_body_from_world_error_log_ind>(state_cov,
-  //                                                                          1.0);
   numerics::set_diag_to_value<3, StateDelta::R_world_from_body_error_log_ind>(state_cov,
                                                                               0.001);
   numerics::set_diag_to_value<3, StateDelta::x_world_error_ind>(state_cov, 0.001);
@@ -83,14 +73,7 @@ FilterState<State> JetFilter::reasonable_initial_state(const TimePoint& t) {
 }
 
 Parameters JetFilter::reasonable_parameters() {
-  const jcc::Vec3 trans_imu_from_vehicle = jcc::Vec3(0.0, 0.0, 0.0);
-  // const SO3 R_imu_from_vehicle = SO3::exp(jcc::Vec3(-2.75553, 0.0790927, -0.0549754));
-
-  const SO3 R_imu_from_vehicle;
-  const SE3 imu_from_vehicle(R_imu_from_vehicle, trans_imu_from_vehicle);
-
   Parameters p;
-  p.T_imu1_from_vehicle = imu_from_vehicle;
   p.acceleration_damping = -0.99;
   return p;
 }
@@ -101,7 +84,7 @@ void JetFilter::setup_models() {
   {
     numerics::set_diag_to_value<AccelMeasurementDelta::observed_acceleration_error_dim,
                                 AccelMeasurementDelta::observed_acceleration_error_ind>(
-        accel_cov, 0.1);
+        accel_cov, 0.5);
   }
 
   const MatNd<GyroMeasurement::DIM, GyroMeasurement::DIM> gyro_cov = 0.1 * accel_cov;
@@ -124,7 +107,8 @@ void JetFilter::setup_models() {
       accel_cov);
 
   gyro_2_id_ = ekf_.add_model(
-      bind_parameters<GyroMeasurement>(observe_gyro_2_error_model, parameters_), gyro_cov);
+      bind_parameters<GyroMeasurement>(observe_gyro_2_error_model, parameters_),
+      gyro_cov);
 
   fiducial_id_ = ekf_.add_model(
       bind_parameters<FiducialMeasurement>(fiducial_error_model, parameters_),
@@ -135,6 +119,12 @@ JetFilter::JetFilter(const JetFilterState& xp, const Parameters& parameters)
     : xp_(xp), parameters_(parameters), ekf_(make_dynamics(parameters), make_cov()) {
   setup_models();
   initialized_ = true;
+}
+
+JetFilter::JetFilter(const Parameters& parameters)
+    : parameters_(parameters), ekf_(make_dynamics(parameters), make_cov()) {
+  setup_models();
+  initialized_ = false;
 }
 
 void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t, bool imu2) {

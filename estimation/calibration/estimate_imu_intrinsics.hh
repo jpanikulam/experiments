@@ -30,6 +30,10 @@ class ImuModel {
 
   jcc::Vec3 correct_measured_mag(const jcc::Vec3& raw_measurement) const;
 
+  const ImuIntrinsics& intrinsics() const {
+    return intrinsics_;
+  }
+
  private:
   ImuIntrinsics intrinsics_;
 };

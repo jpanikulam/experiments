@@ -172,8 +172,6 @@ void visualize_imu_data_with_intrinsics(
   auto& imu_x = builder.make_subplot("imu_x", jcc::Vec4(1.0, 0.0, 0.0, 1.0), 0.5);
   auto& imu_y = builder.make_subplot("imu_y", jcc::Vec4(0.0, 1.0, 0.0, 1.0), 0.5);
   auto& imu_z = builder.make_subplot("imu_z", jcc::Vec4(0.0, 0.0, 1.0, 1.0), 0.5);
-  auto& norm_uncorrected =
-      builder.make_subplot("norm_uncorrected", jcc::Vec4(0.0, 1.0, 1.0, 0.8), 0.5);
   auto& norm = builder.make_subplot("norm", jcc::Vec4(0.0, 1.0, 1.0, 0.8), 0.5);
 
   for (const auto& accel_meas : measurements.accel_meas) {
@@ -193,7 +191,6 @@ void visualize_imu_data_with_intrinsics(
     const jcc::Vec3 g_absent = (corrected - (9.81 * corrected.normalized()));
 
     norm << jcc::Vec2(t, g_absent.norm());
-    // norm_uncorrected << jcc::Vec2(t, g_absent);
   }
 
   ui2d->add_lineplot(builder);
@@ -341,7 +338,6 @@ void visualize_camera_distortion(const std::shared_ptr<viewer::Ui2d>& ui2d,
   const auto bottom_left = *model.unproject(jcc::Vec2(0.0, 0.0));
   const auto bottom_right = *model.unproject(jcc::Vec2(model.cols(), 0.0));
   const auto top_left = *model.unproject(jcc::Vec2(0.0, model.rows()));
-  const auto top_right = *model.unproject(jcc::Vec2(model.cols(), model.rows()));
 
   const double sample_z_dist = 3.0;
   std::vector<jcc::Vec2> mesh_vertices;

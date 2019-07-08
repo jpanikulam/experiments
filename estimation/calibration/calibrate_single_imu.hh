@@ -13,6 +13,7 @@ struct SingleImuCalibration {
   calibration::ImuModel imu_model;
   calibration::GravityEstimationResult g_estimate;
   SO3 camera_from_gyro;
+  int imu_id;
 };
 
 struct CreateSingleImuModelConfig {

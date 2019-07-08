@@ -19,6 +19,7 @@ class JetFilter {
   static Parameters reasonable_parameters();
 
   JetFilter(const JetFilterState& xp, const Parameters& parameters);
+  JetFilter(const Parameters& parameters);
 
   void reset(const JetFilterState& xp) {
     xp_ = xp;

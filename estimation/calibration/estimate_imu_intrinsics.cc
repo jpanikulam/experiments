@@ -7,22 +7,20 @@
 
 namespace estimation {
 namespace calibration {
+constexpr double G_MPSS = 9.81;
 
 jcc::Vec3 ImuModel::correct_measured_accel(const jcc::Vec3& raw_measurement) const {
-  constexpr double G_MPSS = 9.81;
   return geometry::shapes::deform_ellipse_to_unit_sphere(raw_measurement,
                                                          intrinsics_.imu_gains) *
          G_MPSS;
 }
 
 jcc::Vec3 ImuModel::correct_measured_mag(const jcc::Vec3& raw_measurement) const {
-  constexpr double G_MPSS = 9.81;
   return geometry::shapes::deform_ellipse_to_unit_sphere(raw_measurement,
                                                          intrinsics_.magnetometer_gains);
 }
 
 ImuModel estimate_imu_intrinsics(const ImuCalibrationMeasurements& imu_meas) {
-  constexpr double G_MPSS = 9.81;
   constexpr double MAX_G_DEFECT_FRACTION = 0.1;
 
   JASSERT_FALSE(imu_meas.accel_meas.empty(), "Must have nonempty accel measurements");
