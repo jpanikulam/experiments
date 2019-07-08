@@ -20,6 +20,7 @@ class JetFilter {
 
   JetFilter(const JetFilterState& xp, const Parameters& parameters);
   JetFilter(const Parameters& parameters);
+  JetFilter() = default;
 
   void reset(const JetFilterState& xp) {
     xp_ = xp;
@@ -36,11 +37,11 @@ class JetFilter {
   void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t);
 
   State free_run();
-  State run_until(const TimePoint& t);
+  JetFilterState run_until(const TimePoint& t);
   jcc::Optional<State> next_measurement();
 
-  State view(const TimePoint& t) const;
-  State predict(const TimePoint& t) const;
+  JetFilterState view(const TimePoint& t) const;
+  JetFilterState predict(const TimePoint& t) const;
 
   const Parameters& parameters() const {
     return parameters_;
@@ -48,6 +49,7 @@ class JetFilter {
 
   void set_parameters(const Parameters& p) {
     parameters_ = p;
+    setup_models();
   }
 
   const JetFilterState& state() const {

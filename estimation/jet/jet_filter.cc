@@ -4,6 +4,8 @@
 #include "estimation/jet/jet_rk4.hh"
 #include "numerics/set_diag_to_value.hh"
 
+#include "logging/assert.hh"
+
 #include "sophus.hh"
 
 namespace estimation {
@@ -79,6 +81,8 @@ Parameters JetFilter::reasonable_parameters() {
 }
 
 void JetFilter::setup_models() {
+  ekf_ = JetEkf(make_dynamics(parameters_), make_cov());
+
   MatNd<AccelMeasurement::DIM, AccelMeasurement::DIM> accel_cov;
   accel_cov.setZero();
   {
@@ -116,13 +120,12 @@ void JetFilter::setup_models() {
 }
 
 JetFilter::JetFilter(const JetFilterState& xp, const Parameters& parameters)
-    : xp_(xp), parameters_(parameters), ekf_(make_dynamics(parameters), make_cov()) {
+    : xp_(xp), parameters_(parameters) {
   setup_models();
   initialized_ = true;
 }
 
-JetFilter::JetFilter(const Parameters& parameters)
-    : parameters_(parameters), ekf_(make_dynamics(parameters), make_cov()) {
+JetFilter::JetFilter(const Parameters& parameters) : parameters_(parameters) {
   setup_models();
   initialized_ = false;
 }
@@ -148,13 +151,25 @@ void JetFilter::measure_fiducial(const FiducialMeasurement& meas, const TimePoin
 }
 
 State JetFilter::free_run() {
-  assert(initialized_);
+  JASSERT(initialized_, "Filter must be initialized");
   xp_ = ekf_.service_all_measurements(xp_);
   return xp_.x;
 }
 
+FilterState<State> JetFilter::run_until(const TimePoint& t) {
+  JASSERT(initialized_, "Filter must be initialized");
+  while (t > xp_.time_of_validity) {
+    const auto result = ekf_.service_next_measurement(xp_);
+    if (!result) {
+      break;
+    }
+    xp_ = *result;
+  }
+  return xp_;
+}
+
 jcc::Optional<State> JetFilter::next_measurement() {
-  assert(initialized_);
+  JASSERT(initialized_, "Filter must be initialized");
   const auto result = ekf_.service_next_measurement(xp_);
   if (result) {
     xp_ = *result;
@@ -164,17 +179,17 @@ jcc::Optional<State> JetFilter::next_measurement() {
   }
 }
 
-State JetFilter::view(const TimePoint& t) const {
-  assert(initialized_);
+FilterState<State> JetFilter::view(const TimePoint& t) const {
+  JASSERT(initialized_, "Filter must be initialized");
   // TODO: Make this soft_service_until(xp_, t)
   const auto xp_t = ekf_.soft_service_all_measurements(xp_);
-  return ekf_.dynamics_until(xp_t, t).x;
+  return ekf_.dynamics_until(xp_t, t);
 }
 
-State JetFilter::predict(const TimePoint& t) const {
-  assert(initialized_);
+FilterState<State> JetFilter::predict(const TimePoint& t) const {
+  JASSERT(initialized_, "Filter must be initialized");
   // TODO: Make this soft_service_until(xp_, t)
-  return ekf_.dynamics_until(xp_, t).x;
+  return ekf_.dynamics_until(xp_, t);
 }
 
 }  // namespace jet_filter

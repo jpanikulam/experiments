@@ -30,6 +30,7 @@ class Ekf {
  public:
   using Dynamics = std::function<State(const State& x, double dt)>;
 
+  Ekf() = default;
   Ekf(const Dynamics& dynamics, const MatNd<State::DIM, State::DIM>& cov);
 
   FilterState<State> update_state(const FilterState<State>& xp,
@@ -78,8 +79,8 @@ class Ekf {
 
   std::map<int, AnyObservationModel> observation_models_;
 
-  const Dynamics dynamics_;
-  const MatNd<State::DIM, State::DIM> Q_;
+  Dynamics dynamics_;
+  MatNd<State::DIM, State::DIM> Q_;
 };
 
 }  // namespace estimation

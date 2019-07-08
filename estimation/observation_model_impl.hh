@@ -57,9 +57,7 @@ FilterStateUpdate<State> ObservationModel<State, Observation>::generate_update(
 
   const ObservationInfo S_inv = S.inverse();
 
-  // const double log_likelihood = innovation.dot(S_inv * innovation);
-
-  const double log_likelihood = compute_likelihood(S_inv, innovation);
+  // const double log_likelihood = compute_likelihood(S_inv, innovation);
 
   // const slam::HuberCost hc(0.2);
   // const auto cw = hc((innovation.transpose() * S_inv).dot(innovation));

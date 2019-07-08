@@ -71,6 +71,8 @@ FilterState<State> Ekf<State>::soft_service_all_measurements(
   Heap<Measurement> measurements{measurements_};
   while (!measurements.empty()) {
     const Measurement meas = measurements.top();
+    std::cout << "t: " << meas.time_of_validity << std::endl;
+    std::cout << "m: " << x_hat.time_of_validity << std::endl;
     x_hat = dynamics_until(x_hat, meas.time_of_validity);
 
     const int i = meas.type;
