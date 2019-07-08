@@ -4,7 +4,7 @@
 namespace estimation {
 
 void warn_sensor_rates(
-    const estimation::calibration::CalibrationMeasurements& cal_measurements) {
+    const estimation::CalibrationMeasurements& cal_measurements) {
   for (const auto& imu : cal_measurements.imu_cal) {
     const auto& imu_meas = imu.second;
 

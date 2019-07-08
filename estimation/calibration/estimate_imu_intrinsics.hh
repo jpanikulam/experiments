@@ -5,7 +5,6 @@
 #include "estimation/calibration/calibration_dataset.hh"
 
 namespace estimation {
-namespace calibration {
 
 struct ImuIntrinsics {
   // A perfect IMU, if stationary, will measure "g" ~9.81 away from the
@@ -40,5 +39,4 @@ class ImuModel {
 
 ImuModel estimate_imu_intrinsics(const ImuCalibrationMeasurements& imu_meas);
 
-}  // namespace calibration
 }  // namespace estimation

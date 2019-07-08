@@ -6,7 +6,7 @@
 #include <cmath>
 
 namespace estimation {
-namespace calibration {
+
 constexpr double G_MPSS = 9.81;
 
 jcc::Vec3 ImuModel::correct_measured_accel(const jcc::Vec3& raw_measurement) const {
@@ -61,5 +61,4 @@ ImuModel estimate_imu_intrinsics(const ImuCalibrationMeasurements& imu_meas) {
   return ImuModel(intrinsics);
 }
 
-}  // namespace calibration
 }  // namespace estimation

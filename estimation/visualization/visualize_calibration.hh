@@ -13,33 +13,33 @@
 
 namespace estimation {
 
-void visualize_mag_data(const calibration::ImuModel& imu_model,
-                        const calibration::ImuCalibrationMeasurements& measurements,
+void visualize_mag_data(const ImuModel& imu_model,
+                        const ImuCalibrationMeasurements& measurements,
                         const std::shared_ptr<viewer::SimpleGeometry> geo,
                         const std::shared_ptr<viewer::Ui2d> ui2d);
 
-void visualize_gyro_data(const calibration::ImuModel& imu_model,
-                         const calibration::ImuCalibrationMeasurements& measurements,
+void visualize_gyro_data(const ImuModel& imu_model,
+                         const ImuCalibrationMeasurements& measurements,
                          const std::shared_ptr<viewer::SimpleGeometry> geo,
                          const std::shared_ptr<viewer::Ui2d> ui2d);
 
 void visualize_fwd_difference_angular(
-    const calibration::CalibrationMeasurements& measurements,
+    const CalibrationMeasurements& measurements,
     const std::shared_ptr<viewer::SimpleGeometry> geo,
     const std::shared_ptr<viewer::Ui2d> ui2d);
 
 void visualize_imu_data_with_intrinsics(
-    const calibration::ImuModel& imu_model,
-    const calibration::ImuCalibrationMeasurements& measurements,
+    const ImuModel& imu_model,
+    const ImuCalibrationMeasurements& measurements,
     const geometry::UnitVector3& g_direction,
     const std::shared_ptr<viewer::SimpleGeometry> geo,
     const std::shared_ptr<viewer::Ui2d> ui2d);
 
-void visualize_fwd_difference(const calibration::CalibrationMeasurements& measurements,
+void visualize_fwd_difference(const CalibrationMeasurements& measurements,
                               const std::shared_ptr<viewer::SimpleGeometry> geo,
                               const std::shared_ptr<viewer::Ui2d> ui2d);
 
-void visualize_fwd_acceleration(const calibration::CalibrationMeasurements& measurements,
+void visualize_fwd_acceleration(const CalibrationMeasurements& measurements,
                                 const std::shared_ptr<viewer::SimpleGeometry> geo,
                                 const std::shared_ptr<viewer::Ui2d> ui2d);
 

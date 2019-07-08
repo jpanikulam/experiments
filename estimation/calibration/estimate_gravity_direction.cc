@@ -8,7 +8,6 @@
 #include <limits>
 
 namespace estimation {
-namespace calibration {
 
 namespace {
 
@@ -163,5 +162,4 @@ GravityEstimationResult estimate_gravity_direction(
                    estimation::to_seconds(bracket.end - bracket.start) * 0.5))};
 }
 
-}  // namespace calibration
 }  // namespace estimation

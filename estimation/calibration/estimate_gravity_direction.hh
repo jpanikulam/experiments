@@ -5,7 +5,6 @@
 #include "geometry/types/unit_vector.hh"
 
 namespace estimation {
-namespace calibration {
 
 // One should typically expect to use the defaults.
 struct EstimationConfig {
@@ -32,5 +31,4 @@ GravityEstimationResult estimate_gravity_direction(
     const ImuModel& imu_model,
     const EstimationConfig& cfg = {});
 
-}  // namespace calibration
 }  // namespace estimation

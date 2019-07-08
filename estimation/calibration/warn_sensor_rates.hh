@@ -4,5 +4,5 @@
 
 namespace estimation {
 void warn_sensor_rates(
-    const estimation::calibration::CalibrationMeasurements& cal_measurements);
+    const estimation::CalibrationMeasurements& cal_measurements);
 }  // namespace estimation

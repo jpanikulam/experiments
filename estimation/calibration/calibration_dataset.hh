@@ -9,7 +9,6 @@
 #include <opencv2/opencv.hpp>
 
 namespace estimation {
-namespace calibration {
 
 template <typename MeasurementType>
 struct TimedMeasurement {
@@ -56,7 +55,6 @@ struct CalibrationMeasurements {
     return fiducial_meas.back().timestamp;
   }
 };
-}  // namespace calibration
 
 // Hate.
 // Hate.

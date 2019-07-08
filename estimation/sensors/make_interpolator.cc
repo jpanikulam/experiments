@@ -2,9 +2,9 @@
 namespace estimation {
 
 geometry::spatial::TimeInterpolator make_accel_interpolator(
-    const std::vector<calibration::TimedMeasurement<jet_filter::AccelMeasurement>>&
+    const std::vector<TimedMeasurement<jet_filter::AccelMeasurement>>&
         accel_meas,
-    const calibration::ImuModel& imu_model) {
+    const ImuModel& imu_model) {
   std::vector<geometry::spatial::TimeControlPoint> points;
 
   for (const auto& accel : accel_meas) {
@@ -17,7 +17,7 @@ geometry::spatial::TimeInterpolator make_accel_interpolator(
 }
 
 geometry::spatial::TimeInterpolator make_gyro_interpolator(
-    const std::vector<calibration::TimedMeasurement<jet_filter::GyroMeasurement>>&
+    const std::vector<TimedMeasurement<jet_filter::GyroMeasurement>>&
         gyro_meas) {
   std::vector<geometry::spatial::TimeControlPoint> points;
 

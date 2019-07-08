@@ -10,8 +10,8 @@
 namespace estimation {
 
 struct SingleImuCalibration {
-  calibration::ImuModel imu_model;
-  calibration::GravityEstimationResult g_estimate;
+  ImuModel imu_model;
+  GravityEstimationResult g_estimate;
   SO3 camera_from_gyro;
   int imu_id;
 };
@@ -23,8 +23,8 @@ struct CreateSingleImuModelConfig {
 };
 
 SingleImuCalibration create_single_imu_model(
-    const calibration::CalibrationMeasurements& all_cal_measurements,
-    const calibration::ImuCalibrationMeasurements& imu_cal_measurements,
+    const CalibrationMeasurements& all_cal_measurements,
+    const ImuCalibrationMeasurements& imu_cal_measurements,
     const CreateSingleImuModelConfig& cfg = {});
 
 }  // namespace estimation

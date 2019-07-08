@@ -14,8 +14,8 @@
 namespace estimation {
 namespace {
 SO3 estimate_camera_from_gyro(
-    const estimation::calibration::CalibrationMeasurements& measurements,
-    const estimation::calibration::ImuCalibrationMeasurements& imu_measurements,
+    const estimation::CalibrationMeasurements& measurements,
+    const estimation::ImuCalibrationMeasurements& imu_measurements,
     bool visualize = true) {
   const auto interp = estimation::make_gyro_interpolator(imu_measurements.gyro_meas);
 
@@ -77,8 +77,8 @@ SO3 estimate_camera_from_gyro(
 }  // namespace
 
 SingleImuCalibration create_single_imu_model(
-    const estimation::calibration::CalibrationMeasurements& all_cal_measurements,
-    const estimation::calibration::ImuCalibrationMeasurements& imu_cal_measurements,
+    const estimation::CalibrationMeasurements& all_cal_measurements,
+    const estimation::ImuCalibrationMeasurements& imu_cal_measurements,
     const CreateSingleImuModelConfig& cfg) {
   std::stringstream imu_lead_ss;
   { imu_lead_ss << "[IMU-" << imu_cal_measurements.imu_id << "]"; }
@@ -87,7 +87,7 @@ SingleImuCalibration create_single_imu_model(
   jcc::Success() << imu_lead << " Estimating accelerometer/magnetometer intrinsics..."
                  << std::endl;
   const auto imu_model =
-      estimation::calibration::estimate_imu_intrinsics(imu_cal_measurements);
+      estimation::estimate_imu_intrinsics(imu_cal_measurements);
   jcc::Success() << imu_lead << " Estimating sensor-frame direction of gravity..."
                  << std::endl;
 
