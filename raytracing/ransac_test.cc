@@ -49,13 +49,13 @@ TEST(LineModel, test_detects) {
 
   const Vec2 origin = Vec2::Zero();
 
-  auto win2d_1 = viewer::get_window2d("Ransac View");
+  // auto win2d_1 = viewer::get_window2d("Ransac View");
 
 
   std::vector<Observation> observations(points.size());
   for (size_t k = 0; k < points.size(); ++k) {
     observations[k] = {origin, points[k]};
-    win2d_1->add_circle({points[k], 0.1});
+    // win2d_1->add_circle({points[k], 0.1});
   }
 
   RansacConfiguration config;
