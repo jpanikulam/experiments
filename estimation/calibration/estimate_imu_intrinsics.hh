@@ -26,6 +26,7 @@ class ImuModel {
 
   // Take an IMU observation, and transform it into a true acceleration
   jcc::Vec3 correct_measured_accel(const jcc::Vec3& observed_accel) const;
+  jcc::Vec3 distort_true_accel(const jcc::Vec3& true_accel) const;
 
   jcc::Vec3 correct_measured_mag(const jcc::Vec3& raw_measurement) const;
 

@@ -9,6 +9,11 @@ namespace estimation {
 
 constexpr double G_MPSS = 9.81;
 
+jcc::Vec3 ImuModel::distort_true_accel(const jcc::Vec3& true_accel) const {
+  return geometry::shapes::deform_unit_sphere_to_ellipse(true_accel / G_MPSS,
+                                                         intrinsics_.imu_gains);
+}
+
 jcc::Vec3 ImuModel::correct_measured_accel(const jcc::Vec3& raw_measurement) const {
   return geometry::shapes::deform_ellipse_to_unit_sphere(raw_measurement,
                                                          intrinsics_.imu_gains) *
@@ -39,7 +44,7 @@ ImuModel estimate_imu_intrinsics(const ImuCalibrationMeasurements& imu_meas) {
       const double error_fraction =
           std::abs(meas.measurement.observed_acceleration.norm() - G_MPSS) / G_MPSS;
       if (error_fraction < MAX_G_DEFECT_FRACTION) {
-       accel_to_fit.push_back(meas.measurement.observed_acceleration);
+        accel_to_fit.push_back(meas.measurement.observed_acceleration);
       }
     }
   }
