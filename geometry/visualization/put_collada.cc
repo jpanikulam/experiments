@@ -19,6 +19,9 @@ void put_collada(viewer::SimpleGeometry& geo,
   const auto& colors = model.colors();
 
   while (!to_visit.empty()) {
+    const auto key = to_visit.top();
+    to_visit.pop();
+
     const auto& mesh = meshes.at(key);
     if (colors.count(key)) {
       const jcc::Vec4 color = colors.at(key);
