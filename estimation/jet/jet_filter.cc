@@ -76,7 +76,15 @@ FilterState<State> JetFilter::reasonable_initial_state(const TimePoint& t) {
 
 Parameters JetFilter::reasonable_parameters() {
   Parameters p;
+  // Quickly bleed the acceleration -- This is a strong prior
   p.acceleration_damping = -0.99;
+
+  // TODO: Organize Parameters so they can only be constructed whole
+  // These parameters were ballparked by jake
+  const SO3 R_vehicle_from_camera = SO3::exp(jcc::Vec3::UnitY() * M_PI * 0.5) *
+                                    SO3::exp(jcc::Vec3::UnitZ() * M_PI * 0.5);
+  const SE3 vehicle_from_camera(R_vehicle_from_camera, jcc::Vec3(0.11, 0.0, 0.32));
+  p.T_camera_from_vehicle = vehicle_from_camera.inverse();
   return p;
 }
 
@@ -106,6 +114,7 @@ void JetFilter::setup_models() {
   gyro_id_ = ekf_.add_model(
       bind_parameters<GyroMeasurement>(observe_gyro_error_model, parameters_), gyro_cov);
 
+  /*
   imu_2_id_ = ekf_.add_model(
       bind_parameters<AccelMeasurement>(observe_accel_2_error_model, parameters_),
       accel_cov);
@@ -113,6 +122,7 @@ void JetFilter::setup_models() {
   gyro_2_id_ = ekf_.add_model(
       bind_parameters<GyroMeasurement>(observe_gyro_2_error_model, parameters_),
       gyro_cov);
+  */
 
   fiducial_id_ = ekf_.add_model(
       bind_parameters<FiducialMeasurement>(fiducial_error_model, parameters_),
@@ -131,6 +141,7 @@ JetFilter::JetFilter(const Parameters& parameters) : parameters_(parameters) {
 }
 
 void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t, bool imu2) {
+  JASSERT_FALSE(imu2, "imu2 temporarily unsupported");
   if (imu2) {
     ekf_.measure(meas, t, imu_2_id_);
   } else {
@@ -139,6 +150,7 @@ void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t, bo
 }
 
 void JetFilter::measure_gyro(const GyroMeasurement& meas, const TimePoint& t, bool imu2) {
+  JASSERT_FALSE(imu2, "imu2 temporarily unsupported");
   if (imu2) {
     ekf_.measure(meas, t, gyro_2_id_);
   } else {
