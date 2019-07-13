@@ -88,7 +88,7 @@ def what_libs(file, elements, all_tree, known_libs, repo_path):
         elif dep.lower() in external_libs_remapping.keys():
             required_libs.append(external_libs_remapping[dep.lower()])
         else:
-            Log.warn("  no lib: {}, still attempting to use".format(dep))
+            Log.debug("  no lib: {}, still attempting to use".format(dep))
             required_libs.append(dep)
 
     for lib in elements['lib']:
