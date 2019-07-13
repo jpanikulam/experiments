@@ -11,7 +11,6 @@ namespace estimation {
 namespace jet_filter {
 
 using JetEkf = Ekf<State>;
-using ImuModel = ObservationModel<State, AccelMeasurement>;
 
 }  // namespace jet_filter
 }  // namespace estimation

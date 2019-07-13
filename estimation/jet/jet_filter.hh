@@ -12,9 +12,9 @@ inline SE3 get_world_from_body(const State& x) {
 
 class JetFilter {
   using Update = FilterStateUpdate<State>;
-  using JetFilterState = FilterState<State>;
 
  public:
+  using JetFilterState = FilterState<State>;
   static JetFilterState reasonable_initial_state(const TimePoint& t);
   static Parameters reasonable_parameters();
 
