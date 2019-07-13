@@ -116,6 +116,7 @@ void visualize_fwd_difference_angular(
   // auto& dt_plt = builder.make_subplot("dt", jcc::Vec4(0.0, 1.0, 1.0, 0.7), 0.4, false);
   auto& norm = builder.make_subplot("norm", jcc::Vec4(0.0, 1.0, 1.0, 0.8), 0.5);
 
+  jcc::Vec3 prev_vel  ;
   for (std::size_t i = 1u; i < measurements.fiducial_meas.size(); ++i) {
     const auto prev = measurements.fiducial_meas.at(i - 1);
     const auto next = measurements.fiducial_meas.at(i);
@@ -130,7 +131,10 @@ void visualize_fwd_difference_angular(
         fiducial_from_camera_1.inverse() * fiducial_from_camera_0;
 
     const double dt = to_seconds(t1 - t0);
-    const jcc::Vec3 dR_dt = camera_1_from_camera_0.so3().log() / dt;
+    const jcc::Vec3 dR_dt_unsmoothed = camera_1_from_camera_0.so3().log() / dt;
+    const jcc::Vec3 dR_dt =
+        i == 1u ? dR_dt_unsmoothed : (0.25 * dR_dt_unsmoothed) + (0.75 * prev_vel);
+    prev_vel = dR_dt;
 
     const double t = to_seconds(t0 - first);
 
@@ -222,6 +226,7 @@ void visualize_fwd_difference(const CalibrationMeasurements& measurements,
   auto& vel_z = builder.make_subplot("vel_z", jcc::Vec4(0.0, 0.0, 1.0, 0.7), 0.4, true);
   auto& dt_plt = builder.make_subplot("dt", jcc::Vec4(0.0, 1.0, 1.0, 0.7), 0.4, false);
 
+  jcc::Vec3 prev_vel;
   for (std::size_t i = 1u; i < measurements.fiducial_meas.size(); ++i) {
     const auto prev = measurements.fiducial_meas.at(i - 1);
     const auto next = measurements.fiducial_meas.at(i);
@@ -236,11 +241,12 @@ void visualize_fwd_difference(const CalibrationMeasurements& measurements,
         fiducial_from_camera_1.inverse() * fiducial_from_camera_0;
 
     const double dt = to_seconds(t1 - t0);
-    const jcc::Vec3 dx_dt = camera_1_from_camera_0.translation() / dt;
+    const jcc::Vec3 dx_dt_unsmoothed = camera_1_from_camera_0.translation() / dt;
+    const jcc::Vec3 dx_dt =
+        i == 1u ? dx_dt_unsmoothed : (0.75 * prev_vel) + (0.25 * dx_dt_unsmoothed);
+    prev_vel = dx_dt;
 
     const double t = to_seconds(t0 - first);
-
-    std::cout << "t: " << t << std::endl;
 
     constexpr double MAX_DT_SEC = 0.2;
     dt_plt << jcc::Vec2(t, dt);
@@ -485,9 +491,11 @@ OptimizationVisitor create_gyro_orientation_optimization_visitor(
     const std::vector<jcc::Vec3>& w_gyro_at_t, const std::vector<jcc::Vec3>& w_cam_at_t) {
   const auto view = viewer::get_window3d("Calibration");
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
+  const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
   const auto visitor =
-      [view, ui2d, w_cam_at_t, w_gyro_at_t](const RotationBetweenVectorSeries& result) {
+      [view, geo, ui2d, w_cam_at_t, w_gyro_at_t](
+          const RotationBetweenVectorSeries& result) {
         viewer::LinePlotBuilder builder("Gyro->Camera Rotation Optimization");
 
         const double xyz_alpha = 0.0;
@@ -525,14 +533,21 @@ OptimizationVisitor create_gyro_orientation_optimization_visitor(
 
           dot_product << jcc::Vec2(
               t, gyro_w_camera_frame.normalized().dot(cam_w.normalized()));
+
+          geo->add_point({gyro_w_camera_frame, jcc::Vec4(0.0, 1.0, 0.0, 1.0), 2.0});
+          geo->add_point({cam_w, jcc::Vec4(1.0, 0.0, 0.0, 1.0), 2.0});
+          geo->add_line({gyro_w_camera_frame, cam_w, jcc::Vec4(0.6, 0.1, 0.1, 0.7), 0.5});
         }
 
         ui2d->add_lineplot(builder);
         ui2d->flip();
+        geo->flip();
+
         const double average_error = std::sqrt(result.average_error.norm());
         (void)average_error;
         view->spin_until_step();
         ui2d->clear();
+        geo->clear();
       };
   return visitor;
 }
