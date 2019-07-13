@@ -21,6 +21,9 @@ SO3 estimate_camera_from_gyro(
 
   std::vector<jcc::Vec3> w_cam_at_t;
   std::vector<jcc::Vec3> w_gyro_at_t;
+  jcc::Vec3 prev_w;
+  constexpr double PREV_ALPHA = 0.75;
+
   for (std::size_t i = 1u; i < measurements.fiducial_meas.size(); ++i) {
     const auto prev = measurements.fiducial_meas.at(i - 1);
     const auto next = measurements.fiducial_meas.at(i);
@@ -35,7 +38,12 @@ SO3 estimate_camera_from_gyro(
         fiducial_from_camera_1.inverse() * fiducial_from_camera_0;
 
     const double dt = estimation::to_seconds(t1 - t0);
-    const jcc::Vec3 dR_dt = -camera_1_from_camera_0.so3().log() / dt;
+    const jcc::Vec3 dR_dt_unsmoothed = -camera_1_from_camera_0.so3().log() / dt;
+
+    const jcc::Vec3 dR_dt =
+        i == 1u ? dR_dt_unsmoothed
+                : (PREV_ALPHA * prev_w) + ((1.0 - PREV_ALPHA) * dR_dt_unsmoothed);
+    prev_w = dR_dt;
 
     const estimation::TimePoint true_t = estimation::average(t1, t0);
     const auto maybe_w_gyro = interp(true_t);
@@ -86,8 +94,7 @@ SingleImuCalibration create_single_imu_model(
 
   jcc::Success() << imu_lead << " Estimating accelerometer/magnetometer intrinsics..."
                  << std::endl;
-  const auto imu_model =
-      estimation::estimate_imu_intrinsics(imu_cal_measurements);
+  const auto imu_model = estimation::estimate_imu_intrinsics(imu_cal_measurements);
   jcc::Success() << imu_lead << " Estimating sensor-frame direction of gravity..."
                  << std::endl;
 
@@ -158,8 +165,8 @@ SingleImuCalibration create_single_imu_model(
               visualize_imu_data_with_intrinsics(
                   imu_model, imu_cal_measurements, g_estimate.direction, geo, ui2d);
             } else {
-              // visualize_fwd_difference(imu_cal_measurements, geo, ui2d);
-              visualize_fwd_acceleration(all_cal_measurements, geo, ui2d);
+              visualize_fwd_difference(all_cal_measurements, geo, ui2d);
+              // visualize_fwd_acceleration(all_cal_measurements, geo, ui2d);
             }
           };
       view->add_toggle_callback("visualize_imu_data", view_cb);

@@ -10,7 +10,7 @@ namespace estimation {
 struct EstimationConfig {
   double max_speed_mps = 0.1;
   double max_fiducial_dt_sec = 0.2;
-  double min_stationary_time_sec = 6.0;
+  double min_stationary_time_sec = 1.0;
   double max_g_defect = 0.02;
   // Largest permissible difference between max and min accel
   // in the range where the vehicle appears to be stationary

@@ -106,6 +106,11 @@ GravityEstimationResult estimate_gravity_direction(
   TimePoint bracket_start = first;
   TimePoint bracket_end = first;
 
+  return {geometry::Unit3(
+              imu_measurements.accel_meas.at(100).measurement.observed_acceleration),
+          imu_measurements.accel_meas.at(100).timestamp};
+
+  jcc::Vec3 prev_vel;
   for (std::size_t i = 1u; i < measurements.fiducial_meas.size(); ++i) {
     const auto prev = measurements.fiducial_meas.at(i - 1);
     const auto cur = measurements.fiducial_meas.at(i);
@@ -120,7 +125,15 @@ GravityEstimationResult estimate_gravity_direction(
         fiducial_from_camera_1.inverse() * fiducial_from_camera_0;
 
     const double dt = to_seconds(t1 - t0);
-    const jcc::Vec3 dx_dt = camera_1_from_camera_0.translation() / dt;
+
+    const jcc::Vec3 dx_dt_unsmoothed = camera_1_from_camera_0.translation() / dt;
+
+    const jcc::Vec3 dx_dt =
+        i > 1u ? dx_dt_unsmoothed : (0.1 * dx_dt_unsmoothed) + (0.9 * prev_vel);
+    prev_vel = dx_dt;
+
+    std::cout << "dx_dt: " << dx_dt.norm() << std::endl;
+
     const auto t = average(t0, t1);
 
     const bool accel_available = static_cast<bool>(accel_interp(t));
