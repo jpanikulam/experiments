@@ -11,7 +11,9 @@ namespace geometry {
 //
 // - Use for viewer
 // - Use for robots
-//
+// - Add support for transforming:
+//   - Velocities and higher derivatives
+//   - Angular velocities and higher derivatives
 class TransformNetwork {
  public:
   struct Edge {
@@ -33,6 +35,14 @@ class TransformNetwork {
   SE3 find_source_from_destination(const std::string& source,
                                    const std::string& destination) const;
 
+  template <typename T>
+  T transform_a_from_b(const std::string& a,
+                       const std::string& b,
+                       const T& object_destination_frame) const {
+    const SE3 source_from_destination = find_source_from_destination(a, b);
+    return source_from_destination * object_destination_frame;
+  }
+
   // Insert an *entire* other transform network
   // Coming soon: Update! Permit overrides of existing edges
   void insert(const TransformNetwork& other);
@@ -48,6 +58,9 @@ class TransformNetwork {
 
  private:
   std::map<std::string, EdgeMap> edges_from_node_tag_;
+
+  // Coming soon!
+  // mutable std::map<std::string, EdgeMap> lookup_cache_;
 };
 
 }  // namespace geometry
