@@ -9,24 +9,26 @@ constexpr int IMU_1_ID = 78;
 constexpr int IMU_2_ID = 36;
 
 FilterManager::FilterManager() {
-  state_ = FilterSmState::STARTUP;
+  stage_ = FilterStage::STARTUP;
 }
 
 void FilterManager::measure_imu(const TimedMeasurement<AccelMeasurement>& meas,
                                 int imu_id) {
-  JASSERT(state_ != FilterSmState::STARTUP, "Must not be initializing");
+  JASSERT(stage_ != FilterStage::STARTUP, "Must not be initializing");
+  JASSERT_EQ(imu_id, IMU_1_ID, "IMU-2 Unsupported");
   const jcc::Vec3 corrected_accel = imu_model_from_id_.at(imu_id).correct_measured_accel(
       meas.measurement.observed_acceleration);
 
   const AccelMeasurement corrected_meas{.observed_acceleration = corrected_accel};
+
   imu_queue_.push_back({corrected_meas});
 }
 void FilterManager::measure_gyro(const TimedMeasurement<GyroMeasurement>& meas) {
-  JASSERT(state_ != FilterSmState::STARTUP, "Must not be initializing");
+  JASSERT(stage_ != FilterStage::STARTUP, "Must not be initializing");
   gyro_queue_.push_back({meas});
 }
 void FilterManager::measure_fiducial(const TimedMeasurement<FiducialMeasurement>& meas) {
-  JASSERT(state_ != FilterSmState::STARTUP, "Must not be initializing");
+  JASSERT(stage_ != FilterStage::STARTUP, "Must not be initializing");
   fiducial_queue_.push_back({meas});
 }
 
@@ -37,7 +39,7 @@ void FilterManager::init(const FilterManagerConfiguration& config) {
   imu_model_from_id_ = config.imu_model_from_id;
   max_fiducial_latency_ = estimation::to_duration(config.max_fiducial_latency_s);
 
-  state_ = FilterSmState::BOOTSTRAPPING;
+  stage_ = FilterStage::BOOTSTRAPPING;
 }
 
 namespace {
@@ -122,7 +124,7 @@ void FilterManager::bootstrap() {
 
   imu_queue_.clear();
   fiducial_queue_.clear();
-  state_ = FilterSmState::RUNNING;
+  stage_ = FilterStage::RUNNING;
 }
 
 void FilterManager::run() {
@@ -153,22 +155,22 @@ void FilterManager::run() {
 }
 
 void FilterManager::update(const TimePoint& current_time) {
-  switch (state_) {
-    case FilterSmState::UNINITIALIZED: {
+  switch (stage_) {
+    case FilterStage::UNINITIALIZED: {
       JASSERT(false, "Filter state must never be UNINITIALIZED");
       break;
     }
-    case FilterSmState::STARTUP: {
+    case FilterStage::STARTUP: {
       JASSERT(false, "Filter must not be in STARTUP at this stage");
       break;
     }
-    case FilterSmState::BOOTSTRAPPING: {
+    case FilterStage::BOOTSTRAPPING: {
       if (!fiducial_queue_.empty() && imu_queue_.size() > 50) {
         bootstrap();
       }
       break;
     }
-    case FilterSmState::RUNNING: {
+    case FilterStage::RUNNING: {
       run();
       break;
     }
@@ -176,7 +178,7 @@ void FilterManager::update(const TimePoint& current_time) {
 }
 
 JetFilter::JetFilterState FilterManager::state(const TimePoint& current_time) const {
-  JASSERT(state_ == FilterSmState::RUNNING, "Filter must be in RUNNING at this stage");
+  JASSERT(stage_ == FilterStage::RUNNING, "Filter must be in RUNNING at this stage");
   const auto state = jf_primary_.view(current_time);
   return state;
 }

@@ -11,7 +11,7 @@
 namespace estimation {
 namespace jet_filter {
 
-enum class FilterSmState {
+enum class FilterStage {
   // Do not occupy this state!
   UNINITIALIZED = 0,
 
@@ -61,17 +61,22 @@ class FilterManager {
   FilterManager();
 
   void update(const TimePoint& current_time);
+
+  // Jet state
   JetFilter::JetFilterState state(const TimePoint& current_time) const;
 
- private:
-  void init(const FilterManagerConfiguration& filter_manager_cfg);
-  void bootstrap();
-  void run();
-
+  // State machine state
+  FilterStage stage() const {
+    return stage_;
+  }
   void measure_imu(const TimedMeasurement<AccelMeasurement>& meas, int imu_id);
   void measure_gyro(const TimedMeasurement<GyroMeasurement>& meas);
-
   void measure_fiducial(const TimedMeasurement<FiducialMeasurement>& meas);
+  void init(const FilterManagerConfiguration& filter_manager_cfg);
+
+ private:
+  void bootstrap();
+  void run();
 
   geometry::TransformNetwork transform_network_;
 
@@ -87,7 +92,7 @@ class FilterManager {
 
   std::map<int, ImuModel> imu_model_from_id_;
 
-  FilterSmState state_ = FilterSmState::STARTUP;
+  FilterStage stage_ = FilterStage::STARTUP;
 };
 
 }  // namespace jet_filter
