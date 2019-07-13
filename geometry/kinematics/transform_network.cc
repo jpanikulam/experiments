@@ -11,14 +11,27 @@ namespace geometry {
 void TransformNetwork::add_edge(const std::string& source,
                                 const std::string& destination,
                                 const SE3& source_from_destination) {
+  JASSERT_EQ(edges_from_node_tag_[source].count(destination),
+             0u,
+             "Destination already in the graph!");
   edges_from_node_tag_[source][destination] =
       Edge{.source_from_destination = source_from_destination};
   edges_from_node_tag_[destination][source] =
       Edge{.source_from_destination = source_from_destination.inverse()};
 }
 
-SE3 TransformNetwork::source_from_destination(const std::string& source,
-                                              const std::string& destination) const {
+void TransformNetwork::update_edge(const std::string& source,
+                                   const std::string& destination,
+                                   const SE3& source_from_destination) {
+  // Uh oh! Remind you of any other members!?
+  edges_from_node_tag_[source][destination] =
+      Edge{.source_from_destination = source_from_destination};
+  edges_from_node_tag_[destination][source] =
+      Edge{.source_from_destination = source_from_destination.inverse()};
+}
+
+SE3 TransformNetwork::find_source_from_destination(const std::string& source,
+                                                   const std::string& destination) const {
   JASSERT_NE(edges_from_node_tag_.count(source), 0u, "Not in the network");
   JASSERT_NE(edges_from_node_tag_.count(destination), 0u, "Not in the network");
   std::stack<std::string> to_visit;
@@ -69,6 +82,26 @@ SE3 TransformNetwork::source_from_destination(const std::string& source,
   }
 
   return full_source_from_destination;
+}
+
+// Cannot override edges
+void TransformNetwork::insert(const TransformNetwork& other) {
+  for (const auto& node_pair : other.edges_from_node_tag_) {
+    const auto& node = node_pair.first;
+    if (edges_from_node_tag_.count(node) == 0u) {
+      edges_from_node_tag_[node] = other.edges_from_node_tag_.at(node);
+    } else {
+      const auto& our_edges = edges_from_node_tag_.at(node);
+
+      for (const auto& other_edge : node_pair.second) {
+        const auto& other_destination = other_edge.first;
+        JASSERT_EQ(our_edges.count(other_destination),
+                   0u,
+                   "Edge updates not permitted on transform network insertion");
+        edges_from_node_tag_.at(node).insert(other_edge);
+      }
+    }
+  }
 }
 
 }  // namespace geometry

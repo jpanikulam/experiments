@@ -29,7 +29,7 @@ void draw() {
   tfn.add_edge("camera", "IMU-2",
                SE3(SO3::exp(jcc::Vec3(1.2, 0.2, -0.5)), jcc::Vec3(0.0, -1.0, -1.0)));
 
-  const SE3 imu2_from_imu1 = tfn.source_from_destination("IMU-2", "IMU-1");
+  const SE3 imu2_from_imu1 = tfn.find_source_from_destination("IMU-2", "IMU-1");
   tfn.add_edge("IMU-2", "IMU-1", imu2_from_imu1);
 
   tfn.add_edge("jet", "servos",
