@@ -188,7 +188,7 @@ void demo_intersection() {
     (void)intersection;  // TODO(jpanikulam)
     // EXPECT_TRUE(intersection.intersected);
     constexpr double EPS = 1e-4;
-    (void)intersection;  // TODO(jpanikulam)
+    (void)EPS;
     // EXPECT_NEAR(intersection.distance, 2.80121, EPS);
   }
 

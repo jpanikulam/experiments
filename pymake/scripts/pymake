@@ -50,7 +50,8 @@ def compute_deps_from_includes(elements):
         "GL/glew.h": 'opengl',
         "libserialport.h": "serialport",
         "crossguid/guid.hpp": "crossguid",
-        "mqtt/*": "paho-mqttpp3"
+        "mqtt/*": "paho-mqttpp3",
+        "yaml-cpp/yaml.h": "yaml-cpp",
     }
 
     new_deps = []
@@ -71,8 +72,13 @@ def what_libs(file, elements, all_tree, known_libs, repo_path):
         'glew': '${GLEW_LIBRARIES}',
         'opengl': '${OPENGL_LIBRARIES}',
         'pthread': 'pthread',
+        'yaml-cpp': 'yaml-cpp',
+        'serialport': 'serialport',
+        'crossguid': 'crossguid',
+        'paho-mqttpp3': 'paho-mqttpp3',
     }
 
+    # TODO: Warn that something has been auto-detected and doesn't need to be listed
     # TODO: How to detect that opengl must be linked to?
     "GL/glew.h"
     "opencv2/opencv.hpp"
