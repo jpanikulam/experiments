@@ -150,6 +150,11 @@ void FilterManager::run() {
     jf_laggard_.measure_fiducial(fiducial_meas.measurement, fiducial_meas.timestamp);
 
     if (fiducial_meas.timestamp < jf_primary_.state().time_of_validity) {
+      std::cout << "Last fiducial measurement age 1: "
+                << to_seconds(jf_primary_.state().time_of_validity -
+                              fiducial_meas.timestamp)
+                << std::endl;
+
       // Get ready to catch up! (Swapping filters!)
       jf_primary_ = jf_laggard_;
     }
