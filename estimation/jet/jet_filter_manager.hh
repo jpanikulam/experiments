@@ -49,6 +49,24 @@ enum class FilterStage {
   RUNNING,
 };
 
+inline std::string stage_to_string(const FilterStage stage) {
+  switch (stage) {
+    case FilterStage::UNINITIALIZED:
+      return "UNINITIALIZED";
+      break;
+    case FilterStage::STARTUP:
+      return "STARTUP";
+      break;
+    case FilterStage::BOOTSTRAPPING:
+      return "BOOTSTRAPPING";
+      break;
+    case FilterStage::RUNNING:
+      return "RUNNING";
+      break;
+  }
+  return "Unknonw";
+}
+
 struct FilterManagerConfiguration {
   std::map<int, ImuModel> imu_model_from_id;
   geometry::TransformNetwork transform_network;
@@ -89,6 +107,12 @@ class FilterManager {
   std::deque<TimedMeasurement<AccelMeasurement>> imu_queue_;
   std::deque<TimedMeasurement<GyroMeasurement>> gyro_queue_;
   std::deque<TimedMeasurement<FiducialMeasurement>> fiducial_queue_;
+
+  void clear_queues() {
+    imu_queue_.clear();
+    gyro_queue_.clear();
+    fiducial_queue_.clear();
+  }
 
   std::map<int, ImuModel> imu_model_from_id_;
 

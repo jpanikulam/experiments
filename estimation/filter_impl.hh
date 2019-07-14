@@ -48,7 +48,7 @@ FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
                                               const TimePoint& t) const {
   constexpr TimeDuration MAX_DT = to_duration(0.01);
 
-  JASSERT_LE(x0.time_of_validity, t, "Target time must be less than filter state time");
+  JASSERT_LE(x0.time_of_validity, t, "Current time must be less than target time");
 
   FilterState<State> x = x0;
   TimePoint time_simulated = x0.time_of_validity;

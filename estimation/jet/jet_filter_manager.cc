@@ -122,15 +122,26 @@ void FilterManager::bootstrap() {
   jf_laggard_.set_parameters(bootstrap_result.parameters);
   jf_laggard_.reset(bootstrap_result.xp0);
 
-  imu_queue_.clear();
-  fiducial_queue_.clear();
+  clear_queues();
+
   stage_ = FilterStage::RUNNING;
+  jcc::Success() << "Done bootstrapping" << std::endl;
+  jcc::Success() << "Running..." << std::endl;
 }
 
 void FilterManager::run() {
+  const auto min_time = jf_primary_.state().time_of_validity;
+  int num_dropped = 0;
   for (const auto& gyro_meas : gyro_queue_) {
+    if (gyro_meas.timestamp < min_time) {
+      continue;
+    }
+
     jf_primary_.measure_gyro(gyro_meas.measurement, gyro_meas.timestamp);
     jf_laggard_.measure_gyro(gyro_meas.measurement, gyro_meas.timestamp);
+  }
+  if (num_dropped > 0) {
+    jcc::Warning() << "Dropping " << num_dropped << " old gyro measurements" << std::endl;
   }
 
   gyro_queue_.clear();
@@ -148,7 +159,8 @@ void FilterManager::run() {
     transform_network_.update_edge(
         "fiducial", "camera", fiducial_queue_.back().measurement.T_fiducial_from_camera);
   }
-  fiducial_queue_.clear();
+
+  clear_queues();
 
   jf_primary_.free_run();
   jf_laggard_.run_until(jf_primary_.state().time_of_validity - max_fiducial_latency_);

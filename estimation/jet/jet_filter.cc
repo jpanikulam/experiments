@@ -170,6 +170,8 @@ State JetFilter::free_run() {
 
 FilterState<State> JetFilter::run_until(const TimePoint& t) {
   JASSERT(initialized_, "Filter must be initialized");
+  JASSERT(to_seconds(t - xp_.time_of_validity) < 10.0,
+          "You're simulating for more than 10 seconds, something is probably wrong.");
   while (t > xp_.time_of_validity) {
     const auto result = ekf_.service_next_measurement(xp_);
     if (!result) {
