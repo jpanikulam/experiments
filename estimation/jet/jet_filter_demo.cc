@@ -228,7 +228,7 @@ void run_filter() {
     // Printout
     //
     {
-      const auto xp = jf.state();
+      // const auto xp = jf.state();
       // std::cout << "k: " << k << std::endl;
       // std::cout << "(Est)" << std::endl;
       // print_state(xp.x);

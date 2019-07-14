@@ -9,7 +9,6 @@ estimation::jet_filter::State kf_state_from_xlqr_state(const State& x,
                                                        const Controls& u,
                                                        const Parameters& z) {
   estimation::jet_filter::State kf_state;
-  const SE3 world_from_body = SE3(x.R_world_from_body, x.x);
 
   kf_state.R_world_from_body = x.R_world_from_body;
   kf_state.x_world = x.x;

@@ -30,7 +30,8 @@ void verify_all_leaves_unique(const geometry::spatial::BoundingVolumeHierarchy &
   }
 }
 
-void draw_children(const geometry::spatial::BoundingVolumeHierarchy &bvh, int base_node_ind) {
+void draw_children(const geometry::spatial::BoundingVolumeHierarchy &bvh,
+                   int base_node_ind) {
   auto win = viewer::get_window3d("Window A");
   auto draw_children_geometry = win->add_primitive<viewer::SimpleGeometry>();
 
@@ -72,7 +73,9 @@ void climb_tree(const geometry::spatial::BoundingVolumeHierarchy &bvh) {
   cnd.depth = 0;
 
   Heap<ExplorationCandidate> heap(
-      [](const ExplorationCandidate &a, const ExplorationCandidate &b) { return a.depth < b.depth; });
+      [](const ExplorationCandidate &a, const ExplorationCandidate &b) {
+        return a.depth < b.depth;
+      });
   heap.push(cnd);
 
   std::map<int, Eigen::Vector4d> colors;
@@ -106,7 +109,6 @@ void climb_tree(const geometry::spatial::BoundingVolumeHierarchy &bvh) {
       tree_climb_geometry->add_box(aabb);
       draw_children(bvh, next.index);
 
-
       win->spin_until_step();
     }
   }
@@ -131,32 +133,37 @@ void demo_intersection() {
   }
 
   for (size_t k = 0; k < tri.triangles.size(); ++k) {
-    scene_geometry->add_line({tri.triangles[k].vertices[0], tri.triangles[k].vertices[1], Vec4(0.8, 0.8, 0.8, 0.4)});
-    scene_geometry->add_line({tri.triangles[k].vertices[1], tri.triangles[k].vertices[2], Vec4(0.8, 0.8, 0.8, 0.4)});
-    scene_geometry->add_line({tri.triangles[k].vertices[2], tri.triangles[k].vertices[0], Vec4(0.8, 0.8, 0.8, 0.4)});
+    scene_geometry->add_line({tri.triangles[k].vertices[0], tri.triangles[k].vertices[1],
+                              Vec4(0.8, 0.8, 0.8, 0.4)});
+    scene_geometry->add_line({tri.triangles[k].vertices[1], tri.triangles[k].vertices[2],
+                              Vec4(0.8, 0.8, 0.8, 0.4)});
+    scene_geometry->add_line({tri.triangles[k].vertices[2], tri.triangles[k].vertices[0],
+                              Vec4(0.8, 0.8, 0.8, 0.4)});
   }
 
   scene_geometry->flush();
 
-  const auto visitor = [&visitor_geometry, &win](const geometry::spatial::BoundingVolumeHierarchy::TreeElement &element,
-                                                 const bool intersected) {
-    viewer::AxisAlignedBox aabb;
-    aabb.lower = element.bounding_box.lower();
-    aabb.upper = element.bounding_box.upper();
-    if (element.is_leaf) {
-      aabb.color = Eigen::Vector4d(0.0, 0.0, 1.0, 0.8);
-    } else {
-      aabb.color = Eigen::Vector4d(1.0, 0.0, 0.0, 1.0);
-    }
+  const auto visitor =
+      [&visitor_geometry, &win](
+          const geometry::spatial::BoundingVolumeHierarchy::TreeElement &element,
+          const bool intersected) {
+        viewer::AxisAlignedBox aabb;
+        aabb.lower = element.bounding_box.lower();
+        aabb.upper = element.bounding_box.upper();
+        if (element.is_leaf) {
+          aabb.color = Eigen::Vector4d(0.0, 0.0, 1.0, 0.8);
+        } else {
+          aabb.color = Eigen::Vector4d(1.0, 0.0, 0.0, 1.0);
+        }
 
-    if (intersected) {
-      aabb.color(1) = 1.0;
-    }
+        if (intersected) {
+          aabb.color(1) = 1.0;
+        }
 
-    visitor_geometry->add_box(aabb);
-    visitor_geometry->flush();
-    win->spin_until_step();
-  };
+        visitor_geometry->add_box(aabb);
+        visitor_geometry->flush();
+        win->spin_until_step();
+      };
   geometry::spatial::BoundingVolumeHierarchy bvh;
   bvh.build(tri_ptrs);
 
@@ -167,6 +174,7 @@ void demo_intersection() {
 
     scene_geometry->add_ray(ray, 10.0, Vec4(1.0, 0.0, 0.0, 1.0));
     const auto intersection = bvh.intersect(ray, visitor);
+    (void)intersection;  // TODO(jpanikulam)
     // EXPECT_FALSE(intersection.intersected);
   }
   {
@@ -177,8 +185,10 @@ void demo_intersection() {
 
     scene_geometry->add_ray(ray, 10.0, Vec4(1.0, 0.0, 0.0, 1.0));
     const auto intersection = bvh.intersect(ray, visitor);
+    (void)intersection;  // TODO(jpanikulam)
     // EXPECT_TRUE(intersection.intersected);
     constexpr double EPS = 1e-4;
+    (void)intersection;  // TODO(jpanikulam)
     // EXPECT_NEAR(intersection.distance, 2.80121, EPS);
   }
 
@@ -218,8 +228,9 @@ void demo_bounding_volumes() {
 
   std::map<int, Eigen::Vector4d> colors;
   for (int stop_depth = 0; stop_depth < 10; ++stop_depth) {
-    const auto visitor = [&visitor_geometry, &win, &colors, stop_depth](const geometry::spatial::BoundingBox<3> &box,
-                                                                        int depth, bool leaf) {
+    const auto visitor = [&visitor_geometry, &win, &colors, stop_depth](
+                             const geometry::spatial::BoundingBox<3> &box, int depth,
+                             bool leaf) {
       if ((depth != stop_depth) && !leaf) {
         return;
       }

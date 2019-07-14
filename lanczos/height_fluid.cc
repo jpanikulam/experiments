@@ -58,6 +58,8 @@ void visualize() {
         const double v_y = system.v_y()(x, y);
 
         const double norm_v = std::hypot(v_x, v_y);
+        (void)norm_v;
+        (void)h;
 
         // intensities.push_back(norm_v);
         intensities.push_back(h - 23.0);

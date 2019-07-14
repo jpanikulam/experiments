@@ -63,6 +63,7 @@ void MetaViewer::render() {
   const double t_now = glfwGetTime();
 
   const double dt = std::max(t_now - last_update_time_, 0.02);
+  (void)dt;  // I expect this to be necessary -- todo(jpanikulam)
   last_update_time_ = t_now;
 
 }  // namespace viewer

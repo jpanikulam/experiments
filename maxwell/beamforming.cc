@@ -96,12 +96,6 @@ void beamform() {
                                                     const viewer::ViewportPoint& vp) {
     if (dist_sq < 1.0) {
       demo_geo->add_sphere({ray_pt, 0.1, viewer::colors::red()});
-
-      constexpr double selection_sphere_radius = 0.2;
-      const Vec3 p_from_ray = (p - ray_pt);
-      const jcc::Vec3 p2 =
-          p_from_ray - (selection_sphere_radius * p_from_ray.normalized());
-
       demo_text->add_pointer_target({"Dist: " + std::to_string(dist_sq), p, vp});
     }
     demo_text->flip();

@@ -11,7 +11,6 @@ TEST(Coupling, test_coupling_at_identity) {
   const jcc::Vec3 w(0.0, 0.0, 0.0);
   const jcc::Vec6 eps = jcc::vstack(v, w);
 
-  const SE3 vehicle_from_sensor = SE3();
   const SE3 world_from_vehicle = SE3();
 
   const SE3 world_2_from_world_1 = SE3::exp(eps);

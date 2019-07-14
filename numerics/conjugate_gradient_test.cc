@@ -41,8 +41,9 @@ TEST(ConjugateGradient, error_printouts) {
   // Random square matrices are a.e. invertible
   const MatNd<PROBLEM_DIM, PROBLEM_DIM> A = MatNd<PROBLEM_DIM, PROBLEM_DIM>::Random();
   const MatNd<PROBLEM_DIM, PROBLEM_DIM> Q = 500.0 * A.transpose() * A;
-  const VecNd<PROBLEM_DIM> true_soln = Q.inverse() * b;
 
+  const VecNd<PROBLEM_DIM> true_soln = Q.inverse() * b;
   const VecNd<PROBLEM_DIM> soln = conjugate_gradient_solve(Q, b);
+  EXPECT_LT((true_soln - soln).norm(), 1e-3);
 }
 }

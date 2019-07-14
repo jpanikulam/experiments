@@ -6,10 +6,12 @@
 
 namespace numerics {
 namespace {
+/*
 OptimizationState compute_lagrange_update(const OptimizationState& current_state,
-                                          const OptimizationProblem& problem) {
-  return {};
+                                        const OptimizationProblem& problem) {
+return {};
 }
+*/
 
 }  // namespace
 

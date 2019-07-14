@@ -58,6 +58,10 @@ double theta_scaling(const jcc::Vec2& uv, const double phi, const double dphi) {
   return dtheta;
 }
 
+// TODO:
+// - Use the Bracket stuff
+// - Figure out how to uniformly sample from some function
+/*
 std::vector<double> uniform_sample(const double start,
                                    const double end,
                                    const std::function<double(double)>& fnc) {
@@ -77,6 +81,7 @@ std::vector<double> uniform_sample(const double start,
   //   }
   // }
 }
+*/
 
 void go() {
   const auto view = viewer::get_window3d("Mr. Arm, arms");
