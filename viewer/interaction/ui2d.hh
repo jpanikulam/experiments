@@ -77,7 +77,7 @@ class Ui2d final : public Primitive {
 
   void clear();
   void flush();
-  void flip();
+  void flip() override;
 
  private:
   struct Buffer {

@@ -20,7 +20,8 @@ void draw_axes(const Axes &axes) {
     glEnable(GL_LINE_STIPPLE);
     glLineStipple(1.0, 0x00FF);
   } else {
-    glLineStipple(1.0, 0x00FF);
+    // glDisable(GL_LINE_STIPPLE);
+    // glLineStipple(1.0, 0x00FF);
   }
 
   glLineWidth(axes.line_width);
@@ -43,9 +44,9 @@ void draw_axes(const Axes &axes) {
   glLineStipple(1.0, 0xFFFF);
   glPopMatrix();
 
-  // if (axes.dotted) {
-  // glDisable(GL_LINE_STIPPLE);
-  // }
+  if (axes.dotted) {
+    glDisable(GL_LINE_STIPPLE);
+  }
 }
 
 void draw_lines(const std::vector<Line> &lines) {

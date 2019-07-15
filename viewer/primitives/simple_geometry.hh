@@ -55,7 +55,7 @@ class SimpleGeometry final : public Primitive {
 
   void clear();
 
-  void flip();
+  void flip() override;
 
   void flush();
 

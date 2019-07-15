@@ -59,12 +59,18 @@ class Window3D final : public SimpleWindow {
   }
 
   void add_camera(const std::shared_ptr<Camera> &camera) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     cameras_.push_back(camera);
   }
 
   void clear() {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
     primitives_.clear();
+  }
+
+  void flip() {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
+    need_flip_ = true;
   }
 
   ///////////////////////////////////
@@ -78,21 +84,25 @@ class Window3D final : public SimpleWindow {
   //
 
   void add_toggle_hotkey(const std::string &toggle_name, bool default_state, char key) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     toggles_[toggle_name] = default_state;
     key_mappings_[key] = toggle_name;
   }
 
   bool get_toggle(const std::string &state) const {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     return toggles_.at(state);
   }
 
   void clear_toggle_callbacks(const std::string &toggle_name) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     toggle_callbacks_[toggle_name].clear();
   }
 
   using ToggleCallback = std::function<void(bool)>;
   void add_toggle_callback(const std::string &toggle_name,
                            const ToggleCallback &callback) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     toggle_callbacks_[toggle_name].push_back(callback);
   }
 
@@ -103,15 +113,18 @@ class Window3D final : public SimpleWindow {
   void add_click_callback(
       const CallbackManager::ClickCallback &callback,
       const std::vector<geometry::shapes::LineSegment> &line_segments) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     callback_manager_.register_click_callback(callback, line_segments);
   }
 
   void add_click_callback(const CallbackManager::ClickCallback &callback,
                           const geometry::Plane &plane) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     callback_manager_.register_click_callback(callback, plane);
   }
 
   void clear_click_callbacks() {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     callback_manager_.clear_callbacks();
   }
 
@@ -124,6 +137,7 @@ class Window3D final : public SimpleWindow {
   //
 
   void set_continue_time_ms(const int dt_ms) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     continue_ms_ = dt_ms;
   }
 
@@ -137,12 +151,15 @@ class Window3D final : public SimpleWindow {
   }
 
   void set_azimuth(const double azimuth) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     view_.set_azimuth(azimuth);
   }
   void set_elevation(const double elevation) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     view_.set_elevation(elevation);
   }
   void set_zoom(const double zoom) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     view_.set_zoom(zoom);
   }
 
@@ -156,6 +173,7 @@ class Window3D final : public SimpleWindow {
 
   // Switch to orthographic projection
   void set_orthogonal(const bool ortho = true) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     orthogonal_projection_ = ortho;
   }
 
@@ -164,6 +182,7 @@ class Window3D final : public SimpleWindow {
   //
 
   void set_show_axes(const bool hide_axes = true) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     hide_axes_ = hide_axes;
   }
 
@@ -196,6 +215,7 @@ class Window3D final : public SimpleWindow {
 
   CallbackManager callback_manager_;
 
+  bool need_flip_ = false;
   //
   // Interaction History
   //

@@ -9,6 +9,8 @@
 #include "viewer/window_3d.hh"
 #include "viewer/window_manager.hh"
 
+#include "estimation/time_point.hh"
+
 #include "eigen_helpers.hh"
 
 #include <map>
@@ -203,6 +205,13 @@ void Window3D::draw_all_primitives() const {
 
 void Window3D::render() {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
+
+  if (need_flip_) {
+    for (const auto &primitive : primitives_) {
+      primitive->flip();
+    }
+    need_flip_ = false;
+  }
 
   //
   // Render cameras
