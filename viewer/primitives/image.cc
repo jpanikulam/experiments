@@ -81,14 +81,23 @@ void Image::draw() const {
 
   const double height = aspect_ratio * width_m_;
 
+  // glTexCoord2d(1, 0);
+  // glVertex3d(height - (height * 0.5), 0 - (width_m_ * 0.5), 0);
+  // glTexCoord2d(1, 1);
+  // glVertex3d(height - (height * 0.5), width_m_ - (width_m_ * 0.5), 0);
+  // glTexCoord2d(0, 1);
+  // glVertex3d(0 - (height * 0.5), width_m_ - (width_m_ * 0.5), 0);
+  // glTexCoord2d(0, 0);
+  // glVertex3d(0 - (height * 0.5), 0 - (width_m_ * 0.5), 0);
+
   glTexCoord2d(1, 0);
-  glVertex3d(height - (height * 0.5), 0 - (width_m_ * 0.5), 0);
+  glVertex3d(height, 0, 0);
   glTexCoord2d(1, 1);
-  glVertex3d(height - (height * 0.5), width_m_ - (width_m_ * 0.5), 0);
+  glVertex3d(height, width_m_, 0);
   glTexCoord2d(0, 1);
-  glVertex3d(0 - (height * 0.5), width_m_ - (width_m_ * 0.5), 0);
+  glVertex3d(0, width_m_, 0);
   glTexCoord2d(0, 0);
-  glVertex3d(0 - (height * 0.5), 0 - (width_m_ * 0.5), 0);
+  glVertex3d(0, 0, 0);
 
   glEnd();
 
