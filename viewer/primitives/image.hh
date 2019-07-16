@@ -7,6 +7,7 @@
 
 #include "eigen.hh"
 #include "viewer/primitives/primitive.hh"
+#include "viewer/rendering/smart_texture.hh"
 
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
@@ -30,8 +31,7 @@ class Image final : public Primitive {
   double width_m_ = 1.0;
   double  alpha_ = 0.7;
 
-  mutable unsigned int      texture_id_;
-  mutable bool              allocated_texture_ = false;
+  mutable SmartTexture tex_;
   mutable std::atomic<bool> to_update_{false};
   mutable std::mutex        draw_mutex_;
 };

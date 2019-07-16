@@ -1,8 +1,8 @@
 #include "viewer/primitives/image.hh"
 
-#include <GL/glew.h>
+#include "logging/assert.hh"
 
-#include <cassert>
+#include <GL/glew.h>
 
 namespace viewer {
 
@@ -40,27 +40,19 @@ void Image::update_image(const cv::Mat& image) {
   } else if (image.channels() == 3) {
     cv::flip(image, image_, 0);
   } else {
-    assert(false);
+    JASSERT(false, "This type of image is unsupported");
   }
   to_update_ = true;
 }
 
 void Image::update_gl() const {
-  if (!allocated_texture_) {
-    glGenTextures(1, &texture_id_);
-    allocated_texture_ = true;
+  if (!tex_.ready()) {
+    const double width_per_height = image_.cols / static_cast<double>(image_.rows);
+    const jcc::Vec2 size(width_per_height, 1.0);
+    tex_ = SmartTexture(size);
   }
-
-  glBindTexture(GL_TEXTURE_2D, texture_id_);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_.cols, image_.rows, 0, GL_BGR,
-               GL_UNSIGNED_BYTE, image_.data);
+  tex_.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGB, image_.cols, image_.rows, 0, GL_BGR,
+                    GL_UNSIGNED_BYTE, image_.data);
 }
 
 void Image::draw() const {
@@ -72,35 +64,7 @@ void Image::draw() const {
   }
 
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, texture_id_);
-
-  glColor4d(1.0, 1.0, 1.0, alpha_);
-  glBegin(GL_QUADS);
-
-  const double aspect_ratio = image_.cols / static_cast<double>(image_.rows);
-
-  const double height = aspect_ratio * width_m_;
-
-  // glTexCoord2d(1, 0);
-  // glVertex3d(height - (height * 0.5), 0 - (width_m_ * 0.5), 0);
-  // glTexCoord2d(1, 1);
-  // glVertex3d(height - (height * 0.5), width_m_ - (width_m_ * 0.5), 0);
-  // glTexCoord2d(0, 1);
-  // glVertex3d(0 - (height * 0.5), width_m_ - (width_m_ * 0.5), 0);
-  // glTexCoord2d(0, 0);
-  // glVertex3d(0 - (height * 0.5), 0 - (width_m_ * 0.5), 0);
-
-  glTexCoord2d(1, 0);
-  glVertex3d(height, 0, 0);
-  glTexCoord2d(1, 1);
-  glVertex3d(height, width_m_, 0);
-  glTexCoord2d(0, 1);
-  glVertex3d(0, width_m_, 0);
-  glTexCoord2d(0, 0);
-  glVertex3d(0, 0, 0);
-
-  glEnd();
-
+  tex_.draw();
   glDisable(GL_TEXTURE_2D);
 }
 }  // namespace viewer
