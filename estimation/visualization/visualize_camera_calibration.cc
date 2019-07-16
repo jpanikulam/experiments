@@ -1,4 +1,7 @@
 #include "estimation/visualization/visualize_camera_calibration.hh"
+
+#include "estimation/visualization/visualize_camera_frustum.hh"
+
 #include "viewer/window_3d.hh"
 
 namespace estimation {
@@ -22,7 +25,7 @@ void visualize_single_camera_frame(
     visualize_camera_distortion(ui2d, model);
   }
   if (cfg.visualize_camera_frustum) {
-    visualize_camera_frustum(geo, ui2d, model);
+    visualize_camera_frustum(*geo, *ui2d, model);
   }
 
   view->flip();
