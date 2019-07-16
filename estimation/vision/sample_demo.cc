@@ -49,8 +49,6 @@ NonlinearCameraModel make_model() {
 }
 
 cv::Mat render_at_pose(const SE3& camera_from_fiducial, const cv::Mat& fiducial_image) {
-  constexpr double HEIGHT_M = 1.0;
-
   const geometry::Plane im_plane_fiducial_frame{
       .origin = jcc::Vec3::Zero(),        //
       .normal = geometry::Unit3::UnitZ()  //
@@ -71,12 +69,12 @@ cv::Mat render_at_pose(const SE3& camera_from_fiducial, const cv::Mat& fiducial_
 
   const double width_per_height = out_image.cols / static_cast<double>(out_image.rows);
 
-  // ui2d->add_image(fiducial_image, 1.0);
+  ui2d->add_image(fiducial_image, 1.0);
 
   jcc::Vec3 intersection_camera_frame;
   for (int u = 0; u < out_image.cols; ++u) {
     for (int v = 0; v < out_image.rows; ++v) {
-      const auto optl_ray = model.unproject(jcc::Vec2(u, v));
+      const auto optl_ray = model.unproject(jcc::Vec2(u + 0.5, v + 0.5));
       // Could not produce a projection
       if (!optl_ray) {
         std::cout << "Lost a ray at : " << u << ", " << v << std::endl;
@@ -109,23 +107,25 @@ cv::Mat render_at_pose(const SE3& camera_from_fiducial, const cv::Mat& fiducial_
       ui2d->add_point({pt_fiducial_image_frame, jcc::Vec4(0.0, 1.0, 0.0, 1.0), 1.0});
 
       // const double result =
-      //     interpolate_nearest(fiducial_image, pt_fiducial_image_frame * model.rows());
-      const double result =
-          interpolate_bilinear(fiducial_image, pt_fiducial_image_frame * model.rows());
+      // interpolate_nearest(fiducial_image, pt_fiducial_image_frame * model.rows());
+      const double result = interpolate_bilinear(
+          fiducial_image, pt_fiducial_image_frame * fiducial_image.rows);
 
       out_image.at<uint8_t>(v, u) = static_cast<uint8_t>(result);
 
-      if ((v % 10 == 0) && (u % 10 == 0)) {
-        geo->add_ray(*optl_ray, 1.0);
+      // if ((v % 10 == 0) && (u % 10 == 0)) {
+      if ((v % 50 == 0)) {
+        geo->add_ray(*optl_ray, 5.0);
         geo->flush();
       }
     }
     if (u % 50 == 0) {
-      ui2d->add_image(out_image, 1.0);
-      ui2d->flip();
+      // ui2d->add_image(out_image, 1.0);
+      ui2d->flush();
       view->spin_until_step();
     }
   }
+  ui2d->clear();
   ui2d->add_image(out_image, 1.0);
   ui2d->flip();
   view->spin_until_step();
