@@ -20,7 +20,7 @@ struct PointerTarget {
   ViewportPoint location;
 };
 
-struct Image {
+struct UiImage {
   // You cannot imagine how much I hate this.
   cv::Mat image;
   double width_m;
@@ -58,7 +58,7 @@ class Ui2d final : public Primitive {
     add_lineplot(line_plot_builder.build());
   }
 
-  void add_image(const cv::Mat& image, double width_m);
+  void add_image(const cv::Mat image, double width_m);
 
   void add_point(const Point2d& point) {
     const std::lock_guard<std::mutex> lk(draw_mutex_);
@@ -80,7 +80,7 @@ class Ui2d final : public Primitive {
   struct Buffer {
     std::vector<PointerTarget> pointer_targets;
     std::vector<LinePlot2d> line_plots;
-    std::vector<Image> images;
+    std::vector<UiImage> images;
     std::vector<Point2d> points;
     std::vector<GridMesh> grid_meshes;
     std::vector<Line2d> lines;

@@ -141,7 +141,7 @@ void draw_lineplot(const LinePlot2d &line_plot,
   glPopMatrix();
 }
 
-void draw_image(const Image &image,
+void draw_image(const UiImage &image,
                 const Projection &proj,
                 const CharacterLibrary &char_lib) {
   glPushMatrix();
@@ -263,11 +263,11 @@ void Ui2d::add_grid_mesh(const GridMesh &grid_mesh) {
   back_buffer_.grid_meshes.push_back(grid_mesh);
 }
 
-void Ui2d::add_image(const cv::Mat &image, double width_m) {
+void Ui2d::add_image(const cv::Mat image, double width_m) {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   cv::Mat image_rgb;
   if (image.channels() == 1) {
-    cv::cvtColor(image, image_rgb, cv::COLOR_GRAY2BGR);
+    cv::cvtColor(image.clone(), image_rgb, cv::COLOR_GRAY2BGR);
   } else {
     image_rgb = image;
   }
