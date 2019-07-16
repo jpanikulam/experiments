@@ -26,15 +26,13 @@ void error_callback(int error, const char *description);
 // Manage a global registry of the created windows
 //
 
-std::mutex global_state_mutex;
-
 struct GlobalState {
   std::map<GLFWwindow *, std::shared_ptr<SimpleWindow>> windows;
   int last_placed_window_x = 0;
 };
 // Global state singleton
 std::shared_ptr<GlobalState> global_state;
-
+std::mutex global_state_mutex;
 std::atomic<bool> ready(false);
 
 void render_func() {
@@ -90,7 +88,6 @@ void WindowManager::register_window(const GlSize &size,
       glfwCreateWindow(size.height, size.width, window_name.c_str(), nullptr, nullptr);
   simple_window->set_title(window_name);
   simple_window->set_window(window);
-
 
   if (!window) {
     glfwTerminate();
