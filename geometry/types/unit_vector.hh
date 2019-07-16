@@ -19,6 +19,11 @@ class UnitVector {
     v_ = v.normalized();
   }
 
+  explicit UnitVector(double x, double y, double z) {
+    static_assert(N == 3, "Cannot use this constructor with anything but 3 arguments.");
+    v_ = jcc::Vec3(x, y, z).normalized();
+  }
+
   static UnitVector<2> from_angle(const double theta) {
     static_assert(N == 2);
     return UnitVector<2>::bless(VecNd<2>(std::cos(theta), std::sin(theta)));
