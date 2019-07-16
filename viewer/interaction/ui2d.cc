@@ -263,6 +263,18 @@ void Ui2d::add_grid_mesh(const GridMesh &grid_mesh) {
   back_buffer_.grid_meshes.push_back(grid_mesh);
 }
 
+void Ui2d::add_image(const cv::Mat &image, double width_m) {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  cv::Mat image_rgb;
+  if (image.channels() == 1) {
+    cv::cvtColor(image, image_rgb, cv::COLOR_GRAY2BGR);
+  } else {
+    image_rgb = image;
+  }
+
+  back_buffer_.images.push_back({image_rgb, width_m});
+}
+
 void Ui2d::clear() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   back_buffer_.clear();

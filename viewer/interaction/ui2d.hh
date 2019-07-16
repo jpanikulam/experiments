@@ -58,10 +58,7 @@ class Ui2d final : public Primitive {
     add_lineplot(line_plot_builder.build());
   }
 
-  void add_image(const cv::Mat& image, double width_m) {
-    const std::lock_guard<std::mutex> lk(draw_mutex_);
-    back_buffer_.images.push_back({image, width_m});
-  }
+  void add_image(const cv::Mat& image, double width_m);
 
   void add_point(const Point2d& point) {
     const std::lock_guard<std::mutex> lk(draw_mutex_);
