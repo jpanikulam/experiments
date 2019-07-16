@@ -86,3 +86,11 @@ Here, a "process" is some procedure that a _human being_ executes, reading from 
 * Consider that the CPU on your robot has at least 2 orders of magnitude more "complexity" than your entire machine
 * Consider that the OS on your robot has at least 2 orders of magnitude more "complexity" than your entire machine
 * State machines for generating behavior in unstructured environments are very unscalable
+
+# Flaws with OpenCV
+* [col, row] ordering is inconsistent
+    * .at<>(row, col)
+    * Point2f(col, row)
+* Calibration does not appear to use robust cost functions
+* Matrices are not typesafe, and require somewhat challenging reasoning re: memory
+* Matrices and images are the same type. Guys, use the type system! It's here to *prevent* this kind of thing!
