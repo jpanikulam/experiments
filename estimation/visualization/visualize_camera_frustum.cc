@@ -13,7 +13,7 @@ void visualize_camera_frustum(viewer::SimpleGeometry& geo,
   };
 
   constexpr double DIST_Z = 4.0;
-  for (const autonn& image_pt : image_pts) {
+  for (const auto& image_pt : image_pts) {
     const auto unproj = model.unproject(image_pt);
     JASSERT(static_cast<bool>(unproj), "Could not deproject a point");
     {
