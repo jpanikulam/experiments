@@ -10,8 +10,13 @@
 
 namespace jcc {
 
-namespace {
+class JccException : public std::exception {
+  virtual const char* what() const throw() {
+    return "Assertion failed!";
+  }
+};
 
+namespace {
 inline char* filename(char const* const argument) {
   return basename(const_cast<char*>(argument));
 }
@@ -54,7 +59,8 @@ inline void assert_gt(const A& a,
                      a, b, a_expr, b_expr, msg, file_name, line_num, ">")
                      .str()
               << std::endl;
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 
@@ -71,7 +77,8 @@ inline void assert_ge(const A& a,
                      a, b, a_expr, b_expr, msg, file_name, line_num, ">=")
                      .str()
               << std::endl;
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 
@@ -88,7 +95,8 @@ inline void assert_lt(const A& a,
                      a, b, a_expr, b_expr, msg, file_name, line_num, "<")
                      .str()
               << std::endl;
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 template <typename A, typename B>
@@ -104,7 +112,8 @@ inline void assert_le(const A& a,
                      a, b, a_expr, b_expr, msg, file_name, line_num, "<=")
                      .str()
               << std::endl;
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 
@@ -122,7 +131,8 @@ inline void assert_eq(const A& a,
                      .str()
               << std::endl;
 
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 
@@ -139,7 +149,8 @@ inline void assert_ne(const A& a,
                      a, b, a_expr, b_expr, msg, file_name, line_num, "!=")
                      .str()
               << std::endl;
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 
@@ -159,7 +170,8 @@ inline void assert_between(const A& a,
               << to_expr(b, b_expr).str() << " <= " << to_expr(a, a_expr).str()
               << " <= " << to_expr(c, c_expr).str() << ": " << msg;
 
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 
@@ -179,7 +191,8 @@ inline void assert_outside(const A& a,
               << to_expr(b, b_expr).str() << " < " << to_expr(a, a_expr).str() << " < "
               << to_expr(c, c_expr).str() << ": " << msg;
 
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 
@@ -193,7 +206,8 @@ inline void assert_true(const bool& a,
               << Format::red() << "Expected" << Format::reset() << ": " << a_expr
               << std::boolalpha << " " << a << ": " << msg << std::endl;
 
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 
@@ -207,7 +221,8 @@ inline void assert_false(const bool& a,
               << Format::red() << "Expected" << Format::reset() << ": " << a_expr
               << std::boolalpha << " " << a << ": " << msg << std::endl;
 
-    std::abort();
+    // std::abort();
+    throw JccException();
   }
 }
 
