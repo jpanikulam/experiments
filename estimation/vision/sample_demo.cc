@@ -48,7 +48,8 @@ NonlinearCameraModel make_model() {
   return model;
 }
 
-cv::Mat render_at_pose(const SE3& camera_from_fiducial, const cv::Mat& fiducial_image) {
+cv::Mat normal_render_at_pose(const SE3& camera_from_fiducial,
+                              const cv::Mat& fiducial_image) {
   const geometry::Plane im_plane_fiducial_frame{
       .origin = jcc::Vec3::Zero(),        //
       .normal = geometry::Unit3::UnitZ()  //
@@ -56,23 +57,91 @@ cv::Mat render_at_pose(const SE3& camera_from_fiducial, const cv::Mat& fiducial_
 
   const auto im_plane_camera_frame = camera_from_fiducial * im_plane_fiducial_frame;
 
+  const auto model = make_model();
+
+  cv::Mat out_image(cv::Size(480, 270), CV_8UC1, cv::Scalar(0));
+
+  const double width_per_height = out_image.cols / static_cast<double>(out_image.rows);
+
+  jcc::Vec3 intersection_camera_frame;
+  for (int u = 0; u < out_image.cols; ++u) {
+    for (int v = 0; v < out_image.rows; ++v) {
+      const auto optl_ray = model.unproject(jcc::Vec2(u + 0.5, v + 0.5));
+      // Could not produce a projection
+      if (!optl_ray) {
+        continue;
+      }
+
+      const bool intersected =
+          im_plane_camera_frame.intersect(*optl_ray, out(intersection_camera_frame));
+
+      // Did not hit the plane
+      if (!intersected) {
+        continue;
+      }
+
+      const jcc::Vec3 intersection_fiducial_frame =
+          camera_from_fiducial.inverse() * intersection_camera_frame;
+
+      const bool out_x = intersection_fiducial_frame.x() < 0.0 ||
+                         intersection_fiducial_frame.x() >= width_per_height;
+      const bool out_y =
+          intersection_fiducial_frame.y() < 0.0 || intersection_fiducial_frame.y() >= 1.0;
+      // Out of the frame
+      if (out_x || out_y) {
+        continue;
+      }
+
+      const jcc::Vec2 pt_fiducial_image_frame(intersection_fiducial_frame.x(),
+                                              intersection_fiducial_frame.y());
+
+      // const double result =
+      // interpolate_nearest(fiducial_image, pt_fiducial_image_frame * model.rows());
+      const double result = interpolate_bilinear(
+          fiducial_image, pt_fiducial_image_frame * fiducial_image.rows);
+
+      out_image.at<uint8_t>(v, u) = static_cast<uint8_t>(result);
+    }
+  }
+
+  return out_image;
+}
+
+cv::Mat moving_render_at_pose(const SE3& camera_from_fiducial_0,
+                              const jcc::Vec6 fiducial_velocity,
+                              const double lines_per_second,
+                              const cv::Mat& fiducial_image) {
+  const geometry::Plane im_plane_fiducial_frame{
+      .origin = jcc::Vec3::Zero(),        //
+      .normal = geometry::Unit3::UnitZ()  //
+  };
+
   const auto view = viewer::get_window3d("Calibration");
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
-  geo->add_axes({camera_from_fiducial});
+  geo->add_axes({camera_from_fiducial_0});
 
   const auto model = make_model();
 
   cv::Mat out_image(cv::Size(480, 270), CV_8UC1, cv::Scalar(0));
   // cv::Mat out_image(cv::Size(48, 27), CV_8UC1);
 
-  const double width_per_height = out_image.cols / static_cast<double>(out_image.rows);
+  const double width_per_height =
+      fiducial_image.cols / static_cast<double>(fiducial_image.rows);
 
   ui2d->add_image(fiducial_image, 1.0);
 
   jcc::Vec3 intersection_camera_frame;
   for (int u = 0; u < out_image.cols; ++u) {
+    const double t = u * lines_per_second;
+    const SE3 camera_from_fiducial =
+        SE3::exp(fiducial_velocity * t) * camera_from_fiducial_0;
+
+    const auto im_plane_camera_frame = camera_from_fiducial * im_plane_fiducial_frame;
+
+    geo->add_axes({camera_from_fiducial});
+
     for (int v = 0; v < out_image.rows; ++v) {
       const auto optl_ray = model.unproject(jcc::Vec2(u + 0.5, v + 0.5));
       // Could not produce a projection
@@ -113,9 +182,8 @@ cv::Mat render_at_pose(const SE3& camera_from_fiducial, const cv::Mat& fiducial_
 
       out_image.at<uint8_t>(v, u) = static_cast<uint8_t>(result);
 
-      // if ((v % 10 == 0) && (u % 10 == 0)) {
       if ((v % 50 == 0)) {
-        geo->add_ray(*optl_ray, 5.0);
+        geo->add_ray(*optl_ray, intersection_camera_frame.norm(), jcc::Vec4(1.0, 1.0, 1.0, 0.6));
         geo->flush();
       }
     }
@@ -145,8 +213,9 @@ void go() {
   ui2d->flip();
 
   cv::Mat board_image;
-  get_aruco_board()->draw(cv::Size(900, 900), board_image, 50, 1);
-  const SE3 camera_from_fiducial(SO3(), jcc::Vec3(0.0, 0.0, 1.0));
+  get_aruco_board()->draw(cv::Size(1500, 1500), board_image, 50, 1);
+  const SE3 camera_from_fiducial(SO3::exp(jcc::Vec3::Zero()),
+                                 jcc::Vec3(-0.5, -0.5, 1.0));
 
   {
     const auto image_tree = view->add_primitive<viewer::SceneTree>();
@@ -158,7 +227,10 @@ void go() {
                               board_texture_image);
   }
 
-  render_at_pose(camera_from_fiducial, board_image);
+  // normal_render_at_pose(camera_from_fiducial, board_image);
+  const jcc::Vec6 vel = (jcc::Vec6() << 0.0, 0.0, 0.04, 0.0, 0.01, 0.01).finished();
+
+  moving_render_at_pose(camera_from_fiducial, vel, 0.01, board_image);
 
   // OK: Now render some good bullshit
   jcc::Success() << "Finished rendering." << std::endl;
