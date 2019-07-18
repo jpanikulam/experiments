@@ -1,8 +1,7 @@
-#include "testing/gtest.hh"
-
 #include "numerics/import/csv_to_eigen.hh"
 
 #include "logging/assert.hh"
+#include "testing/gtest.hh"
 
 #include <sstream>
 
