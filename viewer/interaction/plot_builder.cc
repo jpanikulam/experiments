@@ -4,10 +4,12 @@ namespace viewer {
 
 SubLinePlotBuilder::SubLinePlotBuilder(const jcc::Vec4& color,
                                        const double width,
-                                       const bool dotted) {
+                                       const bool dotted,
+                                       const LinePlotStyle style) {
   subplot_.color = color;
   subplot_.line_width = width;
   subplot_.dotted = dotted;
+  subplot_.style = style;
 }
 
 void SubLinePlotBuilder::operator<<(const jcc::Vec2& p) {
@@ -32,9 +34,10 @@ void LinePlotBuilder::set_range(const PlotRange& range) {
 
 SubLinePlotBuilder& LinePlotBuilder::make_subplot(const std::string& name,
                                                   const jcc::Vec4& color,
-                                                  const double line_width,
-                                                  const bool dotted) {
-  builders_[name] = SubLinePlotBuilder(color, line_width, dotted);
+                                                  const double width,
+                                                  const bool dotted,
+                                                  const LinePlotStyle style) {
+  builders_[name] = SubLinePlotBuilder(color, width, dotted, style);
   return builders_.at(name);
 }
 

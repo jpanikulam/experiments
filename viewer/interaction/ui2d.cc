@@ -104,8 +104,14 @@ void draw_lineplot(const LinePlot2d &line_plot,
     } else {
       glLineStipple(1.0, 0xFFFF);
     }
-    glLineWidth(subplot.line_width);
-    glBegin(GL_LINE_STRIP);
+
+    if (subplot.style == LinePlotStyle::Line) {
+      glLineWidth(subplot.line_width);
+      glBegin(GL_LINE_STRIP);
+    } else if (subplot.style == LinePlotStyle::Scatter) {
+      glPointSize(subplot.line_width);
+      glBegin(GL_POINTS);
+    }
 
     for (const auto &pt : subplot.points) {
       const double x_val = field_x_max * (pt.x() - range.x_min) / x_range;

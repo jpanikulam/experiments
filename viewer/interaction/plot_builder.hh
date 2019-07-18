@@ -8,11 +8,17 @@
 
 namespace viewer {
 
+enum class LinePlotStyle {
+  Line = 0,
+  Scatter = 1,
+};
+
 struct SubLinePlot2d {
   std::vector<jcc::Vec2> points;
   jcc::Vec4 color = jcc::Vec4(1.0, 1.0, 1.0, 1.0);
   double line_width = 1.0;
   bool dotted = false;
+  LinePlotStyle style = LinePlotStyle::Line;
 };
 
 struct PlotRange {
@@ -34,7 +40,8 @@ class SubLinePlotBuilder {
   SubLinePlotBuilder() = default;
   SubLinePlotBuilder(const jcc::Vec4& color,
                      const double width = 0.2,
-                     const bool dotted = false);
+                     const bool dotted = false,
+                     const LinePlotStyle style = LinePlotStyle::Line);
   void operator<<(const jcc::Vec2& p);
 
   SubLinePlot2d build() const;
@@ -53,8 +60,9 @@ class LinePlotBuilder {
 
   SubLinePlotBuilder& make_subplot(const std::string& name,
                                    const jcc::Vec4& color,
-                                   const double line_width = 0.2,
-                                   const bool dotted = false);
+                                   const double width = 0.2,
+                                   const bool dotted = false,
+                                   const LinePlotStyle style = LinePlotStyle::Line);
 
   LinePlot2d build() const;
 
