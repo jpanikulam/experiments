@@ -51,7 +51,6 @@ double IncreasingPiecewiseLinearFunction1d::operator()(const double x) const {
       return value;
     }
   }
-  std::cout << "Failing over" << std::endl;
 
   const auto& first_pt = augmented_points_.front();
   return first_pt.slope * (x - first_pt.x) + first_pt.y;
