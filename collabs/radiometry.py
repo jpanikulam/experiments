@@ -4,6 +4,20 @@ from scipy.optimize import curve_fit
 
 data = np.genfromtxt("/home/jacob/repos/hover-jet/bin/ppdata", delimiter=',')
 
+
+def conglomerate(rdata):
+    distinct_exposures = np.unique(rdata[:, 0])
+    min_exposure = np.min(distinct_exposures)
+    for exposure in distinct_exposures:
+        eq = rdata[:, 0] == exposure
+        avg_intensity = np.average(rdata[:, 1][eq])
+
+        energy_factor = exposure / min_exposure
+        print "{energy}, {intensity}".format(energy=energy_factor, intensity=avg_intensity)
+
+conglomerate(data)
+exit(0)
+
 plt.title('Camera Radiometric Calibration')
 plt.ylabel('Camera Reported Intensity')
 plt.xlabel('Exposure')
