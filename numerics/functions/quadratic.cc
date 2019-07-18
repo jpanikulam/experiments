@@ -2,6 +2,7 @@
 
 #include "eigen.hh"
 #include "logging/assert.hh"
+#include "util/sign.hh"
 
 namespace numerics {
 
@@ -25,6 +26,11 @@ std::array<std::complex<double>, 2u> QuadraticFunction1d::roots() const {
   // Division by a_ doesn't move the roots --> todo, understand this
   return {eig.eigenvalues()(0), eig.eigenvalues()(1)};
 }
+// void QuadraticFunction1d::inverse(double y,
+//                                   double* x1 = nullptr,
+//                                   double* x2 = nullptr) const {
+//   // TODO
+// }
 
 QuadraticFunction1d fit_quadratic1d(
     double x1, double y1, double x2, double y2, double x3, double y3) {

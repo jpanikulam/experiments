@@ -27,6 +27,9 @@ class QuadraticFunction1d {
     return {a_, b_, c_};
   }
 
+  // Coming soon!
+  // void inverse(double y, double* x1 = nullptr, double* x2 = nullptr) const;
+
  private:
   double a_;
   double b_;
