@@ -12,8 +12,9 @@ def conglomerate(rdata):
         eq = rdata[:, 0] == exposure
         avg_intensity = np.average(rdata[:, 1][eq])
 
-        energy_factor = exposure / min_exposure
-        print "{energy}, {intensity}".format(energy=energy_factor, intensity=avg_intensity)
+        # energy_factor = exposure / min_exposure
+        energy_factor = exposure
+        print "{{{energy}, {intensity}}},".format(energy=energy_factor, intensity=avg_intensity)
 
 conglomerate(data)
 exit(0)
