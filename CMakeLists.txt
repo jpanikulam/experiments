@@ -39,6 +39,12 @@ include_directories(${GLFW_INCLUDE_DIRS})
 find_package(GLEW REQUIRED)
 
 #########################
+# OpenCL
+#
+find_package(OpenCL REQUIRED)
+include_directories(${OpenCL_INCLUDE_DIRS})
+
+#########################
 # ASSIMP
 #
 find_package(ASSIMP REQUIRED)
