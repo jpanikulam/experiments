@@ -145,6 +145,11 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
     if (key_char == 'O') {
       orthogonal_projection_ = !orthogonal_projection_;
     }
+
+    if (key_char == 'T') {
+      view_.toggle_orbit();
+    }
+
     if (key_char == 'H') {
       hide_axes_ = !hide_axes_;
     }

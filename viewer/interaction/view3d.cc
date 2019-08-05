@@ -32,6 +32,11 @@ OrbitCamera OrbitCamera::simulate(const double dt_sec) const {
       {.positional_damping_per_sec = 1e-9, .angular_damping_per_sec = 1e-9});
 
   out_camera.anchor_body_ = lanczos::simulate(anchor_body_, cfg, dt_sec);
+
+  if (orbit_) {
+    out_camera.azimuth_ += 0.001;
+  }
+
   return out_camera;
 }
 

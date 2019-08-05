@@ -67,12 +67,18 @@ class OrbitCamera {
 
   void apply_scroll(const double amount);
 
+  void toggle_orbit() {
+    orbit_ = !orbit_;
+  }
+
  private:
   lanczos::RigidBody anchor_body_;
 
   // Default identity
   static constexpr double INITIAL_Z_OFFSET_M = 15.0;
   SE3 camera_from_anchor_ = SE3(SO3(), Vec3(0.0, 0.0, INITIAL_Z_OFFSET_M));
+
+  bool orbit_ = false;
 
   double azimuth_ = M_PI * 0.25;
   double elevation_ = M_PI * 0.25;
