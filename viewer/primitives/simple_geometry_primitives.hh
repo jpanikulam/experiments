@@ -52,7 +52,7 @@ struct Point {
 struct ColoredPoints {
   std::vector<Vec3> points;
   std::vector<Vec4> colors;
-  double size = 1.0;
+  std::vector<double> sizes;
 };
 
 struct Points2d {

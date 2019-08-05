@@ -111,13 +111,19 @@ void SimpleGeometry::add_ray(const Ray &ray) {
 }
 
 void SimpleGeometry::add_colored_points(const Points &points,
-                                        const std::vector<double> &intensities) {
+                                        const std::vector<double> &intensities,
+                                        const std::vector<double> &sizes) {
   ColoredPoints colored_points;
   colored_points.colors.reserve(intensities.size());
   assert(points.points.size() == intensities.size());
+  if (sizes.empty()) {
+    colored_points.sizes = std::vector<double>(intensities.size(), points.size);
+  } else {
+    colored_points.sizes = sizes;
+    assert(sizes.size() == intensities.size());
+  }
 
   colored_points.points = points.points;
-  colored_points.size = points.size;
 
   double max = 0.01;
   for (std::size_t k = 0; k < intensities.size(); ++k) {

@@ -39,7 +39,9 @@ class SimpleGeometry final : public Primitive {
 
   void add_point(const Point &point);
 
-  void add_colored_points(const Points &points, const std::vector<double> &intensities);
+  void add_colored_points(const Points &points,
+                          const std::vector<double> &intensities,
+                          const std::vector<double> &sizes = {});
 
   void add_points2d(const Points2d &points);
 

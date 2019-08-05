@@ -41,7 +41,7 @@ void render_beam(viewer::SimpleGeometry& geo, const std::vector<PointSource>& so
   {
     points.points.reserve(COUNT);
     intensities.reserve(COUNT);
-    points.size = 5.0;
+    points.sizes.resize(COUNT, 5.0);
   }
 
   double max = 0.0;

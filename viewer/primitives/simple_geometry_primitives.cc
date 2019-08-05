@@ -135,13 +135,13 @@ void draw_points(const Points &points) {
 
 void draw_colored_points(const ColoredPoints &points) {
   glPushAttrib(GL_POINT_BIT | GL_CURRENT_BIT);
-  glPointSize(points.size);
-  glBegin(GL_POINTS);
   for (std::size_t k = 0; k < points.points.size(); ++k) {
+    glBegin(GL_POINTS);
+    glPointSize(points.sizes[k]);
     glColor(points.colors[k]);
     glVertex(points.points[k]);
+    glEnd();
   }
-  glEnd();
   glPopAttrib();
 }
 
