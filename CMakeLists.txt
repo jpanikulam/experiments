@@ -72,7 +72,7 @@ macro(add_test test_name test_file test_libs)
 endmacro(add_test)
 
 execute_process(
-    COMMAND pymake -v success -p "${CMAKE_CURRENT_SOURCE_DIR}"
+    COMMAND pymake -c "${CMAKE_CURRENT_SOURCE_DIR}/pymake.json" -v success -p "${CMAKE_CURRENT_SOURCE_DIR}"
     RESULT_VARIABLE ret
 )
 if(ret EQUAL "1")

@@ -1,7 +1,5 @@
 #pragma once
 
-// %deps(${OpenCL_LIBRARY})
-
 #include "gpgpu/wrappers/cl_info.hh"
 
 #include <CL/cl.hpp>
