@@ -1,0 +1,27 @@
+{
+    "header_remappings": {
+        "opencv2/opencv.hpp": "opencv",
+        "assimp/*": "assimp",
+        "GLFW/glfw3.h": "glfw",
+        "GL/glew.h": "opengl",
+        "libserialport.h": "serialport",
+        "crossguid/guid.hpp": "crossguid",
+        "mqtt/*": "paho-mqttpp3",
+        "yaml-cpp/yaml.h": "yaml-cpp",
+        "CL/cl.hpp": "opencl",
+        "CL/cl.h": "opencl"
+    },
+    "library_mappings": {
+        "assimp": "${ASSIMP_LIBRARIES}",
+        "opencv": "${OpenCV_LIBS}",
+        "glfw": "${GLFW_LIBRARIES}",
+        "glew": "${GLEW_LIBRARIES}",
+        "opengl": "${OPENGL_LIBRARIES}",
+        "opencl": "${OpenCL_LIBRARY}",
+        "pthread": "pthread",
+        "yaml-cpp": "yaml-cpp",
+        "serialport": "serialport",
+        "crossguid": "crossguid",
+        "paho-mqttpp3": "paho-mqttpp3"
+    }
+}

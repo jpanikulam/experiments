@@ -2,12 +2,20 @@
 
 import argparse
 import os
+import json
 
 from generate_cmake.log import Log
 from generate_cmake.file_system import get_files, resolve_include
 from generate_cmake.parse import parse_text, has_annotations, should_ignore
 from generate_cmake.cmake import build_cmakes
 from generate_cmake.bazel import build_bazel_build
+
+
+class Configuration(object):
+    def __init__(self, external_includes_mapping, external_libs_remapping, path):
+        self.external_includes_mapping = external_includes_mapping
+        self.external_libs_remapping = external_libs_remapping
+        self.repo_path = path
 
 
 def get_src_path(file, src):
@@ -42,17 +50,18 @@ def recurse_header_only_deps(file, lib, all_tree, repo_path):
     return recursed_deps
 
 
-def compute_deps_from_includes(elements):
-    external_includes_mapping = {
-        "opencv2/opencv.hpp": 'opencv',
-        "assimp/*": 'assimp',
-        "GLFW/glfw3.h": 'glfw',
-        "GL/glew.h": 'opengl',
-        "libserialport.h": "serialport",
-        "crossguid/guid.hpp": "crossguid",
-        "mqtt/*": "paho-mqttpp3",
-        "yaml-cpp/yaml.h": "yaml-cpp",
-    }
+def compute_deps_from_includes(elements, cfg):
+    # external_includes_mapping = {
+    #     "opencv2/opencv.hpp": 'opencv',
+    #     "assimp/*": 'assimp',
+    #     "GLFW/glfw3.h": 'glfw',
+    #     "GL/glew.h": 'opengl',
+    #     "libserialport.h": "serialport",
+    #     "crossguid/guid.hpp": "crossguid",
+    #     "mqtt/*": "paho-mqttpp3",
+    #     "yaml-cpp/yaml.h": "yaml-cpp",
+    # }
+    external_includes_mapping = cfg.external_includes_mapping
 
     new_deps = []
     for include in elements['include']:
@@ -63,31 +72,26 @@ def compute_deps_from_includes(elements):
     return new_deps
 
 
-def what_libs(file, elements, all_tree, known_libs, repo_path):
+def what_libs(file, elements, all_tree, known_libs, cfg):
     '''Determine what libs are required for this thing.'''
-    external_libs_remapping = {
-        'assimp': '${ASSIMP_LIBRARIES}',
-        'opencv': '${OpenCV_LIBS}',
-        'glfw': '${GLFW_LIBRARIES}',
-        'glew': '${GLEW_LIBRARIES}',
-        'opengl': '${OPENGL_LIBRARIES}',
-        'pthread': 'pthread',
-        'yaml-cpp': 'yaml-cpp',
-        'serialport': 'serialport',
-        'crossguid': 'crossguid',
-        'paho-mqttpp3': 'paho-mqttpp3',
-    }
+    # external_libs_remapping = {
+    #     'assimp': '${ASSIMP_LIBRARIES}',
+    #     'opencv': '${OpenCV_LIBS}',
+    #     'glfw': '${GLFW_LIBRARIES}',
+    #     'glew': '${GLEW_LIBRARIES}',
+    #     'opengl': '${OPENGL_LIBRARIES}',
+    #     'pthread': 'pthread',
+    #     'yaml-cpp': 'yaml-cpp',
+    #     'serialport': 'serialport',
+    #     'crossguid': 'crossguid',
+    #     'paho-mqttpp3': 'paho-mqttpp3',
+    # }
 
-    # TODO: Warn that something has been auto-detected and doesn't need to be listed
-    # TODO: How to detect that opengl must be linked to?
-    "GL/glew.h"
-    "opencv2/opencv.hpp"
-    "GLFW/glfw3.h"
-    "assimp/"
+    external_libs_remapping = cfg.external_libs_remapping
 
     required_libs = []
     # Obviated dependencies
-    estimated_deps = elements['deps'] + compute_deps_from_includes(elements)
+    estimated_deps = elements['deps'] + compute_deps_from_includes(elements, cfg)
     for dep in estimated_deps:
         if dep in known_libs:
             required_libs.append(dep)
@@ -103,7 +107,7 @@ def what_libs(file, elements, all_tree, known_libs, repo_path):
 
         for src in lib['srcs']:
             resolved = get_src_path(file, src)
-            src_libs = set(what_libs(resolved, all_tree[resolved], all_tree, known_libs, repo_path))
+            src_libs = set(what_libs(resolved, all_tree[resolved], all_tree, known_libs, cfg))
 
             # HACK: Don't depend on self
             src_libs = src_libs.difference({lib['target']})
@@ -112,14 +116,14 @@ def what_libs(file, elements, all_tree, known_libs, repo_path):
     # Inferred dependencies
     for include in elements['include']:
         if include['type'] != 'system':
-            resolved = resolve_include(file, include['given_path'], available_include_paths=[repo_path])
+            resolved = resolve_include(file, include['given_path'], available_include_paths=[cfg.repo_path])
             available = resolved in all_tree.keys()
 
             if available:
                 inferred_libs = all_tree[resolved]['lib']
                 for lib in inferred_libs:
                     if lib.get('header_only', False):
-                        required_libs.extend(recurse_header_only_deps(resolved, lib, all_tree, repo_path))
+                        required_libs.extend(recurse_header_only_deps(resolved, lib, all_tree, cfg.repo_path))
                     else:
                         required_libs.append(lib['target'])
 
@@ -191,7 +195,7 @@ def discover_unlabelled_libs(tree):
                 })
 
 
-def build_dependency_table(all_tree, repo_path):
+def build_dependency_table(all_tree, cfg):
     discover_unlabelled_bins(all_tree)
     discover_unlabelled_libs(all_tree)
 
@@ -210,7 +214,7 @@ def build_dependency_table(all_tree, repo_path):
             continue
 
         Log.debug("In: {}".format(file))
-        required_libs = what_libs(file, elements, all_tree, libs, repo_path)
+        required_libs = what_libs(file, elements, all_tree, libs, cfg)
         if len(required_libs):
             Log.debug('  needs: {}'.format(required_libs))
 
@@ -271,15 +275,28 @@ def main():
         default='cmake'
     )
 
+    parser.add_argument(
+        "-c",
+        "--configuration",
+        type=str,
+        default=''
+    )
+
     args = parser.parse_args()
     Log.set_verbosity(args.verbosity)
-
-    here = os.path.dirname(os.path.realpath(__file__))
 
     if args.path is None:
         path = os.getcwdu()
     else:
         path = args.path
+
+    if(len(args.configuration)):
+        json_cfg = json.load(open(args.configuration))
+        cfg = Configuration(json_cfg['header_remappings'], json_cfg['library_mappings'], path)
+    else:
+        cfg = Configuration({}, {}, path)
+
+    here = os.path.dirname(os.path.realpath(__file__))
 
     Log.info("Parsing: ", path)
     files = []
@@ -292,7 +309,7 @@ def main():
     parsed_file_tree = {}
     for file in files:
         parsed_file_tree.update(parse_file(file))
-    to_build = build_dependency_table(parsed_file_tree, path)
+    to_build = build_dependency_table(parsed_file_tree, cfg)
 
     if args.tool == 'cmake':
         build_cmakes(to_build, path)

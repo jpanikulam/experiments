@@ -20,7 +20,7 @@ def between(text, ldelim='(', rdelim=')'):
     needs(text, [ldelim, rdelim])
     start = text.find(ldelim)
     end = text.rfind(rdelim)
-    assert end - start > 1, "Delimeters empty"
+    assert end - start > 1, "Delimeters empty in: {}".format(text)
     return text[start + 1: end]
 
 
@@ -93,7 +93,6 @@ tokens = {
     '#include <': partial(grab_include, incl_type="system"),
     '#include "': partial(grab_include, incl_type="local"),
     'int main(': make_flagger('has_main'),
-    'void main(': make_flagger('has_main'),
     'void main(': make_flagger('has_main'),
     '//%ignore': make_flagger('ignore'),
     '#include "testing/gtest.hh"': make_flagger('is_test'),
