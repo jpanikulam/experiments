@@ -2,6 +2,7 @@
 
 #include "eigen.hh"
 #include "gpgpu/import/load_kernel.hh"
+#include "gpgpu/wrappers/create_context.hh"
 #include "gpgpu/wrappers/errors.hh"
 
 #include "viewer/primitives/simple_geometry.hh"
@@ -47,7 +48,8 @@ std::vector<Star> make_stars(int n_stars) {
     host_stars[k].p_y = ran.y();
     host_stars[k].p_z = ran.z();
 
-    const jcc::Vec3 v = 0.02 * ran.cross(jcc::Vec3::UnitZ()) / (ran.norm());
+    // const jcc::Vec3 v = 0.02 * ran.cross(jcc::Vec3::UnitZ()) / (ran.norm());
+    const jcc::Vec3 v = 0.02 * jcc::Vec3::Random();
 
     host_stars[k].v_x = v.x();
     host_stars[k].v_y = v.y();
@@ -74,29 +76,8 @@ void put_stars(viewer::SimpleGeometry& geo, const std::vector<Star>& stars) {
 }
 }  // namespace
 
-struct ClInfo {
-  cl::Context context;
-  cl::Device device;
-};
-
-ClInfo generate_context() {
-  cl::Platform platform;
-
-  std::vector<cl::Device> devices;
-  platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
-  std::cout << "Found: " << devices.size() << " devices" << std::endl;
-
-  JASSERT_EQ(devices.size(), 1u, "This program expects only one device");
-
-  const cl::Context context(devices);
-  return {
-      .context = context,        //
-      .device = devices.front()  //
-  };
-}
-
 void run() {
-  auto cl_info = generate_context();
+  auto cl_info = jcc::create_context();
 
   const std::size_t n_stars = 10000;
   const std::size_t n_bytes = n_stars * sizeof(Star);
@@ -107,8 +88,7 @@ void run() {
   std::vector<cl::Kernel> kernels;
   {
     auto program =
-        jcc::read_kernel(cl_info.context, cl_info.device,
-                         "/home/jacob/repos/experiments/gpgpu/demos/gravity.cl");
+        jcc::read_kernel(cl_info, "/home/jacob/repos/experiments/gpgpu/demos/gravity.cl");
     program.createKernels(&kernels);
   }
 
@@ -120,11 +100,12 @@ void run() {
   kernel.setArg(1, dv_out_masses);
   kernel.setArg(2, static_cast<cl_int>(n_stars));
 
-  const auto view = viewer::get_window3d("Fluid Visualization");
+  const auto view = viewer::get_window3d("Gravity Visualization");
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
   auto host_stars = make_stars(n_stars);
-  for (int k = 0; k < 10000; ++k) {
+  // for (int k = 0; k < 10000; ++k) {
+  while (!view->should_close()) {
     constexpr bool BLOCK_WRITE = false;
     constexpr std::size_t offset = 0;
 
@@ -147,6 +128,5 @@ void run() {
 }
 
 int main() {
-  std::cout << "Running" << std::endl;
   run();
 }
