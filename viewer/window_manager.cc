@@ -62,7 +62,7 @@ std::shared_ptr<GlobalState> maybe_create_global_state() {
     global_state = std::make_shared<GlobalState>();
 
     ready = true;
-    render_thread.detach();
+    // render_thread.detach();
   }
   return global_state;
 }
@@ -76,6 +76,7 @@ void WindowManager::register_window(const GlSize &size,
     return;
   }
   maybe_create_global_state();
+  // const std::lock_guard<std::mutex> lk(global_state_mutex);
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, win_ver_maj);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -111,23 +112,27 @@ void WindowManager::register_window(const GlSize &size,
 // Render all of the managed windows
 //
 void WindowManager::render() {
+  std::vector<GLFWwindow *> to_erase;
   for (auto it = global_state->windows.begin(); it != global_state->windows.end(); it++) {
     auto &glfw_win = it->first;
     auto &window = it->second;
+    if (glfwWindowShouldClose(glfw_win)) {
+      to_erase.push_back(glfw_win);
+      continue;
+    }
 
     glfwMakeContextCurrent(glfw_win);
     glewInit();
 
-    if (!glfwWindowShouldClose(glfw_win)) {
-      window->render();
-      glfwSwapBuffers(glfw_win);
-    } else {
-      glfwDestroyWindow(glfw_win);
-      global_state->windows.erase(it);
-      continue;
-    }
+    window->render();
+    glfwSwapBuffers(glfw_win);
   }
   glfwPollEvents();
+
+  for (const auto window_key : to_erase) {
+    glfwDestroyWindow(window_key);
+    global_state->windows.erase(window_key);
+  }
 }
 
 bool WindowManager::any_windows() {
