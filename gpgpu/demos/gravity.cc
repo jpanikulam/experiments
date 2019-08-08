@@ -77,7 +77,7 @@ void put_stars(viewer::SimpleGeometry& geo, const std::vector<Star>& stars) {
 }  // namespace
 
 void run() {
-  auto cl_info = jcc::create_context();
+  const auto cl_info = jcc::create_context();
 
   const std::size_t n_stars = 10000;
   const std::size_t n_bytes = n_stars * sizeof(Star);
@@ -85,15 +85,11 @@ void run() {
   cl::Buffer dv_in_masses(cl_info.context, CL_MEM_READ_ONLY, n_bytes);
   cl::Buffer dv_out_masses(cl_info.context, CL_MEM_WRITE_ONLY, n_bytes);
 
-  std::vector<cl::Kernel> kernels;
-  {
-    auto program =
-        jcc::read_kernel(cl_info, "/home/jacob/repos/experiments/gpgpu/demos/gravity.cl");
-    program.createKernels(&kernels);
-  }
+  const auto kernels =
+      read_kernels(cl_info, "/home/jacob/repos/experiments/gpgpu/demos/gravity.cl");
 
-  // TODO: Create a kernels + names map
-  auto kernel = kernels.front();
+  auto kernel = kernels.at("simulate_gravity");
+
   cl::CommandQueue cmd_queue(cl_info.context);
 
   kernel.setArg(0, dv_in_masses);
@@ -104,7 +100,6 @@ void run() {
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
   auto host_stars = make_stars(n_stars);
-  // for (int k = 0; k < 10000; ++k) {
   while (!view->should_close()) {
     constexpr bool BLOCK_WRITE = false;
     constexpr std::size_t offset = 0;

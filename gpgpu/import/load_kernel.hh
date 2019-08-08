@@ -6,8 +6,11 @@
 
 #include <CL/cl.hpp>
 
+#include <map>
+
 namespace jcc {
 
-cl::Program read_kernel(const ClInfo& cl_info, const std::string& path);
+std::map<std::string, cl::Kernel> read_kernels(const ClInfo& cl_info,
+                                               const std::string& path);
 
 }  // namespace jcc

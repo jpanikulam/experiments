@@ -17,9 +17,7 @@ std::string read_file(const std::string& path) {
   return text;
 }
 
-}  // namespace
-
-cl::Program read_kernel(const ClInfo& cl_info, const std::string& path) {
+cl::Program read_program(const ClInfo& cl_info, const std::string& path) {
   //
   // Read the source code and compile the kernel
   //
@@ -36,6 +34,32 @@ cl::Program read_kernel(const ClInfo& cl_info, const std::string& path) {
   JASSERT_EQ(build_status, 0, error.c_str());
 
   return program;
+}
+
+}  // namespace
+
+std::map<std::string, cl::Kernel> read_kernels(const ClInfo& cl_info,
+                                               const std::string& path) {
+  std::map<std::string, cl::Kernel> kernels;
+  auto program = read_program(cl_info, path);
+
+  std::vector<cl::Kernel> kernels_vec;
+  program.createKernels(&kernels_vec);
+
+  for (auto& kernel : kernels_vec) {
+    std::string name;
+    kernel.getInfo(CL_KERNEL_FUNCTION_NAME, &name);
+
+    // The OpenCL driver includes an extra null-terminator in the string.
+    const int last_char = name.find('\0');
+
+    if (last_char != -1) {
+      kernels[name.substr(0, last_char)] = kernel;
+    } else {
+      kernels[name] = kernel;
+    }
+  }
+  return kernels;
 }
 
 }  // namespace jcc
