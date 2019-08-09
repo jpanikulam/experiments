@@ -1,19 +1,3 @@
-struct ProjectionCoefficients {
-  float fx;
-  float fy;
-  float cx;
-  float cy;
-
-  float p1;
-  float p2;
-
-  float k1;
-  float k2;
-  float k3;
-
-  int rows;
-  int cols;
-};
 
 float2 apply_distortion(const struct ProjectionCoefficients proj,
                         const float3 world_point) {
