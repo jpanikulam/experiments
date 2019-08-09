@@ -50,6 +50,29 @@ struct __attribute__((packed)) ProjectionCoefficientsf {
   cl_int cols;
 };
 
+struct __attribute__((packed)) PackedSE3 {
+  PackedSE3(const SE3 &se3) {
+    const MatNd<3, 3> mat = se3.so3().matrix();
+    r0[0] = mat(0, 0);
+    r0[1] = mat(0, 1);
+    r0[2] = mat(0, 2);
+    r1[0] = mat(1, 0);
+    r1[1] = mat(1, 1);
+    r1[2] = mat(1, 2);
+    r2[0] = mat(2, 0);
+    r2[1] = mat(2, 1);
+    r2[2] = mat(2, 2);
+
+    t[0] = se3.translation().x;
+    t[1] = se3.translation().y;
+    t[2] = se3.translation().z;
+  }
+  float r0[4];
+  float r1[4];
+  float r2[4];
+  float t[4];
+};
+
 cv::Ptr<cv::aruco::GridBoard> get_aruco_board() {
   const auto dict = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
   constexpr float FIDUCIAL_WIDTH_METERS = 99.0 / 1000;
@@ -87,13 +110,14 @@ estimation::NonlinearCameraModel make_model() {
 cv::Mat create_ray_lut(const estimation::NonlinearCameraModel &model,
                        const int cols,
                        const int rows) {
-  cv::Mat deprojection_lut(cv::Size(cols, rows), CV_32FC3);
+  cv::Mat deprojection_lut(cv::Size(cols, rows), CV_32FC4);
   for (int u = 0; u < cols; ++u) {
     for (int v = 0; v < rows; ++v) {
       const auto optl_ray = model.unproject(jcc::Vec2(u + 0.5, v + 0.5));
       const Eigen::Vector3f dir_f = optl_ray->direction.cast<float>();
       // deprojection_lut.at<cv::Vec3f>(u, v) = cv::Vec3f(0.0, 0.0, 1.0);
-      deprojection_lut.at<cv::Vec3f>(u, v) = cv::Vec3f(dir_f.x(), dir_f.y(), dir_f.z());
+      deprojection_lut.at<cv::Vec4f>(u, v) =
+          cv::Vec4f(dir_f.x(), dir_f.y(), dir_f.z(), 1.0);
     }
   }
   return deprojection_lut;
@@ -122,116 +146,65 @@ int main() {
   const cl::Image2D dv_fiducial_image(cl_info.context, CL_MEM_READ_ONLY, format,
                                       board_image.cols, board_image.rows, 0, nullptr,
                                       &status);
-  jcc::check_status(status);
+  JCHECK_STATUS(status);
   const cl::Image2D dv_rendered_image(cl_info.context, CL_MEM_WRITE_ONLY, format,
                                       out_cols, out_rows, 0, nullptr, &status);
-  jcc::check_status(status);
 
-  const cl::ImageFormat ray_lut_fmt(CL_R, CL_FLOAT);
-  const cl::Image2D dv_ray_lut0(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols,
-                                out_rows, 0, nullptr, &status);
-  jcc::check_status(status);
-  const cl::Image2D dv_ray_lut1(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols,
-                                out_rows, 0, nullptr, &status);
-  jcc::check_status(status);
-  const cl::Image2D dv_ray_lut2(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols,
-                                out_rows, 0, nullptr, &status);
-
-  jcc::check_status(status);
+  JCHECK_STATUS(status);
+  const cl::ImageFormat ray_lut_fmt(CL_RGBA, CL_FLOAT);
+  const cl::Image2D dv_ray_lut(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols,
+                               out_rows, 0, nullptr, &status);
+  JCHECK_STATUS(status);
 
   const auto cam_model = make_model();
   {
-    kernel.setArg(0, dv_fiducial_image);
-    kernel.setArg(1, dv_ray_lut0);
-    kernel.setArg(2, dv_ray_lut1);
-    kernel.setArg(3, dv_ray_lut2);
-
-    kernel.setArg(4, dv_rendered_image);
-    kernel.setArg(5, sampler);
+    JCHECK_STATUS(kernel.setArg(0, dv_fiducial_image));
+    JCHECK_STATUS(kernel.setArg(1, dv_ray_lut));
+    JCHECK_STATUS(kernel.setArg(2, dv_rendered_image));
+    JCHECK_STATUS(kernel.setArg(3, sampler));
   }
 
   cl::CommandQueue cmd_queue(cl_info.context);
 
   cl::size_t<3> origin;
-  origin[0] = 0;
-  origin[1] = 0;
-  origin[2] = 0;
+  {
+    origin[0] = 0;
+    origin[1] = 0;
+    origin[2] = 0;
+  }
 
   cl::size_t<3> fiducial_region;
-  fiducial_region[0] = board_image.cols;
-  fiducial_region[1] = board_image.rows;
-  fiducial_region[2] = 1;
+  {
+    fiducial_region[0] = board_image.cols;
+    fiducial_region[1] = board_image.rows;
+    fiducial_region[2] = 1;
+  }
 
   cl::size_t<3> out_image_region;
-  out_image_region[0] = out_cols;
-  out_image_region[1] = out_rows;
-  out_image_region[2] = 1;
-
-  status = cmd_queue.enqueueWriteImage(dv_fiducial_image, CL_FALSE, origin,
-                                       fiducial_region, 0, 0, board_image.data);
-  jcc::check_status(status);
+  {
+    out_image_region[0] = out_cols;
+    out_image_region[1] = out_rows;
+    out_image_region[2] = 1;
+  }
+  JCHECK_STATUS(cmd_queue.enqueueWriteImage(dv_fiducial_image, CL_FALSE, origin,
+                                            fiducial_region, 0, 0, board_image.data));
 
   const cv::Mat ray_lut = create_ray_lut(cam_model, out_cols, out_rows).clone();
-  // status = cmd_queue.enqueueWriteImage(dv_ray_lut, CL_FALSE, origin, ray_lut_region, 1,
-  // 1 * out_rows * out_cols, ray_lut.data);
-
-  // cl::size_t<3> ray_lut_region;
-  // ray_lut_region[0] = out_cols;
-  // ray_lut_region[1] = out_rows;
-  // ray_lut_region[2] = 3;
-  // status = cmd_queue.enqueueWriteImage(dv_ray_lut, CL_FALSE, origin, ray_lut_region, 0,
-  // 0, ray_lut.data);
-
-  std::cout << "Writing" << std::endl;
-  cv::Mat bgr[3];           // destination array
-  cv::split(ray_lut, bgr);  // split source
-
-  // for (int d = 0; d < 3; ++d) {
-  //   cv::imshow("poose", cv::abs(bgr[d]));
-  //   cv::waitKey(0);
-
-  //   cl::size_t<3> rl_origin;
-  //   rl_origin[0] = 0;
-  //   rl_origin[1] = 0;
-  //   rl_origin[2] = d;
-
-  //   cl::size_t<3> rl_region;
-  //   rl_region[0] = out_cols;
-  //   rl_region[1] = out_rows;
-  //   rl_region[2] = 1;
-
-  //   std::cout << "d: " << d << std::endl;
-  //   status = cmd_queue.enqueueWriteImage(dv_ray_lut, CL_TRUE, origin, rl_region, 0, 0,
-  //                                        bgr[d].data);
-  //   jcc::check_status(status);
-  // }
-
-  status = cmd_queue.enqueueWriteImage(dv_ray_lut0, CL_FALSE, origin, out_image_region, 0,
-                                       0, bgr[0].data);
-  status = cmd_queue.enqueueWriteImage(dv_ray_lut1, CL_FALSE, origin, out_image_region, 0,
-                                       0, bgr[1].data);
-  status = cmd_queue.enqueueWriteImage(dv_ray_lut2, CL_FALSE, origin, out_image_region, 0,
-                                       0, bgr[2].data);
-
-  std::cout << "Done" << std::endl;
-
-  // std::abort();
+  JCHECK_STATUS(cmd_queue.enqueueWriteImage(dv_ray_lut, CL_FALSE, origin,
+                                            out_image_region, 0, 0, ray_lut.data));
 
   const auto view = viewer::get_window3d("Gravity Visualization");
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
 
   for (float theta = 0.0f; theta < 6.14f; theta += 0.05f) {
-    kernel.setArg(6, theta);
-
+    JCHECK_STATUS(kernel.setArg(4, theta));
     cv::Mat out_img(cv::Size(out_cols, out_rows), CV_32FC1, cv::Scalar(0.0));
-    status =
-        cmd_queue.enqueueNDRangeKernel(kernel, {0}, {out_img.cols, out_img.rows}, {});
-    jcc::check_status(status);
-
-    status = cmd_queue.enqueueReadImage(dv_rendered_image, CL_TRUE, origin,
-                                        out_image_region, 0, 0, out_img.data);
-    jcc::check_status(status);
-
+    JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(
+        kernel, {0},
+        {static_cast<std::size_t>(out_img.cols), static_cast<std::size_t>(out_img.rows)},
+        {}));
+    JCHECK_STATUS(cmd_queue.enqueueReadImage(dv_rendered_image, CL_TRUE, origin,
+                                             out_image_region, 0, 0, out_img.data));
     out_img.convertTo(out_img, CV_8UC1);
     ui2d->add_image(out_img, 1.0);
     ui2d->flip();

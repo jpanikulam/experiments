@@ -2,8 +2,8 @@
 
 #include "logging/assert.hh"
 
-#include <string>
 #include <map>
+#include <string>
 
 namespace jcc {
 namespace {
