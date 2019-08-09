@@ -108,7 +108,7 @@ __kernel void render(
 
     camera_from_plane.translation.x = -0.5;
     camera_from_plane.translation.y = -0.5;
-    camera_from_plane.translation.z = 1.0;
+    camera_from_plane.translation.z = 3.0;
 
     //
     // Render shit up
@@ -130,9 +130,9 @@ __kernel void render(
     const int4 coord2 = (int4) (col, row, 1, 0);
     const int4 coord3 = (int4) (col, row, 2, 0);
     const float3 ray_dir_camera_frame = (float3) (
-        read_imagef(ray_lut, coord1).x,
-        read_imagef(ray_lut, coord2).x,
-        read_imagef(ray_lut, coord3).x
+        read_imagef(ray_lut0, write_coords).x,
+        read_imagef(ray_lut1, write_coords).x,
+        read_imagef(ray_lut2, write_coords).x
     );
     const float3 ray_origin_camera_frame = (float3) (0.0, 0.0, 0.0);
     const float3 intersection_camera_frame = raycast(
@@ -149,15 +149,14 @@ __kernel void render(
     // const float3 coords_input_frame
     // const float4 pixel = read_imagef(input_image, sampler, coords_input_frame);
 
-    // const float4 pixel = read_imagef(input_image, sampler, intersection_plane_frame * 10.0f);
-    // write_imagef(output_image, write_coords, pixel.x);
+    const float4 pixel = read_imagef(input_image, sampler, intersection_plane_frame * 100.0f);
+    write_imagef(output_image, write_coords, pixel.x);
 
-    if(theta < 1.0) {
-        write_imagef(output_image, write_coords, ray_dir_camera_frame.x * 255.0);
-    } else if((theta > 1.0) && (theta < 2.0)) {
-        // write_imagef(output_image, write_coords, (read_imagef(ray_lut, coord3).x - read_imagef(ray_lut, coord2).x) * 255.0);
-        write_imagef(output_image, write_coords, ray_dir_camera_frame.y * 255.0);
-    } else {
-        write_imagef(output_image, write_coords, ray_dir_camera_frame.z * 255.0);
-    }
+    // if(theta < 1.0) {
+    //     write_imagef(output_image, write_coords, ray_dir_camera_frame.x * 255.0);
+    // } else if((theta > 1.0) && (theta < 2.0)) {
+    //     write_imagef(output_image, write_coords, ray_dir_camera_frame.y * 255.0);
+    // } else {
+    //     write_imagef(output_image, write_coords, ray_dir_camera_frame.z * 255.0);
+    // }
 }

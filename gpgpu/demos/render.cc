@@ -65,17 +65,17 @@ estimation::NonlinearCameraModel make_model() {
   proj_coeffs.cx = 235.992;
   proj_coeffs.cy = 141.951;
 
-  // proj_coeffs.k1 = 0.0669332;
-  // proj_coeffs.k2 = -0.224151;
-  // proj_coeffs.p1 = 0.00993584;
-  // proj_coeffs.p2 = 0.00848696;
-  // proj_coeffs.k3 = 0.10179;
+  proj_coeffs.k1 = 0.0669332;
+  proj_coeffs.k2 = -0.224151;
+  proj_coeffs.p1 = 0.00993584;
+  proj_coeffs.p2 = 0.00848696;
+  proj_coeffs.k3 = 0.10179;
 
-  proj_coeffs.k1 = 0.0;
-  proj_coeffs.k2 = -0.0;
-  proj_coeffs.p1 = 0.0;
-  proj_coeffs.p2 = 0.0;
-  proj_coeffs.k3 = 0.0;
+  // proj_coeffs.k1 = 0.0;
+  // proj_coeffs.k2 = -0.0;
+  // proj_coeffs.p1 = 0.0;
+  // proj_coeffs.p2 = 0.0;
+  // proj_coeffs.k3 = 0.0;
 
   proj_coeffs.rows = 480;
   proj_coeffs.cols = 480;
@@ -128,18 +128,26 @@ int main() {
   jcc::check_status(status);
 
   const cl::ImageFormat ray_lut_fmt(CL_R, CL_FLOAT);
-  const cl::Image3D dv_ray_lut(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols,
-                               out_rows, 3, 0, 0, nullptr, &status);
+  const cl::Image2D dv_ray_lut0(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols,
+                                out_rows, 0, nullptr, &status);
+  jcc::check_status(status);
+  const cl::Image2D dv_ray_lut1(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols,
+                                out_rows, 0, nullptr, &status);
+  jcc::check_status(status);
+  const cl::Image2D dv_ray_lut2(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols,
+                                out_rows, 0, nullptr, &status);
+
   jcc::check_status(status);
 
   const auto cam_model = make_model();
   {
     kernel.setArg(0, dv_fiducial_image);
-    kernel.setArg(1, dv_ray_lut);
-    kernel.setArg(2, dv_rendered_image);
-    kernel.setArg(3, sampler);
-    // const ProjectionCoefficientsf pcf(cam_model.projection_coefficients());
-    // kernel.setArg(4, pcf);
+    kernel.setArg(1, dv_ray_lut0);
+    kernel.setArg(2, dv_ray_lut1);
+    kernel.setArg(3, dv_ray_lut2);
+
+    kernel.setArg(4, dv_rendered_image);
+    kernel.setArg(5, sampler);
   }
 
   cl::CommandQueue cmd_queue(cl_info.context);
@@ -178,25 +186,32 @@ int main() {
   cv::Mat bgr[3];           // destination array
   cv::split(ray_lut, bgr);  // split source
 
-  for (int d = 0; d < 3; ++d) {
-    cv::imshow("poose", cv::abs(bgr[d]));
-    cv::waitKey(0);
+  // for (int d = 0; d < 3; ++d) {
+  //   cv::imshow("poose", cv::abs(bgr[d]));
+  //   cv::waitKey(0);
 
-    cl::size_t<3> rl_origin;
-    rl_origin[0] = 0;
-    rl_origin[1] = 0;
-    rl_origin[2] = d;
+  //   cl::size_t<3> rl_origin;
+  //   rl_origin[0] = 0;
+  //   rl_origin[1] = 0;
+  //   rl_origin[2] = d;
 
-    cl::size_t<3> rl_region;
-    rl_region[0] = out_cols;
-    rl_region[1] = out_rows;
-    rl_region[2] = 1;
+  //   cl::size_t<3> rl_region;
+  //   rl_region[0] = out_cols;
+  //   rl_region[1] = out_rows;
+  //   rl_region[2] = 1;
 
-    std::cout << "d: " << d << std::endl;
-    status = cmd_queue.enqueueWriteImage(dv_ray_lut, CL_TRUE, origin, rl_region, 0, 0,
-                                         bgr[d].data);
-    jcc::check_status(status);
-  }
+  //   std::cout << "d: " << d << std::endl;
+  //   status = cmd_queue.enqueueWriteImage(dv_ray_lut, CL_TRUE, origin, rl_region, 0, 0,
+  //                                        bgr[d].data);
+  //   jcc::check_status(status);
+  // }
+
+  status = cmd_queue.enqueueWriteImage(dv_ray_lut0, CL_FALSE, origin, out_image_region, 0,
+                                       0, bgr[0].data);
+  status = cmd_queue.enqueueWriteImage(dv_ray_lut1, CL_FALSE, origin, out_image_region, 0,
+                                       0, bgr[1].data);
+  status = cmd_queue.enqueueWriteImage(dv_ray_lut2, CL_FALSE, origin, out_image_region, 0,
+                                       0, bgr[2].data);
 
   std::cout << "Done" << std::endl;
 
@@ -206,7 +221,7 @@ int main() {
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
 
   for (float theta = 0.0f; theta < 6.14f; theta += 0.05f) {
-    kernel.setArg(4, theta);
+    kernel.setArg(6, theta);
 
     cv::Mat out_img(cv::Size(out_cols, out_rows), CV_32FC1, cv::Scalar(0.0));
     status =

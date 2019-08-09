@@ -32,6 +32,10 @@ class NonlinearCameraModel {
     return linear_model_;
   }
 
+  const ProjectionCoefficients projection_coefficients() const {
+    return proj_;
+  }
+
   int rows() const;
   int cols() const;
 
