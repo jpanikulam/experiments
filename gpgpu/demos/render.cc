@@ -63,9 +63,9 @@ struct __attribute__((packed)) PackedSE3 {
     r2[1] = mat(2, 1);
     r2[2] = mat(2, 2);
 
-    t[0] = se3.translation().x;
-    t[1] = se3.translation().y;
-    t[2] = se3.translation().z;
+    t[0] = se3.translation().x();
+    t[1] = se3.translation().y();
+    t[2] = se3.translation().z();
   }
   float r0[4];
   float r1[4];
@@ -100,7 +100,7 @@ estimation::NonlinearCameraModel make_model() {
   // proj_coeffs.p2 = 0.0;
   // proj_coeffs.k3 = 0.0;
 
-  proj_coeffs.rows = 480;
+  proj_coeffs.rows = 270;
   proj_coeffs.cols = 480;
 
   const estimation::NonlinearCameraModel model(proj_coeffs);
@@ -115,8 +115,7 @@ cv::Mat create_ray_lut(const estimation::NonlinearCameraModel &model,
     for (int v = 0; v < rows; ++v) {
       const auto optl_ray = model.unproject(jcc::Vec2(u + 0.5, v + 0.5));
       const Eigen::Vector3f dir_f = optl_ray->direction.cast<float>();
-      // deprojection_lut.at<cv::Vec3f>(u, v) = cv::Vec3f(0.0, 0.0, 1.0);
-      deprojection_lut.at<cv::Vec4f>(u, v) =
+      deprojection_lut.at<cv::Vec4f>(v, u) =
           cv::Vec4f(dir_f.x(), dir_f.y(), dir_f.z(), 1.0);
     }
   }
@@ -140,7 +139,7 @@ int main() {
   board_image.convertTo(board_image, CV_32FC1);
 
   const int out_cols = 480;
-  const int out_rows = 480;
+  const int out_rows = 270;
 
   const cl::ImageFormat format(CL_R, CL_FLOAT);
   const cl::Image2D dv_fiducial_image(cl_info.context, CL_MEM_READ_ONLY, format,
@@ -197,7 +196,11 @@ int main() {
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
 
   for (float theta = 0.0f; theta < 6.14f; theta += 0.05f) {
-    JCHECK_STATUS(kernel.setArg(4, theta));
+    const SE3 camera_from_plane(SO3::exp(jcc::Vec3(theta, std::cos(theta), 0.1)),
+                                jcc::Vec3(-0.5, -0.5, 2.0));
+    const PackedSE3 cl_se3(camera_from_plane);
+
+    JCHECK_STATUS(kernel.setArg(4, cl_se3));
     cv::Mat out_img(cv::Size(out_cols, out_rows), CV_32FC1, cv::Scalar(0.0));
     JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(
         kernel, {0},
