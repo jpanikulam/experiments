@@ -1,13 +1,13 @@
 #pragma once
 
+#include "logging/assert.hh"
+
 #include <CL/cl.h>
 
 #include <string>
 
 namespace jcc {
 
-// TODO: Make a macro for this that reports line number
-void check_status(cl_int status);
 std::string error_name(const cl_int error);
 
 }  // namespace jcc

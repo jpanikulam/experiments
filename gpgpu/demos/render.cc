@@ -1,8 +1,8 @@
 
-#include "eigen.hh"
 #include "gpgpu/import/load_kernel.hh"
 #include "gpgpu/wrappers/create_context.hh"
 #include "gpgpu/wrappers/errors.hh"
+#include "gpgpu/wrappers/image_read_write.hh"
 
 #include "estimation/calibration/nonlinear_camera_model.hh"
 
@@ -10,13 +10,15 @@
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
 
+#include "eigen.hh"
+#include "out.hh"
+
 #include <CL/cl.hpp>
+
+#include <opencv2/aruco.hpp>
 
 #include <iostream>
 #include <vector>
-
-#include <opencv2/aruco.hpp>
-#include <opencv2/opencv.hpp>
 
 struct __attribute__((packed)) ProjectionCoefficientsf {
   ProjectionCoefficientsf() = default;
@@ -165,32 +167,10 @@ int main() {
 
   cl::CommandQueue cmd_queue(cl_info.context);
 
-  cl::size_t<3> origin;
-  {
-    origin[0] = 0;
-    origin[1] = 0;
-    origin[2] = 0;
-  }
-
-  cl::size_t<3> fiducial_region;
-  {
-    fiducial_region[0] = board_image.cols;
-    fiducial_region[1] = board_image.rows;
-    fiducial_region[2] = 1;
-  }
-
-  cl::size_t<3> out_image_region;
-  {
-    out_image_region[0] = out_cols;
-    out_image_region[1] = out_rows;
-    out_image_region[2] = 1;
-  }
-  JCHECK_STATUS(cmd_queue.enqueueWriteImage(dv_fiducial_image, CL_FALSE, origin,
-                                            fiducial_region, 0, 0, board_image.data));
+  jcc::send_image_to_device(cmd_queue, dv_fiducial_image, board_image);
 
   const cv::Mat ray_lut = create_ray_lut(cam_model, out_cols, out_rows).clone();
-  JCHECK_STATUS(cmd_queue.enqueueWriteImage(dv_ray_lut, CL_FALSE, origin,
-                                            out_image_region, 0, 0, ray_lut.data));
+  jcc::send_image_to_device(cmd_queue, dv_ray_lut, ray_lut);
 
   const auto view = viewer::get_window3d("Gravity Visualization");
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
@@ -206,8 +186,7 @@ int main() {
         kernel, {0},
         {static_cast<std::size_t>(out_img.cols), static_cast<std::size_t>(out_img.rows)},
         {}));
-    JCHECK_STATUS(cmd_queue.enqueueReadImage(dv_rendered_image, CL_TRUE, origin,
-                                             out_image_region, 0, 0, out_img.data));
+    jcc::read_image_from_device(cmd_queue, dv_rendered_image, out(out_img));
     out_img.convertTo(out_img, CV_8UC1);
     ui2d->add_image(out_img, 1.0);
     ui2d->flip();
