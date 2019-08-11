@@ -21,9 +21,12 @@ cl::Program read_program(const ClInfo& cl_info, const std::string& path) {
   //
   // Read the source code and compile the kernel
   //
-  constexpr bool BUILD = true;
+  constexpr bool BUILD = false;
   const std::string source = read_file(path);
   cl::Program program(cl_info.context, source, BUILD);
+
+  const std::string flags = "-cl-std=CL2.0";
+  program.build({cl_info.device}, flags.c_str());
 
   //
   // Check program build status

@@ -64,7 +64,7 @@ inline float3 raycast(const float3 plane_normal, const float3 plane_origin, cons
   return ray_origin + (d * ray_direction);
 }
 
-__kernel void sum_squared_diff(
+__kernel void ssd_r(
     __read_only image2d_t image1,
     __read_only image2d_t image2,
     __write_only image2d_t output) {
@@ -99,6 +99,35 @@ __kernel void sum_squared_diff(
             const int2 coord = (int2) (u1, v1);
             const float4 px_uv = read_imagef(image1, smp, coord).x;
         }
+    }
+}
+
+__kernel void sum_squared_diff(
+    __read_only image2d_t image_1,
+    __read_only image2d_t image_2,
+    float * sums) {
+    const int local_col = get_local_id(0);
+    const int local_row = get_local_id(1);
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    const int group_size = get_local_size(0);
+
+    const int2 read_coord = (int2) (get_global_id(0), get_global_id(1));
+    const sampler_t smp = CLK_NORMALIZED_COORDS_FALSE |
+                          CLK_ADDRESS_CLAMP |
+                          CLK_FILTER_NEAREST;
+                          // CLK_ADDRESS_NONE : Guarantee we won't leave the image
+
+    const float im1_val = read_imagef(image_1, smp, read_coord).x;
+    const float im2_val = read_imagef(image_2, smp, read_coord).x;
+    const float error = (im1_val - im2_val);
+    const float error_sq = error * error;
+
+    const float sum_partial = work_group_reduce_add(error_sq);
+    const int write_loc = get_group_id(0);
+    if (local_col == 0 && local_row == 0) {
+      sums[write_loc] = sum_partial;
     }
 }
 

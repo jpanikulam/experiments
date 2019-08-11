@@ -107,14 +107,14 @@ void run() {
     cl_int status = 0;
     status = cmd_queue.enqueueWriteBuffer(dv_in_masses, BLOCK_WRITE, offset, n_bytes,
                                           host_stars.data());
-    jcc::check_status(status);
+    JCHECK_STATUS(status);
 
     status = cmd_queue.enqueueNDRangeKernel(kernel, {0}, {n_stars}, {1000});
-    jcc::check_status(status);
+    JCHECK_STATUS(status);
     constexpr bool BLOCK_READ = true;
     status = cmd_queue.enqueueReadBuffer(dv_out_masses, BLOCK_READ, offset, n_bytes,
                                          host_stars.data());
-    jcc::check_status(status);
+    JCHECK_STATUS(status);
 
     put_stars(*geo, host_stars);
     geo->flip();
