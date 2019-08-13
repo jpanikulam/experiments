@@ -1,7 +1,7 @@
 #pragma once
 
 #include "geometry/shapes/ray.hh"
-#include "intersection.hh"
+#include "geometry/spatial/intersection.hh"
 
 #include "eigen.hh"
 
