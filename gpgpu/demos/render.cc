@@ -287,7 +287,35 @@ int main() {
       out_img.convertTo(out_img, CV_8UC1);
       // ui2d->add_image(out_img, 1.0);
       // ui2d->flip();
-      view->spin_until_step();
     }
   }
+  view->spin_until_step();
 }
+
+/*
+Here are some benchmarks that I've spent now some time carefully verifying.
+
+I'm able to perform the following 3 operations consistently at 2440 Hz.
+  - Render a 480 x 270 `float` image via ray-plane intersection
+  - Compute sum-squared difference via *twice* work-group parallel-reduce-add, and a bunch
+of global memory reads
+  - Transfer the *whole image* and the difference scalar
+
+This means we are re transferring 1.3GB/s
+This means we can perform the entire up/down transmit cycle with the GPU for a 500kb image
+once every *FOUR MICROSECONDS*
+
+If we don't transmit the image back, the rate is quadrupled. So for an optimization task
+where we don't need to inspect the rendered image on the CPU, we can generate an error
+every microsecond
+
+Can tensorflow do this???
+
+Contributing reasons:
+- We do everything including the serial parts on the GPU
+- We use 2D-caching texture memory on the GPU, instead of buffer memory -- buffer memory
+is simple and therefore very tempting
+
+NOTE: This isn't on jet hardware, but anyone familiar with GPU latency "myths" should be
+surprised by these numbers.
+*/
