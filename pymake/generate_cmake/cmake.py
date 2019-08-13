@@ -19,10 +19,10 @@ def create_bin(build_item, base_directory=""):
 
     if 'is_test' in build_item.get('flags', []):
         assert len(reduced_srcs) == 1, "A test only supports one source file"
-        txt = 'add_test({target} {srcs} {libs})'.format(
+        txt = 'add_test({target} {srcs} \"{libs}\")'.format(
             target=build_item['target'],
             srcs=reduced_srcs[0],
-            libs=" ".join(build_item['deps']) if len(build_item['deps']) else '""'
+            libs=";".join(build_item['deps']) if len(build_item['deps']) else ''
         )
     else:
         txt = "add_executable({} {})".format(build_item['target'], " ".join(reduced_srcs))

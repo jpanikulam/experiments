@@ -68,7 +68,8 @@ macro(add_test test_name test_file test_libs)
         PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test
     )
-    target_link_libraries(${test_name} ${test_libs} ${GTEST_LIBRARIES} pthread)
+    set(AUGLIBS ${GTEST_LIBRARIES} pthread ${test_libs})
+    target_link_libraries(${test_name} ${AUGLIBS})
 endmacro(add_test)
 
 execute_process(
