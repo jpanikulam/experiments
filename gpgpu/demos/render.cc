@@ -326,9 +326,9 @@ int main() {
 /*
 Here are some benchmarks that I've spent now some time carefully verifying.
 
-I'm able to perform the following 3 operations consistently at 2440 Hz.
+We're able to perform the following 3 operations consistently at 2440 Hz, on the GPU.
   - Render a 480 x 270 `float` image via ray-plane intersection
-  - Compute sum-squared difference via *twice* work-group parallel-reduce-add, and a bunch
+  - Compute sum-squared difference via parallel-reduce-add and a bunch
 of global memory reads
   - Transfer the *whole image* and the difference scalar
 
@@ -339,8 +339,6 @@ once every *400 microseconds*
 If we don't transmit the image back, the rate is quadrupled. So for an optimization task
 where we don't need to inspect the rendered image on the CPU, we can generate an error
 every 100 microseconds. That's two renders for every rotation of the jet turbine.
-
-Can tensorflow do this???
 
 Contributing reasons:
 - We do everything including the serial parts on the GPU
