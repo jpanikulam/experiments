@@ -2,6 +2,7 @@
 
 #include <fstream>
 
+#include "util/environment.hh"
 #include "logging/assert.hh"
 
 namespace jcc {
@@ -17,7 +18,9 @@ std::string read_file(const std::string& path) {
   return text;
 }
 
-cl::Program read_program(const ClInfo& cl_info, const std::string& path) {
+cl::Program read_program(const ClInfo& cl_info,
+                         const std::string& path,
+                         const std::string& include_path) {
   //
   // Read the source code and compile the kernel
   //
@@ -25,7 +28,8 @@ cl::Program read_program(const ClInfo& cl_info, const std::string& path) {
   const std::string source = read_file(path);
   cl::Program program(cl_info.context, source, BUILD);
 
-  const std::string flags = "-cl-std=CL2.0";
+  const std::string cl_incl_path = jcc::Environment::repo_path() + "gpgpu/demos/";
+  const std::string flags = "-cl-std=CL2.0 -I " + cl_incl_path;
   program.build({cl_info.device}, flags.c_str());
 
   //
@@ -42,9 +46,12 @@ cl::Program read_program(const ClInfo& cl_info, const std::string& path) {
 }  // namespace
 
 std::map<std::string, cl::Kernel> read_kernels(const ClInfo& cl_info,
-                                               const std::string& path) {
+                                               const std::string& path,
+                                               const std::string& include_path) {
+  setenv("CUDA_CACHE_DISABLE", "1", 1);
+
   std::map<std::string, cl::Kernel> kernels;
-  auto program = read_program(cl_info, path);
+  auto program = read_program(cl_info, path, include_path);
 
   std::vector<cl::Kernel> kernels_vec;
   program.createKernels(&kernels_vec);
