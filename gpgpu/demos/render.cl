@@ -105,29 +105,37 @@ __kernel void ssd_r(
 __kernel void sum_squared_diff(
     __read_only image2d_t image_1,
     __read_only image2d_t image_2,
-    float * sums) {
-    const int local_col = get_local_id(0);
-    const int local_row = get_local_id(1);
-
-    barrier(CLK_LOCAL_MEM_FENCE);
-
-    const int group_size = get_local_size(0);
-
+    __global float * local_sums,
+    __global float * full_sum
+    ) {
     const int2 read_coord = (int2) (get_global_id(0), get_global_id(1));
     const sampler_t smp = CLK_NORMALIZED_COORDS_FALSE |
                           CLK_ADDRESS_CLAMP |
                           CLK_FILTER_NEAREST;
-                          // CLK_ADDRESS_NONE : Guarantee we won't leave the image
 
     const float im1_val = read_imagef(image_1, smp, read_coord).x;
     const float im2_val = read_imagef(image_2, smp, read_coord).x;
-    const float error = (im1_val - im2_val);
+    const float error = (im1_val - im2_val) / 255.0;
     const float error_sq = error * error;
-
     const float sum_partial = work_group_reduce_add(error_sq);
-    const int write_loc = get_group_id(0);
-    if (local_col == 0 && local_row == 0) {
-      sums[write_loc] = sum_partial;
+
+    const int write_loc = get_group_id(1);
+
+    const int local_col = get_local_id(0);
+    const int local_row = get_local_id(1);
+    if (local_row == 0 && local_col == 0) {
+      local_sums[write_loc] = sum_partial / ((float) get_local_size(0));
+    }
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    if (get_group_id(1) == 0) {
+        if (local_row == 0 && local_col == 0) {
+            float total = 0.0;
+            for (int k = 0; k < 270; ++k) {
+                total += local_sums[k];
+            }
+            full_sum[0] = total;
+        }
     }
 }
 

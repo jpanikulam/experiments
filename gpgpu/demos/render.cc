@@ -216,82 +216,70 @@ int main() {
   auto render_kernel = kernels.at("render");
   auto ssd_kernel = kernels.at("sum_squared_diff");
 
-  constexpr auto FLG_NO_NORMALIZED_COORDS = CL_FALSE;
-  const cl::Sampler sampler(cl_info.context, FLG_NO_NORMALIZED_COORDS, CL_ADDRESS_CLAMP,
-                            CL_FILTER_LINEAR);
-
   cv::Mat board_image;
   get_aruco_board()->draw(cv::Size(100, 100), board_image, 5, 1);
   board_image.convertTo(board_image, CV_32FC1);
+  const auto cam_model = make_model();
 
   const int out_cols = 480;
   const int out_rows = 270;
-
-  const cl::ImageFormat format(CL_R, CL_FLOAT);
-  const cl::Image2D dv_fiducial_image(cl_info.context, CL_MEM_READ_ONLY, format,
-                                      board_image.cols, board_image.rows, 0, nullptr,
-                                      &status);
-  JCHECK_STATUS(status);
-  const cl::Image2D dv_rendered_image(cl_info.context, CL_MEM_WRITE_ONLY, format,
+  const cl::ImageFormat write_image_fmt(CL_R, CL_FLOAT);
+  const cl::Image2D dv_rendered_image(cl_info.context, CL_MEM_READ_WRITE, write_image_fmt,
                                       out_cols, out_rows, 0, nullptr, &status);
-
   JCHECK_STATUS(status);
-  const cl::ImageFormat ray_lut_fmt(CL_RGBA, CL_FLOAT);
-  const cl::Image2D dv_ray_lut(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols,
-                               out_rows, 0, nullptr, &status);
+  const cl::Image2D dv_reference_image(cl_info.context, CL_MEM_READ_WRITE,
+                                       write_image_fmt, out_cols, out_rows, 0, nullptr,
+                                       &status);
   JCHECK_STATUS(status);
-
-  const auto cam_model = make_model();
-  {
-    JCHECK_STATUS(render_kernel.setArg(0, dv_fiducial_image));
-    JCHECK_STATUS(render_kernel.setArg(1, dv_ray_lut));
-    JCHECK_STATUS(render_kernel.setArg(2, dv_rendered_image));
-    JCHECK_STATUS(render_kernel.setArg(3, sampler));
-  }
 
   cl::CommandQueue cmd_queue(cl_info.context);
 
-  jcc::send_image_to_device(cmd_queue, dv_fiducial_image, board_image);
+  Renderer renderer(cl_info, cmd_queue, cam_model, board_image, out_cols, out_rows,
+                    render_kernel);
 
-  const cv::Mat ray_lut = create_ray_lut(cam_model, out_cols, out_rows).clone();
-  jcc::send_image_to_device(cmd_queue, dv_ray_lut, ray_lut);
+  const double ref_theta = 0.0;
+  const jcc::Vec3 ref_axis(12.0 * std::cos(ref_theta) * std::sin(ref_theta),
+                           std::cos(ref_theta), 0.0);
+  const SE3 ref_camera_from_plane(SO3::exp(ref_axis), jcc::Vec3(-0.5, -0.5, 2.0));
+  renderer.render(cmd_queue, ref_camera_from_plane, dv_reference_image);
 
-  const auto view = viewer::get_window3d("Gravity Visualization");
+  const auto view = viewer::get_window3d("Render Visualization");
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
+  const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
   const int n_partial_sums = out_cols * out_rows / 480;
   const int n_partial_sum_bytes = sizeof(cl_float) * n_partial_sums;
   cl::Buffer dv_partial_sums(cl_info.context, CL_MEM_WRITE_ONLY, n_partial_sum_bytes);
+  cl::Buffer dv_full_sum(cl_info.context, CL_MEM_WRITE_ONLY, sizeof(cl_float));
 
   JCHECK_STATUS(ssd_kernel.setArg(0, dv_reference_image));
   JCHECK_STATUS(ssd_kernel.setArg(1, dv_rendered_image));
   JCHECK_STATUS(ssd_kernel.setArg(2, dv_partial_sums));
+  JCHECK_STATUS(ssd_kernel.setArg(3, dv_full_sum));
 
   for (float theta = 0.0f; theta < 100.14f; theta += 0.01f) {
-    const jcc::Vec3 axis(12.0 * std::cos(theta) * std::sin(theta), std::cos(theta), 0.1);
+    const jcc::Vec3 axis(12.0 * std::cos(theta) * std::sin(theta), std::cos(theta), 0.0);
     const SE3 camera_from_plane(SO3::exp(axis), jcc::Vec3(-0.5, -0.5, 2.0));
-    const PackedSE3 cl_se3(camera_from_plane);
+    cv::Mat out_img;
+    renderer.render(cmd_queue, camera_from_plane, dv_rendered_image, &out_img);
 
-    JCHECK_STATUS(render_kernel.setArg(4, cl_se3));
-    cv::Mat out_img(cv::Size(out_cols, out_rows), CV_32FC1, cv::Scalar(0.0));
-
-    const cl::NDRange work_group_size{static_cast<std::size_t>(out_img.cols),
-                                      static_cast<std::size_t>(out_img.rows)};
     JCHECK_STATUS(
-        cmd_queue.enqueueNDRangeKernel(render_kernel, {0}, work_group_size, {480, 1}));
-
-    jcc::read_image_from_device(cmd_queue, dv_rendered_image, out(out_img));
-    JCHECK_STATUS(
-        cmd_queue.enqueueNDRangeKernel(ssd_kernel, {0}, work_group_size, {480, 1}));
+        cmd_queue.enqueueNDRangeKernel(ssd_kernel, {0},
+                                       cl::NDRange(static_cast<std::size_t>(out_cols),
+                                                   static_cast<std::size_t>(out_rows)),
+                                       {480, 1}));
 
     std::vector<float> partial_sums(n_partial_sums, 0.0f);
     constexpr bool BLOCK_READ = true;
     JCHECK_STATUS(cmd_queue.enqueueReadBuffer(dv_partial_sums, BLOCK_READ, 0,
                                               n_partial_sum_bytes, partial_sums.data()));
 
-    for (int k = 0; k < n_partial_sums; ++k) {
-      std::cout << k << ": " << partial_sums[k] << std::endl;
-    }
+    float blk_total;
+    JCHECK_STATUS(cmd_queue.enqueueReadBuffer(dv_full_sum, BLOCK_READ, 0,
+                                              sizeof(cl_float), &blk_total));
+
+    geo->add_point({axis, jcc::Vec4((40.0 - total) / 40.0, 0.5, 0.5, 1.0)});
+    geo->flush();
 
     out_img.convertTo(out_img, CV_8UC1);
     ui2d->add_image(out_img, 1.0);
