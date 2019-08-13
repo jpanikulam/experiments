@@ -85,5 +85,6 @@ set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wno-depre
 
 add_subdirectory(tmp)
 target_compile_definitions(environment PRIVATE ASSET_PATH="${BASEPATH}/data")
+target_compile_definitions(environment PRIVATE REPO_PATH="${BASEPATH}")
 add_definitions(-DEIGEN_MAX_ALIGN_BYTES=0)
 add_definitions(-DEIGEN_MAX_STATIC_ALIGN_BYTES=0)
