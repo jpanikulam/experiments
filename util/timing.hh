@@ -2,13 +2,16 @@
 
 #include "estimation/time_point.hh"
 
+#include <string>
+
 namespace jcc {
-class ScopedTimer {
+class PrintingScopedTimer {
  public:
-  ScopedTimer();
-  ~ScopedTimer();
+  PrintingScopedTimer(const std::string& title = "Timer");
+  ~PrintingScopedTimer();
 
  private:
   estimation::TimePoint start_time_;
+  std::string title_;
 };
 }  // namespace jcc

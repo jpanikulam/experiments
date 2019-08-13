@@ -1,11 +1,12 @@
 #include "util/timing.hh"
 
 namespace jcc {
-ScopedTimer::ScopedTimer() {
+PrintingScopedTimer::PrintingScopedTimer(const std::string& title) {
   start_time_ = jcc::now();
+  title_ = title;
 }
-ScopedTimer::~ScopedTimer() {
-  std::cout << "Timer took: " << estimation::to_seconds(jcc::now() - start_time_)
+PrintingScopedTimer::~PrintingScopedTimer() {
+  std::cout << title_ << " took: " << estimation::to_seconds(jcc::now() - start_time_)
             << " Seconds" << std::endl;
 }
 
