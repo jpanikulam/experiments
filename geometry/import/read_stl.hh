@@ -12,5 +12,6 @@ namespace geometry {
 namespace import {
 
 jcc::Optional<TriMesh> read_stl(const std::string &file_path);
+
 }
 }
