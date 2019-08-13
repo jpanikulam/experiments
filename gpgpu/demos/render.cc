@@ -9,6 +9,7 @@
 #include "gpgpu/wrappers/image_read_write.hh"
 
 #include "estimation/calibration/nonlinear_camera_model.hh"
+#include "util/timing.hh"
 
 #include "viewer/interaction/ui2d.hh"
 #include "viewer/primitives/simple_geometry.hh"
@@ -256,34 +257,37 @@ int main() {
   JCHECK_STATUS(ssd_kernel.setArg(1, dv_rendered_image));
   JCHECK_STATUS(ssd_kernel.setArg(2, dv_partial_sums));
   JCHECK_STATUS(ssd_kernel.setArg(3, dv_full_sum));
+  {
+    jcc::ScopedTimer tt;
+    for (float theta = 0.0f; theta < 100.14f; theta += 0.01f) {
+      const jcc::Vec3 axis(12.0 * std::cos(theta) * std::sin(theta), std::cos(theta),
+                           0.0);
+      const SE3 camera_from_plane(SO3::exp(axis), jcc::Vec3(-0.5, -0.5, 2.0));
+      cv::Mat out_img;
+      renderer.render(cmd_queue, camera_from_plane, dv_rendered_image, &out_img);
 
-  for (float theta = 0.0f; theta < 100.14f; theta += 0.01f) {
-    const jcc::Vec3 axis(12.0 * std::cos(theta) * std::sin(theta), std::cos(theta), 0.0);
-    const SE3 camera_from_plane(SO3::exp(axis), jcc::Vec3(-0.5, -0.5, 2.0));
-    cv::Mat out_img;
-    renderer.render(cmd_queue, camera_from_plane, dv_rendered_image, &out_img);
+      JCHECK_STATUS(
+          cmd_queue.enqueueNDRangeKernel(ssd_kernel, {0},
+                                         cl::NDRange(static_cast<std::size_t>(out_cols),
+                                                     static_cast<std::size_t>(out_rows)),
+                                         {480, 1}));
 
-    JCHECK_STATUS(
-        cmd_queue.enqueueNDRangeKernel(ssd_kernel, {0},
-                                       cl::NDRange(static_cast<std::size_t>(out_cols),
-                                                   static_cast<std::size_t>(out_rows)),
-                                       {480, 1}));
+      std::vector<float> partial_sums(n_partial_sums, 0.0f);
+      constexpr bool BLOCK_READ = true;
+      JCHECK_STATUS(cmd_queue.enqueueReadBuffer(
+          dv_partial_sums, BLOCK_READ, 0, n_partial_sum_bytes, partial_sums.data()));
 
-    std::vector<float> partial_sums(n_partial_sums, 0.0f);
-    constexpr bool BLOCK_READ = true;
-    JCHECK_STATUS(cmd_queue.enqueueReadBuffer(dv_partial_sums, BLOCK_READ, 0,
-                                              n_partial_sum_bytes, partial_sums.data()));
+      float blk_total;
+      JCHECK_STATUS(cmd_queue.enqueueReadBuffer(dv_full_sum, BLOCK_READ, 0,
+                                                sizeof(cl_float), &blk_total));
 
-    float blk_total;
-    JCHECK_STATUS(cmd_queue.enqueueReadBuffer(dv_full_sum, BLOCK_READ, 0,
-                                              sizeof(cl_float), &blk_total));
+      geo->add_point({axis, jcc::Vec4((40.0 - blk_total) / 40.0, 0.5, 0.5, 1.0)});
+      geo->flush();
 
-    geo->add_point({axis, jcc::Vec4((40.0 - total) / 40.0, 0.5, 0.5, 1.0)});
-    geo->flush();
-
-    out_img.convertTo(out_img, CV_8UC1);
-    ui2d->add_image(out_img, 1.0);
-    ui2d->flip();
-    view->spin_until_step();
+      out_img.convertTo(out_img, CV_8UC1);
+      // ui2d->add_image(out_img, 1.0);
+      // ui2d->flip();
+      view->spin_until_step();
+    }
   }
 }
