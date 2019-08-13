@@ -121,6 +121,7 @@ void WindowManager::render() {
       continue;
     }
 
+    glfwSetWindowTitle(glfw_win, window->title().c_str());
     glfwMakeContextCurrent(glfw_win);
     glewInit();
 

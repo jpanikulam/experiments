@@ -100,6 +100,11 @@ void Window3D::set_view_preset(const ViewSetting &setting) {
 }
 
 void Window3D::spin_until_step() {
+  const std::string title_at_start = title();
+  if (!should_step_ && !should_continue_) {
+    set_title(title_at_start + " (Waiting For Step)");
+  }
+
   while (!should_step_ && !should_continue_ && !should_close()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
@@ -111,6 +116,7 @@ void Window3D::spin_until_step() {
   if (should_step_) {
     should_step_ = false;
   }
+  set_title(title_at_start);
 }
 
 void Window3D::on_key(int key, int scancode, int action, int mods) {
