@@ -283,27 +283,45 @@ void Ui2d::add_image(const cv::Mat image, double width_m) {
 
 void Ui2d::clear() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
-  back_buffer_.clear();
-  front_buffer_.clear();
+  clear_queued_ = true;
 }
 
 void Ui2d::flip() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
-  front_buffer_ = std::move(back_buffer_);
+  flip_queued_ = true;
 }
 
 void Ui2d::flush() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
-  const auto insert = [](auto &into, const auto &from) {
-    into.insert(into.begin(), from.begin(), from.end());
-  };
+  flush_queued_ = true;
+}
 
-  insert(front_buffer_.pointer_targets, back_buffer_.pointer_targets);
-  insert(front_buffer_.line_plots, back_buffer_.line_plots);
-  insert(front_buffer_.images, back_buffer_.images);
-  insert(front_buffer_.points, back_buffer_.points);
-  insert(front_buffer_.grid_meshes, back_buffer_.grid_meshes);
-  insert(front_buffer_.lines, back_buffer_.lines);
+void Ui2d::state_update() {
+  const std::lock_guard<std::mutex> lk(draw_mutex_);
+  if (flush_queued_) {
+    flush_queued_ = false;
+    const auto insert = [](auto &into, const auto &from) {
+      into.insert(into.begin(), from.begin(), from.end());
+    };
+
+    insert(front_buffer_.pointer_targets, back_buffer_.pointer_targets);
+    insert(front_buffer_.line_plots, back_buffer_.line_plots);
+    insert(front_buffer_.images, back_buffer_.images);
+    insert(front_buffer_.points, back_buffer_.points);
+    insert(front_buffer_.grid_meshes, back_buffer_.grid_meshes);
+    insert(front_buffer_.lines, back_buffer_.lines);
+  }
+  if (flip_queued_) {
+    flip_queued_ = false;
+    front_buffer_.clear();
+    front_buffer_ = std::move(back_buffer_);
+  }
+
+  if (clear_queued_) {
+    clear_queued_ = false;
+    back_buffer_.clear();
+    front_buffer_.clear();
+  }
 }
 
 void Ui2d::draw() const {

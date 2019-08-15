@@ -51,6 +51,7 @@ class Ui2d final : public Primitive {
  public:
   Ui2d() = default;
   void draw() const override;
+  void state_update() override;
 
   void add_pointer_target(const PointerTarget& pointer_target);
   void add_lineplot(const LinePlot2d& line_plot);
@@ -99,6 +100,10 @@ class Ui2d final : public Primitive {
 
   Buffer back_buffer_;
   Buffer front_buffer_;
+
+  bool flush_queued_ = false;
+  bool flip_queued_ = false;
+  bool clear_queued_ = false;
 
   mutable std::mutex draw_mutex_;
 };
