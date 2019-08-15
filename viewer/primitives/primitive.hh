@@ -8,6 +8,8 @@ class Primitive {
   }
   virtual void flip() {
   }
+
+  virtual void state_update(){};
   virtual void draw() const = 0;
 };
 }  // namespace viewer

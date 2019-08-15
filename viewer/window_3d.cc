@@ -129,11 +129,12 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
     // Toggling
     //
     if (key_mappings_.count(key_char) != 0) {
-      const std::string toggle_name = key_mappings_.at(key_char);
-      toggles_[toggle_name] = !toggles_[toggle_name];
-      const bool new_toggle_state = toggles_[toggle_name];
-      for (const auto &toggle_callback : toggle_callbacks_[toggle_name]) {
-        toggle_callback(new_toggle_state);
+      const std::string menu_name = key_mappings_.at(key_char);
+      menus_[menu_name].value =
+          (menus_[menu_name].value + 1) % (menus_[menu_name].n_states );
+      const int new_toggle_state = menus_[menu_name].value;
+      for (const auto &menu_callback : menu_callbacks_[menu_name]) {
+        menu_callback(new_toggle_state);
       }
     }
 
@@ -210,6 +211,7 @@ void Window3D::resize(const GlSize &gl_size) {
 
 void Window3D::draw_all_primitives() const {
   for (const auto &primitive : primitives_) {
+    primitive->state_update();
     primitive->draw();
   }
 }

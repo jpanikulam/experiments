@@ -85,25 +85,45 @@ class Window3D final : public SimpleWindow {
 
   void add_toggle_hotkey(const std::string &toggle_name, bool default_state, char key) {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
-    toggles_[toggle_name] = default_state;
+    add_menu_hotkey(toggle_name, default_state, key, 2);
+  }
+
+  void add_menu_hotkey(const std::string &toggle_name,
+                       int default_state,
+                       char key,
+                       int n_states) {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
+    menus_[toggle_name] = {n_states, default_state};
     key_mappings_[key] = toggle_name;
   }
 
   bool get_toggle(const std::string &state) const {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
-    return toggles_.at(state);
+    return menus_.at(state).value;
+  }
+
+  int get_menu(const std::string &state) const {
+    const std::lock_guard<std::mutex> lk(behavior_mutex_);
+    return menus_.at(state).value;
   }
 
   void clear_toggle_callbacks(const std::string &toggle_name) {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
-    toggle_callbacks_[toggle_name].clear();
+    menu_callbacks_[toggle_name].clear();
   }
 
-  using ToggleCallback = std::function<void(bool)>;
-  void add_toggle_callback(const std::string &toggle_name,
-                           const ToggleCallback &callback) {
+  using MenuCallback = std::function<void(int)>;
+  void add_toggle_callback(const std::string &toggle_name, const MenuCallback &callback) {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
-    toggle_callbacks_[toggle_name].push_back(callback);
+    menu_callbacks_[toggle_name].push_back(callback);
+  }
+
+  void run_menu_callbacks() {
+    for (const auto &cb : menu_callbacks_) {
+      for (const auto &fnc : cb.second) {
+        fnc(menus_[cb.first].value);
+      }
+    }
   }
 
   //
@@ -209,8 +229,12 @@ class Window3D final : public SimpleWindow {
   int continue_ms_ = 20;
   bool hide_axes_ = false;
 
-  std::map<std::string, bool> toggles_;
-  std::map<std::string, std::vector<ToggleCallback>> toggle_callbacks_;
+  struct MenuSettings {
+    int n_states;
+    int value;
+  };
+  std::map<std::string, MenuSettings> menus_;
+  std::map<std::string, std::vector<MenuCallback>> menu_callbacks_;
   std::map<char, std::string> key_mappings_;
 
   CallbackManager callback_manager_;
