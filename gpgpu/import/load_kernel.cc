@@ -48,8 +48,6 @@ cl::Program read_program(const ClInfo& cl_info,
 std::map<std::string, cl::Kernel> read_kernels(const ClInfo& cl_info,
                                                const std::string& path,
                                                const std::string& include_path) {
-  setenv("CUDA_CACHE_DISABLE", "1", 1);
-
   std::map<std::string, cl::Kernel> kernels;
   auto program = read_program(cl_info, path, include_path);
 
