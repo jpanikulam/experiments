@@ -1,0 +1,16 @@
+
+struct Plane {
+  float3 normal;
+  float d;
+};
+
+struct Sphere {
+  float3 origin;
+  float r;
+};
+
+struct RenderConfig {
+  int debug_mode;
+  int test_feature;
+  int terminal_iteration;
+};
