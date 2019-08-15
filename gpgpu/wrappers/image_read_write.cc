@@ -7,7 +7,7 @@ namespace jcc {
 void send_image_to_device(const cl::CommandQueue &cmd_queue,
                           const cl::Image2D &dv_ptr,
                           const cv::Mat &mat) {
-  constexpr cl_bool FLG_NO_BLOCK = CL_FALSE;
+  constexpr cl_bool FLG_NO_BLOCK = CL_TRUE;
 
   cl::size_t<3> origin;
   {
