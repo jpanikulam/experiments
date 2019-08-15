@@ -8,7 +8,8 @@
 #include "gpgpu/wrappers/errors.hh"
 #include "gpgpu/wrappers/image_read_write.hh"
 
-#include "estimation/calibration/nonlinear_camera_model.hh"
+#include "gpgpu/demos/ray_lut.hh"
+
 #include "util/timing.hh"
 
 #include "viewer/interaction/ui2d.hh"
@@ -89,47 +90,6 @@ cv::Ptr<cv::aruco::GridBoard> get_aruco_board() {
                                       FIDUCIAL_GAP_WIDTH_METERS, dict);
 }
 
-estimation::NonlinearCameraModel make_model() {
-  estimation::ProjectionCoefficients proj_coeffs;
-  proj_coeffs.fx = 279.76;
-  proj_coeffs.fy = 280.034;
-  proj_coeffs.cx = 235.992;
-  proj_coeffs.cy = 141.951;
-
-  proj_coeffs.k1 = 0.0669332;
-  proj_coeffs.k2 = -0.224151;
-  proj_coeffs.p1 = 0.00993584;
-  proj_coeffs.p2 = 0.00848696;
-  proj_coeffs.k3 = 0.10179;
-
-  // proj_coeffs.k1 = 0.0;
-  // proj_coeffs.k2 = -0.0;
-  // proj_coeffs.p1 = 0.0;
-  // proj_coeffs.p2 = 0.0;
-  // proj_coeffs.k3 = 0.0;
-
-  proj_coeffs.rows = 270;
-  proj_coeffs.cols = 480;
-
-  const estimation::NonlinearCameraModel model(proj_coeffs);
-  return model;
-}
-
-cv::Mat create_ray_lut(const estimation::NonlinearCameraModel &model,
-                       const int cols,
-                       const int rows) {
-  cv::Mat deprojection_lut(cv::Size(cols, rows), CV_32FC4);
-  for (int u = 0; u < cols; ++u) {
-    for (int v = 0; v < rows; ++v) {
-      const auto optl_ray = model.unproject(jcc::Vec2(u + 0.5, v + 0.5));
-      const Eigen::Vector3f dir_f = optl_ray->direction.cast<float>();
-      deprojection_lut.at<cv::Vec4f>(v, u) =
-          cv::Vec4f(dir_f.x(), dir_f.y(), dir_f.z(), 1.0);
-    }
-  }
-  return deprojection_lut;
-}
-
 class Renderer {
  public:
   Renderer(const jcc::ClInfo &cl_info,
@@ -162,7 +122,7 @@ class Renderer {
     dv_ray_lut_ = cl::Image2D(cl_info.context, CL_MEM_READ_ONLY, ray_lut_fmt, out_cols_,
                               out_rows_, 0, nullptr, &status);
     JCHECK_STATUS(status);
-    const cv::Mat ray_lut = create_ray_lut(cam_model, out_cols_, out_rows_).clone();
+    const cv::Mat ray_lut = jcc::create_ray_lut(cam_model, out_cols_, out_rows_).clone();
     jcc::send_image_to_device(cmd_queue, dv_ray_lut_, ray_lut);
 
     //
@@ -220,7 +180,7 @@ int main() {
   cv::Mat board_image;
   get_aruco_board()->draw(cv::Size(100, 100), board_image, 5, 1);
   board_image.convertTo(board_image, CV_32FC1);
-  const auto cam_model = make_model();
+  const auto cam_model = jcc::make_model();
 
   const int out_cols = 480;
   const int out_rows = 270;

@@ -48,8 +48,7 @@ __kernel void sum_squared_diff(
     __read_only image2d_t image_1,
     __read_only image2d_t image_2,
     __global float * local_sums,
-    __global float * full_sum
-    ) {
+    __global float * full_sum) {
     const int2 read_coord = (int2) (get_global_id(0), get_global_id(1));
     const sampler_t smp = CLK_NORMALIZED_COORDS_FALSE |
                           CLK_ADDRESS_CLAMP |
