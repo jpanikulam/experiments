@@ -2,6 +2,8 @@
 #include "estimation/jet/jet_filter_manager.hh"
 #include "geometry/spatial/form_coordinate_frame.hh"
 
+#include "estimation/jet/bootstrap_jet.hh"
+
 namespace estimation {
 namespace jet_filter {
 

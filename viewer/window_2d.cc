@@ -125,7 +125,7 @@ bool point_on_plane(const Projection &proj,
                     const WindowPoint &point,
                     Out<Vec3> intersection) {
   const geometry::Ray ray = proj.unproject(point);
-  const geometry::Plane plane({Vec3::Zero(), Vec3::UnitZ()});
+  const geometry::Plane plane({Vec3::Zero(), geometry::Unit3::UnitZ()});
   return plane.intersect(ray, intersection);
 }
 

@@ -1,3 +1,9 @@
+#include "estimation/vision/simulate_camera.hh"
+
+#include "estimation/demos/make_model.hh"
+#include "estimation/vision/sample_bilinear.hh"
+#include "geometry/plane.hh"
+
 namespace estimation {
 
 cv::Mat render_at_pose(const SE3& camera_from_fiducial, const cv::Mat& fiducial_image) {

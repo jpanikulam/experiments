@@ -41,7 +41,6 @@ void render_beam(viewer::SimpleGeometry& geo, const std::vector<PointSource>& so
   {
     points.points.reserve(COUNT);
     intensities.reserve(COUNT);
-    points.sizes.resize(COUNT, 5.0);
   }
 
   double max = 0.0;
@@ -107,7 +106,7 @@ void beamform() {
       {geometry::shapes::LineSegment{Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.0, 10.0)}});
 
   view->add_click_callback(hover_callback,
-                           geometry::Plane{Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 1.0)});
+                           geometry::Plane{Vec3(0.0, 0.0, 0.0), geometry::Unit3(0.0, 0.0, 1.0)});
 
   bgnd->add_line({jcc::Vec3(1.0, 1.0, 1.0), jcc::Vec3(0.0, 0.0, 10.0),
                   jcc::Vec4(1.0, 0.5, 0.5, 0.8)});
