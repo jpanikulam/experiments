@@ -1,0 +1,33 @@
+#pragma once
+
+#include "signed_distance_shapes.clh"
+
+float sd_sphere(const struct Sphere sphere, float3 p) {
+    return length(p - sphere.origin) - sphere.r;
+}
+
+float sd_plane(const struct Plane plane, float3 p) {
+    return dot(p, plane.normal) - plane.d;
+}
+
+float sd_box(const struct Box box, float3 p) {
+    const float3 pp = p - (box.origin);
+    const float3 d = fabs(pp) - box.extents;
+    return length(max(d, 0.0f)) + min(max(d.x, max(d.y, d.z)), 0.0f);
+}
+
+float union_sd(float d1, float d2) {
+    return min(d1, d2);
+}
+
+float intersect_sd(float d1, float d2) {
+    return max(d1, d2);
+}
+
+float subtract_sd(float d1, float d2) {
+    return intersect_sd(d1, -d2);
+}
+
+float3 reflect(float3 incoming, float3 normal) {
+    return incoming - ((2.0f * dot(incoming, normal)) * normal);
+}
