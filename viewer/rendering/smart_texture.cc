@@ -65,22 +65,42 @@ void SmartTexture::draw() const {
       glVertex2d(size_.x(), 0.0);
     }
     glEnd();*/
+  constexpr bool SMALL_VIEW = true;
 
-  glColor3d(1.0, 1.0, 1.0);
-  glBegin(GL_QUADS);
-  {
-    glTexCoord2d(0.0, 1.0);
-    glVertex2d(0.0, 0.0);
+  if (SMALL_VIEW) {
+    glColor3d(1.0, 1.0, 1.0);
+    glBegin(GL_QUADS);
+    {
+      glTexCoord2d(0.0, 1.0);
+      glVertex2d(0.0, 0.0);
 
-    glTexCoord2d(0.0, 0.0);
-    glVertex2d(0.0, size_.y());
+      glTexCoord2d(0.0, 0.0);
+      glVertex2d(0.0, size_.y());
 
-    glTexCoord2d(1.0, 0.0);
-    glVertex2d(size_.x(), size_.y());
+      glTexCoord2d(1.0, 0.0);
+      glVertex2d(size_.x(), size_.y());
 
-    glTexCoord2d(1.0, 1.0);
-    glVertex2d(size_.x(), 0.0);
+      glTexCoord2d(1.0, 1.0);
+      glVertex2d(size_.x(), 0.0);
+    }
+    glEnd();
+  } else {
+    glColor3d(1.0, 1.0, 1.0);
+    glBegin(GL_QUADS);
+    {
+      glTexCoord2d(0.0, 1.0);
+      glVertex2d(-size_.x(), -size_.y());
+
+      glTexCoord2d(0.0, 0.0);
+      glVertex2d(-size_.x(), size_.y());
+
+      glTexCoord2d(1.0, 0.0);
+      glVertex2d(size_.x(), size_.y());
+
+      glTexCoord2d(1.0, 1.0);
+      glVertex2d(size_.x(), -size_.y());
+    }
+    glEnd();
   }
-  glEnd();
 }
 }  // namespace viewer
