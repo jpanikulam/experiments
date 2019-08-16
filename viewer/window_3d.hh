@@ -173,9 +173,14 @@ class Window3D final : public SimpleWindow {
     view_.set_anchor_from_world(se3);
   }
 
+  // Get the Z-Forward, Y-Down camera_from_world
+  // This is the OpenCV / General CV convention
+  SE3 standard_camera_from_world() const {
+    return view_.standard_camera_from_world();
+  }
+
+  // Z-Backward, Y-Up
   SE3 camera_from_world() const {
-    // TODO:!
-    // const std::lock_guard<std::mutex> lk(behavior_mutex_);
     return view_.camera_from_world();
   }
 

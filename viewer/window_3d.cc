@@ -46,6 +46,7 @@ void apply_view(const OrbitCamera &view, bool show_axes) {
     draw_axes({SE3(), 0.1 / view.zoom(), 3.0, 5.0});
   }
 
+
   glTransform(view.anchor_from_world());
   if (show_axes) {
     draw_axes({SE3(), 0.2 / view.zoom(), 3.0});
