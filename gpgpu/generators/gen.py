@@ -70,8 +70,15 @@ def generate_conversion(definition, struct_name):
 
 def generate(definition, name):
     cpp = "struct {name} {{\n".format(name=name)
-    openclcc = "struct cl{name} {{\n".format(name=name)
-    opencl = "struct {name} {{\n".format(name=name)
+
+    packed = False
+
+    if (packed):
+        openclcc = "struct __attribute__((packed)) cl{name} {{\n".format(name=name)
+        opencl = "struct __attribute__((packed)) {name} {{\n".format(name=name)
+    else:
+        openclcc = "struct cl{name} {{\n".format(name=name)
+        opencl = "struct {name} {{\n".format(name=name)
     for element in definition:
         cpp += "  {type} {name} = {zero};\n".format(**form_cc_declaration(element))
         openclcc += "  {type} {name};\n".format(**form_openclcc_declaration(element))
@@ -115,6 +122,19 @@ def main():
         }
     ]
 
+    box_defd = [
+        {
+            'type': 'vector',
+            'length': 3,
+            'name': 'origin',
+        },
+        {
+            'type': 'vector',
+            'length': 3,
+            'name': 'extents',
+        },
+    ]
+
     cfg_defd = [
         {
             'type': 'int',
@@ -136,11 +156,12 @@ def main():
     definitions = [
         ("Plane", plane_defd),
         ("Sphere", sphere_defd),
+        ("Box", box_defd),
         ("RenderConfig", cfg_defd),
     ]
     hh = '#pragma once\n\n#include "eigen.hh"\n\n'
 
-    clh = ""
+    clh = "#pragma once\n"
 
     for name, definition in definitions:
         genned = generate(definition, name)
