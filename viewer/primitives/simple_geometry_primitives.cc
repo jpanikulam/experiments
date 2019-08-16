@@ -207,65 +207,55 @@ void draw_ellipsoid(const Ellipsoid &ellipsoid) {
 }
 
 void draw_plane_grid(const Plane &plane) {
+  //
+  // Form a local coordinate system
+  //
   const Vec3 &n = plane.plane.u_normal;
   const Vec3 x_dir = geometry::perp(n);
-  const Vec3 y_dir = x_dir.cross(n).normalized();
+  const Vec3 y_dir = n.cross(x_dir).normalized();
+
+  const Vec3 plane_origin = plane.plane.u_normal * plane.plane.distance_from_origin;
+
+  const MatNd<3, 3> mat_world_from_plane = (MatNd<3, 3>() << x_dir, y_dir, n).finished();
+  const SO3 R_world_from_plane(mat_world_from_plane);
+  const SE3 world_from_plane(R_world_from_plane, plane_origin);
 
   const int n_lines = 10;
-  const double displacement = n_lines * plane.line_spacing;
-  const Vec3 offset = plane.plane.u_normal * plane.plane.distance_from_origin;
+  const double grid_width = n_lines * plane.line_spacing;
 
-  const Vec3 y_offset = y_dir * (n_lines * plane.line_spacing);
-  const Vec3 x_offset = x_dir * (n_lines * plane.line_spacing);
-
-  glPushAttrib(GL_CURRENT_BIT);
   glLineWidth(1.0);
-
   glColor(plane.color);
-  glBegin(GL_LINES);
-  {
-    for (double x = -displacement; x < -plane.line_spacing; x += plane.line_spacing) {
-      const Vec3 v_x = (x * x_dir) + offset;
-      const Vec3 v_y = (x * y_dir) + offset;
 
-      glVertex(Vec3(v_x + y_offset));
-      glVertex(Vec3(v_x - y_offset));
-      glVertex(Vec3(v_y + x_offset));
-      glVertex(Vec3(v_y - x_offset));
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glTransform(world_from_plane);
+  glBegin(GL_LINES);
+  for (int k = -n_lines; k <= n_lines; ++k) {
+    if (k == 0) {
+      continue;
     }
-    for (double x = plane.line_spacing; x <= displacement; x += plane.line_spacing) {
-      const Vec3 v_x = (x * x_dir) + offset;
-      const Vec3 v_y = (x * y_dir) + offset;
-      glVertex(Vec3(v_x + y_offset));
-      glVertex(Vec3(v_x - y_offset));
-      glVertex(Vec3(v_y + x_offset));
-      glVertex(Vec3(v_y - x_offset));
-    }
+    glVertex(Vec3((Vec3::UnitX() * k * plane.line_spacing) + Vec3::UnitY() * grid_width));
+    glVertex(Vec3((Vec3::UnitX() * k * plane.line_spacing) - Vec3::UnitY() * grid_width));
+    glVertex(Vec3((Vec3::UnitY() * k * plane.line_spacing) + Vec3::UnitX() * grid_width));
+    glVertex(Vec3((Vec3::UnitY() * k * plane.line_spacing) - Vec3::UnitX() * grid_width));
   }
 
-  glEnd();
-  glBegin(GL_LINES);
-  {
-    glVertex(Vec3(Vec3::Zero()));
-    glVertex(Vec3(-x_offset));
+  glColor(Vec4(0.0, 1.0, 0.0, 0.8));
+  glVertex(Vec3(Vec3::UnitY() * +grid_width));
+  glVertex(Vec3(Vec3::Zero()));
+  glColor(Vec4(0.0, 1.0, 0.0, 0.4));
+  glVertex(Vec3(Vec3::UnitY() * -grid_width));
+  glVertex(Vec3(Vec3::Zero()));
 
-    glVertex(Vec3(Vec3::Zero()));
-    glVertex(Vec3(-y_offset));
-  }
-  glEnd();
-  glBegin(GL_LINES);
-  {
-    glLineWidth(8.0);
-    glColor(Vec4(1.0, 0.0, 0.0, 0.8));
-    glVertex(Vec3(x_offset));
-    glVertex(Vec3(Vec3::Zero()));
+  glColor(Vec4(1.0, 0.0, 0.0, 0.8));
+  glVertex(Vec3(Vec3::UnitX() * +grid_width));
+  glVertex(Vec3(Vec3::Zero()));
+  glColor(Vec4(1.0, 0.0, 0.0, 0.4));
+  glVertex(Vec3(Vec3::UnitX() * -grid_width));
+  glVertex(Vec3(Vec3::Zero()));
 
-    glColor(Vec4(0.0, 1.0, 0.0, 0.8));
-    glVertex(Vec3(y_offset));
-    glVertex(Vec3(Vec3::Zero()));
-  }
   glEnd();
-  glPopAttrib();
+  glPopMatrix();
 }
 
 void draw_point(const Point &point) {
