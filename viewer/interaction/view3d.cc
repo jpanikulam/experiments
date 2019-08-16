@@ -8,7 +8,7 @@ SE3 OrbitCamera::camera_from_anchor() const {
   const SO3 elev_az = elev_rot * az_rot;
 
   const SE3 instantaneous_rotation(SO3(elev_az), Vec3::Zero());
-  const SE3 offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0)));
+  const SE3 offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0 / zoom_)));
   return offset * instantaneous_rotation;
 }
 
@@ -112,7 +112,7 @@ void OrbitCamera::apply_mouse(const WindowPoint& mouse_pos,
     const double inv_zoom = 1.0 / zoom_;
 
     const Vec3 motion_anchor_frame =
-        camera_from_anchor().so3().inverse() * (motion_camera_frame * inv_zoom * 0.05);
+        camera_from_anchor().so3().inverse() * (motion_camera_frame * inv_zoom * 0.15);
 
     anchor_body_.vel = 5.0 * motion_anchor_frame;
   }

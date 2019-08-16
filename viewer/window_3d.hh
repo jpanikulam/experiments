@@ -78,6 +78,9 @@ class Window3D final : public SimpleWindow {
   ///////////////////////////////////
 
   void spin_until_step();
+  void trigger_continue() {
+    should_continue_ = true;
+  }
 
   //
   // Toggle UI
@@ -168,6 +171,12 @@ class Window3D final : public SimpleWindow {
   void set_target_from_world(const SE3 &se3) {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
     view_.set_anchor_from_world(se3);
+  }
+
+  SE3 camera_from_world() const {
+    // TODO:!
+    // const std::lock_guard<std::mutex> lk(behavior_mutex_);
+    return view_.camera_from_world();
   }
 
   void set_azimuth(const double azimuth) {
