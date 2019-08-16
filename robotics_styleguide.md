@@ -51,9 +51,10 @@ Here, a "process" is some procedure that a _human being_ executes, reading from 
     * *Sometimes* you can model it adequately
     * Any large robotics system has a config filled with heuristic values. Why not optimiize those via some actual optimization strategy. Acknowledge that you're currently doing gradient descent.
 
-# Tip for Problem Solving
+# Tips for Problem Solving
 * Write down the truest possible description of the problem. Chances are you have a POMDP.
-* Write down exactly
+* Write down exactly the approximations you're making
+    * Record clearly the limitations that those approximations imply
 
 # Matrices
 * Use Eigen, avoid dynamic sizes unless the size really is unknown
@@ -73,12 +74,18 @@ Here, a "process" is some procedure that a _human being_ executes, reading from 
 * Don't use Euler angles. Please. In a pinch, use axis-angle
 
 
+# Debugging
+* Visualize everything in 3D.
+    * If you're doing robotics, your problem is 3D. Visualize it in 3D.
+    * Stop making excuses. Visualize it in 3D.
+* When you run into a bug, the *first thing you should do* is spend 5min looking for obvious bugs.
+* The *second thing you should do* is write a debugging tool
+    * You'll need it when you run into your bug the second time
+
 # Last Resort Optimizations
 * Often, it *will* turn out that organizing your code into Eigen matrix/array operations will speed things up.
 * SIMD intrinsics are not something to be afraid of
     * But, consider trying ISPC, or reading about how to coerce the compiler into generating vector instructions
-
-
 
 # On Complexity
 * Be careful when people justify doing something foolish as "avoiding complexity"
@@ -94,3 +101,13 @@ Here, a "process" is some procedure that a _human being_ executes, reading from 
 * Calibration does not appear to use robust cost functions
 * Matrices are not typesafe, and require somewhat challenging reasoning re: memory
 * Matrices and images are the same type. Guys, use the type system! It's here to *prevent* this kind of thing!
+
+
+# OpenGL
+Do not resort to trial-and-error to make views work. These are structured things that have been understood for centuries -- label the matrices and think carefully about what they mean.
+
+OpenGL nominal matrix formats are usually described as follows:
+
+* pt_image_frame = proj_from_view * view_from_world * world_from_model * pt_model_frame
+
+* OpenGL MultMatrix calls *right* multiply the view_from_world matrix by the supplied matrix
