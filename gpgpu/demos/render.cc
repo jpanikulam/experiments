@@ -7,6 +7,7 @@
 #include "gpgpu/wrappers/create_context.hh"
 #include "gpgpu/wrappers/errors.hh"
 #include "gpgpu/wrappers/image_read_write.hh"
+#include "gpgpu/interplatform/cl_liegroups.hh"
 
 #include "gpgpu/demos/ray_lut.hh"
 
@@ -57,29 +58,6 @@ struct __attribute__((packed)) ProjectionCoefficientsf {
 
   cl_int rows;
   cl_int cols;
-};
-
-struct __attribute__((packed)) PackedSE3 {
-  PackedSE3(const SE3 &se3) {
-    const MatNd<3, 3> mat = se3.so3().matrix();
-    r0[0] = mat(0, 0);
-    r0[1] = mat(0, 1);
-    r0[2] = mat(0, 2);
-    r1[0] = mat(1, 0);
-    r1[1] = mat(1, 1);
-    r1[2] = mat(1, 2);
-    r2[0] = mat(2, 0);
-    r2[1] = mat(2, 1);
-    r2[2] = mat(2, 2);
-
-    t[0] = se3.translation().x();
-    t[1] = se3.translation().y();
-    t[2] = se3.translation().z();
-  }
-  float r0[4];
-  float r1[4];
-  float r2[4];
-  float t[4];
 };
 
 cv::Ptr<cv::aruco::GridBoard> get_aruco_board() {
@@ -137,7 +115,7 @@ class Renderer {
               const SE3 &camera_from_plane,
               const cl::Image2D &dv_rendered_image,
               cv::Mat *out_img = nullptr) {
-    const PackedSE3 cl_se3(camera_from_plane);
+    const jcc::clSE3 cl_se3(camera_from_plane);
     {
       JCHECK_STATUS(render_kernel_.setArg(0, dv_source_image_));
       JCHECK_STATUS(render_kernel_.setArg(1, dv_ray_lut_));
