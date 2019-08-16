@@ -1,24 +1,10 @@
+#include "liegroups.clh"
 #include "signed_distance_shapes.clh"
+#include "signed_distance_operations.clh"
 
-float sd_sphere(const struct Sphere sphere, float3 p) {
-    return length(p - sphere.origin) - sphere.r;
+float cel_quantize(float x) {
 }
 
-float sd_plane(const struct Plane plane, float3 p) {
-    return dot(p, plane.normal) - plane.d;
-}
-
-float subtract_sd(float d1, float d2) {
-    return max(-d1, d2);
-}
-
-float union_sd(float d1, float d2) {
-    return min(d1, d2);
-}
-
-float intersect_sd(float d1, float d2) {
-    return max(d1, d2);
-}
 
 float scene(float3 p, float t) {
     struct Sphere sph1;
@@ -32,31 +18,96 @@ float scene(float3 p, float t) {
     sph2.origin = (float3) (0.0f, 0.0f, 3.0f);
     sph2.r = 0.5;
 
+    struct Box box;
+    // const float3 box_motion = (float3) (0.0, 0.0, 0.5);
+    // const float3 box_start = (float3) (0.0, 0.0, 0.0);
+    // box.origin = box_motion * 3.0f * (1.0f + cos(0.1f * t)) + 3.0;
+    // box.extents = (float3) (0.25f, 0.25f, 3.0f);
+
+    box.origin = (float3) (0.0f, 0.0f, 3.0f);
+    box.extents = (float3) (0.25, 0.25, 3.0 * sph1.r * (1.0 + cos(0.1 * t)));
+
     struct Plane plane;
-    plane.normal = (float3) (0.0f, 0.0f, -1.0f);
+    plane.normal = normalize((float3) (0.0f, -0.7f, -0.7f));
     plane.d = -5.0;
 
     const float d_sph1 = sd_sphere(sph1, p);
     const float d_sph2 = sd_sphere(sph2, p);
     const float d_spheres = intersect_sd(d_sph1, d_sph2);
 
-    // const float plane_bgn = sd_plane(plane, p);
-    // const float dist = union_sd(d_spheres, plane_bgn);
+    const float d_box = sd_box(box, p);
+    const float d_sphbox = subtract_sd(d_spheres, d_box);
 
-    return d_spheres;
+    const float plane_bgn = sd_plane(plane, p);
+    const float dist = union_sd(d_sphbox, plane_bgn);
+
+    return dist;
+}
+
+float3 illuminate(bool specular, float3 p, float3 view_dir, float3 normal, float3 light_pos, float3 light_color, float t) {
+    const float shadow_k = 0.999;
+    const float3 r_light = normalize(light_pos - p);
+    float shadow_scaling = 1.0;
+
+    //
+    // Diffuse
+    //
+
+    for(float light_ray_length = 0.1f; light_ray_length < length(light_pos - p);) {
+        const float3 light_p = p + (r_light * light_ray_length);
+        const float light_d = scene(light_p, t);
+        if (fabs(light_d) < 0.001) {
+            shadow_scaling = 0.0;
+            break;
+        }
+        light_ray_length += light_d;
+        shadow_scaling = min(shadow_scaling, shadow_k * max(light_d, 0.0f) / light_ray_length);
+    }
+
+    const float light_dot_normal = dot(r_light, normal);
+    // const float3 color = (float3) (
+    //     light_color.x * shadow_scaling * light_dot_normal,
+    //     light_color.y * shadow_scaling * light_dot_normal,
+    //     light_color.z * shadow_scaling * light_dot_normal
+    // );
+    float3 color = light_color * shadow_scaling * light_dot_normal;
+
+    //
+    // Specular
+    //
+
+    if (specular) {
+        // const float cos_specular = dot(view_dir, reflect(r_light, normal));
+        // const float specular_strength = cos_specular > 0.96 ? cos_specular : 0.0;
+        // color += light_color * specular_strength * shadow_scaling;
+
+        const float specular_shadow_scaling = step(0.01f, shadow_scaling);
+
+        const float specular_strength = max(0.0f, pow(clamp(dot(r_light, reflect(view_dir, normal)), 0.0f, 1.0f), 1.0f ));
+        color += light_color * specular_strength * specular_shadow_scaling;
+
+    }
+
+    return color;
 }
 
 __kernel void compute_sdf(
     __read_only image2d_t ray_lut,
     __write_only image2d_t rendered_image,
+    const struct clSE3 world_from_camera,
     const struct RenderConfig render_cfg,
+    const float zoom,
     const float t) {
     const int2 px_coord = (int2) (get_global_id(0), get_global_id(1));
     const sampler_t smp = CLK_NORMALIZED_COORDS_FALSE |
                           CLK_ADDRESS_CLAMP |
                           CLK_FILTER_NEAREST;
 
-    const float3 ray = read_imagef(ray_lut, smp, px_coord).xyz;
+    const float3 ray_camera = read_imagef(ray_lut, smp, px_coord).xyz;
+
+    // const float3 ray = ray_camera;//mul_so3(world_from_camera.rotation, ray_camera);
+    const float3 ray = mul_so3(world_from_camera.rotation, ray_camera);
+    const float3 ray_origin = world_from_camera.translation;
 
     float3 normal;
     const float eps = 0.001;
@@ -71,20 +122,9 @@ __kernel void compute_sdf(
     float dist_out = 0.0;
     bool hit = false;
 
-
-    // const float fx = scene(test_pt);
-    // float3 d2d_dx2 = (float3) (
-    //     ((scene(test_pt + dx, t) - (2.0 * fx) + scene(test_pt - dx, t)) / (eps * eps);
-    //     ((scene(test_pt + dx, t) - (2.0 * fx) + scene(test_pt - dx, t)) / (eps * eps);
-    //     (scene(test_pt + dx, t) - scene(test_pt - dx, t)) / (2.0f * eps);
-    // );
-    // float3 d;
-    // float3 d;
-
-
     int i = 0;
     for (;i < render_cfg.terminal_iteration; ++i) {
-        const float3 test_pt = ray * motion;
+        const float3 test_pt = ray_origin + (ray * motion);
         dist_out = scene(test_pt, t);
 
         smallest_dist = min(smallest_dist, dist_out);
@@ -102,40 +142,48 @@ __kernel void compute_sdf(
 
     float4 color = (float4) (0.0f, 0.0f, 0.0f, 255.0f);
 
-    const float3 point_light = (float3) (0.0, 1.0, 0.0);
-
     if (render_cfg.debug_mode == 1) {
-        color.z = 255.0f * (float)(i) / (float)(render_cfg.terminal_iteration);
+        color.z = (float)(i) / (float)(render_cfg.terminal_iteration);
     } else if (render_cfg.debug_mode == 2) {
+        // Cone distance
         if (dist_out > 0.0f) {
-            color.z = 255.0f * dist_out / CONE_DIST;
+            color.z = dist_out / CONE_DIST;
         } else {
-            color.y = -255.0f * dist_out / CONE_DIST;
+            color.y = -dist_out / CONE_DIST;
         }
     } else if (render_cfg.debug_mode == 3) {
-        float bottom = 2.5f;
-        float top = 3.5f;
-        color.z = 255.0f * (clamp(motion, bottom, top) - bottom) / (top - bottom);
+        // Ray length
+
+        // float bottom = 2.5f;
+        // float top = 3.5f;
+        // color.z = (clamp(motion, bottom, top) - bottom) / (top - bottom);
+        color.z = motion / 5.0f;
     } else if (render_cfg.debug_mode == 4) {
-        color.xyz = 255.0f * normal;
+        color.xyz = normal;
     } else {
         if (hit) {
             const float n_shades = 3.0f;
-            if (render_cfg.test_feature) {
-                color.x = 255.0 * round(dot(-ray, normalize(normal) * n_shades)) / n_shades;
-                color.y = 120.0 * round(dot(-ray, normalize(normal) * n_shades)) / n_shades;
-            } else {
-                color.x = 255.0 * dot(-ray, normalize(normal));
-                color.y = 120.0 * dot(-ray, normalize(normal));
-                color.z = 20.0;
-            }
-            // color.xyz = 255.0f * normal;
+            const float3 p = ray_origin + (ray * motion);
+            // const float3 r_light = normalize(point_light - p);
+            // const float shadow_k = 0.999;
+            const float3 light_1_pos = (float3) (2.0 * cos(0.1f * t), 2.0 * cos(0.1 * t), -5.0f);
+            const float3 light_1_color = (float3) (0.9f, 0.2f, 0.1f);
+            color.xyz += illuminate(true, p, ray, normal, light_1_pos, light_1_color, t);
+
+            const float3 light_2_pos = (float3) (2.0, 2.0, -3.0f);
+            const float3 light_2_color = 0.0f * (float3) (0.9f, 0.2f, 0.1f);
+            color.xyz += illuminate(true, p, ray, normal, light_2_pos, light_2_color, t);
         } else {
             float rr = smallest_dist - 0.15;
             // color.y = 0.2 / (rr * rr)
-            color.y = 100.0 * exp(-35.0 * (rr * rr));
+            // color.y = 100.0 * exp(-35.0 * (rr * rr));
         }
     }
 
-    write_imagef(rendered_image, px_coord, color);
+    // const float3 adjusted_color = 230.0f * pow(color, 0.5);
+    // const float4 power_adjusted_color = (float4) (255.0f * tanh(color.xyz), 255.0f);
+    const float3 power_adjusted_color = pow(clamp(color.xyz, 0.0f, 3.0f), 0.45f);
+
+    float4 final_color = (float4) (power_adjusted_color, 1.0);
+    write_imagef(rendered_image, px_coord, 255.0f * final_color);
 }

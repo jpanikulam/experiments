@@ -1,9 +1,10 @@
+#include "gpgpu/demos/ray_lut.hh"
 #include "gpgpu/import/load_kernel.hh"
+#include "gpgpu/interplatform/cl_liegroups.hh"
 #include "gpgpu/wrappers/create_context.hh"
 #include "gpgpu/wrappers/errors.hh"
 #include "gpgpu/wrappers/image_read_write.hh"
 
-#include "gpgpu/demos/ray_lut.hh"
 #include "util/timing.hh"
 
 #include "viewer/interaction/ui2d.hh"
@@ -56,12 +57,20 @@ void draw(viewer::Window3D& view,
           const RenderConfig& cc_cfg,
           const ImageSize& out_im_size,
           float t) {
-  const jcc::PrintingScopedTimer tt("Frame Time");
+  // const jcc::PrintingScopedTimer tt("Frame Time");
+  const SE3 world_from_camera = view.camera_from_world().inverse();
+  const jcc::clSE3 cl_world_from_camera(world_from_camera);
+
+  JCHECK_STATUS(sdf_kernel.setArg(2, cl_world_from_camera));
+
   const clRenderConfig cfg = cc_cfg.convert();
-  JCHECK_STATUS(sdf_kernel.setArg(2, cfg));
+  JCHECK_STATUS(sdf_kernel.setArg(3, cfg));
+
+  cl_float cl_zoom = 0.0001f;
+  JCHECK_STATUS(sdf_kernel.setArg(4, cl_zoom));
 
   cl_float cl_t = t;
-  JCHECK_STATUS(sdf_kernel.setArg(3, cl_t));
+  JCHECK_STATUS(sdf_kernel.setArg(5, cl_t));
 
   const cl::NDRange work_group_size{static_cast<std::size_t>(out_im_size.cols),
                                     static_cast<std::size_t>(out_im_size.rows)};
@@ -77,13 +86,21 @@ void draw(viewer::Window3D& view,
   out_img.convertTo(out_img, CV_8UC4);
   cv::cvtColor(out_img, out_img, CV_BGRA2BGR);
 
-  ui2d.add_image(out_img, 1.0);
+  // ui2d.add_image(out_img, 1.0);
   ui2d.flip();
-  out_img.release();
 }
 
 int main() {
   const auto view = viewer::get_window3d("Render Visualization");
+  view->set_view_preset(viewer::Window3D::ViewSetting::CAMERA);
+  view->set_azimuth(0.0);
+  view->set_elevation(0.0);
+
+  const auto background = view->add_primitive<viewer::SimpleGeometry>();
+  const geometry::shapes::Plane ground{jcc::Vec3::UnitZ(), 0.0};
+  background->add_plane({ground});
+  background->flip();
+
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
@@ -128,10 +145,8 @@ int main() {
   JCHECK_STATUS(sdf_kernel.setArg(1, dv_rendered_image));
 
   view->add_menu_hotkey("debug_mode", 0, 'P', 5);
-  view->add_menu_hotkey("terminal_iteration", 10, 'I', 24);
+  view->add_menu_hotkey("terminal_iteration", 6, 'I', 24);
   view->add_menu_hotkey("test_feature", 0, 'F', 2);
-
-  // t += 0.1;
 
   float t = 0.0;
   RenderConfig cc_cfg;
@@ -166,6 +181,7 @@ int main() {
   });
 
   view->run_menu_callbacks();
+  view->trigger_continue();
   while (true) {
     t += 0.1;
     // cc_cfg.terminal_iteration = view->get_menu("terminal_iteration") * 10;
