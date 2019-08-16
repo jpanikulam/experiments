@@ -3,17 +3,23 @@
 namespace viewer {
 
 SE3 OrbitCamera::camera_from_anchor() const {
-  const SO3 az_rot = SO3::exp(Vec3::UnitY() * azimuth_);
-  const SO3 elev_rot = SO3::exp(Vec3::UnitX() * elevation_);
-  const SO3 elev_az = elev_rot * az_rot;
+  const SO3 az_from_anchor = SO3::exp(Vec3::UnitY() * azimuth_);
+  const SO3 elev_from_az = SO3::exp(Vec3::UnitX() * elevation_);
+  const SO3 rot_oriented_anchor_from_anchor = elev_from_az * az_from_anchor;
 
-  const SE3 oriented_anchor_from_anchor(SO3(elev_az), Vec3::Zero());
+  const SE3 oriented_anchor_from_anchor(SO3(rot_oriented_anchor_from_anchor),
+                                        Vec3::Zero());
   const SE3 camera_from_oriented_anchor(SE3(SO3(), Vec3(0.0, 0.0, -1.0 / zoom_)));
   return camera_from_oriented_anchor * oriented_anchor_from_anchor;
 }
 
 SE3 OrbitCamera::camera_from_world() const {
   return camera_from_anchor() * anchor_body_.from_world;
+}
+
+SE3 OrbitCamera::standard_camera_from_world() const {
+  const SE3 standard_from_opengl = jcc::exp_x(M_PI);
+  return standard_from_opengl.inverse() * camera_from_world();
 }
 
 SE3 OrbitCamera::anchor_from_world() const {
@@ -112,7 +118,7 @@ void OrbitCamera::apply_mouse(const WindowPoint& mouse_pos,
     const double inv_zoom = 1.0 / zoom_;
 
     const Vec3 motion_anchor_frame =
-        camera_from_anchor().so3().inverse() * (motion_camera_frame * inv_zoom * 0.15);
+        camera_from_anchor().so3().inverse() * (motion_camera_frame * inv_zoom * 0.05);
 
     anchor_body_.vel = 5.0 * motion_anchor_frame;
   }

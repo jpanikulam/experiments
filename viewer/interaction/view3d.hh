@@ -47,6 +47,11 @@ class OrbitCamera {
 
   SE3 anchor_from_world() const;
 
+  // This is a convenience function for computer vision applications
+  // The OpenGL rendering convention is Z-Backward, Y-Up: Points with negative Z get rendered
+  // The standard CV convention is that cameras image Z-Forward, Y-Down
+  SE3 standard_camera_from_world() const;
+
   SE3 camera_from_anchor() const;
 
   void set_anchor_from_world(const SE3& anchor_from_world) {
