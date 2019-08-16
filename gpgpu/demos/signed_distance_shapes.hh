@@ -34,6 +34,22 @@ struct Sphere {
   }
 };
 
+struct clBox {
+  cl_float3 origin;
+  cl_float3 extents;
+};
+
+struct Box {
+  Eigen::Vector3f origin = Eigen::Vector3f::Zero();
+  Eigen::Vector3f extents = Eigen::Vector3f::Zero();
+  clBox convert() const {
+    clBox cvt;
+    cvt.origin = {origin.x(), origin.y(), origin.z()};
+    cvt.extents = {extents.x(), extents.y(), extents.z()};
+    return cvt;
+  }
+};
+
 struct clRenderConfig {
   cl_int debug_mode;
   cl_int test_feature;

@@ -1,3 +1,4 @@
+#pragma once
 
 struct Plane {
   float3 normal;
@@ -7,6 +8,11 @@ struct Plane {
 struct Sphere {
   float3 origin;
   float r;
+};
+
+struct Box {
+  float3 origin;
+  float3 extents;
 };
 
 struct RenderConfig {
