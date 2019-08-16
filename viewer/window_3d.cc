@@ -19,13 +19,31 @@
 namespace viewer {
 namespace {
 
+// OpenGL nominal matrix formats are usually described as follows:
+//
+// proj_from_view * view_from_world * world_from_model * pt_model_frame
+// For us: all points are in the world frame, so world_from_model = I
+//
+// Which means `view_from_world` == `camera_from_anchor * anchor_from_world`
+//
+// OpenGL MultMatrix calls *right* multiply the view_from_world matrix
+// by the supplied matrix
+//
+// Tracking state in the below computation:
+// view_from_world = I
+// view_from_world = view_from_world * camera_from_anchor;
+//  -> (view_from_anchor)
+// view_from_world = view_from_world * anchor_from_world;
+//  -> (view_from_anchor * anchor_from_world)
+//  -> (view_from_world)
+//
 void apply_view(const OrbitCamera &view, bool show_axes) {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
   glTransform(view.camera_from_anchor());
   if (show_axes) {
-    draw_axes({SE3(), 0.1 / view.zoom(), 3.0});
+    draw_axes({SE3(), 0.1 / view.zoom(), 3.0, 5.0});
   }
 
   glTransform(view.anchor_from_world());
@@ -130,7 +148,7 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
     if (key_mappings_.count(key_char) != 0) {
       const std::string menu_name = key_mappings_.at(key_char);
       menus_[menu_name].value =
-          (menus_[menu_name].value + 1) % (menus_[menu_name].n_states );
+          (menus_[menu_name].value + 1) % (menus_[menu_name].n_states);
       const int new_toggle_state = menus_[menu_name].value;
       for (const auto &menu_callback : menu_callbacks_[menu_name]) {
         menu_callback(new_toggle_state);

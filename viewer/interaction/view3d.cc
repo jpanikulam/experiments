@@ -7,9 +7,9 @@ SE3 OrbitCamera::camera_from_anchor() const {
   const SO3 elev_rot = SO3::exp(Vec3::UnitX() * elevation_);
   const SO3 elev_az = elev_rot * az_rot;
 
-  const SE3 instantaneous_rotation(SO3(elev_az), Vec3::Zero());
-  const SE3 offset(SE3(SO3(), Vec3(0.0, 0.0, -1.0 / zoom_)));
-  return offset * instantaneous_rotation;
+  const SE3 oriented_anchor_from_anchor(SO3(elev_az), Vec3::Zero());
+  const SE3 camera_from_oriented_anchor(SE3(SO3(), Vec3(0.0, 0.0, -1.0 / zoom_)));
+  return camera_from_oriented_anchor * oriented_anchor_from_anchor;
 }
 
 SE3 OrbitCamera::camera_from_world() const {
