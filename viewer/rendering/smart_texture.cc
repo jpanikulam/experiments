@@ -48,24 +48,7 @@ void SmartTexture::tex_image_2d(const GLenum target,
 
 void SmartTexture::draw() const {
   managed_texture_->bind();
-  /*
-    glColor3d(1.0, 1.0, 1.0);
-    glBegin(GL_QUADS);
-    {
-      glTexCoord2d(0.0, 0.0);
-      glVertex2d(0.0, 0.0);
-
-      glTexCoord2d(0.0, 1.0);
-      glVertex2d(0.0, size_.y());
-
-      glTexCoord2d(1.0, 1.0);
-      glVertex2d(size_.x(), size_.y());
-
-      glTexCoord2d(1.0, 0.0);
-      glVertex2d(size_.x(), 0.0);
-    }
-    glEnd();*/
-  constexpr bool SMALL_VIEW = true;
+  constexpr bool SMALL_VIEW = false;
 
   if (SMALL_VIEW) {
     glColor3d(1.0, 1.0, 1.0);
