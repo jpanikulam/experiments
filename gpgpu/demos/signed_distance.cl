@@ -2,67 +2,6 @@
 #include "signed_distance_shapes.clh"
 #include "signed_distance_operations.clh"
 
-struct ComplexObject {
-    int n_u_sphere;
-    int n_sub_sphere;
-    int n_int_sphere;
-    struct Sphere* u_sphere;
-    struct Sphere* sub_sphere;
-    struct Sphere* int_sphere;
-
-    int n_u_plane;
-    int n_sub_plane;
-    int n_int_plane;
-    struct Plane* u_plane;
-    struct Plane* sub_plane;
-    struct Plane* int_plane;
-
-    int n_u_box;
-    int n_sub_box;
-    int n_int_box;
-    struct Box* u_box;
-    struct Box* sub_box;
-    struct Box* int_box;
-};
-
-
-float sd_obj(const ComplexObject* obj) {
-    float dist = 1000.0f;
-    for (int k = 0; k < n_u_sphere; ++k) {
-        dist = sd_union(sd_sphere(u_sphere[k]), dist);
-    }
-    for (int k = 0; k < n_u_plane; ++k) {
-        dist = sd_union(sd_plane(u_plane[k]), dist);
-    }
-    for (int k = 0; k < n_u_box; ++k) {
-        dist = sd_union(sd_box(u_box[k]), dist);
-    }
-
-    for (int k = 0; k < n_int_sphere; ++k) {
-        dist = sd_intersect(sd_sphere(int_sphere[k]), dist);
-    }
-    for (int k = 0; k < n_int_plane; ++k) {
-        dist = sd_intersect(sd_plane(int_plane[k]), dist);
-    }
-    for (int k = 0; k < n_int_box; ++k) {
-        dist = sd_intersect(sd_box(int_box[k]), dist);
-    }
-
-    float dist_sub = 1000.0f;
-    for (int k = 0; k < n_sub_sphere; ++k) {
-        dist_sub = sd_union(sd_sphere(sub_sphere[k]), dist);
-    }
-    for (int k = 0; k < n_sub_plane; ++k) {
-        dist_sub = sd_union(sd_plane(sub_plane[k]), dist);
-    }
-    for (int k = 0; k < n_sub_box; ++k) {
-        dist_sub = sd_union(sd_box(sub_box[k]), dist);
-    }
-
-    dist = sd_subtract(dist, dist_sub);
-    return dist;
-}
-
 float scene(float3 p, float t) {
     struct Sphere sph1;
     sph1.origin = (float3) (0.2f, 0.0f, 3.5f);
@@ -90,24 +29,24 @@ float scene(float3 p, float t) {
 
     const float d_sph1 = sd_sphere(sph1, p);
     const float d_sph2 = sd_sphere(sph2, p);
-    const float d_spheres = intersect_sd(d_sph1, d_sph2);
+    const float d_spheres = op_intersect(d_sph1, d_sph2);
 
 
     const float d_box = sd_box(box, p);
-    const float d_sphbox = subtract_sd(d_spheres, d_box);
+    const float d_sphbox = op_subtract(d_spheres, d_box);
 
     const float plane_bgn = sd_plane(plane, p);
-    float dist = union_sd(d_sphbox, plane_bgn);
-    dist = union_sd(dist, sd_sphere(sph3, p));
+    float dist = op_union(d_sphbox, plane_bgn);
+    dist = op_union(dist, sd_sphere(sph3, p));
 
-    dist = union_sd(dist, sd_plane(plane2, p));
+    dist = op_union(dist, sd_plane(plane2, p));
 
     for (int x = 0; x < 5; ++x) {
         for (int y = 0; y < 5; ++y) {
             struct Sphere sph;
             sph.origin = (float3) (x * 0.4f, y * 0.4f, 3.0f);
             sph.r = 0.2;
-            dist = union_sd(dist, sd_sphere(sph, p));
+            dist = op_union(dist, sd_sphere(sph, p));
         }
     }
 
