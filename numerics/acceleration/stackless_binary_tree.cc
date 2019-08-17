@@ -3,14 +3,6 @@
 #include <iostream>
 
 namespace jcc {
-// void traverse1(int[] xtree, int n) {
-//   uint32_t level_start = 1u;
-//   uint32_t level_index = 0u;
-//   while (level_start <= 1u) {
-//     int node_ind = level_start + level_index - 1;
-//     std::cout << "Visiting: " << xtree[node_ind] << std::endl;
-//   }
-// }
 
 bool is_left(int n) {
   return (n % 2) == 1;
@@ -32,43 +24,40 @@ int rchild(int n) {
   return lchild(n) + 1;
 }
 
+int lr(int n) {
+  return is_left(n) ? 1 : 2;
+}
+
 void traverse(int xtree[], int n) {
   int next = 0;
-  bool backtracking_from_left = false;
-  bool backtracking_from_right = false;
-
+  int btrack_state = 0;
   int n_visited = 0;
 
   while (n_visited < n) {
     const int cur_node = next;
 
-    if (!(backtracking_from_right || backtracking_from_left)) {
+    if (btrack_state == 0) {
       n_visited++;
       std::cout << "Visiting: " << cur_node << std::endl;
     }
 
-    if (backtracking_from_left) {
+    if (1 == btrack_state) {
       if (rchild(cur_node) < n) {
         next = rchild(cur_node);
-        backtracking_from_right = false;
-        backtracking_from_left = false;
+        btrack_state = 0;
       } else {
-        backtracking_from_right = !is_left(cur_node);
-        backtracking_from_left = is_left(cur_node);
+        btrack_state = lr(cur_node);
         next = parent(cur_node);
       }
-    } else if (backtracking_from_right) {
-      backtracking_from_right = !is_left(cur_node);
-      backtracking_from_left = is_left(cur_node);
+    } else if (2 == btrack_state) {
+      btrack_state = lr(cur_node);
 
       next = parent(cur_node);
     } else if (lchild(cur_node) >= n) {
-      backtracking_from_right = !is_left(cur_node);
-      backtracking_from_left = is_left(cur_node);
+      btrack_state = lr(cur_node);
       next = parent(cur_node);
     } else if (lchild(cur_node) < n) {
-      backtracking_from_right = false;
-      backtracking_from_left = false;
+      btrack_state = 0;
       next = lchild(cur_node);
     } else {
     }
