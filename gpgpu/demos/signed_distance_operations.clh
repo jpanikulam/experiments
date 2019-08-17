@@ -16,16 +16,16 @@ float sd_box(const struct Box box, float3 p) {
     return length(max(d, 0.0f)) + min(max(d.x, max(d.y, d.z)), 0.0f);
 }
 
-float union_sd(float d1, float d2) {
+float op_union(float d1, float d2) {
     return min(d1, d2);
 }
 
-float intersect_sd(float d1, float d2) {
+float op_intersect(float d1, float d2) {
     return max(d1, d2);
 }
 
-float subtract_sd(float d1, float d2) {
-    return intersect_sd(d1, -d2);
+float op_subtract(float d1, float d2) {
+    return op_intersect(d1, -d2);
 }
 
 float3 reflect(float3 incoming, float3 normal) {
