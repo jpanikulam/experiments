@@ -1,0 +1,9 @@
+#pragma once
+
+struct FluidSimConfig {
+  float nu;
+  float dt;
+  float dx;
+  int test_feature;
+  int max_iteration;
+};

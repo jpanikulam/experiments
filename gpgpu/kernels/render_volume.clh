@@ -1,0 +1,9 @@
+#pragma once
+
+struct RenderVolumeConfig {
+  int method;
+  float step_size;
+  float max_dist;
+  int test_feature;
+  int max_iteration;
+};
