@@ -20,8 +20,11 @@ def form_cc_declaration(element):
         'bool': 'false',
     }
 
+    default_value = element.get('default', zeros[element['type']])
+
     return {
-        'type': types[element['type']], 'name': element['name'], 'zero': zeros[element['type']]
+        'type': types[element['type']],
+        'name': element['name'], 'default': default_value
     }
 
 
@@ -80,7 +83,7 @@ def generate(definition, name):
         openclcc = "struct cl{name} {{\n".format(name=name)
         opencl = "struct {name} {{\n".format(name=name)
     for element in definition:
-        cpp += "  {type} {name} = {zero};\n".format(**form_cc_declaration(element))
+        cpp += "  {type} {name} = {default};\n".format(**form_cc_declaration(element))
         openclcc += "  {type} {name};\n".format(**form_openclcc_declaration(element))
         opencl += "  {type} {name};\n".format(**form_opencl_declaration(element))
 
@@ -95,70 +98,7 @@ def generate(definition, name):
     }
 
 
-def main():
-    plane_defd = [
-        {
-            'type': 'vector',
-            'length': 3,
-            'name': 'normal',
-        },
-        {
-            'type': 'float',
-            'length': 1,
-            'name': 'd',
-        }
-    ]
-
-    sphere_defd = [
-        {
-            'type': 'vector',
-            'length': 3,
-            'name': 'origin',
-        },
-        {
-            'type': 'float',
-            'length': 1,
-            'name': 'r',
-        }
-    ]
-
-    box_defd = [
-        {
-            'type': 'vector',
-            'length': 3,
-            'name': 'origin',
-        },
-        {
-            'type': 'vector',
-            'length': 3,
-            'name': 'extents',
-        },
-    ]
-
-    cfg_defd = [
-        {
-            'type': 'int',
-            'length': 1,
-            'name': 'debug_mode',
-        },
-        {
-            'type': 'bool',
-            'length': 1,
-            'name': 'test_feature',
-        },
-        {
-            'type': 'int',
-            'length': 1,
-            'name': 'terminal_iteration',
-        }
-    ]
-
-    definitions = [
-        ("Plane", plane_defd),
-        ("Sphere", sphere_defd),
-        ("Box", box_defd),
-        ("RenderConfig", cfg_defd),
-    ]
+def write_files(definitions, destination):
     hh = '#pragma once\n\n#include "eigen.hh"\n\n'
 
     clh = "#pragma once\n"
@@ -168,13 +108,8 @@ def main():
         hh += genned['hh']
         clh += '\n' + genned['clh'] + '\n'
 
-    destination = "/home/jacob/repos/experiments/gpgpu/demos/signed_distance_shapes"
-
     with open(destination + '.clh', 'w') as f:
         f.write(clh)
 
     with open(destination + '.hh', 'w') as f:
         f.write(hh)
-
-if __name__ == '__main__':
-    main()
