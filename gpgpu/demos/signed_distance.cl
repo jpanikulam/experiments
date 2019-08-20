@@ -44,7 +44,7 @@ float scene(float3 p, float t) {
     for (int x = 0; x < 5; ++x) {
         for (int y = 0; y < 5; ++y) {
             struct Sphere sph;
-            sph.origin = (float3) (x * 0.4f, y * 0.4f, 3.0f);
+            sph.origin = (float3) (x * 0.8f, -y * 0.8f, 3.0f);
             sph.r = 0.2;
             dist = op_union(dist, sd_sphere(sph, p));
         }
@@ -71,20 +71,17 @@ float3 illuminate(
     int steps = 0;
     for(float light_ray_length = 0.1f; light_ray_length < length(light_pos - p);) {
         steps++;
-        // if(steps > 1) {
-        //     break;
-        // }
         const float3 light_p = p + (r_light * light_ray_length);
         const float light_d = scene(light_p, t);
-        if (fabs(light_d) < 0.01) {
-            shadow_scaling = 0.0;
+        if (fabs(light_d) < 0.01f) {
+            shadow_scaling = 0.0f;
             break;
         }
         light_ray_length += light_d;
         shadow_scaling = min(shadow_scaling, shadow_k * max(light_d, 0.0f) / light_ray_length);
     }
 
-    const float light_dot_normal = dot(r_light, normal);
+    const float light_dot_normal = clamp(dot(r_light, normal), 0.0f, 1.0f);
     float3 color = light_color * shadow_scaling * light_dot_normal;
 
     //
@@ -93,7 +90,7 @@ float3 illuminate(
 
     const float specular_shadow_scaling = step(0.01f, shadow_scaling);
     const float specular_strength = max(0.0f, pow(clamp(dot(r_light, reflect(view_dir, normal)), 0.0f, 1.0f), 1.0f ));
-    color += light_color * specular_strength * specular_shadow_scaling;
+    // color += light_color * specular_strength * specular_shadow_scaling;
 
     return color;
 }
@@ -111,7 +108,6 @@ __kernel void compute_sdf(
     const float3 ray_camera = read_imagef(ray_lut, smp, px_coord).xyz;
 
     const float3 ray = mul_so3(world_from_camera.rotation, ray_camera);
-    // ?????
     const float3 ray_origin = world_from_camera.translation;
 
     float3 normal;
@@ -129,6 +125,10 @@ __kernel void compute_sdf(
 
     int i = 0;
     for (;i < render_cfg.terminal_iteration; ++i) {
+        if (motion > 20.0f) {
+            break;
+        }
+
         const float3 test_pt = ray_origin + (ray * motion);
         dist_out = scene(test_pt, t);
 
@@ -142,6 +142,8 @@ __kernel void compute_sdf(
             hit = true;
             break;
         }
+
+
         motion += max(dist_out, 1e-4f);
     }
 
@@ -165,11 +167,11 @@ __kernel void compute_sdf(
             const float3 p = ray_origin + (ray * motion);
             const float3 light_1_pos = (float3) (2.0 * cos(0.1f * t), 2.0 * cos(0.1 * t), -5.0f);
             const float3 light_1_color = (float3) (0.9f, 0.2f, 0.1f);
-            color.xyz += illuminate(p, ray, normal, light_1_pos, light_1_color, t);
+            color.xyz += illuminate(p, ray, normal, light_1_pos, 3.0f * light_1_color, t);
 
             const float3 light_2_pos = (float3) (2.0, 2.0, -3.0f);
             const float3 light_2_color = 0.0f * (float3) (0.9f, 0.2f, 0.1f);
-            color.xyz += illuminate(p, ray, normal, light_2_pos, light_2_color, t);
+            color.xyz += illuminate(p, ray, normal, light_2_pos, 3.0f * light_2_color, t);
         } else {
             float rr = smallest_dist - 0.15;
             // color.y = 0.2 / (rr * rr)

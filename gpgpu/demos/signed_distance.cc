@@ -24,38 +24,13 @@
 
 #include "gpgpu/demos/signed_distance_shapes.hh"
 
-struct ImageSize {
-  std::size_t cols = -1;
-  std::size_t rows = -1;
-};
-
-estimation::NonlinearCameraModel nice_model(int cols, int rows) {
-  estimation::ProjectionCoefficients proj_coeffs;
-  proj_coeffs.fx = rows;
-  proj_coeffs.fy = rows;
-  proj_coeffs.cx = cols / 2;
-  proj_coeffs.cy = rows / 2;
-
-  proj_coeffs.k1 = 0.0;
-  proj_coeffs.k2 = -0.0;
-  proj_coeffs.p1 = 0.0;
-  proj_coeffs.p2 = 0.0;
-  proj_coeffs.k3 = 0.0;
-
-  proj_coeffs.rows = rows;
-  proj_coeffs.cols = cols;
-
-  const estimation::NonlinearCameraModel model(proj_coeffs);
-  return model;
-}
-
 void draw(viewer::Window3D& view,
           viewer::Ui2d& ui2d,
           cl::CommandQueue& cmd_queue,
           cl::Kernel& sdf_kernel,
           cl::Image2D& dv_rendered_image,
           const RenderConfig& cc_cfg,
-          const ImageSize& out_im_size,
+          const jcc::ImageSize& out_im_size,
           float t) {
   const jcc::PrintingScopedTimer tt("Frame Time");
   const SE3 world_from_camera = view.standard_camera_from_world().inverse();
@@ -72,8 +47,10 @@ void draw(viewer::Window3D& view,
 
   const cl::NDRange work_group_size{static_cast<std::size_t>(out_im_size.cols),
                                     static_cast<std::size_t>(out_im_size.rows)};
+
+  const cl::NDRange local_size({32u, 32u});
   JCHECK_STATUS(
-      cmd_queue.enqueueNDRangeKernel(sdf_kernel, {0}, work_group_size, {480, 1u}));
+      cmd_queue.enqueueNDRangeKernel(sdf_kernel, {0}, work_group_size, local_size));
 
   cmd_queue.flush();
 
@@ -116,11 +93,11 @@ int main() {
   auto sdf_kernel = kernels.at("compute_sdf");
   cl::CommandQueue cmd_queue(cl_info.context);
 
-  ImageSize out_im_size;
+  jcc::ImageSize out_im_size;
   out_im_size.cols = 2 * 480;
   out_im_size.rows = 2 * 480;
 
-  const auto model = nice_model(out_im_size.cols, out_im_size.rows);
+  const auto model = jcc::nice_model(out_im_size);
 
   //
   // Send the ray LUT
