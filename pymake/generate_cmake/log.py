@@ -1,7 +1,7 @@
 try:
     from colorama import init as colorama_init
     from colorama import Fore, Style
-    colorama_init()
+    imported_colorama = True
 
 except(ImportError):
     print "Could not import colorama: Skipping coloration"
@@ -12,6 +12,7 @@ except(ImportError):
 
     Fore = Dummy()
     Style = Dummy()
+    imported_colorama = False
 
 from collections import OrderedDict
 
@@ -25,15 +26,29 @@ class Log(object):
         ("error", Fore.RED),
     ])
     _enabled = _verbosities.keys()
+    _initialized = False
+
+    @classmethod
+    def init(cls, force_color=False):
+        argument = None
+        if force_color:
+            argument = False
+
+        if (imported_colorama):
+            colorama_init(strip=argument)
+
+        cls._initialized = True
 
     @classmethod
     def set_enabled(cls, keys):
+        assert cls._initialized, "Must call Log.init() first"
         for key in keys:
             assert key in cls._verbosities.keys(), "{} unknown".format(key)
         cls._enabled = keys
 
     @classmethod
     def set_verbosity(cls, level):
+        assert cls._initialized, "Must call Log.init() first"
         assert level in cls._verbosities.keys(), "{} unknown".format(level)
         all_keys = cls._verbosities.keys()
         start = all_keys.index(level)
@@ -47,6 +62,8 @@ class Log(object):
 
 def make_logger(verbosity_type, color):
     def new_logger(cls, *txt):
+        assert cls._initialized, "Must call Log.init() first"
+
         if verbosity_type in cls._enabled:
             out_str = " ".join(map(str, txt))
             print("{}{}{}".format(color, out_str, Style.RESET_ALL))

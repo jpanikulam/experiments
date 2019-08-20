@@ -3,7 +3,7 @@ import re
 
 from generate_cmake.parse import between
 
-valid_extensions = ['cc', 'hh']
+valid_extensions = ['cc', 'hh', '.py']
 
 
 def parse_cfg(path, base):

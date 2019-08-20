@@ -220,6 +220,17 @@ def build_dependency_table(all_tree, cfg):
 
         location = os.path.dirname(file)
 
+        for codegen in elements['codegen']:
+            to_build[file] = {
+                'deps': required_libs,
+                'file': file,
+                'kind': 'codegen',
+                'flags': elements['flags'],
+                'location': location,
+                'type': codegen['type'],
+                'args': codegen['args'],
+            }
+
         for binary in elements['bin']:
             to_build[binary['target']] = {
                 'target': binary['target'],
@@ -282,7 +293,14 @@ def main():
         default=''
     )
 
+    parser.add_argument(
+        "-r",
+        "--force-color",
+        action='store_true',
+    )
+
     args = parser.parse_args()
+    Log.init(args.force_color)
     Log.set_verbosity(args.verbosity)
 
     if args.path is None:

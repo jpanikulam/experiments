@@ -31,6 +31,23 @@ def create_bin(build_item, base_directory=""):
     return txt
 
 
+def create_codegen(build_item, base_directory=""):
+    possibles = {
+        'cl_gen'
+    }
+    assert build_item['type'] in possibles, "Unknown code gen type in {}".format(build_item['srcs'][0])
+
+    raw_name, extension = os.path.splitext(build_item['file'])
+    _, cl_gen_name = os.path.split(raw_name)
+
+    txt = 'add_cl_gen({cl_gen_name} {file_path})'.format(
+        cl_gen_name=cl_gen_name,
+        file_path=reduce_srcs(build_item['file'], base_directory),
+    )
+
+    return txt
+
+
 def should_create_target(build_item):
     if 'CMakeLists.txt' in os.listdir(build_item['location']):
         Log.debug("Ignoring: {}".format(build_item['target']))
@@ -52,7 +69,8 @@ def write_cmake(text, base_directory):
 def build_cmakes(to_build, base_directory):
     actions = {
         'lib': create_lib,
-        'binary': create_bin
+        'binary': create_bin,
+        'codegen': create_codegen
     }
 
     from graph import dependency_sort

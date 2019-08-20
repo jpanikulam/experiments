@@ -43,6 +43,15 @@ def grab_dependencies(line):
     return {'deps': deps}
 
 
+def grab_codegen(line):
+    needs(line, ['(', ')'])
+    needs(line, ['# %codegen'])
+    args = between(line, '(', ')')
+    arg_tokens = splitstrip(args)
+    Log.debug('    codegen: {}'.format(arg_tokens))
+    return {'codegen': {'type': arg_tokens[0], 'args': arg_tokens[1:]}}
+
+
 def grab_lib(line):
     needs(line, ['(', ')'])
     needs(line, ['//%lib'])
@@ -89,6 +98,7 @@ def make_flagger(flag_name):
 tokens = {
     '//%bin': grab_bin,
     '//%deps': grab_dependencies,
+    '# %codegen': grab_codegen,
     '//%lib': grab_lib,
     '#include <': partial(grab_include, incl_type="system"),
     '#include "': partial(grab_include, incl_type="local"),
@@ -124,7 +134,8 @@ def parse_text(text):
         'deps': [],
         'lib': [],
         'include': [],
-        'flags': []
+        'flags': [],
+        'codegen': []
     }
 
     lines = text.split('\n')
@@ -142,7 +153,8 @@ def has_annotations(elements):
     no_deps = len(elements['deps']) == 0
     no_bin = len(elements['bin']) == 0
     no_lib = len(elements['lib']) == 0
-    return not all([no_deps, no_bin, no_lib])
+    no_cgen = len(elements['codegen']) == 0
+    return not all([no_deps, no_bin, no_lib, no_cgen])
 
 
 def should_ignore(elements):
