@@ -1,5 +1,7 @@
 #include "geometry/op_tree/op_tree.hh"
 
+#include "logging/assert.hh"
+
 namespace jcc {
 
 namespace {
@@ -15,7 +17,8 @@ std::string operator_to_string(const CsgOperation op) {
       return " n ";
       break;
     default:
-      return "XXX";
+      JASSERT(false, "Unexpected CSG operation type");
+      return " ERROR OMG";
   }
 }
 

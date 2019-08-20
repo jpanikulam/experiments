@@ -3,6 +3,9 @@
 //
 // Strategies:
 //  - Despair
+//  - Recursive class structure
+//  - Form a binary tree directly
+
 //
 
 #include <iostream>
