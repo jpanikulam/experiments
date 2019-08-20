@@ -11,17 +11,11 @@ estimation::NonlinearCameraModel make_model() {
   proj_coeffs.cx = 235.992;
   proj_coeffs.cy = 141.951;
 
-  // proj_coeffs.k1 = 0.0669332;
-  // proj_coeffs.k2 = -0.224151;
-  // proj_coeffs.p1 = 0.00993584;
-  // proj_coeffs.p2 = 0.00848696;
-  // proj_coeffs.k3 = 0.10179;
-
-  proj_coeffs.k1 = 0.0;
-  proj_coeffs.k2 = -0.0;
-  proj_coeffs.p1 = 0.0;
-  proj_coeffs.p2 = 0.0;
-  proj_coeffs.k3 = 0.0;
+  proj_coeffs.k1 = 0.0669332;
+  proj_coeffs.k2 = -0.224151;
+  proj_coeffs.p1 = 0.00993584;
+  proj_coeffs.p2 = 0.00848696;
+  proj_coeffs.k3 = 0.10179;
 
   proj_coeffs.rows = 270;
   proj_coeffs.cols = 480;
@@ -30,7 +24,27 @@ estimation::NonlinearCameraModel make_model() {
   return model;
 }
 
-cv::Mat create_ray_lut(const estimation::NonlinearCameraModel &model,
+estimation::NonlinearCameraModel nice_model(const ImageSize& image_size) {
+  estimation::ProjectionCoefficients proj_coeffs;
+  proj_coeffs.fx = image_size.rows;
+  proj_coeffs.fy = image_size.rows;
+  proj_coeffs.cx = image_size.cols / 2;
+  proj_coeffs.cy = image_size.rows / 2;
+
+  proj_coeffs.k1 = 0.0;
+  proj_coeffs.k2 = 0.0;
+  proj_coeffs.p1 = 0.0;
+  proj_coeffs.p2 = 0.0;
+  proj_coeffs.k3 = 0.0;
+
+  proj_coeffs.rows = image_size.rows;
+  proj_coeffs.cols = image_size.cols;
+
+  const estimation::NonlinearCameraModel model(proj_coeffs);
+  return model;
+}
+
+cv::Mat create_ray_lut(const estimation::NonlinearCameraModel& model,
                        const int cols,
                        const int rows) {
   cv::Mat deprojection_lut(cv::Size(cols, rows), CV_32FC4);
