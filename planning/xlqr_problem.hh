@@ -1,6 +1,9 @@
 #pragma once
 
 #include "planning/problem.hh"
+
+#include <functional>
+
 namespace planning {
 
 template <typename _Prob>
@@ -21,7 +24,10 @@ class XlqrProblem {
     std::vector<ControlVec> u;
   };
 
-  Solution solve(const State x0, const Solution& initialization = {}) const;
+  using Visitor = std::function<void(const Solution& soln, int iteration, bool final)>;
+  Solution solve(const State& x0,
+                 const Solution& initialization = {},
+                 const Visitor& visitor = {}) const;
 
  private:
   struct LqrFeedback {

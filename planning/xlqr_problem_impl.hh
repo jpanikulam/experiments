@@ -2,6 +2,10 @@
 
 #include "planning/xlqr_problem.hh"
 
+#include "logging/assert.hh"
+
+#include "numerics/project_psd.hh"
+
 #include <iostream>
 #include <limits>
 
@@ -9,27 +13,41 @@ namespace planning {
 
 template <typename _Prob>
 typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::solve(
-    const typename XlqrProblem<_Prob>::State x0,
-    const typename XlqrProblem<_Prob>::Solution& initialization) const {
+    const typename XlqrProblem<_Prob>::State& x0,
+    const typename XlqrProblem<_Prob>::Solution& initialization,
+    const typename XlqrProblem<_Prob>::Visitor& visitor) const {
   Solution traj0;
   if (initialization.x.empty()) {
     traj0.x.resize(prob_.horizon());
     traj0.x[0] = x0;
     traj0.u.resize(prob_.horizon() - 1, ControlVec::Zero());
   } else {
-    assert(initialization.x.size() == prob_.horizon() &&
-           (initialization.u.size() == prob_.horizon() - 1));
+    JASSERT_EQ(initialization.x.size(),
+               prob_.horizon(),
+               "Horizon and initialization must match in size");
+    JASSERT_EQ(initialization.u.size(),
+               prob_.horizon() - 1,
+               "There must be one fewer controls that states");
     traj0 = initialization;
   }
 
   Solution current_soln;
   shoot(traj0, {}, -1.0, &current_soln);
 
-  constexpr int MAX_ITERS = 7;
-  for (int iter = 0; iter < MAX_ITERS; ++iter) {
+  constexpr int MAX_ITERS = 60;
+  int iter = 0;
+  for (; iter < MAX_ITERS; ++iter) {
+    if (visitor) {
+      visitor(current_soln, iter, false);
+    }
+
     const auto lqr_soln = ricatti(current_soln);
     current_soln = line_search(current_soln, lqr_soln);
   }
+  if (visitor) {
+    visitor(current_soln, iter + 1, true);
+  }
+
   return current_soln;
 }
 
@@ -84,7 +102,7 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::line_search(
     const typename XlqrProblem<_Prob>::LqrSolution& lqr_soln) const {
   double best_cost = std::numeric_limits<double>::max();
   double best_alpha = -1.0;
-  for (double alpha : {0.01, 0.1, 0.125, 0.25, 0.5, 1.0}) {
+  for (double alpha : {1e-5, 0.01, 0.1, 0.125, 0.25, 0.5, 1.0}) {
     const double cost = shoot(soln, lqr_soln, alpha);
     if (cost < best_cost) {
       best_cost = cost;
@@ -92,7 +110,7 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::line_search(
     }
   }
 
-  assert(best_alpha > 0.0);
+  JASSERT_GT(best_alpha, 0.0, "Line search must find a positive alpha");
 
   Solution out_soln;
   shoot(soln, lqr_soln, best_alpha, &out_soln);
@@ -123,15 +141,23 @@ typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
     const StateVec Qx = diffs.g_x + diffs.A.transpose() * Vx;
     const ControlVec Qu = diffs.g_u + diffs.B.transpose() * Vx;
 
-    const StateHess Qxx = diffs.Q + diffs.A.transpose() * Vxx * diffs.A;
-    const ControlHess Quu = diffs.R + diffs.B.transpose() * Vxx * diffs.B;
+    const StateHess Qxx =
+        numerics::project_psd(diffs.Q, 0.5) + diffs.A.transpose() * Vxx * diffs.A;
+    const ControlHess Quu =
+        numerics::project_psd(diffs.R, 0.5) + diffs.B.transpose() * Vxx * diffs.B;
     const StateControlHessBlock Qux = diffs.N + diffs.B.transpose() * Vxx * diffs.A;
 
+    // const ControlHess Quu_damped = Quu + (10.0 * ControlHess::Identity());
+
+    const ControlHess Quu_damped1 = numerics::project_psd(Quu, 0.3);
+    const ControlHess Quu_damped = numerics::deproject_psd(Quu_damped1, 10.0);
+
     // Safe LLT computation
-    const Eigen::LLT<ControlHess> llt(Quu);
+    const Eigen::LLT<ControlHess> llt(Quu_damped);
     if (llt.info() != Eigen::Success) {
-      std::cout << "LLT solve was degenerate at state " << k << std::endl;
-      assert((llt.info() == Eigen::Success));
+      const std::string err = "LLT solve was degenerate at state " + std::to_string(k);
+
+      JASSERT_EQ(llt.info(), Eigen::Success, err.c_str());
     }
 
     // Control policy is trivial
@@ -139,9 +165,9 @@ typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
     lqr_soln[k].k = -llt.solve(Qu);
 
     // Compute cost-to-go for next step state (Schur complement)
-    Vx = Qx - lqr_soln[k].K.transpose() * Quu * lqr_soln[k].k;
-    Vxx = Qxx - lqr_soln[k].K.transpose() * Quu * lqr_soln[k].K;
-    Vxx = (Vxx + Vxx.transpose()) * 0.5;
+    Vx = Qx - lqr_soln[k].K.transpose() * Quu_damped * lqr_soln[k].k;
+    Vxx = Qxx - lqr_soln[k].K.transpose() * Quu_damped * lqr_soln[k].K;
+    Vxx = numerics::deproject_psd(StateHess((Vxx + Vxx.transpose()) * 0.5), 25.0);
   }
   return lqr_soln;
 }

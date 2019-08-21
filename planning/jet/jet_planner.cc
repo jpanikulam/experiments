@@ -4,6 +4,11 @@
 #include "planning/generic_planner.hh"
 #include "planning/jet/jet_xlqr.hh"
 
+//
+// TODO
+#include "viewer/primitives/simple_geometry.hh"
+#include "viewer/window_3d.hh"
+
 namespace planning {
 namespace jet {
 
@@ -31,33 +36,33 @@ auto make_jet_cost(const Desires& desires) {
     double cost = 0.0;
 
     {
-      cost += 9.0 * control.q.squaredNorm();
+      cost += 1.0 * control.q.squaredNorm();
       cost += 0.03 * control.throttle_dot * control.throttle_dot;
     }
     {
       const jcc::Vec3 attitude = state.R_world_from_body * jcc::Vec3::UnitZ();
       const double sin_error = attitude.cross(jcc::Vec3::UnitZ()).squaredNorm();
-      cost += 14.0 * sin_error;
+      cost += 1.0 * sin_error;
 
       if (t >= HORIZON - 1) {
         const jcc::Vec3 error = state.x - desires.target;
 
-        cost += 100.0 * huber(error.norm(), 5.0);
-        cost += 200.0 * huber(error.z(), 5.0);
+        cost += 15.0 * huber(error.norm(), 5.0);
+        cost += 15.0 * huber(error.z(), 5.0);
 
-        cost += 150.0 * state.v.squaredNorm();
+        cost += 10.0 * state.v.squaredNorm();
       }
 
-      const jcc::Vec3 velocity_weights(25.0, 25.0, 25.0);
+      const jcc::Vec3 velocity_weights(3.0, 3.0, 3.0);
       cost += state.v.dot(velocity_weights.asDiagonal() * state.v);
       cost += desires.supp_v_weight * state.v.squaredNorm();
 
-      cost += 20.0 * state.w.squaredNorm();
+      cost += 2.0 * state.w.squaredNorm();
       // const jcc::Vec3 target_w(0.01, 0.0, 0.05);
       // cost += 35.0 * (target_w - state.w).squaredNorm();
 
-      cost += 25.0 * quad_hinge(state.throttle_pct, 8.0);
-      cost += 100.0 * quad_hinge(-state.throttle_pct, 0.0);
+      cost += 2.0 * quad_hinge(state.throttle_pct, 8.0);
+      cost += 1.0 * quad_hinge(-state.throttle_pct, 0.0);
     }
     return cost;
   };
@@ -103,7 +108,38 @@ std::vector<StateControl> plan(const State& x0,
       make_jet_cost(desires), dynamics, compute_delta, apply_delta, HORIZON, DT);
   const JetXlqr planner(prob, make_generate_derivatives(prob));
 
-  const auto pre = planner.solve(x0);
+  const auto view = viewer::get_window3d("Mr. Jet, jets");
+  const auto geo = view->add_primitive<viewer::SimpleGeometry>();
+
+  const auto visitor = [view, geo](const JetXlqr::Solution& soln, int iter, bool final) {
+    if (!final) {
+      // return;
+    }
+    geo->clear();
+    for (std::size_t k = 1; k < soln.x.size(); ++k) {
+      const auto& x_prev = soln.x[k - 1];
+      const auto& x = soln.x[k];
+
+      const jcc::Vec4 color =
+          final ? jcc::Vec4(0.2, 0.9, 0.2, 0.9) : jcc::Vec4(1.0, 0.7, 0.7, 0.7);
+      geo->add_line({x_prev.x, x.x, color, 5.0});
+
+      // u
+    }
+
+    const auto& xf = soln.x.back();
+    const SE3 world_from_jet(xf.R_world_from_body, xf.x);
+    const double width = final ? 7.0 : 4.0;
+    geo->add_axes({world_from_jet, 1.0, width});
+
+    geo->flip();
+    // if (final) {
+    view->spin_until_step();
+    // }
+    geo->clear();
+  };
+
+  const auto pre = planner.solve(x0, {}, visitor);
 
   std::vector<StateControl> result;
   for (int k = 0; k < HORIZON; ++k) {

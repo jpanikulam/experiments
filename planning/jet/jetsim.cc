@@ -24,12 +24,12 @@ namespace planning {
 namespace jet {
 
 constexpr bool SHOW_CAMERA = false;
-constexpr bool SHOW_CAMERA_PROJECTION = true;
+constexpr bool SHOW_CAMERA_PROJECTION = false;
 constexpr bool WRITE_IMAGES = false;
 constexpr bool PRINT_STATE = true;
 constexpr bool DRAW_VEHICLE = true;
 constexpr bool TRACK_VEHICLE = false;
-constexpr bool VISUALIZE_TRAJECTORY = true;
+constexpr bool VISUALIZE_TRAJECTORY = false;
 
 namespace {
 void setup() {
@@ -142,8 +142,14 @@ void go() {
   }
 
   State jet;
-  jet.x = jcc::Vec3(-2.0, -2.0, 3.0);
+  jet.x = jcc::Vec3(-2.0, -2.0, 7.0);
   jet.w = jcc::Vec3(0.1, -0.1, 0.1);
+
+
+
+  jet.R_world_from_body = SO3::exp(jcc::Vec3(0.1, 0.0, 0.0));
+  const jcc::Vec3 vel_jet_frame(0.0, 0.0, -0.3);
+  jet.v = jet.R_world_from_body * vel_jet_frame;
 
   jet.throttle_pct = 0.0;
 
