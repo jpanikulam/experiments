@@ -31,7 +31,7 @@ cl::Program read_program(const ClInfo& cl_info,
   const std::string demo_incl_path = jcc::Environment::repo_path() + "gpgpu/demos/";
   const std::string kernel_incl_path = jcc::Environment::repo_path() + "gpgpu/kernels/";
   const std::string flags =
-      "-cl-std=CL2.0 -I " + demo_incl_path + " -I " + kernel_incl_path;
+      "-Werror -cl-std=CL2.0 -I " + demo_incl_path + " -I " + kernel_incl_path;
   program.build({cl_info.device}, flags.c_str());
 
   //
