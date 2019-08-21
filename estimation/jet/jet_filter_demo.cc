@@ -17,18 +17,16 @@ namespace {
 
 Parameters mock_parameters() {
   Parameters p;
-  // const jcc::Vec3 g(0.0, 0.0, -1.3);
-  // p.g_world = g;
 
-  // const jcc::Vec3 t(0.1, 0.5, 0.1);
-  const jcc::Vec3 t(0.0, 0.1, 0.25);
-  // const jcc::Vec3 t = jcc::Vec3::Zero();
-  const SO3 r_vehicle_from_sensor = SO3::exp(jcc::Vec3(0.5 * M_PI, 0.0, 0.1));
-  // const SO3 r_vehicle_from_sensor =
-      // SO3::exp(jcc::Vec3(-3.10341, -0.0387912, -0.00578994));
+  p.acceleration_damping = -0.99;
 
-  const SE3 sensor_from_body(r_vehicle_from_sensor, t);
-  p.T_imu1_from_vehicle = sensor_from_body;
+  // TODO: Organize Parameters so they can only be constructed whole
+  // These parameters were ballparked by jake
+  const SO3 R_vehicle_from_camera = SO3::exp(jcc::Vec3::UnitY() * M_PI * 0.5) *
+                                    SO3::exp(jcc::Vec3::UnitZ() * M_PI * 0.1);
+  const SE3 vehicle_from_camera(R_vehicle_from_camera, jcc::Vec3(0.11, 0.0, 0.32));
+  p.T_camera_from_vehicle = vehicle_from_camera.inverse();
+
   return p;
 }
 
@@ -93,7 +91,7 @@ void run_filter() {
   State true_x = xp0.x;
   // true_x.eps_dot[4] = 0.1;
 
-  true_x.eps_dot[0] = 1.0;
+  true_x.eps_dot[0] = 0.0;
   // true_x.eps_dot[4] = -0.6;
   true_x.eps_dot[5] = 1.2;
 
@@ -115,9 +113,10 @@ void run_filter() {
   std::vector<JetOptimizer::StateObservation> est_states;
 
   TimePoint start_time = xp0.time_of_validity;
-  constexpr auto dt = to_duration(0.1);
+  constexpr double dt_sec = 0.1;
+  constexpr auto dt = to_duration(dt_sec);
 
-  constexpr int NUM_SIM_STEPS = 500;
+  constexpr int NUM_SIM_STEPS = 100;
 
   TimePoint current_time = start_time;
 
@@ -126,6 +125,13 @@ void run_filter() {
   constexpr bool FIDUCIAL_OBS = true;
 
   for (int k = 0; k < NUM_SIM_STEPS; ++k) {
+    const double t = dt_sec * static_cast<double>(k);
+    true_x.eps_ddot[1] = 1.0 * std::cos(2.0 * t) * std::exp(-t * 0.1);
+    true_x.eps_ddot[2] = 1.0 * std::cos(2.0 * t) * std::exp(-t * 0.1);
+    // true_x.eps_ddot[3] = 1.0 * std::cos(t) * std::exp(-t * 0.1);
+    // true_x.eps_ddot[4] = 1.0 * std::cos(t) * std::exp(-t * 0.1);
+    // true_x.eps_ddot[5] = 1.0 * std::cos(t) * std::exp(-t * 0.1);
+
     if (k > 75 && k < 130) {
       true_x.eps_ddot[0] = 0.1;
       // true_x.eps_ddot[1] = -0.02;
