@@ -4,6 +4,7 @@
 #include "gpgpu/wrappers/create_context.hh"
 #include "gpgpu/wrappers/errors.hh"
 #include "gpgpu/wrappers/image_read_write.hh"
+#include "gpgpu/wrappers/volume_size.hh"
 
 #include "util/timing.hh"
 
@@ -21,12 +22,6 @@
 
 #include <iostream>
 #include <vector>
-
-struct VolumeSize {
-  std::size_t rows;
-  std::size_t cols;
-  std::size_t slices;
-};
 
 struct RenderConfig {
   int terminal_iteration;
@@ -75,7 +70,7 @@ void draw(viewer::Window3D& view,
 void populate_test_volume(cl::CommandQueue& cmd_queue,
                           cl::Kernel& test_populate_kernel,
                           const cl::Image3D& volume,
-                          const VolumeSize& vol_size) {
+                          const jcc::VolumeSize& vol_size) {
   test_populate_kernel.setArg(0, volume);
 
   const cl_float cl_t = 0.0f;
@@ -84,9 +79,8 @@ void populate_test_volume(cl::CommandQueue& cmd_queue,
   const cl::NDRange work_group_size{vol_size.cols, vol_size.rows, vol_size.slices};
 
   const cl::NDRange local_size({10u, 10u, 1u});
-  // const cl::NDRange local_size({});
-  JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(test_populate_kernel, {0}, work_group_size,
-                                               local_size));
+  JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(test_populate_kernel, {0},
+  work_group_size, local_size));
 }
 
 int main() {
@@ -134,7 +128,7 @@ int main() {
     jcc::send_image_to_device(cmd_queue, dv_ray_lut, ray_lut);
   }
 
-  const VolumeSize vol_size{100, 100, 100};
+  const jcc::VolumeSize vol_size{100, 100, 100};
   const cl::ImageFormat vol_image_fmt(CL_RGBA, CL_FLOAT);
   cl::Image3D dv_volume(cl_info.context, CL_MEM_READ_WRITE, vol_image_fmt, vol_size.cols,
                         vol_size.rows, vol_size.slices, 0, 0, nullptr, &status);
