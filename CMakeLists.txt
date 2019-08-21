@@ -24,7 +24,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 # OpenGL
 #
 find_package(OpenGL REQUIRED)
-include_directories( ${OPENGL_INCLUDE_DIRS})
+include_directories(${OPENGL_INCLUDE_DIRS})
 
 #########################
 # GLFW
@@ -57,6 +57,8 @@ include_directories(${FREETYPE_INCLUDE_DIRS})
 
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/run)
+SET(GENERATED_PATH ${PROJECT_BINARY_DIR}/include)
+# file(MAKE_DIRECTORY ${GENERATED_PATH})
 
 macro(add_test test_name test_file test_libs)
     add_executable(
@@ -82,6 +84,10 @@ endif()
 
 set(CMAKE_CXX_COMPILER "g++-7")
 set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
+
+
+add_subdirectory(cmake_tools)
+add_cl_gen(gen_fluid_types gpgpu/generators/fluid_defs.py)
 
 add_subdirectory(tmp)
 target_compile_definitions(environment PRIVATE ASSET_PATH="${BASEPATH}/data")
