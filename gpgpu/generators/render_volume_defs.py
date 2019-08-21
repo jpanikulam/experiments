@@ -1,3 +1,4 @@
+# %codegen(cl_gen)
 import generate_opencl_structs
 
 

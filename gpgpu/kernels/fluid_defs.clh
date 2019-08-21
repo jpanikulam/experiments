@@ -2,8 +2,9 @@
 
 struct FluidSimConfig {
   float nu;
-  float dt;
-  float dx;
+  float dt_sec;
+  float dx_m;
   int test_feature;
   int max_iteration;
+  int debug_mode;
 };
