@@ -16,4 +16,10 @@ void fill_volume_section(const cl::CommandQueue cmd_queue,
                          const jcc::Vec3i& region_start,
                          const jcc::VolumeSize& vol_size,
                          const jcc::Vec4 value);
+
+void copy_volume(const cl::CommandQueue cmd_queue,
+                 const cl::Image3D& src,
+                 const cl::Image3D& dst,
+                 const jcc::VolumeSize& vol_size);
+
 }  // namespace jcc

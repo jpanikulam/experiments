@@ -48,4 +48,25 @@ void fill_volume_section(const cl::CommandQueue cmd_queue,
   cmd_queue.enqueueFillImage(volume, fill_color, origin, region);
 }
 
+void copy_volume(const cl::CommandQueue cmd_queue,
+                 const cl::Image3D& src,
+                 const cl::Image3D& dst,
+                 const jcc::VolumeSize& vol_size) {
+  cl::size_t<3> origin;
+  {
+    origin[0] = 0;
+    origin[1] = 0;
+    origin[2] = 0;
+  }
+
+  cl::size_t<3> region;
+  {
+    region[0] = vol_size.cols;
+    region[1] = vol_size.rows;
+    region[2] = vol_size.slices;
+  }
+
+  cmd_queue.enqueueCopyImage(src, dst, origin, origin, region);
+}
+
 }  // namespace jcc
