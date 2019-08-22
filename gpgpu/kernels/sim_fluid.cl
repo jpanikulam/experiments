@@ -101,17 +101,17 @@ __kernel void advect_velocity(
 
     float4 force = (float4) (0.0f, 0.0f, 0.0f, 0.0f);
     if ((vxl_coordi.x > 10) &&
-        (vxl_coordi.x < 40) &&
+        (vxl_coordi.x < 20) &&
         (vxl_coordi.y > 10) &&
-        (vxl_coordi.y < 40) &&
+        (vxl_coordi.y < 20) &&
         (vxl_coordi.z > 10) &&
-        (vxl_coordi.z < 40)) {
-        force.x = 0.3f;
-        force.y = 0.3f;
-        force.z = 0.3f;
+        (vxl_coordi.z < 20)) {
+        // force.x = 0.01f;
+        // force.y = 0.01f;
+        // force.z = 0.01f;
     }
 
-    force += (float4) (0.0f, -0.1f, 0.0f, 0.0f);
+    force += (float4) (0.0f, -0.01f, 0.0f, 0.0f);
 
     float4 u1_damped = u1 + (force * cfg.dt_sec);
 
@@ -269,9 +269,17 @@ __kernel void chiron_projection(
     const int4 unit_y = (int4) (0, 1, 0, 0);
     const int4 unit_z = (int4) (0, 0, 1, 0);
 
-    // Is this just writing the first element and not all elements?
     const float p0x = read_imagef(vol_p, smp, vxl_coord).x;
     const float3 p000 = (float3) (p0x, p0x, p0x);
+    const float pp100 = read_imagef(vol_p, smp, vxl_coord + unit_x).x;
+    const float pp010 = read_imagef(vol_p, smp, vxl_coord + unit_y).x;
+    const float pp001 = read_imagef(vol_p, smp, vxl_coord + unit_z).x;
+
+    const float3 p_p = (float3) (pp100, pp010, pp001);
+
+    const float3 dp_dx = (p_p - p000) / cfg.dx_m;
+
+    /*
     const float pp100 = read_imagef(vol_p, smp, vxl_coord + unit_x).x;
     const float pn100 = read_imagef(vol_p, smp, vxl_coord - unit_x).x;
 
@@ -285,6 +293,8 @@ __kernel void chiron_projection(
     const float3 p_n = (float3) (pn100, pn010, pn001);
 
     const float3 dp_dx = (p_p - p_n) / (2.0f * cfg.dx_m);
+    */
+
     const float3 u1 = w - dp_dx;
 
     write_imagef(vol_u_1, vxl_coord, (float4) (u1, 0.0f));
