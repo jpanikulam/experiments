@@ -40,7 +40,7 @@ __kernel void render_volume(
 
     const sampler_t smp_volume = CLK_NORMALIZED_COORDS_FALSE |
                                  CLK_ADDRESS_CLAMP |
-                                 CLK_FILTER_LINEAR;
+                                 CLK_FILTER_NEAREST;
 
     const int2 px_coord = (int2) (get_global_id(0), get_global_id(1));
 
@@ -79,9 +79,32 @@ __kernel void render_volume(
         integrated_color += image_color.xyz * step_size;
     }
 
+
+    int mode = 1;
+    int index = 2;
+
+    float color_val;
+    if (index == 0) {
+       color_val = integrated_color.x;
+    }
+    if (index == 1) {
+       color_val = integrated_color.y;
+    }
+    if (index == 2) {
+       color_val = integrated_color.z;
+    }
+
+    float3 color;
+    if (mode == 0) {
+        color = integrated_color;
+    } else if (mode == 1) {
+        color.x = step(0.0f, color_val) * color_val;
+        color.y = 0.0f;
+        color.z = -step(0.0f, -color_val) * color_val;
+    }
+
     // const float3 color = (float3) (integrated_value, 0.0, 0.0);
-    const float3 color = integrated_color;
-    const float3 power_adjusted_color = pow(clamp(fabs(color.xyz), 0.0f, 1.0f), 0.45f);
+    const float3 power_adjusted_color = pow(clamp(color.xyz, 0.0f, 1.0f), 0.45f);
     const float4 final_color = (float4) (power_adjusted_color, 1.0f);
     write_imagef(rendered_image, px_coord, 255.0f * final_color);
 }
