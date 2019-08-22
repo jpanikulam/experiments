@@ -28,15 +28,13 @@ struct PhysicsContext {
   // RGBA
   cl::Image3D dv_u0;
 
-  // RGBA
-  cl::Image3D dv_u1;
+  cl::Image3D dv_u_intermediate;
 
+  cl::Image3D dv_u1;
   cl::Image3D dv_utemp;
 
   // RGBA
   cl::Image3D dv_pressure;
-
-  // RGBA
   cl::Image3D dv_ptemp;
 
   jcc::VolumeSize vol_size;
@@ -115,20 +113,21 @@ RenderContext generate_render_context(const jcc::ClInfo& cl_info,
   }
   JCHECK_STATUS(status);
 
+  {
+    rctx.physics_ctx.dv_u_intermediate =
+        cl::Image3D(cl_info.context, CL_MEM_READ_WRITE, vol_image_fmt, vol_size.cols,
+                    vol_size.rows, vol_size.slices, 0, 0, nullptr, &status);
+  }
+  JCHECK_STATUS(status);
+
   rctx.physics_ctx.vol_size = vol_size;
 
   jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_u0, vol_size);
   jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_u1, vol_size);
+  jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_utemp, vol_size);
 
   jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_pressure, vol_size);
   jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_ptemp, vol_size);
-
-  /*  const jcc::Vec3i block_start(0, 0, 0);
-    const jcc::Vec4 pressure(5.0, 0.0, 0.0, 0.0);
-
-    jcc::fill_volume_section(cmd_queue, rctx.physics_ctx.dv_pressure, block_start,
-    vol_size, pressure); jcc::fill_volume_section(cmd_queue, rctx.physics_ctx.dv_ptemp,
-    block_start, vol_size, pressure);*/
 
   rctx.fluid_kernels =
       read_kernels(cl_info, jcc::Environment::repo_path() + "gpgpu/kernels/sim_fluid.cl");
@@ -161,7 +160,8 @@ void render_volume(viewer::Ui2d& ui2d,
                    RenderContext& rctx,
                    const SE3& world_from_camera,
                    const cl::Image3D& dv_volume,
-                   const FluidSimConfig& cc_cfg) {
+                   const FluidSimConfig& cc_cfg,
+                   const double scaling = 10.0) {
   auto vol_draw_kernel = rctx.render_kernels["render_volume"];
 
   JCHECK_STATUS(vol_draw_kernel.setArg(0, rctx.dv_ray_lut));
@@ -171,7 +171,7 @@ void render_volume(viewer::Ui2d& ui2d,
   const jcc::clSE3 cl_world_from_camera(world_from_camera);
   JCHECK_STATUS(vol_draw_kernel.setArg(3, cl_world_from_camera));
 
-  cl_float cl_scaling = 0.01f;
+  cl_float cl_scaling = static_cast<cl_float>(scaling);
   JCHECK_STATUS(vol_draw_kernel.setArg(4, cl_scaling));
 
   const cl::NDRange work_group_size{static_cast<std::size_t>(rctx.im_size.cols),
@@ -181,7 +181,7 @@ void render_volume(viewer::Ui2d& ui2d,
   JCHECK_STATUS(
       cmd_queue.enqueueNDRangeKernel(vol_draw_kernel, {0}, work_group_size, local_size));
 
-  cmd_queue.flush();
+  cmd_queue.finish();
 
   cv::Mat out_img(cv::Size(rctx.im_size.cols, rctx.im_size.rows), CV_32FC4,
                   cv::Scalar(0.0, 0.0, 0.0, 0.0));
@@ -199,76 +199,74 @@ void draw(viewer::Ui2d& ui2d,
           RenderContext& rctx,
           const SE3 world_from_camera,
           const FluidSimConfig& cc_cfg,
-          float t) {
+          float t,
+          bool paused) {
   // const jcc::PrintingScopedTimer tt("Frame Time");
 
   //
   // Advect
   //
 
-  static bool once = true;
-  if (once) {
-    once = false;
-    const jcc::Vec4 vel0(0.9, 0.09, 0.9, 0.0);
-    const jcc::Vec4 vel1(0.0, 0.0, 0.0, 0.0);
-
-    const jcc::VolumeSize block_size{15u, 15u, 15u};
-    const jcc::Vec3i block_start1(50, 50, 50);
-    const jcc::Vec3i block_start2(50, 66, 50);
-
-    jcc::fill_volume_section(cmd_queue, rctx.physics_ctx.dv_u0, jcc::Vec3i::Zero(),
-                             rctx.physics_ctx.vol_size, jcc::Vec4(0.0, 0.0, 0.0, 0.0));
-
-    // jcc::fill_volume_section(cmd_queue, rctx.physics_ctx.dv_u0, block_start1,
-    // block_size,
-    //                          vel0);
-
-    // jcc::fill_volume_section(cmd_queue, rctx.physics_ctx.dv_u0, block_start2,
-    // block_size,
-    //                          vel1);
-  }
   const auto cl_cfg = cc_cfg.convert();
 
   const auto vol_size = rctx.physics_ctx.vol_size;
   const cl::NDRange wg_offset{1u, 1u, 1u};
   const cl::NDRange work_group_size{vol_size.cols - 2, vol_size.rows - 2,
                                     vol_size.slices - 2};
-  // const cl::NDRange local_size({20u, 20u, 1u});
   const cl::NDRange local_size{};
 
   //
   // Advect
   //
 
+  jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_u1, rctx.physics_ctx.vol_size);
+  jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_utemp, rctx.physics_ctx.vol_size);
+  jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_pressure,
+                         rctx.physics_ctx.vol_size);
+  jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_ptemp, rctx.physics_ctx.vol_size);
+  jcc::copy_volume(cmd_queue, rctx.physics_ctx.dv_u0, rctx.physics_ctx.dv_u_intermediate,
+                   vol_size);
+
   constexpr bool ADVECT = true;
   constexpr bool DIFFUSE = true;
+  constexpr bool PRESSURE = true;
+  constexpr bool CHIRON = true;
+  constexpr double SCALING_VELOCITY_VIEW = 50.0;
+
   if (ADVECT) {
     auto apply_velocity_bdry_cond_kernel =
         rctx.fluid_kernels.at("apply_velocity_bdry_cond");
-    apply_velocity_bdry_cond_kernel.setArg(0, rctx.physics_ctx.dv_u0);
+    apply_velocity_bdry_cond_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
     apply_velocity_bdry_cond_kernel.setArg(1, rctx.physics_ctx.dv_u1);
     JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_velocity_bdry_cond_kernel,
                                                  wg_offset, work_group_size, local_size));
-    cmd_queue.flush();
+    cmd_queue.finish();
 
-    if (cc_cfg.debug_mode == 3) {
-      render_volume(ui2d, cmd_queue, rctx, world_from_camera, rctx.physics_ctx.dv_u1,
-                    cc_cfg);
-    }
-
-    std::swap(rctx.physics_ctx.dv_u0, rctx.physics_ctx.dv_u1);
+    std::swap(rctx.physics_ctx.dv_u_intermediate, rctx.physics_ctx.dv_u1);
+    jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_u1, rctx.physics_ctx.vol_size);
 
     auto advect_kernel = rctx.fluid_kernels.at("advect_velocity");
-    advect_kernel.setArg(0, rctx.physics_ctx.dv_u0);
+    advect_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
     advect_kernel.setArg(1, rctx.physics_ctx.dv_u1);
-
     advect_kernel.setArg(2, cl_cfg);
+
     JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(advect_kernel, wg_offset,
                                                  work_group_size, local_size));
 
-    cmd_queue.flush();
-    std::swap(rctx.physics_ctx.dv_u0, rctx.physics_ctx.dv_u1);
+    cmd_queue.finish();
+
+    apply_velocity_bdry_cond_kernel.setArg(0, rctx.physics_ctx.dv_u1);
+    apply_velocity_bdry_cond_kernel.setArg(1, rctx.physics_ctx.dv_u_intermediate);
+    JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_velocity_bdry_cond_kernel,
+                                                 wg_offset, work_group_size, local_size));
+
+    cmd_queue.finish();
   }
+  if (cc_cfg.debug_mode == 3) {
+    render_volume(ui2d, cmd_queue, rctx, world_from_camera,
+                  rctx.physics_ctx.dv_u_intermediate, cc_cfg, SCALING_VELOCITY_VIEW);
+  }
+
   //
   // Diffuse
   //
@@ -276,19 +274,21 @@ void draw(viewer::Ui2d& ui2d,
   if (DIFFUSE) {
     auto diffuse_kernel = rctx.fluid_kernels.at("diffuse");
     for (int j = 0; j < N_JACOBI_ITERS; ++j) {
-      diffuse_kernel.setArg(0, rctx.physics_ctx.dv_u0);
+      // "Give me u1 s.t. laplacian(u1) == u0"
+      diffuse_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
       diffuse_kernel.setArg(1, rctx.physics_ctx.dv_u1);
       diffuse_kernel.setArg(2, rctx.physics_ctx.dv_utemp);
       diffuse_kernel.setArg(3, cl_cfg);
 
       JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(diffuse_kernel, wg_offset,
                                                    work_group_size, local_size));
-      cmd_queue.flush();
+      cmd_queue.finish();
       std::swap(rctx.physics_ctx.dv_u1, rctx.physics_ctx.dv_utemp);
     }
 
-    std::swap(rctx.physics_ctx.dv_u0, rctx.physics_ctx.dv_u1);
+    std::swap(rctx.physics_ctx.dv_u_intermediate, rctx.physics_ctx.dv_u1);
   }
+
   //
   // Compute divergence of `u`
   //
@@ -296,7 +296,7 @@ void draw(viewer::Ui2d& ui2d,
   {
     auto divergence_kernel = rctx.fluid_kernels.at("compute_divergence");
     // This is currently `w`
-    divergence_kernel.setArg(0, rctx.physics_ctx.dv_u0);
+    divergence_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
 
     // This is now `div w`
     divergence_kernel.setArg(1, rctx.physics_ctx.dv_utemp);
@@ -305,54 +305,48 @@ void draw(viewer::Ui2d& ui2d,
     JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(divergence_kernel, wg_offset,
                                                  work_group_size, local_size));
   }
-  cmd_queue.flush();
-  // if (cc_cfg.debug_mode == 2) {
-  //   render_volume(ui2d, cmd_queue, rctx, world_from_camera, rctx.physics_ctx.dv_utemp,
-  //                 cc_cfg);
-  // }
+
+  if (cc_cfg.debug_mode == 2) {
+    render_volume(ui2d, cmd_queue, rctx, world_from_camera, rctx.physics_ctx.dv_utemp,
+                  cc_cfg);
+  }
+
+  cmd_queue.finish();
 
   //
   // Compute pressure
   //
 
-  constexpr bool PRESSURE = true;
-  constexpr bool CHIRON = true;
-
   if (PRESSURE) {
     auto pressure_kernel = rctx.fluid_kernels.at("compute_pressure");
+    auto apply_pressure_bdry_cond = rctx.fluid_kernels.at("apply_pressure_bdry_cond");
 
     for (int j = 0; j < N_JACOBI_ITERS; ++j) {
-      auto apply_pressure_bdry_cond = rctx.fluid_kernels.at("apply_pressure_bdry_cond");
-
-      // std::swap(rctx.physics_ctx.dv_u0, rctx.physics_ctx.dv_u1);
-
+      // div w
       pressure_kernel.setArg(0, rctx.physics_ctx.dv_utemp);
+      // p ("best guess" right now)
       pressure_kernel.setArg(1, rctx.physics_ctx.dv_pressure);
+      // Output p -- at convergence these are the same
       pressure_kernel.setArg(2, rctx.physics_ctx.dv_ptemp);
       pressure_kernel.setArg(3, cl_cfg);
 
       JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(pressure_kernel, wg_offset,
                                                    work_group_size, local_size));
-      cmd_queue.flush();
-      // if ((j == ((cc_cfg.max_iteration - 1) / 10)) && cc_cfg.debug_mode == 1) {
-      //   render_volume(ui2d, cmd_queue, rctx, world_from_camera,
-      //                 rctx.physics_ctx.dv_pressure, cc_cfg);
-      // }
-      // std::swap(rctx.physics_ctx.dv_pressure, rctx.physics_ctx.dv_ptemp);
+      cmd_queue.finish();
 
       apply_pressure_bdry_cond.setArg(0, rctx.physics_ctx.dv_ptemp);
       apply_pressure_bdry_cond.setArg(1, rctx.physics_ctx.dv_pressure);
       JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_pressure_bdry_cond, wg_offset,
                                                    work_group_size, local_size));
-      cmd_queue.flush();
+      cmd_queue.finish();
     }
 
     if (cc_cfg.debug_mode == 1) {
       render_volume(ui2d, cmd_queue, rctx, world_from_camera,
-                    rctx.physics_ctx.dv_pressure, cc_cfg);
+                    rctx.physics_ctx.dv_pressure, cc_cfg, 10.0);
     }
 
-    // std::swap(rctx.physics_ctx.dv_u0, rctx.physics_ctx.dv_u1);
+    // std::swap(rctx.physics_ctx.dv_u_intermediate, rctx.physics_ctx.dv_u1);
   }
 
   //
@@ -361,28 +355,35 @@ void draw(viewer::Ui2d& ui2d,
 
   if (CHIRON) {
     auto chiron_kernel = rctx.fluid_kernels.at("chiron_projection");
-    // This is now `div w`
-    chiron_kernel.setArg(0, rctx.physics_ctx.dv_u0);
+    // This is currently `w`
+    chiron_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
 
+    // We're subtracting the gradient of pressure
     chiron_kernel.setArg(1, rctx.physics_ctx.dv_pressure);
     chiron_kernel.setArg(2, rctx.physics_ctx.dv_u1);
     chiron_kernel.setArg(3, cl_cfg);
 
     JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(chiron_kernel, wg_offset,
                                                  work_group_size, local_size));
-    cmd_queue.flush();
+    cmd_queue.finish();
 
-    std::swap(rctx.physics_ctx.dv_u0, rctx.physics_ctx.dv_u1);
+    std::swap(rctx.physics_ctx.dv_u_intermediate, rctx.physics_ctx.dv_u1);
   }
 
   if (cc_cfg.debug_mode == 0) {
-    render_volume(ui2d, cmd_queue, rctx, world_from_camera, rctx.physics_ctx.dv_u0,
-                  cc_cfg);
+    render_volume(ui2d, cmd_queue, rctx, world_from_camera,
+                  rctx.physics_ctx.dv_u_intermediate, cc_cfg, SCALING_VELOCITY_VIEW);
   }
 
-  {
+  if (!paused) {
+    std::swap(rctx.physics_ctx.dv_u0, rctx.physics_ctx.dv_u_intermediate);
+  }
+  return;
+
+  constexpr bool VERIFICATION_DIVERGENCE = false;
+  if (VERIFICATION_DIVERGENCE) {
     auto divergence_kernel = rctx.fluid_kernels.at("compute_divergence");
-    divergence_kernel.setArg(0, rctx.physics_ctx.dv_u0);
+    divergence_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
 
     // This is now `div w`
     divergence_kernel.setArg(1, rctx.physics_ctx.dv_utemp);
@@ -391,18 +392,14 @@ void draw(viewer::Ui2d& ui2d,
     JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(divergence_kernel, wg_offset,
                                                  work_group_size, local_size));
   }
-  cmd_queue.flush();
-  if (cc_cfg.debug_mode == 2) {
-    render_volume(ui2d, cmd_queue, rctx, world_from_camera, rctx.physics_ctx.dv_utemp,
-                  cc_cfg);
-  }
+  cmd_queue.finish();
 }
 
 auto setup_window() {
   const auto view = viewer::get_window3d("Render Visualization");
   view->set_view_preset(viewer::Window3D::ViewSetting::CAMERA);
   view->set_azimuth(0.0);
-  view->set_elevation(0.0);
+  view->set_elevation(0.7);
 
   const auto background = view->add_primitive<viewer::SimpleGeometry>();
   const geometry::shapes::Plane ground{jcc::Vec3(0.0, 1.0, 0.0).normalized(), 1.0};
@@ -418,7 +415,8 @@ int main() {
   cl::CommandQueue cmd_queue(cl_info.context);
 
   const jcc::ImageSize im_size = {2 * 480, 2 * 480};
-  const jcc::VolumeSize vol_size = {100u, 100u, 100u};
+  const std::size_t dimension = 100;
+  const jcc::VolumeSize vol_size = {dimension, dimension, dimension};
 
   auto rctx = generate_render_context(cl_info, cmd_queue, vol_size, im_size);
 
@@ -426,34 +424,44 @@ int main() {
   const auto ui2d = view->add_primitive<viewer::Ui2d>();
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();
 
-  view->add_menu_hotkey("debug_mode", 1, 'P', 4);
-  view->add_menu_hotkey("max_iteration", 0, 'I', 12);
+  view->add_menu_hotkey("paused", 1, 'P', 2);
+
+  view->add_menu_hotkey("debug_mode", 3, 'V', 4);
+  view->add_menu_hotkey("max_iteration", 0, 'I', 50);
   view->add_menu_hotkey("test_feature", 0, 'F', 2);
 
   float t = 0.0;
+  bool paused = view->get_menu("paused") == 0;
 
   FluidSimConfig cc_cfg;
-  // cc_cfg.debug_mode = 0;
-  cc_cfg.nu = 0.1;
+  cc_cfg.debug_mode = 3;
+  cc_cfg.nu = 0.001;
   cc_cfg.dt_sec = 0.01;
   cc_cfg.dx_m = 0.1;
 
   const auto basic_draw = [&]() {
     const SE3 world_from_camera = view->standard_camera_from_world().inverse();
-    draw(*ui2d, cmd_queue, rctx, world_from_camera, cc_cfg, t);
+    draw(*ui2d, cmd_queue, rctx, world_from_camera, cc_cfg, t, paused);
   };
+
+  view->add_toggle_callback("paused", [&](int paused_state) {
+    if (paused_state == 1) {
+      std::cout << "Pausing" << std::endl;
+      paused = true;
+    } else {
+      std::cout << "Unpausing" << std::endl;
+      paused = false;
+    }
+  });
 
   view->add_toggle_callback("max_iteration", [&](int iter_ct) {
     std::cout << "\tIteration Count --> " << iter_ct * 10 << std::endl;
     cc_cfg.max_iteration = iter_ct * 10;
-
-    // basic_draw();
   });
 
   view->add_toggle_callback("test_feature", [&](int feature) {
     std::cout << "\tTest Feature --> " << feature << std::endl;
     cc_cfg.test_feature = feature;
-    // basic_draw();
   });
 
   view->add_toggle_callback("debug_mode", [&](int dbg_mode) {
@@ -469,8 +477,6 @@ int main() {
       std::cout << "\tDisabling Debug " << std::endl;
     }
     cc_cfg.debug_mode = dbg_mode;
-
-    // basic_draw();
   });
 
   view->run_menu_callbacks();
