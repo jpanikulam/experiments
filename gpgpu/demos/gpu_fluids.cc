@@ -12,6 +12,8 @@
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
 
+#include "estimation/time_point.hh"
+
 #include "util/environment.hh"
 #include "util/timing.hh"
 
@@ -163,7 +165,7 @@ void render_volume(viewer::Ui2d& ui2d,
                    const FluidSimConfig& cc_cfg,
                    const double scaling = 10.0,
                    const double t = 0.5) {
-  const jcc::PrintingScopedTimer tt("  Render Time");
+  // const jcc::PrintingScopedTimer tt("  Render Time");
   auto vol_draw_kernel = rctx.render_kernels["render_volume"];
 
   JCHECK_STATUS(vol_draw_kernel.setArg(0, rctx.dv_ray_lut));
@@ -207,7 +209,7 @@ void draw(viewer::Ui2d& ui2d,
           float t,
           bool paused) {
   std::cout << "\n" << std::endl;
-  const jcc::PrintingScopedTimer tt("Frame Time");
+  // const jcc::PrintingScopedTimer t0("Frame Time");
 
   //
   // Advect
@@ -230,14 +232,19 @@ void draw(viewer::Ui2d& ui2d,
   constexpr bool CHIRON = true;
   constexpr double SCALING_VELOCITY_VIEW = 50.0;
 
+  cl::Event advect_event;
+  cl::Event pressure_event;
+  cl_int status;
+
   if (ADVECT) {
-    const jcc::PrintingScopedTimer tt("  Advection Time");
+    // const jcc::PrintingScopedTimer tt("  Advection Time");
     auto apply_velocity_bdry_cond_kernel =
         rctx.fluid_kernels.at("apply_velocity_bdry_cond");
     apply_velocity_bdry_cond_kernel.setArg(0, rctx.physics_ctx.dv_u0);
     apply_velocity_bdry_cond_kernel.setArg(1, rctx.physics_ctx.dv_u1);
     JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_velocity_bdry_cond_kernel,
-                                                 wg_offset, work_group_size, local_size));
+                                                 wg_offset, work_group_size, local_size,
+                                                 nullptr, &advect_event));
     cmd_queue.finish();
 
     std::swap(rctx.physics_ctx.dv_u_intermediate, rctx.physics_ctx.dv_u1);
@@ -270,7 +277,7 @@ void draw(viewer::Ui2d& ui2d,
   //
   constexpr int N_JACOBI_ITERS = 70;
   if (DIFFUSE) {
-    const jcc::PrintingScopedTimer tt("  Diffusion Time");
+    // const jcc::PrintingScopedTimer tt("  Diffusion Time");
     auto diffuse_kernel = rctx.fluid_kernels.at("diffuse");
     for (int j = 0; j < N_JACOBI_ITERS; ++j) {
       // "Give me u1 s.t. laplacian(u1) == u0"
@@ -294,7 +301,7 @@ void draw(viewer::Ui2d& ui2d,
   //
 
   {
-    const jcc::PrintingScopedTimer tt("  Divergence Time");
+    // const jcc::PrintingScopedTimer tt("  Divergence Time");
     auto divergence_kernel = rctx.fluid_kernels.at("compute_divergence");
     // This is currently `w`
     divergence_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
@@ -321,25 +328,42 @@ void draw(viewer::Ui2d& ui2d,
     const jcc::PrintingScopedTimer tt("  Pressure Time");
     auto pressure_kernel = rctx.fluid_kernels.at("compute_pressure");
     auto apply_pressure_bdry_cond = rctx.fluid_kernels.at("apply_pressure_bdry_cond");
+    // div w
+    pressure_kernel.setArg(0, rctx.physics_ctx.dv_utemp);
+    // p ("best guess" right now)
+    pressure_kernel.setArg(1, rctx.physics_ctx.dv_pressure);
+    // Output p -- at convergence these are the same
+    pressure_kernel.setArg(2, rctx.physics_ctx.dv_ptemp);
+    pressure_kernel.setArg(3, cl_cfg);
+
+    apply_pressure_bdry_cond.setArg(0, rctx.physics_ctx.dv_ptemp);
+    apply_pressure_bdry_cond.setArg(1, rctx.physics_ctx.dv_pressure);
 
     for (int j = 0; j < N_JACOBI_ITERS; ++j) {
-      // div w
-      pressure_kernel.setArg(0, rctx.physics_ctx.dv_utemp);
-      // p ("best guess" right now)
-      pressure_kernel.setArg(1, rctx.physics_ctx.dv_pressure);
-      // Output p -- at convergence these are the same
-      pressure_kernel.setArg(2, rctx.physics_ctx.dv_ptemp);
-      pressure_kernel.setArg(3, cl_cfg);
-
       JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(pressure_kernel, wg_offset,
-                                                   work_group_size, local_size));
-      // cmd_queue.finish();
+                                                   work_group_size, local_size, nullptr,
+                                                   &pressure_event));
 
-      apply_pressure_bdry_cond.setArg(0, rctx.physics_ctx.dv_ptemp);
-      apply_pressure_bdry_cond.setArg(1, rctx.physics_ctx.dv_pressure);
       JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_pressure_bdry_cond, wg_offset,
                                                    work_group_size, local_size));
-      // cmd_queue.finish();
+
+      if (j == cc_cfg.max_iteration) {
+        cmd_queue.finish();
+        const auto queued = estimation::from_nanoseconds(
+            pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>(&status));
+        const auto submit = estimation::from_nanoseconds(
+            pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>(&status));
+        const auto start = estimation::from_nanoseconds(
+            pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&status));
+        const auto end = estimation::from_nanoseconds(
+            pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_END>(&status));
+
+        std::cout << "queued -> submit " << estimation::to_seconds(submit - queued)
+                  << std::endl;
+        std::cout << "submit -> start " << estimation::to_seconds(start - submit)
+                  << std::endl;
+        std::cout << "start -> end " << estimation::to_seconds(end - start) << std::endl;
+      }
     }
 
     cmd_queue.finish();
@@ -356,7 +380,7 @@ void draw(viewer::Ui2d& ui2d,
   //
 
   if (CHIRON) {
-    const jcc::PrintingScopedTimer tt("  Chiron Time");
+    // const jcc::PrintingScopedTimer tt("  Chiron Time");
     auto chiron_kernel = rctx.fluid_kernels.at("chiron_projection");
     // This is currently `w`
     chiron_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
@@ -415,7 +439,7 @@ auto setup_window() {
 int main() {
   const auto cl_info = jcc::create_context();
 
-  cl::CommandQueue cmd_queue(cl_info.context);
+  cl::CommandQueue cmd_queue(cl_info.context, CL_QUEUE_PROFILING_ENABLE);
 
   const jcc::ImageSize im_size = {2 * 480, 2 * 480};
   // const std::size_t dimension = 100;
