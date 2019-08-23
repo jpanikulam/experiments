@@ -3,7 +3,7 @@
 #include "estimation/jet/fiducial_measurement.hh"
 #include "estimation/jet/jet_rk4.hh"
 #include "estimation/sensors/magnetometer_measurement.hh"
-#include "estimation/time_point.hh"
+#include "util/time_point.hh"
 
 #include <map>
 #include <opencv2/opencv.hpp>

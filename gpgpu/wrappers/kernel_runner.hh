@@ -1,6 +1,6 @@
 #include <CL/cl.hpp>
 
-#include "estimation/time_point.hh"
+#include "util/time_point.hh"
 
 #include <map>
 

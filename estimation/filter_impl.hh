@@ -3,7 +3,7 @@
 #include "logging/assert.hh"
 
 #include "estimation/filter.hh"
-#include "estimation/time_point.hh"
+#include "util/time_point.hh"
 
 #include "numerics/group_diff.hh"
 #include "numerics/is_pd.hh"

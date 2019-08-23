@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "estimation/optimization/block_sparse_matrix.hh"
-#include "estimation/time_point.hh"
+#include "util/time_point.hh"
 
 #include "numerics/is_pd.hh"
 #include "vision/robust_estimator.hh"

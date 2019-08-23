@@ -7,7 +7,7 @@ namespace spatial {
 
 TEST(TimeInterpolatorTest, time_interpolator) {
   const jcc::TimePoint t0 = {};
-  const estimation::TimeDuration dt = estimation::to_duration(1.0);
+  const jcc::TimeDuration dt = estimation::to_duration(1.0);
 
   const std::vector<geometry::spatial::TimeControlPoint> points = {
       geometry::spatial::TimeControlPoint{t0, jcc::Vec3(0.0, 0.0, 0.0)},

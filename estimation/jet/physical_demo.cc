@@ -11,7 +11,7 @@
 
 #include "estimation/jet/jet_filter.hh"
 #include "estimation/jet/jet_optimizer.hh"
-#include "estimation/time_point.hh"
+#include "util/time_point.hh"
 
 // TODO: Factor
 #include "numerics/set_diag_to_value.hh"

@@ -9,7 +9,7 @@
 #include "viewer/window_3d.hh"
 #include "viewer/window_manager.hh"
 
-#include "estimation/time_point.hh"
+#include "util/time_point.hh"
 
 #include "eigen_helpers.hh"
 

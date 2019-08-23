@@ -1,6 +1,6 @@
 #pragma once
 
-#include "estimation/time_point.hh"
+#include "util/time_point.hh"
 #include "geometry/spatial/interpolator.hh"
 
 #include <memory>

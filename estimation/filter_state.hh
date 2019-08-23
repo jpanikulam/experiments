@@ -2,7 +2,7 @@
 
 #include "eigen.hh"
 
-#include "estimation/time_point.hh"
+#include "util/time_point.hh"
 
 namespace estimation {
 template <typename State>

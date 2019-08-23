@@ -12,7 +12,7 @@
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
 
-#include "estimation/time_point.hh"
+#include "util/time_point.hh"
 
 #include "util/environment.hh"
 #include "util/timing.hh"
