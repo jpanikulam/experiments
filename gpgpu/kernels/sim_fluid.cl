@@ -142,10 +142,9 @@ __kernel void advect_vector(
     const float3 q0_vxl_coordf = q0_real_coord * cfg.dx_m;
     const int4 q0_vxl_coordi = (int4) (convert_int3(q0_vxl_coordf), 0);
     const float4 q0_0 = read_imagef(vol_q_0, smp_volume_interp, q0_vxl_coordi);
-    const float4 q0_1 = read_imagef(vol_q_0, smp_volume_interp, vxl_coordi);
-
-    const float4 q1 = (q0_0 + q0_1) * 0.5f;
-    write_imagef(vol_q_1, vxl_coordi, q1);
+    // const float4 q0_1 = read_imagef(vol_q_0, smp_volume_interp, vxl_coordi);
+    // const float4 q1 = (q0_0 + q0_1) * 0.5f;
+    write_imagef(vol_q_1, vxl_coordi, q0_0);
 }
 
 
