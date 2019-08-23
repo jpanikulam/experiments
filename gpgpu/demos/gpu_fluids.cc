@@ -43,6 +43,8 @@ struct PhysicsContext {
   // RGBA
   cl::Image3D dv_ink;
   cl::Image3D dv_ink_tmp;
+  cl::Image3D dv_ink_swap1;
+  cl::Image3D dv_ink_swap2;
 
   jcc::VolumeSize vol_size;
 };
@@ -146,6 +148,20 @@ RenderContext generate_render_context(const jcc::ClInfo& cl_info,
     jcc::fill_volume_zeros(cmd_queue, rctx.physics.dv_ink_tmp, vol_size);
   }
 
+  {
+    rctx.physics.dv_ink_swap1 =
+        cl::Image3D(cl_info.context, CL_MEM_READ_WRITE, vol_image_fmt, vol_size.cols,
+                    vol_size.rows, vol_size.slices, 0, 0, nullptr, &status);
+    jcc::fill_volume_zeros(cmd_queue, rctx.physics.dv_ink_swap1, vol_size);
+  }
+
+  {
+    rctx.physics.dv_ink_swap2 =
+        cl::Image3D(cl_info.context, CL_MEM_READ_WRITE, vol_image_fmt, vol_size.cols,
+                    vol_size.rows, vol_size.slices, 0, 0, nullptr, &status);
+    jcc::fill_volume_zeros(cmd_queue, rctx.physics.dv_ink_swap2, vol_size);
+  }
+
   JCHECK_STATUS(status);
 
   rctx.physics.vol_size = vol_size;
@@ -235,8 +251,6 @@ void draw(viewer::Ui2d& ui2d,
 
   const auto cl_cfg = cc_cfg.convert();
 
-  const auto vol_size = rctx.physics.vol_size;
-
   const jcc::Vec3i ink_origin(50, 50, 50);
   const jcc::Vec4 ink_color(1.5, 1.0 + std::cos(t * 0.3), 0.2, 0.0);
   const jcc::VolumeSize ink_size{.cols = 7, .rows = 7, .slices = 7};
@@ -281,7 +295,8 @@ void draw(viewer::Ui2d& ui2d,
 
     if (cc_cfg.debug_mode == 3) {
       render_volume(ui2d, kernel_runner.queue(), rctx, world_from_camera,
-                    rctx.physics.dv_ink_tmp, cc_cfg, SCALING_VELOCITY_VIEW, t);
+
+                    rctx.physics.dv_ink_tmp, cc_cfg, SCALING_VELOCITY_VIEW * 5.0, t);
     }
   }
 
@@ -296,22 +311,22 @@ void draw(viewer::Ui2d& ui2d,
     for (int j = 0; j < N_JACOBI_ITERS; ++j) {
       // "Give me u1 s.t. laplacian(u1) == u0"
       diffuse_kernel.setArg(0, rctx.physics.dv_ink_tmp);
-      diffuse_kernel.setArg(1, rctx.physics.dv_ptemp);
-      diffuse_kernel.setArg(2, rctx.physics.dv_utemp);
+      diffuse_kernel.setArg(1, rctx.physics.dv_ink_swap1);
+      diffuse_kernel.setArg(2, rctx.physics.dv_ink_swap2);
       diffuse_kernel.setArg(3, cl_cfg);
 
       kernel_runner.run(diffuse_kernel, false);
 
       diffuse_kernel.setArg(0, rctx.physics.dv_ink_tmp);
-      diffuse_kernel.setArg(1, rctx.physics.dv_ptemp);
-      diffuse_kernel.setArg(2, rctx.physics.dv_utemp);
+      diffuse_kernel.setArg(1, rctx.physics.dv_ink_swap2);
+      diffuse_kernel.setArg(2, rctx.physics.dv_ink_swap1);
       diffuse_kernel.setArg(3, cl_cfg);
 
       kernel_runner.run(diffuse_kernel, false);
     }
 
     kernel_runner.queue().finish();
-    std::swap(rctx.physics.dv_ink_tmp, rctx.physics.dv_utemp);
+    std::swap(rctx.physics.dv_ink_tmp, rctx.physics.dv_ink_swap1);
   }
 
   //
