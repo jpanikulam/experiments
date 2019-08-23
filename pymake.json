@@ -9,6 +9,7 @@
         "mqtt/*": "paho-mqttpp3",
         "yaml-cpp/yaml.h": "yaml-cpp",
         "CL/cl.hpp": "opencl",
+        "CL/cl2.hpp": "opencl",
         "CL/cl.h": "opencl"
     },
     "library_mappings": {
