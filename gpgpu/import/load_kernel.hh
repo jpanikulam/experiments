@@ -2,7 +2,7 @@
 
 #include "gpgpu/wrappers/cl_info.hh"
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 
 #include <map>
 

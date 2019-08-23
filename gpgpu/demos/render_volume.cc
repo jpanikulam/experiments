@@ -18,7 +18,7 @@
 #include "out.hh"
 #include "util/waves.hh"
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 
 #include <iostream>
 #include <vector>

@@ -8,7 +8,7 @@
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 
 #include <iostream>
 #include <vector>

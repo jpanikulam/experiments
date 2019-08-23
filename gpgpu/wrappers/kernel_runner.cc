@@ -9,26 +9,31 @@ namespace jcc {
 
 KernelRunner::KernelRunner(const cl::CommandQueue& cmd_queue,
                            const WorkGroupConfig& work_group_cfg,
-                           const bool enable_profiling) {
-  cmd_queue_ = cmd_queue;
-  enable_profiling_ = enable_profiling;
-  work_group_cfg_ = work_group_cfg;
+                           const bool enable_profiling)
+    : cmd_queue_(cmd_queue),
+      work_group_cfg_(work_group_cfg),
+      enable_profiling_(enable_profiling) {
 }
 
-void KernelRunner::run(const cl::Kernel& kernel,
+bool KernelRunner::run(const cl::Kernel& kernel,
                        const WorkGroupConfig& work_group_cfg,
                        const int profiling_period) {
+  JASSERT_GT(profiling_period, 0, "Profiling period must be greater than zero");
+
   cl::Event event;
   cl_int status;
 
   const std::string kernel_name = kernel.getInfo<CL_KERNEL_FUNCTION_NAME>(&status);
   JCHECK_STATUS(status);
 
-  JCHECK_STATUS(cmd_queue_.enqueueNDRangeKernel(
-      kernel, work_group_cfg.work_group_offset, work_group_cfg.work_group_size,
-      work_group_cfg.local_size, nullptr, &event));
-
   auto& profile = profiling_[kernel_name];
+  JCHECK_STATUS(cmd_queue_.enqueueNDRangeKernel(kernel,
+                                                work_group_cfg.work_group_offset,
+                                                work_group_cfg.work_group_size,
+                                                work_group_cfg.local_size,
+                                                nullptr,
+                                                &event));
+
   if (enable_profiling_ && profile.total_calls % profiling_period == 0) {
     //
     // Gather profiling data
@@ -51,11 +56,20 @@ void KernelRunner::run(const cl::Kernel& kernel,
 
     profile.measurements.push_back(time_meas);
     profile.total_calls++;
+
+    // Return true if we profiled so that outer callers know not to clFinish()
+    return true;
   }
+  return false;
 }
 
-void KernelRunner::run(const cl::Kernel& kernel, const int profiling_period) {
-  run(kernel, work_group_cfg_, profiling_period);
+void KernelRunner::run(const cl::Kernel& kernel,
+                       bool finish,
+                       const int profiling_period) {
+  bool did_profile = run(kernel, work_group_cfg_, profiling_period);
+  if (!did_profile && finish) {
+    cmd_queue_.finish();
+  }
 }
 
 void KernelRunner::print_average_execution_times(const std::string& kernel_name) const {

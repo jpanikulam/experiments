@@ -4,7 +4,7 @@
 
 #include "eigen.hh"
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 
 namespace jcc {
 void fill_volume_zeros(const cl::CommandQueue cmd_queue,

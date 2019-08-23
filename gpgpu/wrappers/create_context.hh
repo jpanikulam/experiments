@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 
 #include "gpgpu/wrappers/cl_info.hh"
 

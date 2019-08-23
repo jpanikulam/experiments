@@ -28,7 +28,7 @@ struct VoxelGridDescription {
 __kernel void apply_velocity_bdry_cond(
     __read_only image3d_t u0,
     __write_only image3d_t u1) {
-
+/*
     const int4 vxl_coord = (int4) (get_global_id(0), get_global_id(1), get_global_id(2), 0);
 
     // This is terrible, I know. We'll make it faster once it's stable.
@@ -67,7 +67,7 @@ __kernel void apply_velocity_bdry_cond(
     }
 
     // Note: There's a race condition in corners and edges
-    write_imagef(u1, vxl_coord, (float4) (u_inner_bdry, 0.0f));
+    write_imagef(u1, vxl_coord, (float4) (u_inner_bdry, 0.0f));*/
 }
 
 __kernel void advect_velocity(

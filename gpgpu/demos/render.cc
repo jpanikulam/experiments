@@ -21,7 +21,7 @@
 #include "out.hh"
 #include "util/waves.hh"
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 
 #include <opencv2/aruco.hpp>
 

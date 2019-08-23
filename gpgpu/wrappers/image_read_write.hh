@@ -2,7 +2,7 @@
 
 #include "out.hh"
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 #include <opencv2/opencv.hpp>
 
 namespace jcc {

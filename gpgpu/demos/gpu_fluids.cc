@@ -4,6 +4,7 @@
 #include "gpgpu/wrappers/create_context.hh"
 #include "gpgpu/wrappers/errors.hh"
 #include "gpgpu/wrappers/image_read_write.hh"
+#include "gpgpu/wrappers/kernel_runner.hh"
 #include "gpgpu/wrappers/volume_read_write.hh"
 
 #include "gpgpu/kernels/fluid_defs.hh"
@@ -21,7 +22,7 @@
 #include "out.hh"
 #include "util/waves.hh"
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 
 #include <iostream>
 #include <vector>
@@ -202,7 +203,7 @@ void render_volume(viewer::Ui2d& ui2d,
 }
 
 void draw(viewer::Ui2d& ui2d,
-          cl::CommandQueue& cmd_queue,
+          jcc::KernelRunner& kernel_runner,
           RenderContext& rctx,
           const SE3 world_from_camera,
           const FluidSimConfig& cc_cfg,
@@ -232,9 +233,8 @@ void draw(viewer::Ui2d& ui2d,
   constexpr bool CHIRON = true;
   constexpr double SCALING_VELOCITY_VIEW = 50.0;
 
-  cl::Event advect_event;
-  cl::Event pressure_event;
-  cl_int status;
+  // cl::Event advect_event;
+  // cl::Event pressure_event;
 
   if (ADVECT) {
     // const jcc::PrintingScopedTimer tt("  Advection Time");
@@ -242,33 +242,52 @@ void draw(viewer::Ui2d& ui2d,
         rctx.fluid_kernels.at("apply_velocity_bdry_cond");
     apply_velocity_bdry_cond_kernel.setArg(0, rctx.physics_ctx.dv_u0);
     apply_velocity_bdry_cond_kernel.setArg(1, rctx.physics_ctx.dv_u1);
-    JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_velocity_bdry_cond_kernel,
-                                                 wg_offset, work_group_size, local_size,
-                                                 nullptr, &advect_event));
-    cmd_queue.finish();
+
+    cl::Event event;
+    cl_int status;
+
+    const std::string kernel_name =
+        apply_velocity_bdry_cond_kernel.getInfo<CL_KERNEL_FUNCTION_NAME>(&status);
+    JCHECK_STATUS(status);
+    // JCHECK_STATUS(kernel_runner.queue().enqueueNDRangeKernel(
+    //    apply_velocity_bdry_cond_kernel, wg_offset, work_group_size, local_size,
+    //    nullptr, &event));
+    // const auto& work_group_cfg = kernel_runner.work_group_cfg_;
+    // JCHECK_STATUS(kernel_runner.queue().enqueueNDRangeKernel(
+    //     apply_velocity_bdry_cond_kernel, work_group_cfg.work_group_offset,
+    //     work_group_cfg.work_group_size, work_group_cfg.local_size, nullptr, &event));
+
+    // std::cout << "dq" << std::endl;
+    // kernel_runner.queue().finish();
+    // std::cout << "bp" << std::endl;
+    kernel_runner.run(apply_velocity_bdry_cond_kernel, true);
 
     std::swap(rctx.physics_ctx.dv_u_intermediate, rctx.physics_ctx.dv_u1);
-    jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_u1, rctx.physics_ctx.vol_size);
+
+    // TODO(jpanikulam) Remove this
+    jcc::fill_volume_zeros(kernel_runner.queue(), rctx.physics_ctx.dv_u1,
+                           rctx.physics_ctx.vol_size);
 
     auto advect_kernel = rctx.fluid_kernels.at("advect_velocity");
     advect_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
     advect_kernel.setArg(1, rctx.physics_ctx.dv_u1);
     advect_kernel.setArg(2, cl_cfg);
 
-    JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(advect_kernel, wg_offset,
-                                                 work_group_size, local_size));
-
-    cmd_queue.finish();
+    // JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(advect_kernel, wg_offset,
+    // work_group_size, local_size));
+    // cmd_queue.finish();
+    kernel_runner.run(advect_kernel, true);
 
     apply_velocity_bdry_cond_kernel.setArg(0, rctx.physics_ctx.dv_u1);
     apply_velocity_bdry_cond_kernel.setArg(1, rctx.physics_ctx.dv_u_intermediate);
-    JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_velocity_bdry_cond_kernel,
-                                                 wg_offset, work_group_size, local_size));
-
-    cmd_queue.finish();
+    // JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_velocity_bdry_cond_kernel,
+    //                                              wg_offset, work_group_size,
+    //                                              local_size));
+    // cmd_queue.finish();
+    kernel_runner.run(apply_velocity_bdry_cond_kernel, true);
   }
   if (cc_cfg.debug_mode == 3) {
-    render_volume(ui2d, cmd_queue, rctx, world_from_camera,
+    render_volume(ui2d, kernel_runner.queue(), rctx, world_from_camera,
                   rctx.physics_ctx.dv_u_intermediate, cc_cfg, SCALING_VELOCITY_VIEW, t);
   }
 
@@ -286,14 +305,15 @@ void draw(viewer::Ui2d& ui2d,
       diffuse_kernel.setArg(2, rctx.physics_ctx.dv_utemp);
       diffuse_kernel.setArg(3, cl_cfg);
 
-      JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(diffuse_kernel, wg_offset,
-                                                   work_group_size, local_size));
-      cmd_queue.finish();
+      // JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(diffuse_kernel, wg_offset,
+      // work_group_size, local_size));
+      // cmd_queue.finish();
+      kernel_runner.run(diffuse_kernel, true);
       std::swap(rctx.physics_ctx.dv_u1, rctx.physics_ctx.dv_utemp);
     }
 
     std::swap(rctx.physics_ctx.dv_u_intermediate, rctx.physics_ctx.dv_u1);
-    cmd_queue.finish();
+    // cmd_queue.finish();
   }
 
   //
@@ -310,14 +330,15 @@ void draw(viewer::Ui2d& ui2d,
     divergence_kernel.setArg(1, rctx.physics_ctx.dv_utemp);
     divergence_kernel.setArg(2, cl_cfg);
 
-    JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(divergence_kernel, wg_offset,
-                                                 work_group_size, local_size));
-    cmd_queue.finish();
+    // JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(divergence_kernel, wg_offset,
+    // work_group_size, local_size));
+    // cmd_queue.finish();
+    kernel_runner.run(divergence_kernel, true);
   }
 
   if (cc_cfg.debug_mode == 2) {
-    render_volume(ui2d, cmd_queue, rctx, world_from_camera, rctx.physics_ctx.dv_utemp,
-                  cc_cfg, t);
+    render_volume(ui2d, kernel_runner.queue(), rctx, world_from_camera,
+                  rctx.physics_ctx.dv_utemp, cc_cfg, t);
   }
 
   //
@@ -340,39 +361,23 @@ void draw(viewer::Ui2d& ui2d,
     apply_pressure_bdry_cond.setArg(1, rctx.physics_ctx.dv_pressure);
 
     for (int j = 0; j < N_JACOBI_ITERS; ++j) {
-      JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(pressure_kernel, wg_offset,
-                                                   work_group_size, local_size, nullptr,
-                                                   &pressure_event));
+      // JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(pressure_kernel, wg_offset,
+      // work_group_size, local_size, nullptr,
+      // &pressure_event));
 
-      JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_pressure_bdry_cond, wg_offset,
-                                                   work_group_size, local_size));
-
-      if (j == cc_cfg.max_iteration) {
-        cmd_queue.finish();
-        const auto queued = jcc::from_nanoseconds(
-            pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>(&status));
-        const auto submit = jcc::from_nanoseconds(
-            pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>(&status));
-        const auto start = jcc::from_nanoseconds(
-            pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&status));
-        const auto end = jcc::from_nanoseconds(
-            pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_END>(&status));
-
-        std::cout << "queued -> submit " << jcc::to_seconds(submit - queued)
-                  << std::endl;
-        std::cout << "submit -> start " << jcc::to_seconds(start - submit)
-                  << std::endl;
-        std::cout << "start -> end " << jcc::to_seconds(end - start) << std::endl;
-      }
+      kernel_runner.run(pressure_kernel, false);
+      // JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(apply_pressure_bdry_cond, wg_offset,
+      // work_group_size, local_size));
+      kernel_runner.run(apply_pressure_bdry_cond, false);
     }
 
-    cmd_queue.finish();
+    kernel_runner.queue().finish();
 
     // std::swap(rctx.physics_ctx.dv_u_intermediate, rctx.physics_ctx.dv_u1);
   }
   if (cc_cfg.debug_mode == 1) {
-    render_volume(ui2d, cmd_queue, rctx, world_from_camera, rctx.physics_ctx.dv_pressure,
-                  cc_cfg, 50.0, t);
+    render_volume(ui2d, kernel_runner.queue(), rctx, world_from_camera,
+                  rctx.physics_ctx.dv_pressure, cc_cfg, 50.0, t);
   }
 
   //
@@ -390,15 +395,16 @@ void draw(viewer::Ui2d& ui2d,
     chiron_kernel.setArg(2, rctx.physics_ctx.dv_u1);
     chiron_kernel.setArg(3, cl_cfg);
 
-    JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(chiron_kernel, wg_offset,
-                                                 work_group_size, local_size));
-    cmd_queue.finish();
+    //    JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(chiron_kernel, wg_offset,
+    //                                                 work_group_size, local_size));
+    //    cmd_queue.finish();
+    kernel_runner.run(chiron_kernel, true);
 
     std::swap(rctx.physics_ctx.dv_u_intermediate, rctx.physics_ctx.dv_u1);
   }
 
   if (cc_cfg.debug_mode == 0) {
-    render_volume(ui2d, cmd_queue, rctx, world_from_camera,
+    render_volume(ui2d, kernel_runner.queue(), rctx, world_from_camera,
                   rctx.physics_ctx.dv_u_intermediate, cc_cfg, SCALING_VELOCITY_VIEW, t);
   }
 
@@ -407,19 +413,19 @@ void draw(viewer::Ui2d& ui2d,
   }
   return;
 
-  constexpr bool VERIFICATION_DIVERGENCE = false;
-  if (VERIFICATION_DIVERGENCE) {
-    auto divergence_kernel = rctx.fluid_kernels.at("compute_divergence");
-    divergence_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
+  // constexpr bool VERIFICATION_DIVERGENCE = false;
+  // if (VERIFICATION_DIVERGENCE) {
+  //   auto divergence_kernel = rctx.fluid_kernels.at("compute_divergence");
+  //   divergence_kernel.setArg(0, rctx.physics_ctx.dv_u_intermediate);
 
-    // This is now `div w`
-    divergence_kernel.setArg(1, rctx.physics_ctx.dv_utemp);
-    divergence_kernel.setArg(2, cl_cfg);
+  //   // This is now `div w`
+  //   divergence_kernel.setArg(1, rctx.physics_ctx.dv_utemp);
+  //   divergence_kernel.setArg(2, cl_cfg);
 
-    JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(divergence_kernel, wg_offset,
-                                                 work_group_size, local_size));
-  }
-  cmd_queue.finish();
+  //   JCHECK_STATUS(cmd_queue.enqueueNDRangeKernel(divergence_kernel, wg_offset,
+  //                                                work_group_size, local_size));
+  // }
+  // cmd_queue.finish();
 }
 
 auto setup_window() {
@@ -442,9 +448,14 @@ int main() {
   cl::CommandQueue cmd_queue(cl_info.context, CL_QUEUE_PROFILING_ENABLE);
 
   const jcc::ImageSize im_size = {2 * 480, 2 * 480};
-  // const std::size_t dimension = 100;
-  // const jcc::VolumeSize vol_size = {dimension, dimension, dimension};
-  const jcc::VolumeSize vol_size = {96 + 2, 96 + 2, 96 + 2};
+  const std::size_t dimension = 96;
+  const jcc::VolumeSize vol_size = {dimension + 2, dimension + 2, dimension + 2};
+
+  const jcc::WorkGroupConfig wg_cfg{
+      .work_group_size = {vol_size.cols - 2, vol_size.rows - 2, vol_size.slices - 2},
+      .work_group_offset = {1u, 1u, 1u},
+      .local_size = {16u, 16u, 1u}};
+  jcc::KernelRunner kernel_runner(cmd_queue, wg_cfg);
 
   auto rctx = generate_render_context(cl_info, cmd_queue, vol_size, im_size);
 
@@ -469,7 +480,7 @@ int main() {
 
   const auto basic_draw = [&]() {
     const SE3 world_from_camera = view->standard_camera_from_world().inverse();
-    draw(*ui2d, cmd_queue, rctx, world_from_camera, cc_cfg, t, paused);
+    draw(*ui2d, kernel_runner, rctx, world_from_camera, cc_cfg, t, paused);
   };
 
   view->add_toggle_callback("paused", [&](int paused_state) {

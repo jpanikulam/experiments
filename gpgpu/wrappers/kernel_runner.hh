@@ -2,7 +2,7 @@
 
 #include "util/time_point.hh"
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 
 #include <map>
 
@@ -18,12 +18,12 @@ class KernelRunner {
  public:
   KernelRunner(const cl::CommandQueue& cmd_queue,
                const WorkGroupConfig& work_group_cfg,
-               bool enable_profiling_ = true);
+               bool enable_profiling = true);
 
-  void run(const cl::Kernel& kernel,
+  bool run(const cl::Kernel& kernel,
            const WorkGroupConfig& work_group_cfg,
-           const int profiling_period = 0);
-  void run(const cl::Kernel& kernel, const int profiling_period = 0);
+           const int profiling_period = 1);
+  void run(const cl::Kernel& kernel, bool finish = false, const int profiling_period = 1);
 
   void print_average_execution_times() const;
   void print_average_execution_times(const std::string& kernel_name) const;
@@ -45,10 +45,10 @@ class KernelRunner {
     std::vector<TimingMeasurements> measurements;
   };
 
-  cl::CommandQueue cmd_queue_;
   std::map<std::string, ProfilingInfo> profiling_;
-  WorkGroupConfig work_group_cfg_;
 
+  cl::CommandQueue cmd_queue_;
+  WorkGroupConfig work_group_cfg_;
   bool enable_profiling_ = false;
 };
 }  // namespace jcc

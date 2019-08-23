@@ -1,6 +1,6 @@
 #pragma once
 
-#include <CL/cl.hpp>
+#include "gpgpu/opencl.hh"
 
 namespace jcc {
 
