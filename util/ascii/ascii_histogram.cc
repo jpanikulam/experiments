@@ -12,10 +12,12 @@ std::vector<int> form_histogram(const std::vector<double> &v,
                                 const double end,
                                 const int n_bins) {
   const double bin_spacing = (end - start) / n_bins;
+  const double inv_bin_spacing = start == end ? 1.0 : 1.0 / bin_spacing;
+
   std::vector<int> bins(n_bins, 0);
 
   for (const auto &val : v) {
-    const double bin_d = (val - start) / bin_spacing;
+    const double bin_d = (val - start) * inv_bin_spacing;
     const int bin_index = std::round(bin_d);
     if (bin_index >= 0 && bin_index < n_bins) {
       ++bins[bin_index];
@@ -27,6 +29,9 @@ std::vector<int> form_histogram(const std::vector<double> &v,
 }  // namespace
 
 std::string ascii_histogram(const std::vector<double> &v, int n_bins) {
+  if (v.empty()) {
+    return "";
+  }
   const double start = *std::min_element(v.begin(), v.end());
   const double end = *std::max_element(v.begin(), v.end());
 
@@ -36,6 +41,9 @@ std::string ascii_histogram(const std::vector<double> &v,
                             const double start,
                             const double end,
                             const int n_bins) {
+  if (v.empty()) {
+    return "";
+  }
   const std::vector<int> histogram = form_histogram(v, start, end, n_bins);
 
   constexpr int MAX_WIDTH_CHARS = 120;
