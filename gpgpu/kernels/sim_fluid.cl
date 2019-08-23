@@ -28,7 +28,6 @@ struct VoxelGridDescription {
 __kernel void apply_velocity_bdry_cond(
     __read_only image3d_t u0,
     __write_only image3d_t u1) {
-/*
     const int4 vxl_coord = (int4) (get_global_id(0), get_global_id(1), get_global_id(2), 0);
 
     // This is terrible, I know. We'll make it faster once it's stable.
@@ -67,7 +66,7 @@ __kernel void apply_velocity_bdry_cond(
     }
 
     // Note: There's a race condition in corners and edges
-    write_imagef(u1, vxl_coord, (float4) (u_inner_bdry, 0.0f));*/
+    write_imagef(u1, vxl_coord, (float4) (u_inner_bdry, 0.0f));
 }
 
 __kernel void advect_velocity(
@@ -106,9 +105,9 @@ __kernel void advect_velocity(
         (vxl_coordi.y < 55) &&
         (vxl_coordi.z > 45) &&
         (vxl_coordi.z < 55)) {
-        force.x = 0.01f;
-        force.y = 0.01f;
-        force.z = 0.01f;
+        force.x = 0.1f;
+        force.y = 0.1f;
+        force.z = 0.1f;
     }
 
     force += (float4) (0.0f, -0.01f, 0.0f, 0.0f);
@@ -117,6 +116,38 @@ __kernel void advect_velocity(
 
     write_imagef(vol_u_1, vxl_coordi, u1_damped);
 }
+
+__kernel void advect_vector(
+    __read_only image3d_t vol_u_0,
+    __read_only image3d_t vol_q_0,
+    __write_only image3d_t vol_q_1,
+    struct FluidSimConfig cfg) {
+    const sampler_t smp_volume_interp =
+        CLK_NORMALIZED_COORDS_FALSE |
+        CLK_ADDRESS_CLAMP_TO_EDGE |
+        CLK_FILTER_LINEAR;
+
+    const sampler_t smp_volume_nearest =
+        CLK_NORMALIZED_COORDS_FALSE |
+        CLK_ADDRESS_CLAMP |
+        CLK_FILTER_NEAREST;
+
+    const int4 vxl_coordi = (int4) (get_global_id(0), get_global_id(1), get_global_id(2), 0);
+    const float3 u0 = read_imagef(vol_u_0, smp_volume_nearest, vxl_coordi).xyz;
+
+    const float3 vxl_coordf = convert_float4(vxl_coordi).xyz;
+    const float3 u0_real_coord = (vxl_coordf / cfg.dx_m);
+
+    const float3 q0_real_coord = u0_real_coord - (u0 * cfg.dt_sec);
+    const float3 q0_vxl_coordf = q0_real_coord * cfg.dx_m;
+    const int4 q0_vxl_coordi = (int4) (convert_int3(q0_vxl_coordf), 0);
+    const float4 q0_0 = read_imagef(vol_q_0, smp_volume_interp, q0_vxl_coordi);
+    const float4 q0_1 = read_imagef(vol_q_0, smp_volume_interp, vxl_coordi);
+
+    const float4 q1 = (q0_0 + q0_1) * 0.5f;
+    write_imagef(vol_q_1, vxl_coordi, q1);
+}
+
 
 // Viscous Diffusion
 //
@@ -278,23 +309,6 @@ __kernel void chiron_projection(
     const float3 p_p = (float3) (pp100, pp010, pp001);
 
     const float3 dp_dx = (p_p - p000) / cfg.dx_m;
-
-    /*
-    const float pp100 = read_imagef(vol_p, smp, vxl_coord + unit_x).x;
-    const float pn100 = read_imagef(vol_p, smp, vxl_coord - unit_x).x;
-
-    const float pp010 = read_imagef(vol_p, smp, vxl_coord + unit_y).x;
-    const float pn010 = read_imagef(vol_p, smp, vxl_coord - unit_y).x;
-
-    const float pp001 = read_imagef(vol_p, smp, vxl_coord + unit_z).x;
-    const float pn001 = read_imagef(vol_p, smp, vxl_coord - unit_z).x;
-
-    const float3 p_p = (float3) (pp100, pp010, pp001);
-    const float3 p_n = (float3) (pn100, pn010, pn001);
-
-    const float3 dp_dx = (p_p - p_n) / (2.0f * cfg.dx_m);
-    */
-
     const float3 u1 = w - dp_dx;
 
     write_imagef(vol_u_1, vxl_coord, (float4) (u1, 0.0f));

@@ -49,7 +49,6 @@ __kernel void render_volume(
     const float3 ray_dir_world = mul_so3(world_from_camera.rotation, ray_dir_camera);
     const float3 ray_origin_m = world_from_camera.translation;
 
-
     const float3 volume_dims_px = (float3) (
         get_image_width(volume),
         get_image_height(volume),
@@ -68,7 +67,7 @@ __kernel void render_volume(
     float3 integrated_color = (float3) (0.0f, 0.0f, 0.0f);
     float integrated_value = 0.0f;
 
-    int mode = 1;
+    int mode = 0;
     int index = 2;
     float3 slice_diagonal_dir = (float3) (0.0f, 0.0f, 0.0f);
 
@@ -93,12 +92,12 @@ __kernel void render_volume(
         // const float mahalanobis_d = -error * error * cov;
         // const float weighting = normalizer * exp(0.5 * mahalanobis_d);
 
-        const float4 image_color = scaling * read_imagef(volume, smp_volume, sample_pos_vx_frame);
+        const float4 image_color = read_imagef(volume, smp_volume, sample_pos_vx_frame);
         integrated_color += image_color.xyz * step_size * 1.0f;
         // integrated_color = min(integrated_color, error);
     }
 
-    const float color_val = dot(slice_diagonal_dir, integrated_color);
+    const float color_val = scaling * dot(slice_diagonal_dir, integrated_color);
 
     float3 color;
     if (mode == 0) {
