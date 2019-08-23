@@ -100,15 +100,15 @@ __kernel void advect_velocity(
     const float4 u1 = read_imagef(vol_u_0, smp_volume_interp, u1_vxl_coordi);
 
     float4 force = (float4) (0.0f, 0.0f, 0.0f, 0.0f);
-    if ((vxl_coordi.x > 10) &&
-        (vxl_coordi.x < 20) &&
-        (vxl_coordi.y > 10) &&
-        (vxl_coordi.y < 20) &&
-        (vxl_coordi.z > 10) &&
-        (vxl_coordi.z < 20)) {
-        // force.x = 0.01f;
-        // force.y = 0.01f;
-        // force.z = 0.01f;
+    if ((vxl_coordi.x > 45) &&
+        (vxl_coordi.x < 55) &&
+        (vxl_coordi.y > 45) &&
+        (vxl_coordi.y < 55) &&
+        (vxl_coordi.z > 45) &&
+        (vxl_coordi.z < 55)) {
+        force.x = 0.01f;
+        force.y = 0.01f;
+        force.z = 0.01f;
     }
 
     force += (float4) (0.0f, -0.01f, 0.0f, 0.0f);
@@ -172,7 +172,7 @@ __kernel void compute_divergence(
     const float xk_nz = read_imagef(vol_u, smp, (vxl_coord - unit_z)).z;
     const float xk_pz = read_imagef(vol_u, smp, (vxl_coord + unit_z)).z;
 
-    const float inv_2dx = 0.5f / (cfg.dx_m * cfg.dx_m);
+    const float inv_2dx = 0.5f / (cfg.dx_m);
     float div_u = (xk_pz - xk_nz) * inv_2dx;
     div_u += (xk_py - xk_ny) * inv_2dx;
     div_u += (xk_px - xk_nx) * inv_2dx;

@@ -33,7 +33,8 @@ __kernel void render_volume(
     __read_only image3d_t volume,
     __write_only image2d_t rendered_image,
     const struct clSE3 world_from_camera,
-    const float scaling) {
+    const float scaling,
+    const float slice_coord) {
     const sampler_t smp_ray = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_CLAMP |
                               CLK_FILTER_NEAREST;
@@ -62,10 +63,25 @@ __kernel void render_volume(
     // const float3 volume_origin_m = (-2.0f, -2.0f, -2.0f);
     const float3 volume_origin_m = (float3) (0.0f, 0.0f, 0.0f);
 
-    const float step_size = 0.01f;
+    const float step_size = 0.05f;
 
     float3 integrated_color = (float3) (0.0f, 0.0f, 0.0f);
     float integrated_value = 0.0f;
+
+    int mode = 1;
+    int index = 2;
+    float3 slice_diagonal_dir = (float3) (0.0f, 0.0f, 0.0f);
+
+    const float cov = 0.8f;
+    if (index == 0) {
+       slice_diagonal_dir.x = 1.0f;
+    } else if (index == 1) {
+       slice_diagonal_dir.y = 1.0f;
+    } else if (index == 2) {
+       slice_diagonal_dir.z = 1.0f;
+    }
+
+    const float normalizer = 1.0f / sqrt(2.0f * M_PI_F * cov);
 
     // TODO: Consider an exponential step size
     for (float dist_m = 0.0f; dist_m < 10.0f; dist_m += step_size) {
@@ -73,26 +89,16 @@ __kernel void render_volume(
 
         const float4 sample_pos_vx_frame = (float4) ((sample_pos_m - volume_origin_m) / volume_m_per_px, 1.0f);
 
+        // const float error = dot(sample_pos_vx_frame.xyz, slice_diagonal_dir) - slice_coord;
+        // const float mahalanobis_d = -error * error * cov;
+        // const float weighting = normalizer * exp(0.5 * mahalanobis_d);
+
         const float4 image_color = scaling * read_imagef(volume, smp_volume, sample_pos_vx_frame);
-        const float value = image_color.x;
-        integrated_value += value * step_size;
-        integrated_color += image_color.xyz * step_size;
+        integrated_color += image_color.xyz * step_size * 1.0f;
+        // integrated_color = min(integrated_color, error);
     }
 
-
-    int mode = 1;
-    int index = 2;
-
-    float color_val;
-    if (index == 0) {
-       color_val = integrated_color.x;
-    }
-    if (index == 1) {
-       color_val = integrated_color.y;
-    }
-    if (index == 2) {
-       color_val = integrated_color.z;
-    }
+    const float color_val = dot(slice_diagonal_dir, integrated_color);
 
     float3 color;
     if (mode == 0) {
@@ -103,7 +109,6 @@ __kernel void render_volume(
         color.z = -step(0.0f, -color_val) * color_val;
     }
 
-    // const float3 color = (float3) (integrated_value, 0.0, 0.0);
     const float3 power_adjusted_color = pow(clamp(color.xyz, 0.0f, 1.0f), 0.45f);
     const float4 final_color = (float4) (power_adjusted_color, 1.0f);
     write_imagef(rendered_image, px_coord, 255.0f * final_color);

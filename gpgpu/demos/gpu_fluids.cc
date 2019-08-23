@@ -161,7 +161,8 @@ void render_volume(viewer::Ui2d& ui2d,
                    const SE3& world_from_camera,
                    const cl::Image3D& dv_volume,
                    const FluidSimConfig& cc_cfg,
-                   const double scaling = 10.0) {
+                   const double scaling = 10.0,
+                   const double t = 0.5) {
   const jcc::PrintingScopedTimer tt("  Render Time");
   auto vol_draw_kernel = rctx.render_kernels["render_volume"];
 
@@ -175,10 +176,13 @@ void render_volume(viewer::Ui2d& ui2d,
   cl_float cl_scaling = static_cast<cl_float>(scaling);
   JCHECK_STATUS(vol_draw_kernel.setArg(4, cl_scaling));
 
+  cl_float cl_t = static_cast<cl_float>(-0.5f);
+  JCHECK_STATUS(vol_draw_kernel.setArg(5, cl_t));
+
   const cl::NDRange work_group_size{static_cast<std::size_t>(rctx.im_size.cols),
                                     static_cast<std::size_t>(rctx.im_size.rows)};
 
-  const cl::NDRange local_size({32u, 32u});
+  const cl::NDRange local_size({16u, 16u});
   JCHECK_STATUS(
       cmd_queue.enqueueNDRangeKernel(vol_draw_kernel, {0}, work_group_size, local_size));
 
@@ -215,22 +219,11 @@ void draw(viewer::Ui2d& ui2d,
   const cl::NDRange wg_offset{1u, 1u, 1u};
   const cl::NDRange work_group_size{vol_size.cols - 2, vol_size.rows - 2,
                                     vol_size.slices - 2};
-  const cl::NDRange local_size{49u, 7u, 1u};
+  const cl::NDRange local_size{16u, 16u, 1u};
 
   //
   // Advect
   //
-  {
-    // const jcc::PrintingScopedTimer tt("  Zeroing Time");
-    // jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_u1,
-    // rctx.physics_ctx.vol_size); jcc::fill_volume_zeros(cmd_queue,
-    // rctx.physics_ctx.dv_utemp, rctx.physics_ctx.vol_size);
-    // jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_pressure,
-    //                        rctx.physics_ctx.vol_size);
-    // jcc::fill_volume_zeros(cmd_queue, rctx.physics_ctx.dv_ptemp,
-    //                        rctx.physics_ctx.vol_size);
-    cmd_queue.finish();
-  }
   constexpr bool ADVECT = true;
   constexpr bool DIFFUSE = true;
   constexpr bool PRESSURE = true;
@@ -269,13 +262,13 @@ void draw(viewer::Ui2d& ui2d,
   }
   if (cc_cfg.debug_mode == 3) {
     render_volume(ui2d, cmd_queue, rctx, world_from_camera,
-                  rctx.physics_ctx.dv_u_intermediate, cc_cfg, SCALING_VELOCITY_VIEW);
+                  rctx.physics_ctx.dv_u_intermediate, cc_cfg, SCALING_VELOCITY_VIEW, t);
   }
 
   //
   // Diffuse
   //
-  constexpr int N_JACOBI_ITERS = 30;
+  constexpr int N_JACOBI_ITERS = 70;
   if (DIFFUSE) {
     const jcc::PrintingScopedTimer tt("  Diffusion Time");
     auto diffuse_kernel = rctx.fluid_kernels.at("diffuse");
@@ -317,7 +310,7 @@ void draw(viewer::Ui2d& ui2d,
 
   if (cc_cfg.debug_mode == 2) {
     render_volume(ui2d, cmd_queue, rctx, world_from_camera, rctx.physics_ctx.dv_utemp,
-                  cc_cfg);
+                  cc_cfg, t);
   }
 
   //
@@ -355,7 +348,7 @@ void draw(viewer::Ui2d& ui2d,
   }
   if (cc_cfg.debug_mode == 1) {
     render_volume(ui2d, cmd_queue, rctx, world_from_camera, rctx.physics_ctx.dv_pressure,
-                  cc_cfg, 50.0);
+                  cc_cfg, 50.0, t);
   }
 
   //
@@ -382,7 +375,7 @@ void draw(viewer::Ui2d& ui2d,
 
   if (cc_cfg.debug_mode == 0) {
     render_volume(ui2d, cmd_queue, rctx, world_from_camera,
-                  rctx.physics_ctx.dv_u_intermediate, cc_cfg, SCALING_VELOCITY_VIEW);
+                  rctx.physics_ctx.dv_u_intermediate, cc_cfg, SCALING_VELOCITY_VIEW, t);
   }
 
   if (!paused) {
@@ -425,8 +418,9 @@ int main() {
   cl::CommandQueue cmd_queue(cl_info.context);
 
   const jcc::ImageSize im_size = {2 * 480, 2 * 480};
-  const std::size_t dimension = 100;
-  const jcc::VolumeSize vol_size = {dimension, dimension, dimension};
+  // const std::size_t dimension = 100;
+  // const jcc::VolumeSize vol_size = {dimension, dimension, dimension};
+  const jcc::VolumeSize vol_size = {96 + 2, 96 + 2, 96 + 2};
 
   auto rctx = generate_render_context(cl_info, cmd_queue, vol_size, im_size);
 
