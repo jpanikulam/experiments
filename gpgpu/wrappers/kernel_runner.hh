@@ -1,6 +1,8 @@
-#include <CL/cl.hpp>
+#pragma once
 
 #include "util/time_point.hh"
+
+#include <CL/cl.hpp>
 
 #include <map>
 
@@ -10,26 +12,32 @@ struct WorkGroupConfig {
   cl::NDRange work_group_size;
   cl::NDRange work_group_offset;
   cl::NDRange local_size;
-}
+};
 
 class KernelRunner {
  public:
   KernelRunner(const cl::CommandQueue& cmd_queue,
                const WorkGroupConfig& work_group_cfg,
-               const bool enable_profiling = true);
+               bool enable_profiling_ = true);
 
   void run(const cl::Kernel& kernel,
-           const std::string& name,
-           const int profiling_period == 0);
+           const WorkGroupConfig& work_group_cfg,
+           const int profiling_period = 0);
+  void run(const cl::Kernel& kernel, const int profiling_period = 0);
 
-  void print_average_execution_times();
+  void print_average_execution_times() const;
+  void print_average_execution_times(const std::string& kernel_name) const;
+
+  cl::CommandQueue& queue() {
+    return cmd_queue_;
+  }
 
  private:
   struct TimingMeasurements {
-    cl_ulong queued;
-    cl_ulong submit;
-    cl_ulong start;
-    cl_ulong end;
+    jcc::TimePoint queued;
+    jcc::TimePoint submit;
+    jcc::TimePoint start;
+    jcc::TimePoint end;
   };
 
   struct ProfilingInfo {

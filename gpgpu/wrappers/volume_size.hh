@@ -11,9 +11,3 @@ struct VolumeSize {
 };
 
 }  // namespace jcc
-
-physical_demo \
-gpu_fluids \
-time_point \
-time_point_test \
-window_3d \
