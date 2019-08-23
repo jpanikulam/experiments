@@ -71,16 +71,13 @@ static std::map<int, std::string> error_name_from_id = {
     {-69, "CL_INVALID_PIPE_SIZE"},
     {-70, "CL_INVALID_DEVICE_QUEUE"},
     {-71, "CL_INVALID_SPEC_ID"},
-    {-72, "CL_MAX_SIZE_RESTRICTION_EXCEEDED"}};
+    {-72, "CL_MAX_SIZE_RESTRICTION_EXCEEDED"},
+    {-9999, "ILLEGAL READ OR WRITE (NVIDIA-Specific)"}
+};
 }  // namespace
 
 std::string error_name(const cl_int error) {
   return error_name_from_id.at(error);
-}
-
-void check_status(cl_int status) {
-  const std::string error = "OpenCL reported an error: " + error_name(status);
-  JASSERT_EQ(status, 0, error.c_str());
 }
 
 }  // namespace jcc

@@ -16,7 +16,7 @@ struct WorkGroupConfig {
 
 class KernelRunner {
  public:
-  KernelRunner(const cl::CommandQueue& cmd_queue,
+  KernelRunner(cl::CommandQueue& cmd_queue,
                const WorkGroupConfig& work_group_cfg,
                bool enable_profiling = true);
 
@@ -47,7 +47,7 @@ class KernelRunner {
 
   std::map<std::string, ProfilingInfo> profiling_;
 
-  cl::CommandQueue cmd_queue_;
+  cl::CommandQueue& cmd_queue_;
   WorkGroupConfig work_group_cfg_;
   bool enable_profiling_ = false;
 };

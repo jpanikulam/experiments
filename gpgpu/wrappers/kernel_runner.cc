@@ -7,7 +7,7 @@
 
 namespace jcc {
 
-KernelRunner::KernelRunner(const cl::CommandQueue& cmd_queue,
+KernelRunner::KernelRunner(cl::CommandQueue& cmd_queue,
                            const WorkGroupConfig& work_group_cfg,
                            const bool enable_profiling)
     : cmd_queue_(cmd_queue),
@@ -68,7 +68,7 @@ void KernelRunner::run(const cl::Kernel& kernel,
                        const int profiling_period) {
   bool did_profile = run(kernel, work_group_cfg_, profiling_period);
   if (!did_profile && finish) {
-    cmd_queue_.finish();
+    JCHECK_STATUS(cmd_queue_.finish());
   }
 }
 
@@ -84,14 +84,42 @@ void KernelRunner::print_average_execution_times(const std::string& kernel_name)
   std::vector<double> start_to_end;
   start_to_end.reserve(profile.measurements.size());
 
+  std::vector<double> queued_to_end;
+  queued_to_end.reserve(profile.measurements.size());
+
   for (const auto& meas : profile.measurements) {
     const double queued_to_submit_sec = jcc::to_seconds(meas.submit - meas.queued);
     queued_to_submit.push_back(queued_to_submit_sec);
+
     const double submit_to_start_sec = jcc::to_seconds(meas.start - meas.submit);
     submit_to_start.push_back(submit_to_start_sec);
+
     const double start_to_end_sec = jcc::to_seconds(meas.end - meas.start);
     start_to_end.push_back(start_to_end_sec);
+
+    const double queued_to_end_sec = jcc::to_seconds(meas.end - meas.queued);
+    queued_to_end.push_back(queued_to_end_sec);
   }
+
+  std::cout << std::string(100, '_') << std::endl;
+  std::cout << "Kernel: " << kernel_name << std::endl;
+  std::cout << "\n\n" << std::endl;
+
+  std::cout << std::string(100, '_') << std::endl;
+  std::cout << "Queued to Submit (sec)" << std::endl;
+  std::cout << ascii_histogram(queued_to_submit, 10) << std::endl;
+
+  std::cout << std::string(100, '_') << std::endl;
+  std::cout << "Submit to Start (sec)" << std::endl;
+  std::cout << ascii_histogram(submit_to_start, 10) << std::endl;
+
+  std::cout << std::string(100, '_') << std::endl;
+  std::cout << "Start to End (sec)" << std::endl;
+  std::cout << ascii_histogram(start_to_end, 10) << std::endl;
+
+  std::cout << std::string(100, '_') << std::endl;
+  std::cout << "Total (sec)" << std::endl;
+  std::cout << ascii_histogram(queued_to_end, 10) << std::endl;
 }
 void KernelRunner::print_average_execution_times() const {
   for (const auto& profile_element : profiling_) {

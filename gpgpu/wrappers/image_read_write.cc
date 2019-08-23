@@ -9,14 +9,14 @@ void send_image_to_device(const cl::CommandQueue &cmd_queue,
                           const cv::Mat &mat) {
   constexpr cl_bool FLG_NO_BLOCK = CL_TRUE;
 
-  std::array<std::size_t, 3> origin;
+  cl::size_t<3> origin;
   {
     origin[0] = 0;
     origin[1] = 0;
     origin[2] = 0;
   }
 
-  std::array<std::size_t, 3> region;
+  cl::size_t<3> region;
   {
     region[0] = mat.cols;
     region[1] = mat.rows;
@@ -30,14 +30,14 @@ void send_image_to_device(const cl::CommandQueue &cmd_queue,
 void read_image_from_device(const cl::CommandQueue &cmd_queue,
                             const cl::Image2D &dv_ptr,
                             Out<cv::Mat> out_mat) {
-  std::array<std::size_t, 3> origin;
+  cl::size_t<3> origin;
   {
     origin[0] = 0;
     origin[1] = 0;
     origin[2] = 0;
   }
 
-  std::array<std::size_t, 3> region;
+  cl::size_t<3> region;
   {
     region[0] = out_mat->cols;
     region[1] = out_mat->rows;
@@ -45,6 +45,7 @@ void read_image_from_device(const cl::CommandQueue &cmd_queue,
   }
 
   constexpr cl_bool FLG_BLOCK = CL_TRUE;
+
   JCHECK_STATUS(
       cmd_queue.enqueueReadImage(dv_ptr, FLG_BLOCK, origin, region, 0, 0, out_mat->data));
 }
