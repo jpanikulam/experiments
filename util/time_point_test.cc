@@ -4,7 +4,7 @@
 
 #include "testing/gtest.hh"
 
-namespace estimation {
+namespace jcc {
 
 TEST(TimePointTest, test_it_all_constexpr) {
   constexpr double TIME = 3.54e-5;
@@ -53,4 +53,4 @@ TEST(TimePointTest, average) {
   EXPECT_EQ(avg1, t0 + to_duration(1.0));
 }
 
-}  // namespace estimation
+}  // namespace jcc
