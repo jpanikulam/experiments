@@ -41,7 +41,7 @@ geometry::UnitVector3 estimate_from_bracket(
   constexpr double G_MPSS = 9.81;
 
   JASSERT_GT(
-      estimation::to_seconds(bracket.end - bracket.start),
+      jcc::to_seconds(bracket.end - bracket.start),
       cfg.min_stationary_time_sec,
       "Could not find a time bracket where the vehicle is stationary and pointed at "
       "the fiducial for sufficiently long");
@@ -156,7 +156,7 @@ GravityEstimationResult estimate_gravity_direction(
     }
 
     if (valid && in_bracket &&
-        (estimation::to_seconds(bracket_end - bracket_start) >
+        (jcc::to_seconds(bracket_end - bracket_start) >
          cfg.min_stationary_time_sec)) {
       break;
     }
@@ -171,8 +171,8 @@ GravityEstimationResult estimate_gravity_direction(
   return GravityEstimationResult{
       .direction = direction,
       .time = (bracket.start +
-               estimation::to_duration(
-                   estimation::to_seconds(bracket.end - bracket.start) * 0.5))};
+               jcc::to_duration(
+                   jcc::to_seconds(bracket.end - bracket.start) * 0.5))};
 }
 
 }  // namespace estimation

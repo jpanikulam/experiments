@@ -349,20 +349,20 @@ void draw(viewer::Ui2d& ui2d,
 
       if (j == cc_cfg.max_iteration) {
         cmd_queue.finish();
-        const auto queued = estimation::from_nanoseconds(
+        const auto queued = jcc::from_nanoseconds(
             pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>(&status));
-        const auto submit = estimation::from_nanoseconds(
+        const auto submit = jcc::from_nanoseconds(
             pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>(&status));
-        const auto start = estimation::from_nanoseconds(
+        const auto start = jcc::from_nanoseconds(
             pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&status));
-        const auto end = estimation::from_nanoseconds(
+        const auto end = jcc::from_nanoseconds(
             pressure_event.getProfilingInfo<CL_PROFILING_COMMAND_END>(&status));
 
-        std::cout << "queued -> submit " << estimation::to_seconds(submit - queued)
+        std::cout << "queued -> submit " << jcc::to_seconds(submit - queued)
                   << std::endl;
-        std::cout << "submit -> start " << estimation::to_seconds(start - submit)
+        std::cout << "submit -> start " << jcc::to_seconds(start - submit)
                   << std::endl;
-        std::cout << "start -> end " << estimation::to_seconds(end - start) << std::endl;
+        std::cout << "start -> end " << jcc::to_seconds(end - start) << std::endl;
       }
     }
 

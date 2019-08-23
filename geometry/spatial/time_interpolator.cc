@@ -5,7 +5,7 @@ namespace geometry {
 namespace spatial {
 
 double TimeInterpolator::time_offset(const jcc::TimePoint& time_stamp) const {
-  return estimation::to_seconds(time_stamp - first_time_);
+  return jcc::to_seconds(time_stamp - first_time_);
 }
 
 TimeInterpolator::TimeInterpolator(

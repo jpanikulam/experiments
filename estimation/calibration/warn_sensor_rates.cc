@@ -13,7 +13,7 @@ void warn_sensor_rates(
     const std::string imu_lead = imu_lead_ss.str();
 
     if (imu_meas.accel_meas.size() > 0) {
-      const double total_time = estimation::to_seconds(
+      const double total_time = jcc::to_seconds(
           imu_meas.accel_meas.back().timestamp - imu_meas.accel_meas.front().timestamp);
       const double avg_rate_hz = imu_meas.accel_meas.size() / total_time;
       if (avg_rate_hz < 80) {
@@ -31,7 +31,7 @@ void warn_sensor_rates(
     }
 
     if (imu_meas.gyro_meas.size() > 0) {
-      const double total_time = estimation::to_seconds(
+      const double total_time = jcc::to_seconds(
           imu_meas.gyro_meas.back().timestamp - imu_meas.gyro_meas.front().timestamp);
       const double avg_rate_hz = imu_meas.gyro_meas.size() / total_time;
       if (avg_rate_hz < 80) {
@@ -49,7 +49,7 @@ void warn_sensor_rates(
     }
 
     if (imu_meas.mag_meas.size() > 0) {
-      const double total_time = estimation::to_seconds(
+      const double total_time = jcc::to_seconds(
           imu_meas.mag_meas.back().timestamp - imu_meas.mag_meas.front().timestamp);
       const double avg_rate_hz = imu_meas.mag_meas.size() / total_time;
       if (avg_rate_hz < 80) {
@@ -71,7 +71,7 @@ void warn_sensor_rates(
   }
   if (cal_measurements.fiducial_meas.size() > 0) {
     const double total_time =
-        estimation::to_seconds(cal_measurements.fiducial_meas.back().timestamp -
+        jcc::to_seconds(cal_measurements.fiducial_meas.back().timestamp -
                                cal_measurements.fiducial_meas.front().timestamp);
     const double avg_rate_hz = cal_measurements.fiducial_meas.size() / total_time;
     if (avg_rate_hz < 6) {

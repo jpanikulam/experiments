@@ -28,13 +28,13 @@ void KernelRunner::run(const cl::Kernel& kernel, const int profiling_period) {
   auto& profile = profiling_[kernel_name];
   if (profile.total_calls % profiling_period == 0) {
     cmd_queue.finish();
-    const auto queued = estimation::from_nanoseconds(
+    const auto queued = jcc::from_nanoseconds(
         event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>(&status));
-    const auto submit = estimation::from_nanoseconds(
+    const auto submit = jcc::from_nanoseconds(
         event.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>(&status));
-    const auto start = estimation::from_nanoseconds(
+    const auto start = jcc::from_nanoseconds(
         event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&status));
-    const auto end = estimation::from_nanoseconds(
+    const auto end = jcc::from_nanoseconds(
         event.getProfilingInfo<CL_PROFILING_COMMAND_END>(&status));
 
     const TimingMeasurements time_meas{.queued = queued,  //

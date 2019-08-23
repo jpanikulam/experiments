@@ -7,6 +7,6 @@ std::ostream& operator<<(std::ostream& os, const jcc::TimePoint& t) {
 }
 
 std::ostream& operator<<(std::ostream& os, const jcc::TimeDuration& dt) {
-  os << estimation::to_seconds(dt) << "s";
+  os << jcc::to_seconds(dt) << "s";
   return os;
 }

@@ -7,7 +7,7 @@ namespace spatial {
 
 TEST(TimeInterpolatorTest, time_interpolator) {
   const jcc::TimePoint t0 = {};
-  const jcc::TimeDuration dt = estimation::to_duration(1.0);
+  const jcc::TimeDuration dt = jcc::to_duration(1.0);
 
   const std::vector<geometry::spatial::TimeControlPoint> points = {
       geometry::spatial::TimeControlPoint{t0, jcc::Vec3(0.0, 0.0, 0.0)},
@@ -31,7 +31,7 @@ TEST(TimeInterpolatorTest, time_interpolator) {
   {  // Nothing at the end point
     EXPECT_FALSE(interp(t0 + (2 * dt)));
 
-    const jcc::TimePoint t = t0 + estimation::to_duration(1.9999);
+    const jcc::TimePoint t = t0 + jcc::to_duration(1.9999);
     const auto interp_at_t = interp(t);
     ASSERT_TRUE(interp_at_t);
     const auto error = (*interp_at_t - points[2].value).norm();
@@ -39,13 +39,13 @@ TEST(TimeInterpolatorTest, time_interpolator) {
   }
 
   {
-    const jcc::TimePoint t = t0 + estimation::to_duration(0.5);
+    const jcc::TimePoint t = t0 + jcc::to_duration(0.5);
     const auto error = (*interp(t) - jcc::Vec3(0.5, 0.5, 0.5)).norm();
     EXPECT_LT(error, EPS);
   }
 
   {
-    const jcc::TimePoint t = t0 + estimation::to_duration(1.5);
+    const jcc::TimePoint t = t0 + jcc::to_duration(1.5);
     const auto error = (*interp(t) - jcc::Vec3(3.0, 3.0, 3.0)).norm();
     EXPECT_LT(error, EPS);
   }

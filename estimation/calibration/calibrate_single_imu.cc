@@ -37,7 +37,7 @@ SO3 estimate_camera_from_gyro(
     const SE3 camera_1_from_camera_0 =
         fiducial_from_camera_1.inverse() * fiducial_from_camera_0;
 
-    const double dt = estimation::to_seconds(t1 - t0);
+    const double dt = jcc::to_seconds(t1 - t0);
     const jcc::Vec3 dR_dt_unsmoothed = -camera_1_from_camera_0.so3().log() / dt;
 
     const jcc::Vec3 dR_dt =
@@ -45,7 +45,7 @@ SO3 estimate_camera_from_gyro(
                 : (PREV_ALPHA * prev_w) + ((1.0 - PREV_ALPHA) * dR_dt_unsmoothed);
     prev_w = dR_dt;
 
-    const jcc::TimePoint true_t = estimation::average(t1, t0);
+    const jcc::TimePoint true_t = jcc::average(t1, t0);
     const auto maybe_w_gyro = interp(true_t);
     if (maybe_w_gyro && (dt < 0.2) && (dR_dt.norm() > 0.1)) {
       w_cam_at_t.push_back(dR_dt);

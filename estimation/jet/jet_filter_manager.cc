@@ -39,7 +39,7 @@ void FilterManager::init(const FilterManagerConfiguration& config) {
 
   transform_network_ = config.transform_network;
   imu_model_from_id_ = config.imu_model_from_id;
-  max_fiducial_latency_ = estimation::to_duration(config.max_fiducial_latency_s);
+  max_fiducial_latency_ = jcc::to_duration(config.max_fiducial_latency_s);
 
   stage_ = FilterStage::BOOTSTRAPPING;
 }
