@@ -27,6 +27,13 @@ constexpr TimePoint average(const TimePoint& t0, const TimePoint& t1) {
   return t_avg;
 }
 
+constexpr TimePoint from_nanoseconds(const long int time_nanoseconds) {
+  // const auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(t);
+  const auto nanos = std::chrono::nanoseconds(time_nanoseconds);
+  const TimePoint tp(nanos);
+  return tp;
+}
+
 }  // namespace estimation
 
 namespace jcc {
