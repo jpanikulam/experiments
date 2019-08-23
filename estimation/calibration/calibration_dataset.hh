@@ -60,7 +60,7 @@ struct CalibrationMeasurements {
 // Hate.
 // Hate.
 struct ImageMeasurement {
-  estimation::TimePoint time;
+  jcc::TimePoint time;
   cv::Mat image;
   std::string serial_number;
 };

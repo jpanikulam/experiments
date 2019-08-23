@@ -11,7 +11,7 @@ class PrintingScopedTimer {
   ~PrintingScopedTimer();
 
  private:
-  estimation::TimePoint start_time_;
+  jcc::TimePoint start_time_;
   std::string title_;
 };
 }  // namespace jcc

@@ -3,7 +3,7 @@
 #include <chrono>
 #include <iostream>
 
-namespace estimation {
+namespace jcc {
 
 using TimePoint = std::chrono::system_clock::time_point;
 using TimeDuration = TimePoint::duration;
@@ -34,14 +34,11 @@ constexpr TimePoint from_nanoseconds(const long int time_nanoseconds) {
   return tp;
 }
 
-}  // namespace estimation
-
-namespace jcc {
-inline estimation::TimePoint now() {
+inline jcc::TimePoint now() {
   return std::chrono::system_clock::now();
-}
+}  // namespace jcc
 
 }  // namespace jcc
 
-std::ostream& operator<<(std::ostream& os, const estimation::TimePoint& t);
-std::ostream& operator<<(std::ostream& os, const estimation::TimeDuration& dt);
+std::ostream& operator<<(std::ostream& os, const jcc::TimePoint& t);
+std::ostream& operator<<(std::ostream& os, const jcc::TimeDuration& dt);

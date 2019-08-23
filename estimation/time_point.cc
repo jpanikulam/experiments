@@ -1,6 +1,6 @@
 #include "estimation/time_point.hh"
 
-std::ostream& operator<<(std::ostream& os, const estimation::TimePoint& t) {
+std::ostream& operator<<(std::ostream& os, const jcc::TimePoint& t) {
   os << std::chrono::duration_cast<std::chrono::microseconds>(t.time_since_epoch())
             .count();
   return os;

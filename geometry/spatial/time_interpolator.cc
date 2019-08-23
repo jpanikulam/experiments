@@ -4,7 +4,7 @@
 namespace geometry {
 namespace spatial {
 
-double TimeInterpolator::time_offset(const estimation::TimePoint& time_stamp) const {
+double TimeInterpolator::time_offset(const jcc::TimePoint& time_stamp) const {
   return estimation::to_seconds(time_stamp - first_time_);
 }
 
@@ -26,13 +26,13 @@ TimeInterpolator::TimeInterpolator(
   interpolator_ = std::make_shared<LinearInterpolator>(sorted_control_points);
 }
 jcc::Optional<jcc::Vec3> TimeInterpolator::operator()(
-    const estimation::TimePoint& time_stamp) const {
+    const jcc::TimePoint& time_stamp) const {
   const double t = time_offset(time_stamp);
   return (*interpolator_)(t);
 }
 
-std::size_t TimeInterpolator::count_between(const estimation::TimePoint& start,
-                                            const estimation::TimePoint& end) const {
+std::size_t TimeInterpolator::count_between(const jcc::TimePoint& start,
+                                            const jcc::TimePoint& end) const {
   return interpolator_->count_between(time_offset(start), time_offset(end));
 }
 
