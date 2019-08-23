@@ -24,9 +24,9 @@ def main():
             'default': 0.1,
         },
         {
-            'type': 'bool',
+            'type': 'int',
             'length': 1,
-            'name': 'test_feature',
+            'name': 'render_mode',
         },
         {
             'type': 'int',
@@ -37,7 +37,7 @@ def main():
             'type': 'int',
             'length': 1,
             'name': 'debug_mode',
-        }
+        },
     ]
 
     definitions = [

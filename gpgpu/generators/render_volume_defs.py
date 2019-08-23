@@ -22,9 +22,9 @@ def main():
             'default': "25.0"
         },
         {
-            'type': 'bool',
+            'type': 'int',
             'length': 1,
-            'name': 'test_feature',
+            'name': 'render_mode',
         },
         {
             'type': 'int',
