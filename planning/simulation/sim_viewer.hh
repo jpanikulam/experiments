@@ -1,23 +1,25 @@
+#pragma once
+
 #include "viewer/window_3d.hh"
+
+#include "planning/simulation/sim_viewer_ui.hh"
+#include "viewer/primitives/simple_geometry.hh"
 
 namespace jcc {
 
-class SimViewer : public Window3D {
+class SimViewer : public viewer::Window3D {
  public:
+  SimViewer();
   void on_key(int key, int scancode, int action, int mods) override;
   void on_mouse_button(int button, int action, int mods) override;
-  void on_mouse_move(const WindowPoint &mouse_pos) override;
+  void on_mouse_move(const viewer::WindowPoint &mouse_pos) override;
   void on_scroll(const double amount) override;
 
   void draw() override;
+private:
+ std::shared_ptr<viewer::SimpleGeometry> geo_primary_;
 };
 
-std::shared_ptr<SimViewer> create_sim_viewer(const std::string &title) {
-  const GlSize gl_size(640, 640);
-  auto window = std::make_shared<SimViewer>(gl_size);
-  get_global_state().windows[title] = window;
-  WindowManager::register_window(gl_size, window, title);
-  return window;
-}
+std::shared_ptr<SimViewer> create_sim_viewer(const std::string &title);
 
 }  // namespace jcc
