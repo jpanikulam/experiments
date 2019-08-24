@@ -59,8 +59,33 @@ void create_main_menu(Out<MainMenuState> menu_state) {
   }
 }
 
-void create_task_popup(const EditorState& editor_state,
-                       Out<TaskPopupState> task_popup_state) {
+namespace {
+
+std::shared_ptr<Command> create_object(const EditorState& editor_state,
+                                       const ElementType element_type,
+                                       const jcc::Vec3& world_click_pos) {
+  const int id = static_cast<int>(editor_state.elements.size());
+
+  const SE3 world_from_object = SE3(SO3(), world_click_pos);
+  auto cmd = std::make_shared<CreateElementCommand>();
+  cmd->id = id;
+  cmd->element_type = element_type;
+  cmd->world_from_object = world_from_object;
+  cmd->desc = "Create object";
+  cmd->initial_properties = {{"size", jcc::Vec3::Ones()}};
+  return cmd;
+}
+}  // namespace
+
+jcc::Optional<std::shared_ptr<Command>> create_task_popup(
+    const EditorState& editor_state, Out<TaskPopupState> task_popup_state) {
+  jcc::Optional<std::shared_ptr<Command>> cmd = std::nullopt;
+
+  if (task_popup_state->is_new) {
+    task_popup_state->creation_world_point = editor_state.world_click_pos;
+    task_popup_state->is_new = false;
+  }
+
   if (!ImGui::IsItemHovered() && ImGui::IsMouseClicked(1)) {
     ImGui::OpenPopup("Add Component");
   }
@@ -71,8 +96,8 @@ void create_task_popup(const EditorState& editor_state,
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor(0.1f, 0.8f, 0.1f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor(0.05f, 0.95f, 0.05f));
     if (ImGui::Button("Go Zone")) {
-      const int id = static_cast<int>(editor_state.elements.size());
-
+      cmd = {create_object(
+          editor_state, ElementType::GoZone, task_popup_state->creation_world_point)};
       ImGui::CloseCurrentPopup();
     }
     ImGui::PopStyleColor(3);
@@ -82,16 +107,22 @@ void create_task_popup(const EditorState& editor_state,
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor(0.8f, 0.1f, 0.1f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor(0.95f, 0.05f, 0.05f));
     if (ImGui::Button("No-Go Zone")) {
+      cmd = {create_object(
+          editor_state, ElementType::NoGoZone, task_popup_state->creation_world_point)};
       ImGui::CloseCurrentPopup();
     }
     ImGui::PopStyleColor(3);
 
     if (ImGui::Button("Must-Look Zone")) {
+      cmd = {create_object(
+          editor_state, ElementType::LookZone, task_popup_state->creation_world_point)};
       ImGui::CloseCurrentPopup();
     }
 
     ImGui::EndPopup();
   }
+
+  return cmd;
 }
 
 }  // namespace simulation
