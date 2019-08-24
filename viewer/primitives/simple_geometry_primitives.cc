@@ -171,10 +171,21 @@ void draw_circle(const Vec3 &center,
   world_from_circle_frame.col(1) = y_u;
   world_from_circle_frame.col(2) = normal;
 
+  Eigen::Matrix3d incremental_rot;
+  const double s = std::sin(CIRCLE_RES);
+  const double c = std::cos(CIRCLE_RES);
+  incremental_rot.col(0) << c, -s, 0.0;
+  incremental_rot.col(1) << s, c, 0.0;
+  incremental_rot.col(2) << 0.0, 0.0, 1.0;
+
+  Vec3 pt_circle_frm(radius, radius, 0.0);
   glColor(color);
   glBegin(GL_LINE_LOOP);
   for (double t = 0.0; t < (2.0 * M_PI); t += CIRCLE_RES) {
-    const Vec3 pt_circle_frm(radius * std::sin(t), radius * std::cos(t), 0.0);
+    // const Vec3 pt_circle_frm(radius * std::sin(t), radius * std::cos(t), 0.0);
+    // Avoid transcendentals by incremental rotation
+    pt_circle_frm = incremental_rot * pt_circle_frm;
+
     const Vec3 pt_world_frm = (world_from_circle_frame * pt_circle_frm) + center;
     glVertex(pt_world_frm);
   }
