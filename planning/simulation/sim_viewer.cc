@@ -3,9 +3,10 @@
 
 #include "planning/simulation/sim_viewer.hh"
 
-#include "third_party/imgui/imgui.h"
-
+#include "geometry/plane.hh"
 #include "viewer/window_manager.hh"
+
+#include "third_party/imgui/imgui.h"
 
 namespace jcc {
 namespace simulation {
@@ -30,8 +31,42 @@ void SimViewer::on_scroll(const double amount) {
   Window3D::on_scroll(amount);
 }
 
+void SimViewer::update_editor_state() {
+  //
+  // Plane intersection
+  //
+  const geometry::Plane plane{Vec3::Zero(), geometry::Unit3::UnitZ()};
+
+  const auto &proj = projection();
+  const auto ray = proj.unproject(mouse_pos());
+
+  jcc::Vec3 intersection;
+  const bool intersected = plane.intersect(ray, out(intersection));
+  if (intersected) {
+    editor_state_.world_clicked = true;
+    editor_state_.world_click_pos = intersection;
+  } else {
+    editor_state_.world_clicked = false;
+  }
+}
+
 void SimViewer::draw() {
-  create_main_menu(main_menu_state_);
+  create_main_menu(out(main_menu_state_));
+
+  //
+  // Draw things
+  //
+
+  // for (const auto &element : editor_state_.elements) {
+  //   geo_primary_->add_axes({element.second.world_from_object});
+  // }
+  // geo_primary_->flip();
+
+  TaskPopupState popup_state{};
+  const auto maybe_command = create_task_popup(editor_state_, out(popup_state));
+  if (maybe_command) {
+    cmd_queue_.commit(*maybe_command, out(editor_state_));
+  }
 }
 
 std::shared_ptr<SimViewer> create_sim_viewer(const std::string &title) {

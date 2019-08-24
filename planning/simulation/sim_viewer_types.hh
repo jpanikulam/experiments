@@ -22,6 +22,9 @@ struct Element {
 
 struct EditorState {
   std::map<int, Element> elements;
+
+  bool world_clicked = false;
+  jcc::Vec3 world_click_pos;
 };
 
 }  // namespace simulation
