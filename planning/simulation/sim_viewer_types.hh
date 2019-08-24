@@ -14,6 +14,12 @@ enum class ElementType {
   LookZone = 2   //
 };
 
+enum class CommandQueueAction {
+  None = 0,  //
+  Undo = 1,  //
+  Redo = 2   //
+};
+
 struct Element {
   ElementType element_type;
   SE3 world_from_object;
@@ -23,8 +29,17 @@ struct Element {
 struct EditorState {
   std::map<int, Element> elements;
 
+  //
+  // World interaction
+  //
   bool world_clicked = false;
   jcc::Vec3 world_click_pos;
+
+  //
+  // UI Affordances
+  //
+  bool can_undo = false;
+  bool can_redo = false;
 };
 
 }  // namespace simulation
