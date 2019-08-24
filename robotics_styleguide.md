@@ -65,6 +65,7 @@ Here, a "process" is some procedure that a _human being_ executes, reading from 
 
 # Geometry
 * All transformations should be named `destination_from_source`, so that `a_from_b * b_from_c == a_from_c`
+    * `point_frame_a = a_from_b * point_frame_b`
 
 * Users should not be exposed to the representation details of your chosen transform. Nobody should be talking about quaternions or matrices
     * Except under very select high-performance situations
