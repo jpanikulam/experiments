@@ -224,9 +224,6 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
 
   view_.apply_mouse(mouse_pos, mouse_pos_last_click_, left, right);
 
-  const auto ray = projection_.unproject(mouse_pos);
-  callback_manager_.handle_callbacks(ray, projection_.to_viewport(mouse_pos));
-
   if (left || right) {
     mouse_pos_last_click_ = mouse_pos;
   }
@@ -282,13 +279,15 @@ void Window3D::render() {
     prepare_to_render();
     apply_view(view_, !hide_axes_);
     projection_ = Projection::get_from_current();
+
+    const auto ray = projection_.unproject(mouse_pos());
+    callback_manager_.handle_callbacks(ray, projection_.to_viewport(mouse_pos()));
+
     draw_all_primitives();
   }
 
   imgui_mgr_.new_frame();
-
   draw();
-
   imgui_mgr_.render();
 
   const double t_now = glfwGetTime();

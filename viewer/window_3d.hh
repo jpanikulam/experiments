@@ -95,7 +95,6 @@ class Window3D : public SimpleWindow {
   //
 
   void add_toggle_hotkey(const std::string &toggle_name, bool default_state, char key) {
-    const std::lock_guard<std::mutex> lk(behavior_mutex_);
     add_menu_hotkey(toggle_name, default_state, key, 2);
   }
 
@@ -227,9 +226,9 @@ class Window3D : public SimpleWindow {
   // View Minutia Configuration
   //
 
-  void set_show_axes(const bool hide_axes = true) {
+  void set_show_axes(const bool show_axes = true) {
     const std::lock_guard<std::mutex> lk(behavior_mutex_);
-    hide_axes_ = hide_axes;
+    hide_axes_ = !show_axes;
   }
 
   const GlSize &size() const {
