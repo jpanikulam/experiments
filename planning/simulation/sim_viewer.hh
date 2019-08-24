@@ -6,6 +6,7 @@
 #include "viewer/primitives/simple_geometry.hh"
 
 namespace jcc {
+namespace simulation {
 
 class SimViewer : public viewer::Window3D {
  public:
@@ -16,10 +17,13 @@ class SimViewer : public viewer::Window3D {
   void on_scroll(const double amount) override;
 
   void draw() override;
-private:
- std::shared_ptr<viewer::SimpleGeometry> geo_primary_;
+
+ private:
+  std::shared_ptr<viewer::SimpleGeometry> geo_primary_;
+  MainMenuState main_menu_state_;
 };
 
 std::shared_ptr<SimViewer> create_sim_viewer(const std::string &title);
 
+}  // namespace simulation
 }  // namespace jcc

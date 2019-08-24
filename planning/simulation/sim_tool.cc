@@ -6,7 +6,7 @@
 
 namespace jcc {
 void go() {
-  auto view = create_sim_viewer("2D Robot Test");
+  auto view = simulation::create_sim_viewer("2D Robot Test");
   jcc::Success() << "Loaded assets..." << std::endl;
 
   const auto geo = view->add_primitive<viewer::SimpleGeometry>();

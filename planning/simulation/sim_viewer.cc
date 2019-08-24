@@ -2,18 +2,17 @@
 #include <GLFW/glfw3.h>
 
 #include "planning/simulation/sim_viewer.hh"
-// #include "planning/simulation/sim_viewer_ui.hh"
 
 #include "third_party/imgui/imgui.h"
 
 #include "viewer/window_manager.hh"
 
 namespace jcc {
+namespace simulation {
 
 SimViewer::SimViewer() {
   const auto background = this->add_primitive<viewer::SimpleGeometry>();
   const geometry::shapes::Plane ground{jcc::Vec3::UnitZ(), 0.0};
-  // const geometry::shapes::Plane ground{jcc::Vec3(0.0, 1.0, 0.0).normalized(), 1.0};
   background->add_plane({ground});
   background->flip();
 }
@@ -32,7 +31,7 @@ void SimViewer::on_scroll(const double amount) {
 }
 
 void SimViewer::draw() {
-  // create_main_menu();
+  create_main_menu(main_menu_state_);
 }
 
 std::shared_ptr<SimViewer> create_sim_viewer(const std::string &title) {
@@ -42,4 +41,5 @@ std::shared_ptr<SimViewer> create_sim_viewer(const std::string &title) {
   return window;
 }
 
+}  // namespace simulation
 }  // namespace jcc
