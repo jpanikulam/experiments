@@ -4,8 +4,8 @@
 
 #include <GLFW/glfw3.h>
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 // TODO
 #include <iostream>
@@ -18,7 +18,6 @@ void SimpleWindow::key_pressed(int key, int scancode, int action, int mods) {
   } else if (action == GLFW_RELEASE) {
     held_keys_[key] = false;
   }
-
 
   on_key(key, scancode, action, mods);
 }
@@ -69,6 +68,12 @@ const std::array<bool, 3> &SimpleWindow::held_mouse_buttons() const {
 }
 
 const WindowPoint &SimpleWindow::mouse_pos() const {
+  // return mouse_pos_;
+  double xpos = -1.0;
+  double ypos = -1.0;
+  glfwGetCursorPos(window_, &xpos, &ypos);
+  // mouse_pos_.point(0) = xpos;
+  // mouse_pos_.point(1) = ypos;
   return mouse_pos_;
 }
-}
+}  // namespace viewer

@@ -311,6 +311,7 @@ void Ui2d::state_update() {
     insert(front_buffer_.grid_meshes, back_buffer_.grid_meshes);
     insert(front_buffer_.lines, back_buffer_.lines);
   }
+
   if (flip_queued_) {
     flip_queued_ = false;
     front_buffer_.clear();
