@@ -2,6 +2,7 @@
 
 #include "viewer/gl_size.hh"
 #include "viewer/interaction/callback_manager.hh"
+#include "viewer/interaction/imgui_manager.hh"
 #include "viewer/interaction/view3d.hh"
 #include "viewer/primitives/camera.hh"
 #include "viewer/primitives/primitive.hh"
@@ -26,19 +27,25 @@ using Vec2Map = Eigen::Map<const Eigen::Vector2d>;
 using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
 }  // namespace
 
-class Window3D final : public SimpleWindow {
+class Window3D : public SimpleWindow {
  public:
   Window3D(const GlSize &gl_size);
+  virtual ~Window3D() = default;
+  void init() override;
+
   ///////////////////////////////////
   // Window3D Configuration
   //////////////////////////////////
 
-  void on_key(int key, int scancode, int action, int mods) override;
-  void on_mouse_button(int button, int action, int mods) override;
-  void on_mouse_move(const WindowPoint &mouse_pos) override;
-  void on_scroll(const double amount) override;
+  virtual void on_key(int key, int scancode, int action, int mods) override;
+  virtual void on_mouse_button(int button, int action, int mods) override;
+  virtual void on_mouse_move(const WindowPoint &mouse_pos) override;
+  virtual void on_scroll(const double amount) override;
+  virtual void resize(const GlSize &gl_size) override;
+
   void render() override;
-  void resize(const GlSize &gl_size) override;
+
+  virtual draw();
 
   ///////////////////////////////////
   // Drawing
@@ -220,6 +227,10 @@ class Window3D final : public SimpleWindow {
     hide_axes_ = hide_axes;
   }
 
+  const GlSize& size() const {
+    return gl_size_;
+  }
+
  private:
   void draw_all_primitives() const;
 
@@ -251,9 +262,14 @@ class Window3D final : public SimpleWindow {
   std::map<std::string, std::vector<MenuCallback>> menu_callbacks_;
   std::map<char, std::string> key_mappings_;
 
+  // Click Callbacks
   CallbackManager callback_manager_;
 
+  ImGuiManager imgui_mgr_;
+
+  // Queued UI flip
   bool need_flip_ = false;
+
   //
   // Interaction History
   //

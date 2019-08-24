@@ -9,9 +9,10 @@
 #include "viewer/window_3d.hh"
 #include "viewer/window_manager.hh"
 
+#include "eigen_helpers.hh"
 #include "util/time_point.hh"
 
-#include "eigen_helpers.hh"
+#include "third_party/imgui/imgui.h"
 
 #include <map>
 #include <thread>
@@ -45,7 +46,6 @@ void apply_view(const OrbitCamera &view, bool show_axes) {
   if (show_axes) {
     draw_axes({SE3(), 0.1 / view.zoom(), 3.0, 5.0});
   }
-
 
   glTransform(view.anchor_from_world());
   if (show_axes) {
@@ -102,6 +102,11 @@ Window3D::Window3D(const GlSize &gl_size) : gl_size_(gl_size) {
   set_view_preset(ViewSetting::STANDARD);
 }
 
+void Window3D::init() {
+  // Initialize imgui
+  imgui_mgr_.init(get_window());
+}
+
 void Window3D::set_view_preset(const ViewSetting &setting) {
   switch (setting) {
     case ViewSetting::STANDARD: {
@@ -139,6 +144,10 @@ void Window3D::spin_until_step() {
 
 void Window3D::on_key(int key, int scancode, int action, int mods) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
+
+  if (imgui_mgr_.want_capture()) {
+    return;
+  }
 
   const char key_char = static_cast<char>(key);
 
@@ -182,6 +191,9 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
 }
 void Window3D::on_mouse_button(int button, int action, int mods) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
+  if (imgui_mgr_.want_capture()) {
+    return;
+  }
 
   const auto current_mouse_pos = mouse_pos();
   // const auto ray = projection_.unproject(current_mouse_pos);
@@ -191,6 +203,9 @@ void Window3D::on_mouse_button(int button, int action, int mods) {
 
 void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
+  if (imgui_mgr_.want_capture()) {
+    return;
+  }
 
   const bool shift = held_keys().count(GLFW_KEY_LEFT_SHIFT) == 1
                          ? held_keys().at(GLFW_KEY_LEFT_SHIFT)
@@ -217,6 +232,9 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
 
 void Window3D::on_scroll(const double amount) {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
+  if (imgui_mgr_.want_capture()) {
+    return;
+  }
   view_.apply_scroll(amount);
 }
 
@@ -261,6 +279,12 @@ void Window3D::render() {
     projection_ = Projection::get_from_current();
     draw_all_primitives();
   }
+
+  imgui_mgr_.new_frame();
+
+  draw();
+
+  imgui_mgr_.render();
 
   const double t_now = glfwGetTime();
 
