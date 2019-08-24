@@ -32,7 +32,7 @@ class Window3D : public SimpleWindow {
  public:
   Window3D();
   virtual ~Window3D() = default;
-  void init(const GlSize& gl_size) override;
+  void init(const GlSize &gl_size) override;
 
   ///////////////////////////////////
   // Window3D Configuration
@@ -187,6 +187,10 @@ class Window3D : public SimpleWindow {
     return view_.standard_camera_from_world();
   }
 
+  const Projection &projection() const {
+    return projection_;
+  }
+
   // Z-Backward, Y-Up
   SE3 camera_from_world() const {
     return view_.camera_from_world();
@@ -228,7 +232,7 @@ class Window3D : public SimpleWindow {
     hide_axes_ = hide_axes;
   }
 
-  const GlSize& size() const {
+  const GlSize &size() const {
     return gl_size_;
   }
 
