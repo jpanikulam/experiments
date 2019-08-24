@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stack>
 
 #include "out.hh"
@@ -9,22 +11,23 @@ namespace simulation {
 
 class CommandQueue {
  public:
-  void commit(const Command& command, Out<EditorState> editor_state) {
-    command.commit(editor_state);
+  void commit(const std::shared_ptr<Command> command, Out<EditorState> editor_state) {
+    command->commit(editor_state);
+    committed_.push(command);
   }
 
   void undo() {
-    undone_commands_.push(commands_.top());
-    commands_.pop();
+    undone_commands_.push(committed_.top());
+    committed_.pop();
   }
 
-  void redo() {
-    commit(undone_commands_.top());
+  void redo(Out<EditorState> editor_state) {
+    commit(undone_commands_.top(), editor_state);
     undone_commands_.pop();
   }
 
  private:
-  std::stack<std::shared_ptr<Command>> executed_;
+  std::stack<std::shared_ptr<Command>> committed_;
   std::stack<std::shared_ptr<Command>> undone_commands_;
 };
 }  // namespace simulation

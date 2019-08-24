@@ -19,10 +19,11 @@ struct Command {
   };
 };
 
-struct ObjectCreationCommand : Command {
+struct CreateElementCommand : Command {
   int id;
   ElementType element_type;
   SE3 world_from_object;
+  std::map<std::string, jcc::Vec3> initial_properties;
 
   std::string desc;
 
@@ -30,11 +31,12 @@ struct ObjectCreationCommand : Command {
     Element obj;
     obj.element_type = element_type;
     obj.world_from_object = world_from_object;
+    obj.properties = initial_properties;
     state->elements[id] = obj;
   }
 
   void undo(Out<EditorState> state) {
-    state->elements.erase(id);
+  state->elements.erase(id);
   }
 };
 
@@ -42,7 +44,7 @@ struct ObjectCreationCommand : Command {
 //
 // - extents : vector
 // - success time: scalar
-struct ObjectModifyCommand : Command {
+struct ModifyElementCommand : Command {
   int id;
   std::string property;
   jcc::Vec3 value;
