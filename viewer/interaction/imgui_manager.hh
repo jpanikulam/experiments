@@ -15,7 +15,6 @@ namespace viewer {
 // Note: You can use `want_capture()` to check if ImGui is
 // trying to capture the keyboard or mouse
 //
-//
 class ImGuiManager {
  public:
   void init(GLFWwindow* window);

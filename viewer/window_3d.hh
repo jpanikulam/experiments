@@ -1,5 +1,7 @@
 #pragma once
 
+#include "viewer/simple_window.hh"
+
 #include "viewer/gl_size.hh"
 #include "viewer/interaction/callback_manager.hh"
 #include "viewer/interaction/imgui_manager.hh"
@@ -7,7 +9,6 @@
 #include "viewer/primitives/camera.hh"
 #include "viewer/primitives/primitive.hh"
 #include "viewer/projection.hh"
-#include "viewer/simple_window.hh"
 
 #include "sophus.hh"
 
@@ -29,9 +30,9 @@ using Vec3Map = Eigen::Map<const Eigen::Vector3d>;
 
 class Window3D : public SimpleWindow {
  public:
-  Window3D(const GlSize &gl_size);
+  Window3D();
   virtual ~Window3D() = default;
-  void init() override;
+  void init(const GlSize& gl_size) override;
 
   ///////////////////////////////////
   // Window3D Configuration
@@ -45,7 +46,7 @@ class Window3D : public SimpleWindow {
 
   void render() override;
 
-  virtual draw();
+  virtual void draw();
 
   ///////////////////////////////////
   // Drawing

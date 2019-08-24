@@ -89,7 +89,7 @@ void WindowManager::register_window(const GlSize &size,
       glfwCreateWindow(size.height, size.width, window_name.c_str(), nullptr, nullptr);
   simple_window->set_title(window_name);
   simple_window->set_window(window);
-  simple_window->init();
+  simple_window->init(size);
 
   if (!window) {
     glfwTerminate();

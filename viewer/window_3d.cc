@@ -98,12 +98,13 @@ void set_perspective(const GlSize &gl_size, bool ortho = false) {
 
 }  // namespace
 
-Window3D::Window3D(const GlSize &gl_size) : gl_size_(gl_size) {
+Window3D::Window3D() {
   set_view_preset(ViewSetting::STANDARD);
 }
 
-void Window3D::init() {
+void Window3D::init(const GlSize& gl_size) {
   // Initialize imgui
+  gl_size_ = gl_size;
   imgui_mgr_.init(get_window());
 }
 
@@ -252,6 +253,9 @@ void Window3D::draw_all_primitives() const {
   }
 }
 
+void Window3D::draw() {
+}
+
 void Window3D::render() {
   const std::lock_guard<std::mutex> lk(behavior_mutex_);
 
@@ -314,7 +318,7 @@ std::shared_ptr<Window3D> get_window3d(const std::string &title) {
     return it->second;
   } else {
     const GlSize gl_size(640, 640);
-    auto window = std::make_shared<Window3D>(gl_size);
+    auto window = std::make_shared<Window3D>();
     get_global_state().windows[title] = window;
     WindowManager::register_window(gl_size, window, title);
     return window;

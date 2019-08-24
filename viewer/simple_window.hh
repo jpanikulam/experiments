@@ -17,7 +17,7 @@ namespace viewer {
 class SimpleWindow {
  public:
   virtual ~SimpleWindow() = default;
-  virtual void init() {
+  virtual void init(const GlSize &gl_size) {
   }
 
   virtual void key_pressed(int key, int scancode, int action, int mods);
