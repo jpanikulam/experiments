@@ -17,6 +17,9 @@ namespace viewer {
 class SimpleWindow {
  public:
   virtual ~SimpleWindow() = default;
+  virtual void init() {
+  }
+
   virtual void key_pressed(int key, int scancode, int action, int mods);
   virtual void mouse_button(int button, int action, int mods);
   virtual void mouse_moved(double x, double y);
