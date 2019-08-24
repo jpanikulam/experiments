@@ -102,7 +102,7 @@ Window3D::Window3D() {
   set_view_preset(ViewSetting::STANDARD);
 }
 
-void Window3D::init(const GlSize& gl_size) {
+void Window3D::init(const GlSize &gl_size) {
   // Initialize imgui
   gl_size_ = gl_size;
   imgui_mgr_.init(get_window());
@@ -150,6 +150,7 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
     return;
   }
 
+  // TODO: There is precision loss here, so the character is actually ambiguous.
   const char key_char = static_cast<char>(key);
 
   if (action == GLFW_PRESS) {
@@ -169,23 +170,23 @@ void Window3D::on_key(int key, int scancode, int action, int mods) {
     //
     // Navigation UI management
     //
-    if (key_char == 'N') {
+    if (key == GLFW_KEY_N) {
       should_step_ = true;
     }
 
-    if (key_char == 'C') {
+    if (key == GLFW_KEY_C) {
       should_continue_ = !should_continue_;
     }
 
-    if (key_char == 'O') {
+    if (key == GLFW_KEY_O) {
       orthogonal_projection_ = !orthogonal_projection_;
     }
 
-    if (key_char == 'T') {
+    if (key == GLFW_KEY_T) {
       view_.toggle_orbit();
     }
 
-    if (key_char == 'H') {
+    if (key == GLFW_KEY_H) {
       hide_axes_ = !hide_axes_;
     }
   }

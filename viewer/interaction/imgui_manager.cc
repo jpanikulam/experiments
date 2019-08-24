@@ -26,7 +26,8 @@ void ImGuiManager::init(GLFWwindow* window) {
   // ImGui::StyleColorsClassic();
 
   // Setup Platform/Renderer bindings
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  constexpr bool INSTALL_CALLBACKS = true;
+  ImGui_ImplGlfw_InitForOpenGL(window, INSTALL_CALLBACKS);
   ImGui_ImplOpenGL2_Init();
 }
 

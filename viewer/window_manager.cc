@@ -87,9 +87,6 @@ void WindowManager::register_window(const GlSize &size,
 
   GLFWwindow *window =
       glfwCreateWindow(size.height, size.width, window_name.c_str(), nullptr, nullptr);
-  simple_window->set_title(window_name);
-  simple_window->set_window(window);
-  simple_window->init(size);
 
   if (!window) {
     glfwTerminate();
@@ -107,6 +104,10 @@ void WindowManager::register_window(const GlSize &size,
 
   global_state->windows[window] = simple_window;
   global_state->last_placed_window_x += size.width;
+
+  simple_window->set_title(window_name);
+  simple_window->set_window(window);
+  simple_window->init(size);
 }
 
 //
