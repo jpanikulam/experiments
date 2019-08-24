@@ -5,8 +5,8 @@
 #include "sophus.hh"
 #include "viewer/primitives/primitive.hh"
 
-#include "geometry/shapes/halfspace.hh"
 #include "geometry/shapes/fit_ellipse.hh"
+#include "geometry/shapes/halfspace.hh"
 #include "geometry/tri_mesh.hh"
 
 #include <vector>

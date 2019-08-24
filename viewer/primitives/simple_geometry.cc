@@ -66,7 +66,8 @@ void SimpleGeometry::clear() {
 void SimpleGeometry::flip() {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
   front_buffer_ = std::move(back_buffer_);
-  mesh_displaylists_.clear();
+  front_buffer_.mesh_displaylists.clear();
+  back_buffer_.mesh_displaylists.clear();
 }
 
 void SimpleGeometry::flush() {
@@ -90,7 +91,7 @@ void SimpleGeometry::flush() {
   back_buffer_.clear();
 
   // TODO: Why do we have to invalidate the whole cache?
-  mesh_displaylists_.clear();
+  back_buffer_.mesh_displaylists.clear();
 }
 
 void SimpleGeometry::add_ray(const geometry::Ray &ray,
@@ -185,63 +186,6 @@ void SimpleGeometry::add_box(const AxisAlignedBox &box) {
 
 void SimpleGeometry::draw() const {
   const std::lock_guard<std::mutex> lk(draw_mutex_);
-  glMatrixMode(GL_MODELVIEW);
-
-  for (const auto &axes : front_buffer_.axes) {
-    draw_axes(axes);
-  }
-
-  for (const auto &points : front_buffer_.points) {
-    draw_points(points);
-  }
-
-  for (const auto &point : front_buffer_.raw_points) {
-    draw_point(point);
-  }
-
-  for (const auto &points2d : front_buffer_.points2d) {
-    draw_points2d(points2d);
-  }
-
-  for (const auto &circle : front_buffer_.spheres) {
-    draw_sphere(circle);
-  }
-
-  for (const auto &ellipse : front_buffer_.ellipsoids) {
-    draw_ellipsoid(ellipse);
-  }
-
-  for (const auto &polygon : front_buffer_.polygons) {
-    draw_polygon(polygon);
-  }
-
-  for (const auto &colored_points : front_buffer_.colored_points) {
-    draw_colored_points(colored_points);
-  }
-
-  for (const auto &plane : front_buffer_.planes) {
-    draw_plane_grid(plane);
-  }
-
-  constexpr bool USE_CACHE = true;
-  for (std::size_t i = 0; i < front_buffer_.tri_meshes.size(); ++i) {
-    if (USE_CACHE) {
-      if (mesh_displaylists_.count(i) == 0) {
-        const auto &tri_mesh = front_buffer_.tri_meshes[i];
-        const GLuint index = glGenLists(1);
-        assert(index > 0);
-        mesh_displaylists_[i] = index;
-        glNewList(index, GL_COMPILE);
-        draw_trimesh(tri_mesh);
-        glEndList();
-      }
-      glCallList(mesh_displaylists_.at(i));
-    } else {
-      const auto &tri_mesh = front_buffer_.tri_meshes[i];
-      draw_trimesh(tri_mesh);
-    }
-  }
-
-  draw_lines(front_buffer_.lines);
+  draw_geometry_buffer(front_buffer_);
 }
 }  // namespace viewer
