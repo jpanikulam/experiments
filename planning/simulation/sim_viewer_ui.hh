@@ -13,9 +13,11 @@ namespace simulation {
 
 struct MainMenuState {
   float sim_speed = 1.0;
+
+  CommandQueueAction cmd_queue_update;
 };
 
-void create_main_menu(Out<MainMenuState> menu_state);
+void create_main_menu(const EditorState& editor_state, Out<MainMenuState> menu_state);
 
 struct TaskPopupState {
   bool is_new = true;
