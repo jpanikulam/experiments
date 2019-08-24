@@ -14,15 +14,38 @@ class CommandQueue {
   void commit(const std::shared_ptr<Command> command, Out<EditorState> editor_state) {
     command->commit(editor_state);
     committed_.push(command);
+
+    while (!undone_commands_.empty()) {
+      undone_commands_.pop();
+    }
   }
 
-  void undo() {
-    undone_commands_.push(committed_.top());
+  bool can_undo() const {
+    return !committed_.empty();
+  }
+
+  void undo(Out<EditorState> editor_state) {
+    if (committed_.empty()) {
+      return;
+    }
+    const auto command = committed_.top();
+    command->undo(editor_state);
+    undone_commands_.push(command);
     committed_.pop();
   }
 
+  bool can_redo() const {
+    return !undone_commands_.empty();
+  }
+
   void redo(Out<EditorState> editor_state) {
-    commit(undone_commands_.top(), editor_state);
+    if (undone_commands_.empty()) {
+      return;
+    }
+
+    const auto command = undone_commands_.top();
+    command->commit(editor_state);
+    committed_.push(command);
     undone_commands_.pop();
   }
 

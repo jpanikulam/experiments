@@ -36,7 +36,7 @@ struct CreateElementCommand : Command {
   }
 
   void undo(Out<EditorState> state) {
-  state->elements.erase(id);
+    state->elements.erase(id);
   }
 };
 
