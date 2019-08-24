@@ -58,21 +58,6 @@ include_directories(${FREETYPE_INCLUDE_DIRS})
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/run)
 SET(GENERATED_PATH ${PROJECT_BINARY_DIR}/include)
-# file(MAKE_DIRECTORY ${GENERATED_PATH})
-
-macro(add_test test_name test_file test_libs)
-    add_executable(
-        ${test_name}
-        ${test_file}
-    )
-    set_target_properties(
-        ${test_name}
-        PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test
-    )
-    set(AUGLIBS ${GTEST_LIBRARIES} pthread ${test_libs})
-    target_link_libraries(${test_name} ${AUGLIBS})
-endmacro(add_test)
 
 execute_process(
     COMMAND pymake -c "${CMAKE_CURRENT_SOURCE_DIR}/pymake.json" -v success -p "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -85,12 +70,12 @@ endif()
 set(CMAKE_CXX_COMPILER "g++-7")
 set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
 
-
 add_subdirectory(cmake_tools)
-add_cl_gen(gen_fluid_types gpgpu/generators/fluid_defs.py)
-
+add_subdirectory(third_party)
 add_subdirectory(tmp)
+
 target_compile_definitions(environment PRIVATE ASSET_PATH="${BASEPATH}/data")
 target_compile_definitions(environment PRIVATE REPO_PATH="${BASEPATH}")
+
 add_definitions(-DEIGEN_MAX_ALIGN_BYTES=0)
 add_definitions(-DEIGEN_MAX_STATIC_ALIGN_BYTES=0)
