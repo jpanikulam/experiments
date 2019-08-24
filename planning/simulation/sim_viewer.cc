@@ -20,6 +20,15 @@ SimViewer::SimViewer() {
 
 void SimViewer::on_key(int key, int scancode, int action, int mods) {
   Window3D::on_key(key, scancode, action, mods);
+
+  if (action == GLFW_PRESS) {
+    if ((key == GLFW_KEY_Z) && (mods == GLFW_MOD_CONTROL)) {
+      cmd_queue_.undo(out(editor_state_));
+
+    } else if ((key == GLFW_KEY_Y) && (mods == GLFW_MOD_CONTROL)) {
+      cmd_queue_.redo(out(editor_state_));
+    }
+  }
 }
 void SimViewer::on_mouse_button(int button, int action, int mods) {
   Window3D::on_mouse_button(button, action, mods);
@@ -48,22 +57,67 @@ void SimViewer::update_editor_state() {
   } else {
     editor_state_.world_clicked = false;
   }
+
+  //
+  // Main Menu UI Availability
+  //
+  editor_state_.can_undo = cmd_queue_.can_undo();
+  editor_state_.can_redo = cmd_queue_.can_redo();
 }
 
+namespace {
+
+void draw_element(const Element &element) {
+  const jcc::Vec3 size = element.properties["size"];
+
+  buffer_.lines.push_back({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
+                           Vec3(box.lower.x(), box.upper.y(), box.upper.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
+                           Vec3(box.lower.x(), box.lower.y(), box.lower.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.lower.x(), box.lower.y(), box.upper.z()),
+                           Vec3(box.upper.x(), box.lower.y(), box.upper.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.lower.x(), box.upper.y(), box.upper.z()),
+                           Vec3(box.upper.x(), box.upper.y(), box.upper.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.lower.x(), box.upper.y(), box.upper.z()),
+                           Vec3(box.lower.x(), box.upper.y(), box.lower.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.upper.x(), box.upper.y(), box.upper.z()),
+                           Vec3(box.upper.x(), box.upper.y(), box.lower.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.upper.x(), box.upper.y(), box.upper.z()),
+                           Vec3(box.upper.x(), box.lower.y(), box.upper.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.upper.x(), box.upper.y(), box.lower.z()),
+                           Vec3(box.upper.x(), box.lower.y(), box.lower.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.upper.x(), box.upper.y(), box.lower.z()),
+                           Vec3(box.lower.x(), box.upper.y(), box.lower.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.upper.x(), box.lower.y(), box.lower.z()),
+                           Vec3(box.lower.x(), box.lower.y(), box.lower.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.upper.x(), box.lower.y(), box.lower.z()),
+                           Vec3(box.upper.x(), box.lower.y(), box.upper.z()), box.color});
+  buffer_.lines.push_back({Vec3(box.lower.x(), box.lower.y(), box.lower.z()),
+                           Vec3(box.lower.x(), box.upper.y(), box.lower.z()), box.color});
+}
+}  // namespace
+
 void SimViewer::draw() {
-  create_main_menu(out(main_menu_state_));
+  update_editor_state();
+
+  create_main_menu(editor_state_, out(main_menu_state_));
+
+  if (main_menu_state_.cmd_queue_update == CommandQueueAction::Undo) {
+    cmd_queue_.undo(out(editor_state_));
+  } else if (main_menu_state_.cmd_queue_update == CommandQueueAction::Redo) {
+    cmd_queue_.redo(out(editor_state_));
+  }
 
   //
   // Draw things
   //
 
-  // for (const auto &element : editor_state_.elements) {
-  //   geo_primary_->add_axes({element.second.world_from_object});
-  // }
-  // geo_primary_->flip();
+  for (const auto &element : editor_state_.elements) {
+    // viewer::draw_axes({element.second.world_from_object});
+    draw_element(element);
+  }
 
-  TaskPopupState popup_state{};
-  const auto maybe_command = create_task_popup(editor_state_, out(popup_state));
+  const auto maybe_command = create_task_popup(editor_state_, out(task_popup_state_));
   if (maybe_command) {
     cmd_queue_.commit(*maybe_command, out(editor_state_));
   }

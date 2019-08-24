@@ -3,6 +3,7 @@
 #include "viewer/window_3d.hh"
 
 #include "planning/simulation/sim_viewer_ui.hh"
+#include "viewer/primitives/geometry_buffer.hh"
 #include "viewer/primitives/simple_geometry.hh"
 
 #include "planning/simulation/sim_viewer_command_queue.hh"
@@ -23,9 +24,10 @@ class SimViewer : public viewer::Window3D {
   void update_editor_state();
 
  private:
-  std::shared_ptr<viewer::SimpleGeometry> geo_primary_;
   MainMenuState main_menu_state_;
   EditorState editor_state_;
+
+  viewer::GeometryBuffer geo_;
 
   //
   // Between frames
