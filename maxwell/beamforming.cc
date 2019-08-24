@@ -95,6 +95,7 @@ void beamform() {
                                                     const viewer::ViewportPoint& vp) {
     if (dist_sq < 1.0) {
       demo_geo->add_sphere({ray_pt, 0.1, viewer::colors::red()});
+      demo_geo->add_line({ray_pt, p, viewer::colors::red()});
       demo_text->add_pointer_target({"Dist: " + std::to_string(dist_sq), p, vp});
     }
     demo_text->flip();
@@ -105,8 +106,9 @@ void beamform() {
       hover_callback,
       {geometry::shapes::LineSegment{Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.0, 10.0)}});
 
-  view->add_click_callback(hover_callback,
-                           geometry::Plane{Vec3(0.0, 0.0, 0.0), geometry::Unit3(0.0, 0.0, 1.0)});
+  // view->add_click_callback(
+  //     hover_callback,
+  //     geometry::Plane{Vec3(0.0, 0.0, 0.0), geometry::Unit3(0.0, 0.0, 1.0)});
 
   bgnd->add_line({jcc::Vec3(1.0, 1.0, 1.0), jcc::Vec3(0.0, 0.0, 10.0),
                   jcc::Vec4(1.0, 0.5, 0.5, 0.8)});
