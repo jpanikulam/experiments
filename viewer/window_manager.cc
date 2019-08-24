@@ -94,6 +94,8 @@ void WindowManager::register_window(const GlSize &size,
     exit(EXIT_FAILURE);
   }
 
+  // glfwMakeContextCurrent(window);
+
   glfwSetWindowPos(window, global_state->last_placed_window_x, 0);
 
   glfwSetKeyCallback(window, key_callback);
@@ -131,7 +133,8 @@ void WindowManager::render() {
     window->render();
     glfwSwapBuffers(glfw_win);
   }
-  glfwPollEvents();
+  // glfwPollEvents();
+  glfwWaitEvents();
 
   for (const auto window_key : to_erase) {
     glfwDestroyWindow(window_key);
