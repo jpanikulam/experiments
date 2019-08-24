@@ -295,7 +295,6 @@ void draw(viewer::Ui2d& ui2d,
 
     if (cc_cfg.debug_mode == 3) {
       render_volume(ui2d, kernel_runner.queue(), rctx, world_from_camera,
-
                     rctx.physics.dv_ink_tmp, cc_cfg, SCALING_VELOCITY_VIEW * 5.0, t);
     }
   }
@@ -308,7 +307,7 @@ void draw(viewer::Ui2d& ui2d,
   if (DIFFUSE) {
     // const jcc::PrintingScopedTimer tt("  Diffusion Time");
     auto diffuse_kernel = rctx.fluid_kernels.at("diffuse");
-    for (int j = 0; j < N_JACOBI_ITERS; ++j) {
+    for (int j = 0; j < 20; ++j) {
       // "Give me u1 s.t. laplacian(u1) == u0"
       diffuse_kernel.setArg(0, rctx.physics.dv_ink_tmp);
       diffuse_kernel.setArg(1, rctx.physics.dv_ink_swap1);
