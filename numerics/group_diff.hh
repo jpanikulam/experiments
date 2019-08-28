@@ -24,18 +24,18 @@ MatNd<Y::DIM, X::DIM> group_jacobian(const X& x,
                                      const ComputeDelta<Y>& compute_delta,
                                      const ApplyDelta<X>& apply_delta) {
   const auto fx = fnc(x);
-  const auto f_x =
-      [&apply_delta, &compute_delta, &fnc, fx, &x](const VecNd<X::DIM>& dx) {
-        const X xplus_dx = apply_delta(x, dx);
-        return compute_delta(fnc(xplus_dx), fx);
-      };
+  const auto f_x = [&apply_delta, &compute_delta, &fnc, fx, &x](
+                       const VecNd<X::DIM>& dx) -> VecNd<Y::DIM> {
+    const X xplus_dx = apply_delta(x, dx);
+    return compute_delta(fnc(xplus_dx), fx);
+  };
   return numerical_jacobian<Y::DIM>(VecNd<X::DIM>::Zero().eval(), f_x);
 }
 
 template <typename X, typename Y>
 MatNd<Y::DIM, X::DIM> group_jacobian(const X& x, const GroupFnc<X, Y>& fnc) {
   const auto fx = fnc(x);
-  const auto f_x = [&fnc, &x, fx](const VecNd<X::DIM>& dx) {
+  const auto f_x = [&fnc, &x, fx](const VecNd<X::DIM>& dx) -> VecNd<Y::DIM> {
     const X xplus_dx = X::apply_delta(x, dx);
     return Y::compute_delta(fnc(xplus_dx), fx);
   };
