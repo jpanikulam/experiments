@@ -87,7 +87,7 @@ void form(aiScene const* const scene,
       material->Get(AI_MATKEY_COLOR_DIFFUSE, color_diff);
 
       (*colors)[this_node_name] =
-          jcc::Vec4(color_diff[0], color_diff[1], color_diff[2], 0.7);
+          jcc::Vec4(color_diff[0], color_diff[1], color_diff[2], 1.0);
     }
 
     const int n_children = node->mNumChildren;
