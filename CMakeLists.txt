@@ -55,6 +55,11 @@ find_package(ASSIMP REQUIRED)
 find_package(Freetype REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
+#########################
+# YAML-Cpp
+# TODO: Destroy this
+#
+find_package(yaml-cpp REQUIRED)
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/run)
 SET(GENERATED_PATH ${PROJECT_BINARY_DIR}/include)
