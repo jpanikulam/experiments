@@ -26,6 +26,7 @@ struct GenericDerivatives {
 
   MatNd<Dim::X_DIM, Dim::X_DIM> A;
   MatNd<Dim::X_DIM, Dim::U_DIM> B;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 template <typename Dim, typename _State>
