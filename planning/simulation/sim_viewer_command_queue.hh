@@ -13,11 +13,8 @@ class CommandQueue {
  public:
   void commit(const std::shared_ptr<Command> command, Out<EditorState> editor_state) {
     command->commit(editor_state);
-    committed_.push(command);
-
-    while (!undone_commands_.empty()) {
-      undone_commands_.pop();
-    }
+    committed_.push_back(command);
+    undone_commands_.clear();
   }
 
   bool can_undo() const {
@@ -28,10 +25,10 @@ class CommandQueue {
     if (committed_.empty()) {
       return;
     }
-    const auto command = committed_.top();
+    const auto command = committed_.back();
     command->undo(editor_state);
-    undone_commands_.push(command);
-    committed_.pop();
+    undone_commands_.push_back(command);
+    committed_.pop_back();
   }
 
   bool can_redo() const {
@@ -43,15 +40,18 @@ class CommandQueue {
       return;
     }
 
-    const auto command = undone_commands_.top();
+    const auto command = undone_commands_.back();
     command->commit(editor_state);
-    committed_.push(command);
-    undone_commands_.pop();
+    committed_.push_back(command);
+    undone_commands_.pop_back();
   }
 
+  void save(const std::string& filepath);
+  void load(const std::string& filepath, Out<EditorState> editor_state);
+
  private:
-  std::stack<std::shared_ptr<Command>> committed_;
-  std::stack<std::shared_ptr<Command>> undone_commands_;
+  std::vector<std::shared_ptr<Command>> committed_;
+  std::vector<std::shared_ptr<Command>> undone_commands_;
 };
 }  // namespace simulation
 }  // namespace jcc
