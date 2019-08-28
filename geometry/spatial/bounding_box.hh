@@ -47,6 +47,21 @@ class BoundingBox {
     return sa;
   }
 
+  std::vector<Vec> points() const {
+    static_assert(DIM == 3, "Only supported for 3D bboxes");
+    std::vector<Vec> pts;
+
+    pts.emplace_back(lower_.x(), lower_.y(), upper_.z());
+    pts.emplace_back(lower_.x(), upper_.y(), upper_.z());
+    pts.emplace_back(lower_.x(), lower_.y(), lower_.z());
+    pts.emplace_back(upper_.x(), lower_.y(), upper_.z());
+    pts.emplace_back(upper_.x(), upper_.y(), upper_.z());
+    pts.emplace_back(lower_.x(), upper_.y(), lower_.z());
+    pts.emplace_back(upper_.x(), upper_.y(), lower_.z());
+    pts.emplace_back(upper_.x(), lower_.y(), lower_.z());
+    return pts;
+  }
+
   // Compute an intersection using the slab method
   Intersection intersect(const Ray &ray) const {
     static_assert(DIM == 3, "Dimension must be 3 because rays are of dim 3 so");
@@ -83,6 +98,27 @@ class BoundingBox {
       intersection.intersected = (max_t_near < min_t_far) && max_t_near >= 0.0;
       intersection.distance = max_t_near;
     }
+    return intersection;
+  }
+
+  // Not symmetrical!
+  struct BoundingBoxIntersection {
+    bool contained = false;
+    bool intersected = false;
+  };
+
+  BoundingBoxIntersection intersect(const BoundingBox<DIM> &other) const {
+    BoundingBoxIntersection intersection;
+
+    intersection.contained = (other.lower_.array() >= lower_.array()).all() &&
+                             (other.upper_.array() <= upper_.array()).all();
+    // for (const auto &pt : other.points()) {
+    //   if (contains(pt)) {
+    //     intersection.intersected = true;
+    //     break;
+    //   }
+    // }
+
     return intersection;
   }
 
