@@ -32,11 +32,15 @@ struct GeometryBuffer {
     polygons.clear();
     colored_points.clear();
     tri_meshes.clear();
+
+    // mesh_displaylists.clear();
+    displaylist_clear_queued = true;
   }
 
   // This is not great
   // TODO: Add a universal UUID -> displaylist map
   mutable std::map<std::size_t, int> mesh_displaylists;
+  mutable bool displaylist_clear_queued = false;
 };
 
 void draw_geometry_buffer(const GeometryBuffer &buffer);

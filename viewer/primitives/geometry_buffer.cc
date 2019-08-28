@@ -2,6 +2,8 @@
 
 #include <GL/glew.h>
 
+#include "viewer/gl_aliases.hh"
+
 namespace viewer {
 
 void draw_geometry_buffer(const GeometryBuffer &buffer) {
@@ -43,19 +45,31 @@ void draw_geometry_buffer(const GeometryBuffer &buffer) {
     draw_plane_grid(plane);
   }
 
+  if (buffer.displaylist_clear_queued) {
+    buffer.displaylist_clear_queued = false;
+    for (auto &dl : buffer.mesh_displaylists) {
+      glDeleteLists(dl.second, 1u);
+    }
+    buffer.mesh_displaylists.clear();
+  }
+
   constexpr bool USE_CACHE = true;
   for (std::size_t i = 0; i < buffer.tri_meshes.size(); ++i) {
     if (USE_CACHE) {
       if (buffer.mesh_displaylists.count(i) == 0) {
-        const auto &tri_mesh = buffer.tri_meshes[i];
+        auto tri_mesh2 = buffer.tri_meshes[i];
+        tri_mesh2.world_from_mesh = SE3();
         const GLuint index = glGenLists(1);
         assert(index > 0);
         buffer.mesh_displaylists[i] = index;
         glNewList(index, GL_COMPILE);
-        draw_trimesh(tri_mesh);
+        draw_trimesh(tri_mesh2);
         glEndList();
       }
+      glPushMatrix();
+      glTransform(buffer.tri_meshes[i].world_from_mesh);
       glCallList(buffer.mesh_displaylists.at(i));
+      glPopMatrix();
     } else {
       const auto &tri_mesh = buffer.tri_meshes[i];
       draw_trimesh(tri_mesh);

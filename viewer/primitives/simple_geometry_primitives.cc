@@ -284,39 +284,50 @@ void draw_point(const Point &point) {
 void draw_trimesh(const TriMesh &trimesh) {
   glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+
+  const Eigen::Vector4f light_intensity(0.7, 0.7, 0.7, 1.0);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_intensity.data());
+
+  const Eigen::Vector4f specular_intensity(0.2, 0.2, 0.3, 1.0);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, specular_intensity.data());
+
+  const Eigen::Vector4f ambient_intensity(0.2, 0.2, 0.2, 1.0);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, ambient_intensity.data());
+
   glPushMatrix();
   glTransform(trimesh.world_from_mesh);
 
   glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
   if (trimesh.outline) {
     glLineWidth(trimesh.outline_width);
-    glBegin(GL_LINES);
     for (const auto &tri : trimesh.mesh.triangles) {
+      glBegin(GL_LINE_LOOP);
       glVertex(tri.vertices[0]);
       glVertex(tri.vertices[1]);
       glVertex(tri.vertices[2]);
+      glEnd();
     }
-    glEnd();
   }
 
-  // glEnable(GL_LIGHTING);
   const auto material = colors::get_plastic(trimesh.color);
   colors::gl_material(material);
   glColor(trimesh.color);
   if (trimesh.filled) {
     glBegin(GL_TRIANGLES);
     for (const auto &tri : trimesh.mesh.triangles) {
+      glNormal3dv(tri.normal.data());
       glVertex(tri.vertices[0]);
       glVertex(tri.vertices[1]);
       glVertex(tri.vertices[2]);
     }
-
     glEnd();
+
   }
-  // glDisable(GL_LIGHTING);
+  glDisable(GL_LIGHTING);
   glPopMatrix();
 
   glPopAttrib();
-  // draw the display list
 }
 }  // namespace viewer

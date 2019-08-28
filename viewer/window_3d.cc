@@ -275,6 +275,7 @@ void Window3D::render() {
   }
 
   {  // Render main scene
+
     set_perspective(gl_size_, orthogonal_projection_);
     prepare_to_render();
     apply_view(view_, !hide_axes_);
