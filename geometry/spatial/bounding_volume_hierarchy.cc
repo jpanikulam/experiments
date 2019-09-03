@@ -20,50 +20,71 @@ Partition compute_partition(std::vector<BoundingVolumeHierarchy::AABB> &boxes,
                             size_t begin,
                             size_t end,
                             int dim) {
-  const auto begin_it = boxes.begin();
-  std::sort(begin_it + begin, begin_it + end,
-            [dim](const BoundingVolumeHierarchy::AABB &a,
-                  const BoundingVolumeHierarchy::AABB &b) {
-              return a.bbox.upper()(dim) < b.bbox.upper()(dim);
-            });
+  constexpr bool SMART_PARTITION = false;
 
-  //
-  // Partition the hierarchy based on [2] by testing different possibly box sizes
-  //
-  BoundingBox<BoundingVolumeHierarchy::DIM> lower_bbox;
-  double best_split_cost = std::numeric_limits<double>::max();
-  int best_split_index = -1;
-  for (size_t k = begin; k < end; ++k) {
-    const double lower_size = static_cast<double>(k - begin);
-    const double upper_size = static_cast<double>(end - k);
-    assert((lower_size + upper_size) == (end - begin));
+  if (!SMART_PARTITION) {
+    const auto begin_it = boxes.begin();
+    std::sort(begin_it + begin, begin_it + end,
+              [dim](const BoundingVolumeHierarchy::AABB &a,
+                    const BoundingVolumeHierarchy::AABB &b) {
+                return a.bbox.upper()(dim) < b.bbox.upper()(dim);
+              });
 
-    BoundingBox<BoundingVolumeHierarchy::DIM> upper_bbox;
-    for (size_t u = k; u < end; ++u) {
-      upper_bbox.expand(boxes[u].bbox);
+    const std::size_t best_split_index = (begin + end) / 2;
+    Partition partition;
+    partition.dim = dim;
+    partition.split_value = boxes[best_split_index].bbox.upper()(dim);
+    partition.split_cost = -1.0;
+    partition.index = best_split_index;
+
+    return partition;
+
+  } else {
+    const auto begin_it = boxes.begin();
+    std::sort(begin_it + begin, begin_it + end,
+              [dim](const BoundingVolumeHierarchy::AABB &a,
+                    const BoundingVolumeHierarchy::AABB &b) {
+                return a.bbox.upper()(dim) < b.bbox.upper()(dim);
+              });
+
+    //
+    // Partition the hierarchy based on [2] by testing different possibly box sizes
+    //
+    BoundingBox<BoundingVolumeHierarchy::DIM> lower_bbox;
+    double best_split_cost = std::numeric_limits<double>::max();
+    int best_split_index = -1;
+    for (size_t k = begin; k < end; ++k) {
+      const double lower_size = static_cast<double>(k - begin);
+      const double upper_size = static_cast<double>(end - k);
+      assert((lower_size + upper_size) == (end - begin));
+
+      BoundingBox<BoundingVolumeHierarchy::DIM> upper_bbox;
+      for (size_t u = k; u < end; ++u) {
+        upper_bbox.expand(boxes[u].bbox);
+      }
+
+      lower_bbox.expand(boxes[k].bbox);
+
+      const double lower_sa = lower_bbox.surface_area();
+      const double upper_sa = upper_bbox.surface_area();
+
+      const double split_cost = (lower_sa * lower_size) + (upper_sa * upper_size);
+
+      if (split_cost < best_split_cost) {
+        best_split_cost = split_cost;
+        best_split_index = k;
+      }
     }
 
-    lower_bbox.expand(boxes[k].bbox);
+    assert(best_split_index >= 0);
 
-    const double lower_sa = lower_bbox.surface_area();
-    const double upper_sa = upper_bbox.surface_area();
-
-    const double split_cost = (lower_sa * lower_size) + (upper_sa * upper_size);
-
-    if (split_cost < best_split_cost) {
-      best_split_cost = split_cost;
-      best_split_index = k;
-    }
+    Partition partition;
+    partition.dim = dim;
+    partition.split_value = boxes[best_split_index].bbox.upper()(dim);
+    partition.split_cost = best_split_cost;
+    partition.index = best_split_index;
+    return partition;
   }
-
-  assert(best_split_index >= 0);
-
-  Partition partition;
-  partition.dim = dim;
-  partition.split_value = boxes[best_split_index].bbox.upper()(dim);
-  partition.split_cost = best_split_cost;
-  partition.index = best_split_index;
-  return partition;
 }
 }  // namespace
 
@@ -93,6 +114,7 @@ int BoundingVolumeHierarchy::add_node_and_children(
   //
   // Partition the tree -- this is a pivot operation so we can use flat storage
   //
+
   const Partition chosen_partition =
       compute_partition(bounding_boxes, begin, end, depth % 3);
   const int dim = chosen_partition.dim;

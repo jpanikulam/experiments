@@ -117,7 +117,9 @@ void climb_tree(const geometry::spatial::BoundingVolumeHierarchy &bvh) {
 void demo_intersection() {
   auto win = viewer::get_window3d("Window A");
 
-  const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
+  // const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
+  const std::string file_path = "/home/jacob/repos/models/store.stl";
+
   const auto tri = *geometry::import::read_stl(file_path);
   auto scene_geometry = win->add_primitive<viewer::SimpleGeometry>();
   auto visitor_geometry = win->add_primitive<viewer::SimpleGeometry>();
@@ -127,19 +129,24 @@ void demo_intersection() {
   std::vector<geometry::spatial::TriangleVolume> triangles;
   triangles.reserve(tri.triangles.size());
 
+  scene_geometry->add_triangle_mesh({tri});
+
   for (size_t k = 0; k < tri.triangles.size(); ++k) {
     triangles.emplace_back(tri.triangles[k].vertices);
     tri_ptrs.push_back(&triangles.back());
   }
 
-  for (size_t k = 0; k < tri.triangles.size(); ++k) {
-    scene_geometry->add_line({tri.triangles[k].vertices[0], tri.triangles[k].vertices[1],
-                              Vec4(0.8, 0.8, 0.8, 0.4)});
-    scene_geometry->add_line({tri.triangles[k].vertices[1], tri.triangles[k].vertices[2],
-                              Vec4(0.8, 0.8, 0.8, 0.4)});
-    scene_geometry->add_line({tri.triangles[k].vertices[2], tri.triangles[k].vertices[0],
-                              Vec4(0.8, 0.8, 0.8, 0.4)});
-  }
+  // for (size_t k = 0; k < tri.triangles.size(); ++k) {
+  //   scene_geometry->add_line({tri.triangles[k].vertices[0],
+  //   tri.triangles[k].vertices[1],
+  //                             Vec4(0.8, 0.8, 0.8, 0.4)});
+  //   scene_geometry->add_line({tri.triangles[k].vertices[1],
+  //   tri.triangles[k].vertices[2],
+  //                             Vec4(0.8, 0.8, 0.8, 0.4)});
+  //   scene_geometry->add_line({tri.triangles[k].vertices[2],
+  //   tri.triangles[k].vertices[0],
+  //                             Vec4(0.8, 0.8, 0.8, 0.4)});
+  // }
 
   scene_geometry->flush();
 
@@ -165,7 +172,9 @@ void demo_intersection() {
         win->spin_until_step();
       };
   geometry::spatial::BoundingVolumeHierarchy bvh;
+  std::cout << "Building BHV" << std::endl;
   bvh.build(tri_ptrs);
+  std::cout << "bvh done" << std::endl;
 
   {
     geometry::Ray ray;
@@ -200,9 +209,9 @@ void demo_intersection() {
 void demo_bounding_volumes() {
   auto win = viewer::get_window3d("Window A");
 
-  const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
+  // const std::string file_path = "/home/jacob/repos/experiments/data/test_stuff2.stl";
+  const std::string file_path = "/home/jacob/repos/models/store.stl";
   const auto tri = *geometry::import::read_stl(file_path);
-
   auto scene_geometry = win->add_primitive<viewer::SimpleGeometry>();
   auto visitor_geometry = win->add_primitive<viewer::SimpleGeometry>();
 
@@ -216,22 +225,23 @@ void demo_bounding_volumes() {
     tri_ptrs.push_back(&triangles.back());
   }
 
-  win->spin_until_step();
+  // win->spin_until_step();
+  /*
 
-  {
-    geometry::spatial::BoundingVolumeHierarchy bvh;
-    bvh.build(tri_ptrs);
-    verify_all_leaves_unique(bvh);
-    climb_tree(bvh);
-  }
-  return;
+    {
+      geometry::spatial::BoundingVolumeHierarchy bvh;
+      bvh.build(tri_ptrs);
+      verify_all_leaves_unique(bvh);
+      climb_tree(bvh);
+    }
+    return;*/
 
   std::map<int, Eigen::Vector4d> colors;
   for (int stop_depth = 0; stop_depth < 10; ++stop_depth) {
     const auto visitor = [&visitor_geometry, &win, &colors, stop_depth](
                              const geometry::spatial::BoundingBox<3> &box, int depth,
                              bool leaf) {
-      if ((depth != stop_depth) && !leaf) {
+      if ((depth != stop_depth)) {
         return;
       }
       viewer::AxisAlignedBox aabb;
@@ -262,5 +272,5 @@ void demo_bounding_volumes() {
 
 int main() {
   demo_intersection();
-  demo_bounding_volumes();
+  // demo_bounding_volumes();
 }
