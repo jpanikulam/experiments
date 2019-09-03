@@ -83,18 +83,32 @@ __kernel void render_volume(
     const float normalizer = 1.0f / sqrt(2.0f * M_PI_F * cov);
 
     // TODO: Consider an exponential step size
+    /*for (float dist_m = 0.0f; dist_m < 10.0f; dist_m += step_size) {
+        const float3 sample_pos_m = ray_origin_m + (dist_m * ray_dir_world);
+
+        const float4 sample_pos_vx_frame = (float4) ((sample_pos_m - volume_origin_m) / volume_m_per_px, 1.0f);
+
+        const float4 image_color = read_imagef(volume, smp_volume, sample_pos_vx_frame);
+        integrated_color += image_color.xyz * step_size * 1.0f;
+    }*/
+
+    const float density = 0.1;
+
+
     for (float dist_m = 0.0f; dist_m < 10.0f; dist_m += step_size) {
         const float3 sample_pos_m = ray_origin_m + (dist_m * ray_dir_world);
 
         const float4 sample_pos_vx_frame = (float4) ((sample_pos_m - volume_origin_m) / volume_m_per_px, 1.0f);
 
-        // const float error = dot(sample_pos_vx_frame.xyz, slice_diagonal_dir) - slice_coord;
-        // const float mahalanobis_d = -error * error * cov;
-        // const float weighting = normalizer * exp(0.5 * mahalanobis_d);
-
         const float4 image_color = read_imagef(volume, smp_volume, sample_pos_vx_frame);
-        integrated_color += image_color.xyz * step_size * 1.0f;
-        // integrated_color = min(integrated_color, error);
+        // integrated_color += image_color.xyz * step_size * 1.0f;
+        // integrated_value +=
+        // integrated_color.w *= density;
+        integrated_color.xyz += (density * image_color.xyz) * (1.0f - integrated_value);
+        integrated_value += image_color.z * density;
+        if (integrated_value > 1.0) {
+            break;
+        }
     }
 
     const float color_val = scaling * dot(slice_diagonal_dir, integrated_color);
