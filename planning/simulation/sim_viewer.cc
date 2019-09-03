@@ -14,10 +14,14 @@
 
 #include "third_party/imgui/imgui.h"
 
+// TODO
+#include "util/heap.hh"
+
 namespace jcc {
 namespace simulation {
 
 namespace {
+
 jcc::Vec4 get_color(const Element &element) {
   const std::map<ElementType, jcc::Vec4> color_map = {
       {ElementType::NoGoZone, jcc::Vec4(1.0, 0.0, 0.0, 1.0)},
@@ -36,35 +40,70 @@ jcc::Vec4 get_color(const Element &element) {
 
 void add_bbox(viewer::GeometryBuffer &buf,
               const geometry::spatial::BoundingBox<3> &bbox,
-              const jcc::Vec4 &color) {
+              const jcc::Vec4 &color,
+              double line_width = 1.0) {
   const jcc::Vec3 lower = bbox.lower();
   const jcc::Vec3 upper = bbox.upper();
   buf.lines.push_back({Vec3(lower.x(), lower.y(), upper.z()),
-                       Vec3(lower.x(), upper.y(), upper.z()), color});
+                       Vec3(lower.x(), upper.y(), upper.z()), color, line_width});
   buf.lines.push_back({Vec3(lower.x(), lower.y(), upper.z()),
-                       Vec3(lower.x(), lower.y(), lower.z()), color});
+                       Vec3(lower.x(), lower.y(), lower.z()), color, line_width});
   buf.lines.push_back({Vec3(lower.x(), lower.y(), upper.z()),
-                       Vec3(upper.x(), lower.y(), upper.z()), color});
+                       Vec3(upper.x(), lower.y(), upper.z()), color, line_width});
   buf.lines.push_back({Vec3(lower.x(), upper.y(), upper.z()),
-                       Vec3(upper.x(), upper.y(), upper.z()), color});
+                       Vec3(upper.x(), upper.y(), upper.z()), color, line_width});
   buf.lines.push_back({Vec3(lower.x(), upper.y(), upper.z()),
-                       Vec3(lower.x(), upper.y(), lower.z()), color});
+                       Vec3(lower.x(), upper.y(), lower.z()), color, line_width});
   buf.lines.push_back({Vec3(upper.x(), upper.y(), upper.z()),
-                       Vec3(upper.x(), upper.y(), lower.z()), color});
+                       Vec3(upper.x(), upper.y(), lower.z()), color, line_width});
   buf.lines.push_back({Vec3(upper.x(), upper.y(), upper.z()),
-                       Vec3(upper.x(), lower.y(), upper.z()), color});
+                       Vec3(upper.x(), lower.y(), upper.z()), color, line_width});
   buf.lines.push_back({Vec3(upper.x(), upper.y(), lower.z()),
-                       Vec3(upper.x(), lower.y(), lower.z()), color});
+                       Vec3(upper.x(), lower.y(), lower.z()), color, line_width});
   buf.lines.push_back({Vec3(upper.x(), upper.y(), lower.z()),
-                       Vec3(lower.x(), upper.y(), lower.z()), color});
+                       Vec3(lower.x(), upper.y(), lower.z()), color, line_width});
   buf.lines.push_back({Vec3(upper.x(), lower.y(), lower.z()),
-                       Vec3(lower.x(), lower.y(), lower.z()), color});
+                       Vec3(lower.x(), lower.y(), lower.z()), color, line_width});
   buf.lines.push_back({Vec3(upper.x(), lower.y(), lower.z()),
-                       Vec3(upper.x(), lower.y(), upper.z()), color});
+                       Vec3(upper.x(), lower.y(), upper.z()), color, line_width});
   buf.lines.push_back({Vec3(lower.x(), lower.y(), lower.z()),
-                       Vec3(lower.x(), upper.y(), lower.z()), color});
+                       Vec3(lower.x(), upper.y(), lower.z()), color, line_width});
 }
 
+void draw_children(const geometry::spatial::BoundingVolumeHierarchy &bvh,
+                   int base_node_ind,
+                   viewer::GeometryBuffer &buf) {
+  Heap<int> stack;
+  stack.push(base_node_ind);
+  while (!stack.empty()) {
+    const int next_index = stack.pop();
+    const auto &node = bvh.tree()[next_index];
+    if (node.is_leaf) {
+      for (int k = node.leaf.start; k < node.leaf.end; ++k) {
+        const auto &aabb = bvh.aabb()[k];
+        const jcc::Vec4 color(0.8, 0.1, 0.1, 0.6);
+        add_bbox(buf, aabb.bbox, color, 0.5);
+      }
+    } else {
+      stack.push(node.node.left_child_index);
+      stack.push(node.node.left_child_index + 1);
+    }
+  }
+}
+
+auto make_visit(viewer::GeometryBuffer &buf) {
+  return [&buf](const geometry::spatial::BoundingVolumeHierarchy::TreeElement &el,
+                bool intersected) {
+
+    const double alpha = el.is_leaf ? 0.4 : 0.2;
+    const jcc::Vec4 color =
+        intersected ? jcc::Vec4(0.1, 0.8, 0.1, alpha) : jcc::Vec4(0.1, 0.8, 0.8, alpha);
+
+    if (el.is_leaf) {
+      add_bbox(buf, el.bounding_box, color, 0.2);
+    }
+  };
+}
 }  // namespace
 
 SimViewer::SimViewer() {
@@ -89,6 +128,32 @@ SimViewer::SimViewer() {
                                       "planning/simulation/models/bossa_nova_robot.stl");
   assets_["Store"] =
       build_asset(Environment::repo_path() + "planning/simulation/models/store.stl");
+
+  jcc::Success() << "Loaded assets" << std::endl;
+
+  geometry::spatial::RayCasterConfig cfg;
+
+  for (double x = -0.1; x <= 0.5; x += 0.1) {
+    for (double y = -0.5; y <= 0.5; y += 0.1) {
+      const geometry::Unit3 dir(y, 1.0, x);
+
+      const geometry::Ray ray{jcc::Vec3::UnitZ() * 0.2, dir.vec()};
+      cfg.rays.push_back({ray});
+      const geometry::Ray ray2{jcc::Vec3::UnitZ() * 0.2, -dir.vec()};
+      cfg.rays.push_back({ray2});
+    }
+  }
+
+  ray_caster_.init(cfg);
+  jcc::Warning() << "Building Bounding Volume Hierarchies" << std::endl;
+  // ray_caster_.add_mesh(assets_["One Shelf+X"].mesh);
+  // ray_caster_.add_mesh(assets_["One Shelf-X"].mesh);
+  // ray_caster_.add_mesh(assets_["Store"].mesh);
+  ray_caster_.add_volume(assets_["Store"].get_bvh());
+
+  // draw_children(*assets_["Store"].get_bvh(), 0, bgnd_geo_);
+
+  jcc::Success() << "Built Bounding Volume Hierarchies" << std::endl;
 }
 
 void SimViewer::on_key(int key, int scancode, int action, int mods) {
@@ -291,8 +356,8 @@ void SimViewer::draw() {
             "Time (steps)", &editor_state_.time_scrub, 0, integrator_.max_scrub())) {
       integrator_.scrub_to(editor_state_.time_scrub);
     }
-    ImGui::End();
   }
+  ImGui::End();
 
   //
   // Flush the queue of editor commands
@@ -313,7 +378,6 @@ void SimViewer::draw() {
       jcc::Warning() << "Saving as " << path + editor_state_.filename << std::endl;
       cmd_queue_.save(path + editor_state_.filename);
     } else if (cmd == EditorCommand::Open) {
-
       JASSERT_NE(editor_state_.filename, "", "Cannot save without a set filename");
       const std::string path = jcc::Environment::repo_path() + "sims/";
 
@@ -367,12 +431,12 @@ void SimViewer::draw() {
                                          (element.properties.at("size") * 0.5);
         integrator_.add_avoider(element_center, element_radius);
       }
-
-      if (editor_state_.robot.model == "Bossa Nova") {
-        integrator_.set_max_speed(0.4);
-      } else {
-        integrator_.set_max_speed(1.5);
-      }
+    }
+    if (editor_state_.robot.model == "Bossa Nova") {
+      integrator_.set_max_speed(0.05);
+      integrator_.set_target(jcc::Vec3(0.0, 4.5, 0.0));
+    } else {
+      integrator_.set_max_speed(1.5);
     }
 
     last_step_time_ = t_now;
@@ -394,30 +458,47 @@ void SimViewer::draw() {
     const double spacing = 0.25;
 
     viewer::ColoredPoints colored_points;
+    /*
+        for (double x = -5.5; x < 5.5; x += spacing) {
+          for (double y = -5.5; y < 5.5; y += spacing) {
+            const jcc::Vec3 offset(x, y, 0.0);
+            xtest.x_world = offset;
+            const double cost = compute_cost(xtest,
+                                             planning::drifter::Controls::to_vector(utest),
+                                             planning::drifter::HORIZON - 1);
 
-    for (double x = -5.5; x < 5.5; x += spacing) {
-      for (double y = -5.5; y < 5.5; y += spacing) {
-        const jcc::Vec3 offset(x, y, 0.0);
-        // xtest.x_world = x0.x_world + offset;
-        xtest.x_world = offset;
-        const double cost = compute_cost(xtest,
-                                         planning::drifter::Controls::to_vector(utest),
-                                         planning::drifter::HORIZON - 1);
+            const jcc::Vec3 viz_pt = xtest.x_world + jcc::Vec3::UnitZ() * 0.1 * cost;
 
-        // const jcc::Vec3 viz_pt =
-        // xtest.x_world + jcc::Vec3::UnitZ() * 0.1 * std::log(cost + 1e-3);
-        const jcc::Vec3 viz_pt = xtest.x_world + jcc::Vec3::UnitZ() * 0.1 * cost;
+            const Vec4 color = jcc::augment(viewer::colors::viridis(cost / 8.0), 0.9);
+            colored_points.points.push_back(viz_pt);
+            colored_points.colors.push_back(color);
+            colored_points.sizes.push_back(3.0);
+          }
+        }
+    */
+    const SE3 world_from_robot(x0.R_world_from_body, x0.x_world);
 
-        const Vec4 color = jcc::augment(viewer::colors::viridis(cost / 8.0), 0.9);
-        colored_points.points.push_back(viz_pt);
-        colored_points.colors.push_back(color);
-        colored_points.sizes.push_back(3.0);
+    const auto dists = ray_caster_.cast_rays(world_from_robot);
 
-        // plan_geo_.lines.push_back(
-        // {xtest.x_world, xtest.x_world + jcc::Vec3::UnitZ() * 0.1 * std::log(cost)});
-      }
-      plan_geo_.colored_points.push_back(colored_points);
+    const auto &cfg = ray_caster_.config();
+    viewer::ColoredPoints lidar_points;
+
+    for (std::size_t k = 0; k < dists.size(); ++k) {
+      lidar_points.points.push_back(world_from_robot * cfg.rays[k](dists[k]));
+      const Vec4 color = jcc::augment(viewer::colors::viridis(dists[k] / 5.0), 1.0);
+      // const Vec4 color(1.0, 1.0, 0.0, 1.0);
+      lidar_points.colors.push_back(color);
+      lidar_points.sizes.push_back(0.8);
     }
+
+    lidar_geo_.colored_points.push_back(lidar_points);
+
+    const auto visitor = make_visit(plan_geo_);
+    const auto bvh = assets_["Store"].get_bvh();
+
+    const geometry::Ray test_ray{jcc::Vec3::UnitZ() * 0.2,
+                                 geometry::Unit3(0.0, 1.0, 0.0).vec()};
+    bvh->intersect(world_from_robot * test_ray, visitor);
   }
 
   //
@@ -444,6 +525,8 @@ void SimViewer::draw() {
   viewer::draw_geometry_buffer(tmp_geo_);
   viewer::draw_geometry_buffer(robot_geo_);
   viewer::draw_geometry_buffer(plan_geo_);
+  viewer::draw_geometry_buffer(lidar_geo_);
+  viewer::draw_geometry_buffer(bgnd_geo_);
 }
 
 std::shared_ptr<SimViewer> create_sim_viewer(const std::string &title) {

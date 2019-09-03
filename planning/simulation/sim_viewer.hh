@@ -14,6 +14,8 @@
 // TODO: Add pausing
 #include "planning/simulation/sim_viewer_integrator.hh"
 
+// todo
+#include "geometry/spatial/raycaster.hh"
 
 namespace jcc {
 namespace simulation {
@@ -39,11 +41,19 @@ class SimViewer : public viewer::Window3D {
   InteractableGeometry interactable_geo_;
   SimulationIntegrator integrator_;
 
+  geometry::spatial::RayCaster ray_caster_;
+  bool show_bvh_ = false;
+
   viewer::GeometryBuffer geo_;
   viewer::GeometryBuffer tmp_geo_;
 
   viewer::GeometryBuffer plan_geo_;
   viewer::GeometryBuffer robot_geo_;
+
+  viewer::GeometryBuffer bgnd_geo_;
+
+
+  viewer::GeometryBuffer lidar_geo_;
 
   // SceneTree robot_tree_;
 
