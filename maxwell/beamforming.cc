@@ -94,8 +94,8 @@ void beamform() {
                                                     const Vec3& p,
                                                     const viewer::ViewportPoint& vp) {
     if (dist_sq < 1.0) {
-      demo_geo->add_sphere({ray_pt, 0.1, viewer::colors::red()});
-      demo_geo->add_line({ray_pt, p, viewer::colors::red()});
+      demo_geo->add_sphere({ray_pt, 0.1, viewer::red()});
+      demo_geo->add_line({ray_pt, p, viewer::red()});
       demo_text->add_pointer_target({"Dist: " + std::to_string(dist_sq), p, vp});
     }
     demo_text->flip();

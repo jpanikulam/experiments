@@ -1,6 +1,7 @@
 #pragma once
 
 #include "viewer/primitives/simple_geometry_primitives.hh"
+#include "viewer/colors/colors.hh"
 
 #include <map>
 #include <vector>

@@ -3,7 +3,6 @@
 #include "eigen.hh"
 
 namespace viewer {
-namespace colors {
 // TODO: Add a color scheme
 
 inline jcc::Vec4 black() {
@@ -70,5 +69,4 @@ inline jcc::Vec4 navy() {
   return jcc::Vec4(0.0, 0.0, 0.5, 1.0);
 }
 
-}  // namespace colors
 }  // namespace viewer
