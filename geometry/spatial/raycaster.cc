@@ -2,6 +2,9 @@
 
 #include <limits>
 
+// TODO
+#include <iostream>
+
 namespace geometry {
 namespace spatial {
 using Vec3 = Eigen::Vector3d;
@@ -46,5 +49,6 @@ std::vector<double> RayCaster::cast_rays(const SE3 &world_from_caster) {
   }
   return ranges;
 }
-}
-}
+
+}  // namespace spatial
+}  // namespace geometry

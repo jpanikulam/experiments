@@ -1,7 +1,7 @@
 #pragma once
 
-#include "geometry/spatial/volume.hh"
 #include "geometry/shapes/ray.hh"
+#include "geometry/spatial/volume.hh"
 
 #include "sophus.hh"
 
@@ -19,19 +19,25 @@ struct RayCasterConfig {
 RayCasterConfig build_raycaster_config();
 
 class RayCaster {
-public:
-  RayCaster(const RayCasterConfig &config)
-      : config_(config){};
+ public:
+  RayCaster() = default;
+  RayCaster(const RayCasterConfig &config) : config_(config){};
+
+  void init(const RayCasterConfig &config) {
+    config_ = config;
+  }
+
   const RayCasterConfig &config() & {
     return config_;
   }
 
   void add_volume(std::shared_ptr<Volume> volume);
+
   std::vector<double> cast_rays(const SE3 &world_from_caster);
 
-private:
+ private:
   RayCasterConfig config_;
   std::vector<std::shared_ptr<Volume>> volumes_;
 };
-}
-}
+}  // namespace spatial
+}  // namespace geometry
