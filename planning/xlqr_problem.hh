@@ -21,7 +21,8 @@ class XlqrProblem {
 
   struct Solution {
     std::vector<State> x;
-    std::vector<ControlVec> u;
+    StdVector<ControlVec> u;
+    double cost = std::numeric_limits<double>::max();
   };
 
   using Visitor = std::function<void(const Solution& soln, int iteration, bool final)>;
@@ -36,9 +37,10 @@ class XlqrProblem {
 
     // Feed-forward
     ControlVec k = ControlVec::Zero();
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
   };
 
-  using LqrSolution = StdVector<LqrFeedback>;
+  using LqrSolution = std::vector<LqrFeedback>;
 
   double shoot(const Solution& soln,
                const LqrSolution& lqr_soln,
