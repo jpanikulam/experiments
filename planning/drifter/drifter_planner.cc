@@ -1,5 +1,6 @@
 #include "planning/drifter/drifter_planner.hh"
 
+#include "planning/costs/costs.hh"
 #include "planning/differentiation.hh"
 #include "planning/drifter/drifter_xlqr.hh"
 #include "planning/generic_planner.hh"
@@ -15,43 +16,27 @@
 namespace planning {
 namespace drifter {
 
-double huber(double x, double k) {
-  constexpr double half = 0.5;
-  const double abs_x = std::abs(x);
-  if (abs_x < k) {
-    return (x * x) * half;
-  } else {
-    return k * (abs_x - (k * half));
-  }
-}
-
-double square(double x) {
-  return x * x;
-}
-
-double quad_hinge(double x, double k) {
-  return square(std::max(x - k, 0.0));
-}
-
 DrifterProblem::Cost make_drifter_cost(const BehaviorPrimitives& desires) {
   return [desires](const State& state, const VecNd<U_DIM>& u, int t) {
     const auto control = Controls::from_vector(u);
     double cost = 0.0;
 
-    {
-      cost += 1.0 * square(control.a);
-      cost += 1.0 * square(control.phidot);
-    }
-    {
-      if (t >= HORIZON - 3) {
-        const jcc::Vec3 error = state.x_world - desires.target;
-        cost += 1.0 * huber(error.norm(), 1.0);
-        cost += 10.0 * square(state.x_vel);
-      }
+    cost += 1.0 * square(control.a);
+    cost += 1.0 * square(control.phidot);
 
-      cost += quad_hinge(state.x_vel, desires.vmax);
-      cost += square(state.phi);
+    if (t >= HORIZON - 3) {
+      const jcc::Vec3 error = state.x_world - desires.target;
+      cost += 1.0 * huber(error.norm(), 1.0);
+      cost += 10.0 * square(state.x_vel);
     }
+
+    cost += 50.0 * quad_hinge(state.x_vel, 1.5);
+    // cost += 50.0 * square(state.x_vel);
+    // if(state.x_vel > 0.4) {
+    // cost += 50.0 * square(state.x_vel - 0.4);
+    // }
+
+    cost += square(state.phi);
 
     for (const auto& avoid : desires.avoids) {
       const double error = (state.x_world - avoid.pos_world).norm();
@@ -145,6 +130,5 @@ std::vector<StateControl> plan(const State& x0,
 
   return result;
 }
-
 }  // namespace drifter
 }  // namespace planning
