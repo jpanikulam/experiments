@@ -1,8 +1,8 @@
 
 #include "testing/gtest.hh"
 
-#include "geometry/spatial/bounding_box.hh"
 #include "eigen.hh"
+#include "geometry/spatial/bounding_box.hh"
 
 using Vec3 = Eigen::Vector3d;
 
@@ -16,8 +16,8 @@ TEST(TestBoundingBox, intersection_test) {
 
   {  // Translated beneath on y, pointing at box
     geometry::Ray ray;
-    ray.origin        = Vec3(0.0, -0.5, 0.5);
-    ray.direction     = Vec3(0.0, 1.0, 0.0);
+    ray.origin = Vec3(0.0, -0.5, 0.5);
+    ray.direction = Vec3(0.0, 1.0, 0.0);
     const auto result = bbox.intersect(ray);
 
     EXPECT_TRUE(result.intersected);
@@ -29,8 +29,8 @@ TEST(TestBoundingBox, intersection_test) {
 
   {  // Translated above on y, pointing at box
     geometry::Ray ray;
-    ray.origin        = Vec3(0.0, 1.5, 0.5);
-    ray.direction     = Vec3(0.0, -1.0, 0.0);
+    ray.origin = Vec3(0.0, 1.5, 0.5);
+    ray.direction = Vec3(0.0, -1.0, 0.0);
     const auto result = bbox.intersect(ray);
 
     EXPECT_TRUE(result.intersected);
@@ -42,8 +42,8 @@ TEST(TestBoundingBox, intersection_test) {
 
   {  // translated above on z, pointing at box
     geometry::Ray ray;
-    ray.origin        = Vec3(0.5, 0.0, 1.5);
-    ray.direction     = Vec3(0.0, 0.0, -1.0);
+    ray.origin = Vec3(0.5, 0.0, 1.5);
+    ray.direction = Vec3(0.0, 0.0, -1.0);
     const auto result = bbox.intersect(ray);
 
     EXPECT_TRUE(result.intersected);
@@ -55,8 +55,8 @@ TEST(TestBoundingBox, intersection_test) {
 
   {  // translated above on z, pointing at box
     geometry::Ray ray;
-    ray.origin        = Vec3(0.5, 0.0, -0.5);
-    ray.direction     = Vec3(0.0, 0.0, 1.0);
+    ray.origin = Vec3(0.5, 0.0, -0.5);
+    ray.direction = Vec3(0.0, 0.0, 1.0);
     const auto result = bbox.intersect(ray);
 
     EXPECT_TRUE(result.intersected);
@@ -68,8 +68,8 @@ TEST(TestBoundingBox, intersection_test) {
 
   {  // translated above on x, pointing at box
     geometry::Ray ray;
-    ray.origin        = Vec3(-0.5, 0.0, 0.5);
-    ray.direction     = Vec3(1.0, 0.0, 0.0);
+    ray.origin = Vec3(-0.5, 0.0, 0.5);
+    ray.direction = Vec3(1.0, 0.0, 0.0);
     const auto result = bbox.intersect(ray);
 
     EXPECT_TRUE(result.intersected);
@@ -81,8 +81,8 @@ TEST(TestBoundingBox, intersection_test) {
 
   {  // translated above on x, pointing at box
     geometry::Ray ray;
-    ray.origin        = Vec3(1.5, 0.0, 0.5);
-    ray.direction     = Vec3(-1.0, 0.0, 0.0);
+    ray.origin = Vec3(1.5, 0.0, 0.5);
+    ray.direction = Vec3(-1.0, 0.0, 0.0);
     const auto result = bbox.intersect(ray);
 
     EXPECT_TRUE(result.intersected);
@@ -94,8 +94,8 @@ TEST(TestBoundingBox, intersection_test) {
 
   {
     geometry::Ray ray;
-    ray.origin        = Vec3(0.0, -0.5, 0.5);
-    ray.direction     = Vec3(0.0, -1.0, 0.0);
+    ray.origin = Vec3(0.0, -0.5, 0.5);
+    ray.direction = Vec3(0.0, -1.0, 0.0);
     const auto result = bbox.intersect(ray);
 
     ASSERT_FALSE(bbox.contains(ray.origin));
@@ -104,8 +104,8 @@ TEST(TestBoundingBox, intersection_test) {
 
   {
     geometry::Ray ray;
-    ray.origin        = Vec3(0.0, -1.0, 0.5);
-    ray.direction     = Vec3(0.0, -1.0, -1.0).normalized();
+    ray.origin = Vec3(0.0, -1.0, 0.5);
+    ray.direction = Vec3(0.0, -1.0, -1.0).normalized();
     const auto result = bbox.intersect(ray);
 
     ASSERT_FALSE(bbox.contains(ray.origin));
@@ -120,8 +120,8 @@ TEST(TestBoundingBox, contains_ray) {
 
   {  // Translated beneath on y, pointing at box
     geometry::Ray ray;
-    ray.origin        = Vec3(0.5, 0.5, 0.5);
-    ray.direction     = Vec3(0.0, 1.0, 0.0);
+    ray.origin = Vec3(0.5, 0.5, 0.5);
+    ray.direction = Vec3(0.0, 1.0, 0.0);
     const auto result = bbox.intersect(ray);
 
     EXPECT_TRUE(result.intersected);
@@ -139,8 +139,8 @@ TEST(TestBoundingBox, does_not_intersect) {
 
   {
     geometry::Ray ray;
-    ray.origin        = Vec3(1.5, 1.5, 1.5);
-    ray.direction     = Vec3(0.0, 1.0, 0.0);
+    ray.origin = Vec3(1.5, 1.5, 1.5);
+    ray.direction = Vec3(0.0, 1.0, 0.0);
     const auto result = bbox.intersect(ray);
 
     ASSERT_FALSE(bbox.contains(ray.origin));
@@ -149,8 +149,8 @@ TEST(TestBoundingBox, does_not_intersect) {
 
   {
     geometry::Ray ray;
-    ray.origin        = Vec3(0.0, 0.0, 1.5);
-    ray.direction     = Vec3(0.0, 1.0, 0.0);
+    ray.origin = Vec3(0.0, 0.0, 1.5);
+    ray.direction = Vec3(0.0, 1.0, 0.0);
     const auto result = bbox.intersect(ray);
 
     ASSERT_FALSE(bbox.contains(ray.origin));
@@ -166,11 +166,64 @@ TEST(TestBoundingBox, apparent_bug) {
   bbox.expand(Vec3(-2.01473, -3.04393, 2.45791));
 
   geometry::Ray ray;
-  ray.origin                      = Vec3(0.0, 0.0, 0.75);
-  ray.direction                   = Vec3(-1.0, -1.0, 0.0).normalized();
+  ray.origin = Vec3(0.0, 0.0, 0.75);
+  ray.direction = Vec3(-1.0, -1.0, 0.0).normalized();
   const Intersection intersection = bbox.intersect(ray);
 
   EXPECT_FALSE(intersection.intersected);
 }
+
+TEST(TestBoundingBox, contains_aabb) {
+  BoundingBox<3> bbox1;
+  bbox1.expand(Vec3(0.0, 0.0, 0.0));
+  bbox1.expand(Vec3(1.0, 1.0, 1.0));
+
+  BoundingBox<3> bbox2;
+  bbox2.expand(Vec3(0.1, 0.1, 0.1));
+  bbox2.expand(Vec3(0.9, 0.9, 0.9));
+
+  // Contains itself
+  EXPECT_TRUE(bbox1.contains(bbox1));
+
+  // Contains sub-box
+  EXPECT_TRUE(bbox1.contains(bbox2));
+
+  // Does not contain thing that it contains
+  EXPECT_FALSE(bbox2.contains(bbox1));
 }
+
+TEST(TestBoundingBox, intersects_aabb) {
+  BoundingBox<3> bbox1;
+  bbox1.expand(Vec3(0.0, 0.0, 0.0));
+  bbox1.expand(Vec3(1.0, 1.0, 1.0));
+
+  BoundingBox<3> bbox2;
+  bbox2.expand(Vec3(0.1, 0.1, 0.1));
+  bbox2.expand(Vec3(0.9, 0.9, 0.9));
+
+  BoundingBox<3> bbox3;
+  bbox3.expand(Vec3(0.5, 0.5, 0.5));
+  bbox3.expand(Vec3(1.5, 1.5, 1.5));
+
+  BoundingBox<3> bbox4;
+  bbox4.expand(Vec3(1.2, 1.2, 1.2));
+  bbox4.expand(Vec3(1.5, 1.5, 1.5));
+
+  // Intersects itself
+  EXPECT_TRUE(bbox1.intersects(bbox1));
+
+  // Intersects sub-box
+  EXPECT_TRUE(bbox1.intersects(bbox2));
+
+  // Intersects containing box
+  EXPECT_TRUE(bbox2.intersects(bbox1));
+
+  // Intersects overlapping box
+  EXPECT_TRUE(bbox1.intersects(bbox3));
+
+  // Does not intersect non-overlapping box
+  EXPECT_FALSE(bbox1.intersects(bbox4));
 }
+
+}  // namespace spatial
+}  // namespace geometry

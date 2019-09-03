@@ -110,16 +110,23 @@ class BoundingBox {
   BoundingBoxIntersection intersect(const BoundingBox<DIM> &other) const {
     BoundingBoxIntersection intersection;
 
-    intersection.contained = (other.lower_.array() >= lower_.array()).all() &&
-                             (other.upper_.array() <= upper_.array()).all();
-    // for (const auto &pt : other.points()) {
-    //   if (contains(pt)) {
-    //     intersection.intersected = true;
-    //     break;
-    //   }
-    // }
+    intersection.contained = contains(other);
+    intersection.intersected = intersects(other);
 
     return intersection;
+  }
+
+  //
+  // NOTE: Returns true for itself (non-strict)
+  bool contains(const BoundingBox<DIM> &other) const {
+    return (other.lower_.array() >= lower_.array()).all() &&
+           (other.upper_.array() <= upper_.array()).all();
+  }
+
+  // Use separating hyperplane theorem to determine if there is overlap
+  bool intersects(const BoundingBox<DIM> &other) const {
+    return (lower_.array() < other.upper_.array()).all() &&
+           (upper_.array() > other.lower_.array()).all();
   }
 
   Eigen::Vector3d nearest_point(const Eigen::Vector3d &point) const {
