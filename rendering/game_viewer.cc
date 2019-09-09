@@ -119,14 +119,6 @@ void GameViewer::draw_scene() {
         gv_state_.view.camera.camera_from_world().matrix().cast<float>();
     test_shader_.set("camera_from_world", camera_from_world);
 
-    float vertices[] = {-0.5f, -0.5f, -0.5f,  //
-                        0.5f,  -0.5f, -0.5f,  //
-                        0.0f,  0.5f,  -0.5f};
-
-    float colors[] = {1.0f, 0.0f, 1.0f,  //
-                      0.0f, 1.0f, 0.0f,  //
-                      0.0f, 0.0f, 0.7f};
-
     const std::vector<jcc::Vec3f> vctr_vertices = {{-0.5f, -0.5f, -0.5f},  //
                                                    {0.5f, -0.5f, -0.5f},   //
                                                    {0.0f, 0.5f, -0.5f}};
@@ -135,30 +127,15 @@ void GameViewer::draw_scene() {
                                                  {0.0f, 1.0f, 0.0f},  //
                                                  {0.0f, 0.0f, 0.7f}};
 
-    const auto vao = test_shader_.generate_vao();
+    auto vao = test_shader_.generate_vao();
     vao.bind();
+
     vao.set("vertex_color", vctr_colors);
     vao.set("vertex_world", vctr_vertices);
-    /*    unsigned int vertices_vbo, colors_vbo;
-        glGenBuffers(1, &vertices_vbo);
-        glGenBuffers(1, &colors_vbo);
 
-        unsigned int vao_id;
-        glGenVertexArrays(1, &vao_id);
-        glBindVertexArray(vao_id);
-
-        glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-        glEnableVertexAttribArray(0);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-
-    */
-    // glBindVertexArray(vao_id);
+    vao.bind();
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    vao.destroy();
 
     demo_buffer_.planes.push_back({ground});
     viewer::draw_geometry_buffer(demo_buffer_);
