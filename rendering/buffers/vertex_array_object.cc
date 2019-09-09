@@ -1,0 +1,228 @@
+#include <GL/glew.h>
+
+#include "rendering/buffers/vertex_array_object.hh"
+
+#include "logging/assert.hh"
+
+namespace jcc {
+
+VertexArrayObject::VertexArrayObject(
+    const std::map<std::string, AttributeDescription>& desc)
+    : attribute_from_name_(desc) {
+  unsigned int vao_;
+  glGenVertexArrays(1, &vao_);
+}
+
+void VertexArrayObject::bind() const {
+  glBindVertexArray(vao_);
+}
+
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<MatNf<2, 3>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT2x3), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 6 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT2x3, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<MatNf<2, 4>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT2x4), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 8 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT2x4, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<MatNf<3, 2>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT3x2), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 6 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT3x2, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<MatNf<3, 4>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT3x4), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 12 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT3x4, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<MatNf<4, 2>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT4x2), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 8 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT4x2, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<MatNf<3, 3>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT3), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 9 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT3, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<VecNf<2>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC2), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 2 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_VEC2, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<VecNf<3>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC3), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 3 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_VEC3, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<VecNf<4>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC4), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 4 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_VEC4, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<float>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 1 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<MatNf<4, 4>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT4), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 16 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT4, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<MatNf<4, 3>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT4x3), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 12 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT4x3, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+void VertexArrayObject::set(const std::string& name,
+                            const std::vector<MatNf<2, 2>>& arg) const {
+  const auto& desc = attribute_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT2), "Mismatched argument type");
+  glBindVertexArray(vao_);
+  GLuint vbo_id;
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, arg.size() * 4 * sizeof(GLfloat), arg.data(),
+               GL_STATIC_DRAW);
+  constexpr GLint SIZE = 3;
+  constexpr bool NORMALIZED = false;
+  constexpr int STRIDE = 0;
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT2, NORMALIZED, STRIDE, 0);
+  glEnableVertexAttribArray(desc.location);
+}
+}  // namespace jcc
