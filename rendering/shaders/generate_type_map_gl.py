@@ -31,6 +31,39 @@ mapping = {
 }
 
 
+list_content_type = {
+    "GL_FLOAT": "GL_FLOAT",
+    "GL_FLOAT_VEC2": "GL_FLOAT",
+    "GL_FLOAT_VEC3": "GL_FLOAT",
+    "GL_FLOAT_VEC4": "GL_FLOAT",
+
+    "GL_INT": "GL_INT",
+    "GL_INT_VEC2": "GL_INT",
+    "GL_INT_VEC3": "GL_INT",
+    "GL_INT_VEC4": "GL_INT",
+    "GL_UNSIGNED_INT": "GL_UNSIGNED_INT",
+    "GL_UNSIGNED_INT_VEC2": "GL_UNSIGNED_INT",
+    "GL_UNSIGNED_INT_VEC3": "GL_UNSIGNED_INT",
+    "GL_UNSIGNED_INT_VEC4": "GL_UNSIGNED_INT",
+
+    "GL_BOOL": "GL_BOOL",
+    "GL_BOOL_VEC2": "GL_BOOL",
+    "GL_BOOL_VEC3": "GL_BOOL",
+    "GL_BOOL_VEC4": "GL_BOOL",
+
+    "GL_FLOAT_MAT2": "GL_FLOAT",
+    "GL_FLOAT_MAT2x3": "GL_FLOAT",
+    "GL_FLOAT_MAT2x4": "GL_FLOAT",
+    "GL_FLOAT_MAT3": "GL_FLOAT",
+    "GL_FLOAT_MAT3x2": "GL_FLOAT",
+    "GL_FLOAT_MAT3x4": "GL_FLOAT",
+    "GL_FLOAT_MAT4": "GL_FLOAT",
+    "GL_FLOAT_MAT4x2": "GL_FLOAT",
+    "GL_FLOAT_MAT4x3": "GL_FLOAT",
+
+}
+
+
 def make_uniform(type_enum, xdt):
     n_elements, type_name, cc_type, function = xdt
     txt = "void Shader::set(const std::string& name, const {}& arg) const ".format(cc_type) + "{"
@@ -56,7 +89,7 @@ def line(txt, depth=0):
 
 def make_attribute(type_enum, xdt):
     n_elements, type_name, cc_type, function = xdt
-    txt = "void VertexArrayObject::set(const std::string& name, const std::vector<{}>& arg) const ".format(cc_type) + "{"
+    txt = "void VertexArrayObject::set(const std::string& name, const std::vector<{}>& arg) ".format(cc_type) + "{"
     txt += "\n  const auto& desc = attribute_from_name_.at(name);"
     txt += '\n  JASSERT_EQ(desc.type, static_cast<int>({type_enum}), "Mismatched argument type");'.format(
         type_enum=type_enum
@@ -78,23 +111,26 @@ def make_attribute(type_enum, xdt):
     txt += line("constexpr bool NORMALIZED = false", 1)
     txt += line("constexpr int STRIDE = 0", 1)
     txt += line("glVertexAttribPointer(desc.location, SIZE, {type_enum}, NORMALIZED, STRIDE, 0)".format(
-        type_enum=type_enum), 1
+        type_enum=list_content_type[type_enum]), 1
     )
 
     txt += line("glEnableVertexAttribArray(desc.location)", 1)
+    txt += line("allocated_buffers_.push_back(vbo_id)", 1)
     txt += "}"
     return txt
 
 
-def main():
+def uniforms():
     for type_enum, data in mapping.items():
         if len(data) > 2:
             print make_uniform(type_enum, data)
 
+def attributes():
     for type_enum, data in mapping.items():
         if len(data) > 2:
             print make_attribute(type_enum, data)
 
 
 if __name__ == '__main__':
-    main()
+    # uniforms()
+    attributes()
