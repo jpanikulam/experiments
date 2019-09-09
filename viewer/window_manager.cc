@@ -70,7 +70,8 @@ std::shared_ptr<GlobalState> maybe_create_global_state() {
 void WindowManager::register_window(const GlSize &size,
                                     const std::shared_ptr<SimpleWindow> simple_window,
                                     const std::string &window_name,
-                                    const int win_ver_maj) {
+                                    const int win_ver_maj,
+                                    const int win_ver_minor) {
   if (VALGRIND) {
     simple_window->close();
     return;
@@ -79,7 +80,7 @@ void WindowManager::register_window(const GlSize &size,
   // const std::lock_guard<std::mutex> lk(global_state_mutex);
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, win_ver_maj);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, win_ver_minor);
   glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
   // 8x MSAA
@@ -106,10 +107,8 @@ void WindowManager::register_window(const GlSize &size,
 
   global_state->windows[window] = simple_window;
   global_state->last_placed_window_x += size.width;
-
-  simple_window->set_title(window_name);
+  simple_window->set_size(size);
   simple_window->set_window(window);
-  simple_window->init(size);
 }
 
 //
@@ -118,8 +117,10 @@ void WindowManager::register_window(const GlSize &size,
 void WindowManager::render() {
   std::vector<GLFWwindow *> to_erase;
   for (auto it = global_state->windows.begin(); it != global_state->windows.end(); it++) {
+
     auto &glfw_win = it->first;
     auto &window = it->second;
+
     if (glfwWindowShouldClose(glfw_win)) {
       to_erase.push_back(glfw_win);
       continue;
@@ -129,6 +130,8 @@ void WindowManager::render() {
     glfwMakeContextCurrent(glfw_win);
     glfwSwapInterval(1);
     glewInit();
+
+    window->maybe_init();
 
     window->render();
     glfwSwapBuffers(glfw_win);

@@ -3,6 +3,8 @@
 #include "viewer/gl_size.hh"
 #include "viewer/gl_types.hh"
 
+#include "macros.hh"
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -17,6 +19,14 @@ namespace viewer {
 class SimpleWindow {
  public:
   virtual ~SimpleWindow() = default;
+
+  void maybe_init() {
+    if (UNLIKELY(!initialized_)) {
+      init(gl_size_);
+      initialized_ = true;
+    }
+  }
+
   virtual void init(const GlSize &gl_size) {
   }
 
@@ -39,6 +49,10 @@ class SimpleWindow {
   virtual void resize(const GlSize &gl_size);
 
   virtual void render() = 0;
+
+  void set_size(const GlSize &size) {
+    gl_size_ = size;
+  }
 
   virtual void close() {
     should_close_ = true;
@@ -70,7 +84,13 @@ class SimpleWindow {
   bool left_mouse_held() const;
   bool right_mouse_held() const;
 
+  const GlSize &gl_size() const {
+    return gl_size_;
+  }
+
  private:
+  bool initialized_ = false;
+
   std::string title_;
   std::unordered_map<int, bool> held_keys_;
   std::array<bool, 3> held_mouse_buttons_ = {false, false, false};

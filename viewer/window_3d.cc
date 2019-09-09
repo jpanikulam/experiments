@@ -6,6 +6,7 @@
 
 #include "viewer/gl_aliases.hh"
 #include "viewer/primitives/simple_geometry_primitives.hh"
+#include "viewer/rendering/pre_render.hh"
 #include "viewer/window_3d.hh"
 #include "viewer/window_manager.hh"
 
@@ -20,25 +21,7 @@
 namespace viewer {
 namespace {
 
-// OpenGL nominal matrix formats are usually described as follows:
-//
-// proj_from_view * view_from_world * world_from_model * pt_model_frame
-// For us: all points are in the world frame, so world_from_model = I
-//
-// Which means `view_from_world` == `camera_from_anchor * anchor_from_world`
-//
-// OpenGL MultMatrix calls *right* multiply the view_from_world matrix
-// by the supplied matrix
-//
-// Tracking state in the below computation:
-// view_from_world = I
-// view_from_world = view_from_world * camera_from_anchor;
-//  -> (view_from_anchor)
-// view_from_world = view_from_world * anchor_from_world;
-//  -> (view_from_anchor * anchor_from_world)
-//  -> (view_from_world)
-//
-void apply_view(const OrbitCamera &view, bool show_axes) {
+void apply_view_with_axes(const OrbitCamera &view, bool show_axes) {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
@@ -50,49 +33,6 @@ void apply_view(const OrbitCamera &view, bool show_axes) {
   glTransform(view.anchor_from_world());
   if (show_axes) {
     draw_axes({SE3(), 0.2 / view.zoom(), 3.0});
-  }
-}
-
-void prepare_to_render() {
-  //
-  // Flag soup
-  //
-
-  glShadeModel(GL_SMOOTH);
-
-  // Check depth when rendering
-  glEnable(GL_DEPTH_TEST);
-
-  // Turn on lighting
-  // glEnable(GL_LIGHTING);
-
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_BLEND);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glClearColor(0.1, 0.1, 0.1, 1.0f);
-
-  glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-  glEnable(GL_LINE_SMOOTH);
-  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-
-  glEnable(GL_MULTISAMPLE);
-}
-
-void set_perspective(const GlSize &gl_size, bool ortho = false) {
-  glViewport(0, 0, gl_size.width, gl_size.height);
-  glMatrixMode(GL_PROJECTION);
-
-  glLoadIdentity();
-
-  constexpr double NEAR_CLIP = 0.001;
-  constexpr double FAR_CLIP = 1000.0;
-  const double aspect_ratio =
-      (static_cast<double>(gl_size.width) / static_cast<double>(gl_size.height));
-  if (ortho) {
-    glOrtho(-aspect_ratio, aspect_ratio, -1.0, 1.0, NEAR_CLIP, FAR_CLIP);
-  } else {
-    constexpr double FOV = 60.0;
-    gluPerspective(FOV, aspect_ratio, NEAR_CLIP, FAR_CLIP);
   }
 }
 
@@ -278,7 +218,7 @@ void Window3D::render() {
 
     set_perspective(gl_size_, orthogonal_projection_);
     prepare_to_render();
-    apply_view(view_, !hide_axes_);
+    apply_view_with_axes(view_, !hide_axes_);
     projection_ = Projection::get_from_current();
 
     const auto ray = projection_.unproject(mouse_pos());
