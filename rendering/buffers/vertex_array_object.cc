@@ -9,7 +9,6 @@ namespace jcc {
 VertexArrayObject::VertexArrayObject(
     const std::map<std::string, AttributeDescription>& desc)
     : attribute_from_name_(desc) {
-  unsigned int vao_;
   glGenVertexArrays(1, &vao_);
 }
 
@@ -17,8 +16,14 @@ void VertexArrayObject::bind() const {
   glBindVertexArray(vao_);
 }
 
+void VertexArrayObject::destroy() {
+  glDeleteBuffers(allocated_buffers_.size(), allocated_buffers_.data());
+  glDeleteVertexArrays(1, &vao_);
+  allocated_buffers_.clear();
+  vao_ = -1;
+}
 void VertexArrayObject::set(const std::string& name,
-                            const std::vector<MatNf<2, 3>>& arg) const {
+                            const std::vector<MatNf<2, 3>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT2x3), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -30,11 +35,12 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT2x3, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
 void VertexArrayObject::set(const std::string& name,
-                            const std::vector<MatNf<2, 4>>& arg) const {
+                            const std::vector<MatNf<2, 4>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT2x4), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -46,11 +52,12 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT2x4, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
 void VertexArrayObject::set(const std::string& name,
-                            const std::vector<MatNf<3, 2>>& arg) const {
+                            const std::vector<MatNf<3, 2>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT3x2), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -62,11 +69,12 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT3x2, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
 void VertexArrayObject::set(const std::string& name,
-                            const std::vector<MatNf<3, 4>>& arg) const {
+                            const std::vector<MatNf<3, 4>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT3x4), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -78,11 +86,12 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT3x4, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
 void VertexArrayObject::set(const std::string& name,
-                            const std::vector<MatNf<4, 2>>& arg) const {
+                            const std::vector<MatNf<4, 2>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT4x2), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -94,11 +103,12 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT4x2, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
 void VertexArrayObject::set(const std::string& name,
-                            const std::vector<MatNf<3, 3>>& arg) const {
+                            const std::vector<MatNf<3, 3>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT3), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -110,11 +120,11 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT3, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
-void VertexArrayObject::set(const std::string& name,
-                            const std::vector<VecNf<2>>& arg) const {
+void VertexArrayObject::set(const std::string& name, const std::vector<VecNf<2>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC2), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -126,11 +136,11 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_VEC2, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
-void VertexArrayObject::set(const std::string& name,
-                            const std::vector<VecNf<3>>& arg) const {
+void VertexArrayObject::set(const std::string& name, const std::vector<VecNf<3>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC3), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -142,11 +152,11 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_VEC3, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
-void VertexArrayObject::set(const std::string& name,
-                            const std::vector<VecNf<4>>& arg) const {
+void VertexArrayObject::set(const std::string& name, const std::vector<VecNf<4>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC4), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -158,11 +168,11 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_VEC4, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
-void VertexArrayObject::set(const std::string& name,
-                            const std::vector<float>& arg) const {
+void VertexArrayObject::set(const std::string& name, const std::vector<float>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -176,9 +186,10 @@ void VertexArrayObject::set(const std::string& name,
   constexpr int STRIDE = 0;
   glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
 void VertexArrayObject::set(const std::string& name,
-                            const std::vector<MatNf<4, 4>>& arg) const {
+                            const std::vector<MatNf<4, 4>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT4), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -190,11 +201,12 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT4, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
 void VertexArrayObject::set(const std::string& name,
-                            const std::vector<MatNf<4, 3>>& arg) const {
+                            const std::vector<MatNf<4, 3>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT4x3), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -206,11 +218,12 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT4x3, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
 void VertexArrayObject::set(const std::string& name,
-                            const std::vector<MatNf<2, 2>>& arg) const {
+                            const std::vector<MatNf<2, 2>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT2), "Mismatched argument type");
   glBindVertexArray(vao_);
@@ -222,7 +235,8 @@ void VertexArrayObject::set(const std::string& name,
   constexpr GLint SIZE = 3;
   constexpr bool NORMALIZED = false;
   constexpr int STRIDE = 0;
-  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT_MAT2, NORMALIZED, STRIDE, 0);
+  glVertexAttribPointer(desc.location, SIZE, GL_FLOAT, NORMALIZED, STRIDE, 0);
   glEnableVertexAttribArray(desc.location);
+  allocated_buffers_.push_back(vbo_id);
 }
 }  // namespace jcc
