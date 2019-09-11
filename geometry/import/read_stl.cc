@@ -1,5 +1,7 @@
 #include "geometry/import/read_stl.hh"
 
+#include "geometry/import/read_from_file.hh"
+
 #include <fstream>
 #include <iostream>
 
@@ -8,14 +10,6 @@ namespace import {
 
 namespace {
 using Vec3 = Eigen::Vector3d;
-
-// Read something from a file
-template <typename T>
-T read_from_file(std::ifstream &stream) {
-  T data;
-  stream.read(reinterpret_cast<char *>(&data), sizeof(data));
-  return data;
-}
 
 Eigen::Vector3f read_vec3(std::ifstream &stream) {
   Eigen::Vector3f vec;
