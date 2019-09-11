@@ -9,7 +9,6 @@
 
 // TODO
 #include <iostream>
-
 namespace jcc {
 
 // Compute the perspective projection matrix
@@ -61,6 +60,8 @@ void GameViewer::init(const viewer::GlSize &gl_size) {
   test_shader_ =
       load_shaders("/home/jacob/repos/experiments/rendering/shaders/phong.vert",
                    "/home/jacob/repos/experiments/rendering/shaders/phong.frag");
+  test_asset_ =
+      load_voxel_asset("/home/jacob/repos/experiments/rendering/assets/spaceship1.vox");
 }
 
 void GameViewer::on_key(int key, int scancode, int action, int mods) {
@@ -119,28 +120,60 @@ void GameViewer::draw_scene() {
         gv_state_.view.camera.camera_from_world().matrix().cast<float>();
     test_shader_.set("camera_from_world", camera_from_world);
 
-    const std::vector<jcc::Vec3f> vctr_vertices = {{-0.5f, -0.5f, -0.5f},  //
-                                                   {0.5f, -0.5f, -0.5f},   //
-                                                   {0.0f, 0.5f, -0.5f}};
+    const auto vertices = test_asset_.vertices();
+    const auto normals = test_asset_.normals();
 
-    const std::vector<jcc::Vec3f> vctr_colors = {{1.0f, 0.0f, 1.0f},  //
-                                                 {0.0f, 1.0f, 0.0f},  //
-                                                 {0.0f, 0.0f, 0.7f}};
+    std::vector<jcc::Vec3f> colors;
+    colors.reserve(vertices.size());
+    for (std::size_t k = 0; k < vertices.size(); ++k) {
+      colors.push_back(jcc::Vec3f(0.7f, 0.6f, 0.7f));
+    }
 
-    auto vao = test_shader_.generate_vao();
-    vao.bind();
+    auto ship_vao = test_shader_.generate_vao();
+    ship_vao.bind();
 
-    vao.set("vertex_color", vctr_colors);
-    vao.set("vertex_world", vctr_vertices);
+    const auto indices = test_asset_.faces();
 
-    vao.bind();
+    GLuint element_buffer;
+    glGenBuffers(1, &element_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * (3 * 4), indices.data(),
+                 GL_STATIC_DRAW);
+
+    ship_vao.set("vertex_color", colors);
+    ship_vao.set("vertex_world", vertices);
+    ship_vao.set("vertex_normal", normals);
+
+    ship_vao.bind();
+    glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (void *)0);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (void *)0);
+
+    // glLineWidth(3.0);
+    // glDrawArrays(GL_LINES, 0, vertices.size());
+
+    // glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+    ship_vao.destroy();
+
+    auto light_vao = test_shader_.generate_vao();
+    light_vao.bind();
+    const std::vector<jcc::Vec3f> light_colors = {jcc::Vec3f(1.0, 1.0, 1.0),  //
+                                                  jcc::Vec3f(1.0, 1.0, 1.0),  //
+                                                  jcc::Vec3f(1.0, 1.0, 1.0)};
+    const std::vector<jcc::Vec3f> light_vertices = {jcc::Vec3f(10.0, 1.0, 1.0),  //
+                                                    jcc::Vec3f(9.0, 1.0, 0.0),   //
+                                                    jcc::Vec3f(9.0, 0.0, 1.0)};
+    const std::vector<jcc::Vec3f> light_normals = {
+        jcc::Vec3f(1.0, 1.0, 1.0),  //
+        jcc::Vec3f(1.0, 1.0, 1.0),  //
+        jcc::Vec3f(1.0, 1.0, 1.0)   //
+    };
+
+    light_vao.set("vertex_color", light_colors);
+    light_vao.set("vertex_world", light_vertices);
+    light_vao.set("vertex_normal", light_normals);
     glDrawArrays(GL_TRIANGLES, 0, 3);
-    vao.destroy();
-
-    demo_buffer_.planes.push_back({ground});
-    viewer::draw_geometry_buffer(demo_buffer_);
-
-    demo_buffer_.planes.clear();
+    light_vao.destroy();
   }
 }
 
@@ -178,8 +211,6 @@ void GameViewer::go() const {
 std::shared_ptr<GameViewer> create_gameviewer(const GameViewerConfig &cfg) {
   const viewer::GlSize gl_size(640, 640);
   auto window = std::make_shared<GameViewer>();
-  // const int win_ver_maj = 4;
-  // const int win_ver_min = 6;
 
   const int win_ver_maj = 4;
   const int win_ver_min = 6;

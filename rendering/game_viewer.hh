@@ -17,6 +17,7 @@
 #include <vector>
 
 // TODO
+#include "rendering/assets/load_voxel_asset.hh"
 #include "rendering/shaders/load_shader.hh"
 
 namespace jcc {
@@ -62,6 +63,7 @@ class GameViewer : public viewer::SimpleWindow {
   viewer::ImGuiManager imgui_mgr_;
 
   Shader test_shader_;
+  VoxelAsset test_asset_;
 
   viewer::GeometryBuffer demo_buffer_;
 };
