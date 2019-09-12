@@ -4,6 +4,7 @@ out vec4 FragColor;
 in vec4 o_color;
 in vec3 o_light_pos;
 in vec3 o_normal;
+in vec3 o_world_pos;
 
 uniform mat4x4 camera_from_world;
 
@@ -11,8 +12,9 @@ void main() {
     const vec3 surface_color_diffuse = o_color.xyz;
 
     // const vec3 relative_light_pos = o_light_pos - gl_FragCoord.xyz;
-    const vec4 light_pos_world = vec4(10.0, 1.0, 1.0, 1.0);
-    const vec3 relative_light_pos = (camera_from_world * light_pos_world).xyz;
+    const vec3 light_pos_world = vec3(10.0, 1.0, 1.0);
+    // const vec3 relative_light_pos = (camera_from_world * light_pos_world).xyz;
+    const vec3 relative_light_pos = (light_pos_world - o_world_pos);
     const float light_dist = length(relative_light_pos);
 
     const float fresnel = pow(clamp(1.0 + dot(o_normal, relative_light_pos / light_dist), 0.0, 1.0), 5.0);
@@ -20,12 +22,12 @@ void main() {
     const float power_coeff = clamp(dot(o_normal, relative_light_pos / light_dist), 0.0, 1.0);
     const vec3 color = power_coeff * surface_color_diffuse;
 
-
     const vec3 brdf =
         // vec3() +
-        vec3(0.5, 0.5, 0.5) +
-        (0.7 * smoothstep(0.1, 0.15, fresnel))
+        vec3(0.15, 0.15, 0.15)
+        // (0.2 * smoothstep(0.1, 0.15, fresnel))
     ;
+
     const vec3 interacted_color = brdf * surface_color_diffuse;
 
     //
