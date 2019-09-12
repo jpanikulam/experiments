@@ -49,6 +49,8 @@ void pre_render() {
   glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
   glEnable(GL_LINE_SMOOTH);
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  glEnable(GL_POLYGON_SMOOTH);
+  glHint(GL_POLYGON_SMOOTH, GL_NICEST);
 }
 }  // namespace
 
