@@ -14,8 +14,7 @@ out vec3 o_light_pos;
 uniform mat4x4 camera_from_world;
 uniform mat4x4 perspective_from_camera;
 
-void main()
-{
+void main() {
     const vec4 vertex_camera = camera_from_world * vec4(vertex_world, 1.0);
     const vec4 vertex_perspective = perspective_from_camera * vertex_camera;
     o_world_pos = vertex_world;

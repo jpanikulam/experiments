@@ -22,6 +22,7 @@ void VertexArrayObject::destroy() {
   allocated_buffers_.clear();
   vao_ = -1;
 }
+
 void VertexArrayObject::set(const std::string& name,
                             const std::vector<MatNf<2, 3>>& arg) {
   const auto& desc = attribute_from_name_.at(name);
