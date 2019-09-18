@@ -13,11 +13,27 @@ Eigen::Matrix<double, rows, rows> numerical_hessian(
     const Eigen::Matrix<double, rows, 1> &x,
     const Callable &fcn,
     const double feps = 1e-6) {
-  const auto gradient_fnc = [fcn, feps](const Eigen::Matrix<double, rows, 1> &pt) {
-    return numerical_gradient<rows>(pt, fcn, feps);
-  };
+  MatNd<rows, rows> hessian;
+  hessian.setZero();
 
-  const auto hessian = numerical_jacobian<rows>(x, gradient_fnc, feps);
+  const double ifeps = 0.25 / (feps * feps);
+  using Vec = VecNd<rows>;
+  for (int i = 0; i < rows; ++i) {
+    for (int j = i; j < rows; ++j) {
+      const Vec u_i = Vec::Unit(i) * feps;
+      const Vec u_j = Vec::Unit(j) * feps;
+
+      const double fpp = fcn((x + u_i) + u_j);
+      const double fnp = fcn((x - u_i) + u_j);
+      const double fpn = fcn((x + u_i) - u_j);
+      const double fnn = fcn((x - u_i) - u_j);
+
+      const double diff = ifeps * ((fpp - fnp) - (fpn - fnn));
+      hessian(i, j) = diff;
+      hessian(j, i) = diff;
+    }
+  }
+
   return hessian;
 }
 }  // namespace numerics
