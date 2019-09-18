@@ -34,7 +34,7 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::solve(
   Solution current_soln;
   shoot(traj0, {}, -1.0, &current_soln);
 
-  constexpr int MAX_ITERS = 60;
+  constexpr int MAX_ITERS = 15;
   int iter = 0;
   for (; iter < MAX_ITERS; ++iter) {
     if (visitor) {
@@ -114,6 +114,7 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::line_search(
 
   Solution out_soln;
   shoot(soln, lqr_soln, best_alpha, &out_soln);
+  out_soln.cost = best_cost;
   return out_soln;
 }
 
@@ -141,33 +142,42 @@ typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
     const StateVec Qx = diffs.g_x + diffs.A.transpose() * Vx;
     const ControlVec Qu = diffs.g_u + diffs.B.transpose() * Vx;
 
-    const StateHess Qxx =
-        numerics::project_psd(diffs.Q, 0.5) + diffs.A.transpose() * Vxx * diffs.A;
+    const StateHess Qxx = diffs.Q + diffs.A.transpose() * Vxx * diffs.A;
+
+    constexpr double MU_0 = 1e-1;
+    const StateHess levenberg_damping = MU_0 * StateHess::Identity();
+
     const ControlHess Quu =
-        numerics::project_psd(diffs.R, 0.5) + diffs.B.transpose() * Vxx * diffs.B;
-    const StateControlHessBlock Qux = diffs.N + diffs.B.transpose() * Vxx * diffs.A;
+        diffs.R + diffs.B.transpose() * (Vxx + levenberg_damping) * diffs.B;
+    const StateControlHessBlock Qux =
+        diffs.N + diffs.B.transpose() * (Vxx + levenberg_damping) * diffs.A;
 
-    // const ControlHess Quu_damped = Quu + (10.0 * ControlHess::Identity());
-
-    const ControlHess Quu_damped1 = numerics::project_psd(Quu, 0.3);
-    const ControlHess Quu_damped = numerics::deproject_psd(Quu_damped1, 10.0);
+    const ControlHess Quu_damped1 = numerics::project_psd(Quu, 0.1);
+    // const ControlHess Quu_damped = numerics::deproject_psd(Quu_damped1, 10.0);
+    const ControlHess Quu_damped = Quu_damped1;
 
     // Safe LLT computation
-    const Eigen::LLT<ControlHess> llt(Quu_damped);
-    if (llt.info() != Eigen::Success) {
+    const Eigen::LDLT<ControlHess> Quu_llt(Quu_damped);
+    if (Quu_llt.info() != Eigen::Success) {
       const std::string err = "LLT solve was degenerate at state " + std::to_string(k);
 
-      JASSERT_EQ(llt.info(), Eigen::Success, err.c_str());
+      JASSERT_EQ(Quu_llt.info(), Eigen::Success, err.c_str());
     }
 
     // Control policy is trivial
-    lqr_soln[k].K = -llt.solve(Qux);
-    lqr_soln[k].k = -llt.solve(Qu);
+    lqr_soln[k].K = -Quu_llt.solve(Qux);
+    lqr_soln[k].k = -Quu_llt.solve(Qu);
 
-    // Compute cost-to-go for next step state (Schur complement)
-    Vx = Qx - lqr_soln[k].K.transpose() * Quu_damped * lqr_soln[k].k;
-    Vxx = Qxx - lqr_soln[k].K.transpose() * Quu_damped * lqr_soln[k].K;
-    Vxx = numerics::deproject_psd(StateHess((Vxx + Vxx.transpose()) * 0.5), 25.0);
+    Vx = Qx + (lqr_soln[k].K.transpose() * Quu_damped * lqr_soln[k].k) +
+         (lqr_soln[k].K.transpose() * Qu) + (Qux.transpose() * lqr_soln[k].k);
+
+    const StateHess Vxx_tmp = Qxx + (lqr_soln[k].K.transpose() * Quu * lqr_soln[k].K) +
+                              (lqr_soln[k].K.transpose() * Qux) +
+                              (Qux.transpose() * lqr_soln[k].K);
+    Vxx = ((Vxx_tmp + Vxx_tmp.transpose()) * 0.5).eval();
+
+    // Ugh: Should have have just done this the whole time
+    Vxx = numerics::project_psd(Vxx, 0.1);
   }
   return lqr_soln;
 }
