@@ -21,7 +21,8 @@ struct Avoid {
 struct BehaviorPrimitives {
   // jcc::Vec3 target = jcc::Vec3::Zero();
   jcc::Vec3 target = jcc::Vec3(1.0, 1.0, 0.0);
-  double vmax = 1.0;
+  double max_vel = 1.0;
+  double max_accel = 3.0;
 
   std::vector<Avoid> avoids;
 };

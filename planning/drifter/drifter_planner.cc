@@ -21,7 +21,7 @@ DrifterProblem::Cost make_drifter_cost(const BehaviorPrimitives& desires) {
     const auto control = Controls::from_vector(u);
     double cost = 0.0;
 
-    cost += 1.0 * square(control.a);
+    cost += 0.1 * square(control.a) + quad_hinge(std::abs(control.a), desires.max_accel);
     cost += 1.0 * square(control.phidot);
 
     if (t >= HORIZON - 3) {
@@ -30,12 +30,7 @@ DrifterProblem::Cost make_drifter_cost(const BehaviorPrimitives& desires) {
       cost += 10.0 * square(state.x_vel);
     }
 
-    cost += 50.0 * quad_hinge(state.x_vel, 1.5);
-    // cost += 50.0 * square(state.x_vel);
-    // if(state.x_vel > 0.4) {
-    // cost += 50.0 * square(state.x_vel - 0.4);
-    // }
-
+    cost += 50.0 * quad_hinge(state.x_vel, desires.max_vel);
     cost += square(state.phi);
 
     for (const auto& avoid : desires.avoids) {

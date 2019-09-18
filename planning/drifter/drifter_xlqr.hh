@@ -11,7 +11,7 @@ constexpr int X_DIM = State::DIM;
 constexpr int U_DIM = Controls::DIM;
 
 constexpr double DT = 0.15;
-constexpr int HORIZON = 35;
+constexpr int HORIZON = 70;
 
 using DrifterDim = Dimensions<X_DIM, U_DIM>;
 using DrifterProblem = Problem<DrifterDim, State>;
