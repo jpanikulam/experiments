@@ -237,12 +237,14 @@ void draw_plane_grid(const Plane &plane) {
   glLineWidth(1.0);
   glColor(plane.color);
 
+  constexpr bool DRAW_COLORS = false;
+
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glTransform(world_from_plane);
   glBegin(GL_LINES);
   for (int k = -n_lines; k <= n_lines; ++k) {
-    if (k == 0) {
+    if (DRAW_COLORS && k == 0) {
       continue;
     }
     glVertex(Vec3((Vec3::UnitX() * k * plane.line_spacing) + Vec3::UnitY() * grid_width));
@@ -251,20 +253,21 @@ void draw_plane_grid(const Plane &plane) {
     glVertex(Vec3((Vec3::UnitY() * k * plane.line_spacing) - Vec3::UnitX() * grid_width));
   }
 
-  glColor(Vec4(0.0, 1.0, 0.0, 0.8));
-  glVertex(Vec3(Vec3::UnitY() * +grid_width));
-  glVertex(Vec3(Vec3::Zero()));
-  glColor(Vec4(0.0, 1.0, 0.0, 0.4));
-  glVertex(Vec3(Vec3::UnitY() * -grid_width));
-  glVertex(Vec3(Vec3::Zero()));
+  if (DRAW_COLORS) {
+    glColor(Vec4(0.0, 1.0, 0.0, 0.8));
+    glVertex(Vec3(Vec3::UnitY() * +grid_width));
+    glVertex(Vec3(Vec3::Zero()));
+    glColor(Vec4(0.0, 1.0, 0.0, 0.4));
+    glVertex(Vec3(Vec3::UnitY() * -grid_width));
+    glVertex(Vec3(Vec3::Zero()));
 
-  glColor(Vec4(1.0, 0.0, 0.0, 0.8));
-  glVertex(Vec3(Vec3::UnitX() * +grid_width));
-  glVertex(Vec3(Vec3::Zero()));
-  glColor(Vec4(1.0, 0.0, 0.0, 0.4));
-  glVertex(Vec3(Vec3::UnitX() * -grid_width));
-  glVertex(Vec3(Vec3::Zero()));
-
+    glColor(Vec4(1.0, 0.0, 0.0, 0.8));
+    glVertex(Vec3(Vec3::UnitX() * +grid_width));
+    glVertex(Vec3(Vec3::Zero()));
+    glColor(Vec4(1.0, 0.0, 0.0, 0.4));
+    glVertex(Vec3(Vec3::UnitX() * -grid_width));
+    glVertex(Vec3(Vec3::Zero()));
+  }
   glEnd();
   glPopMatrix();
 }
@@ -323,7 +326,6 @@ void draw_trimesh(const TriMesh &trimesh) {
       glVertex(tri.vertices[2]);
     }
     glEnd();
-
   }
   glDisable(GL_LIGHTING);
   glPopMatrix();
