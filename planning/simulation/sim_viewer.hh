@@ -11,11 +11,12 @@
 #include "planning/simulation/sim_viewer_asset.hh"
 #include "planning/simulation/sim_viewer_command_queue.hh"
 #include "planning/simulation/sim_viewer_types.hh"
-// TODO: Add pausing
 #include "planning/simulation/sim_viewer_integrator.hh"
 
 // todo
 #include "geometry/spatial/raycaster.hh"
+
+#include "planning/drifter/drifter_configuration.hh"
 
 namespace jcc {
 namespace simulation {
@@ -51,7 +52,6 @@ class SimViewer : public viewer::Window3D {
   viewer::GeometryBuffer robot_geo_;
 
   viewer::GeometryBuffer bgnd_geo_;
-
 
   viewer::GeometryBuffer lidar_geo_;
 

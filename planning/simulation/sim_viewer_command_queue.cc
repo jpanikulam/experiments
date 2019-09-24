@@ -1,11 +1,14 @@
 #include "planning/simulation/sim_viewer_command_queue.hh"
 
+#include "logging/assert.hh"
+
 #include <fstream>
 
 namespace jcc {
 namespace simulation {
 void CommandQueue::save(const std::string& filepath) {
   std::ofstream myfile(filepath);
+
   YAML::Node cmd_queue;
 
   cmd_queue["committed"] = save_commands(committed_);

@@ -117,6 +117,8 @@ struct ModifyElementCommand : public Command {
     node["had_previous_value"] = had_previous_value_;
     set_matrix(node, "previous_value", previous_value_);
 
+    node["command_type"] = "ModifyElementCommand";
+
     return node;
   }
   void load(const YAML::Node&) {
@@ -186,6 +188,9 @@ struct CreateRobotCommand : public Command {
       const std::string key = it->first.as<std::string>();
       initial_properties[key] = read_matrix<3, 1>(it->second);
     }
+
+    model = node["model"].as<std::string>();
+    desc = node["desc"].as<std::string>();
   }
 };
 

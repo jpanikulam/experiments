@@ -25,7 +25,6 @@ int pushcolor(int c) {
     ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor(0.6f, 0.1f, 0.1f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor(0.8f, 0.1f, 0.1f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor(0.95f, 0.05f, 0.05f));
-
     return 3;
   }
 
@@ -44,7 +43,7 @@ int pushcolor(int c) {
 
 }  // namespace
 
-void load_manifest_modal(const EditorState& editor_state, Out<MainMenuState> menu_state) {
+bool load_manifest_modal(const EditorState& editor_state, Out<MainMenuState> menu_state) {
   namespace fs = std::experimental::filesystem;
   if (menu_state->manifest_stale) {
     menu_state->manifest_elements.clear();
@@ -65,13 +64,14 @@ void load_manifest_modal(const EditorState& editor_state, Out<MainMenuState> men
 
         entry.allowed = it->second["allowed"].as<bool>();
         menu_state->manifest_elements[key].push_back(entry);
-
-        std::cout << entry.name << std::endl;
       }
     }
     menu_state->manifest_stale = false;
   }
 
+  bool complete = false;
+
+  ImGui::SetNextWindowSizeConstraints(ImVec2(500, 100), ImVec2(10000, 10000));
   if (ImGui::BeginPopupModal("Manifest Modal", NULL)) {
     ImGui::Columns(2);
     for (const auto& p : menu_state->manifest_elements) {
@@ -85,6 +85,7 @@ void load_manifest_modal(const EditorState& editor_state, Out<MainMenuState> men
           if (ImGui::Selectable(entry.name.c_str(), false, flags)) {
             menu_state->new_file = true;
             menu_state->new_file_name = entry.filename;
+            complete = true;
             ImGui::CloseCurrentPopup();
           }
           ImGui::PopStyleColor(2);
@@ -93,6 +94,7 @@ void load_manifest_modal(const EditorState& editor_state, Out<MainMenuState> men
           if (ImGui::Selectable(entry.name.c_str(), false, flags)) {
             menu_state->new_file = true;
             menu_state->new_file_name = entry.filename;
+            complete = true;
             ImGui::CloseCurrentPopup();
           }
           ImGui::PopStyleColor(2);
@@ -105,6 +107,7 @@ void load_manifest_modal(const EditorState& editor_state, Out<MainMenuState> men
     }
     ImGui::EndPopup();
   }
+  return complete;
 }
 
 void create_main_menu(const EditorState& editor_state, Out<MainMenuState> menu_state) {
@@ -191,7 +194,10 @@ void create_main_menu(const EditorState& editor_state, Out<MainMenuState> menu_s
   if (manifest_modal) {
     ImGui::OpenPopup("Manifest Modal");
   }
-  load_manifest_modal(editor_state, menu_state);
+
+  if (load_manifest_modal(editor_state, menu_state)) {
+    menu_state->cmd_queue_update = EditorCommand::Open;
+  }
 }
 
 jcc::Optional<std::shared_ptr<Command>> menus_new_object(
@@ -288,10 +294,15 @@ jcc::Optional<std::shared_ptr<Command>> menus_new_object(
           create_robot(editor_state, "Drifter", task_popup_state->creation_world_point)};
     }
 
-    if (ImGui::MenuItem("Bossa Nova", nullptr, false, !editor_state.any_robot_placed)) {
+    if (ImGui::MenuItem("Grocery Scanner", nullptr, false, !editor_state.any_robot_placed)) {
       cmd = {create_robot(
           editor_state, "Bossa Nova", task_popup_state->creation_world_point)};
     }
+    if (ImGui::MenuItem("Scrubber", nullptr, false, !editor_state.any_robot_placed)) {
+      cmd = {
+          create_robot(editor_state, "Scrubber", task_popup_state->creation_world_point)};
+    }
+
     ImGui::EndMenu();
   }
 

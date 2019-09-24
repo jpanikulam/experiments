@@ -14,7 +14,10 @@
 
 #include "third_party/imgui/imgui.h"
 
+#include "planning/drifter/drifter_ui_elements.hh"
+
 // TODO
+#include "geometry/visualization/put_bounding_box.hh"
 #include "util/heap.hh"
 
 namespace jcc {
@@ -38,72 +41,6 @@ jcc::Vec4 get_color(const Element &element) {
   return color;
 }
 
-void add_bbox(viewer::GeometryBuffer &buf,
-              const geometry::spatial::BoundingBox<3> &bbox,
-              const jcc::Vec4 &color,
-              double line_width = 1.0) {
-  const jcc::Vec3 lower = bbox.lower();
-  const jcc::Vec3 upper = bbox.upper();
-  buf.lines.push_back({Vec3(lower.x(), lower.y(), upper.z()),
-                       Vec3(lower.x(), upper.y(), upper.z()), color, line_width});
-  buf.lines.push_back({Vec3(lower.x(), lower.y(), upper.z()),
-                       Vec3(lower.x(), lower.y(), lower.z()), color, line_width});
-  buf.lines.push_back({Vec3(lower.x(), lower.y(), upper.z()),
-                       Vec3(upper.x(), lower.y(), upper.z()), color, line_width});
-  buf.lines.push_back({Vec3(lower.x(), upper.y(), upper.z()),
-                       Vec3(upper.x(), upper.y(), upper.z()), color, line_width});
-  buf.lines.push_back({Vec3(lower.x(), upper.y(), upper.z()),
-                       Vec3(lower.x(), upper.y(), lower.z()), color, line_width});
-  buf.lines.push_back({Vec3(upper.x(), upper.y(), upper.z()),
-                       Vec3(upper.x(), upper.y(), lower.z()), color, line_width});
-  buf.lines.push_back({Vec3(upper.x(), upper.y(), upper.z()),
-                       Vec3(upper.x(), lower.y(), upper.z()), color, line_width});
-  buf.lines.push_back({Vec3(upper.x(), upper.y(), lower.z()),
-                       Vec3(upper.x(), lower.y(), lower.z()), color, line_width});
-  buf.lines.push_back({Vec3(upper.x(), upper.y(), lower.z()),
-                       Vec3(lower.x(), upper.y(), lower.z()), color, line_width});
-  buf.lines.push_back({Vec3(upper.x(), lower.y(), lower.z()),
-                       Vec3(lower.x(), lower.y(), lower.z()), color, line_width});
-  buf.lines.push_back({Vec3(upper.x(), lower.y(), lower.z()),
-                       Vec3(upper.x(), lower.y(), upper.z()), color, line_width});
-  buf.lines.push_back({Vec3(lower.x(), lower.y(), lower.z()),
-                       Vec3(lower.x(), upper.y(), lower.z()), color, line_width});
-}
-
-void draw_children(const geometry::spatial::BoundingVolumeHierarchy &bvh,
-                   int base_node_ind,
-                   viewer::GeometryBuffer &buf) {
-  Heap<int> stack;
-  stack.push(base_node_ind);
-  while (!stack.empty()) {
-    const int next_index = stack.pop();
-    const auto &node = bvh.tree()[next_index];
-    if (node.is_leaf) {
-      for (int k = node.leaf.start; k < node.leaf.end; ++k) {
-        const auto &aabb = bvh.aabb()[k];
-        const jcc::Vec4 color(0.8, 0.1, 0.1, 0.6);
-        add_bbox(buf, aabb.bbox, color, 0.5);
-      }
-    } else {
-      stack.push(node.node.left_child_index);
-      stack.push(node.node.left_child_index + 1);
-    }
-  }
-}
-
-auto make_visit(viewer::GeometryBuffer &buf) {
-  return [&buf](const geometry::spatial::BoundingVolumeHierarchy::TreeElement &el,
-                bool intersected) {
-
-    const double alpha = el.is_leaf ? 0.4 : 0.2;
-    const jcc::Vec4 color =
-        intersected ? jcc::Vec4(0.1, 0.8, 0.1, alpha) : jcc::Vec4(0.1, 0.8, 0.8, alpha);
-
-    if (el.is_leaf) {
-      add_bbox(buf, el.bounding_box, color, 0.2);
-    }
-  };
-}
 }  // namespace
 
 SimViewer::SimViewer() {
@@ -126,6 +63,8 @@ SimViewer::SimViewer() {
                                    "planning/simulation/models/drifter_low_poly.stl");
   assets_["Bossa Nova"] = build_asset(Environment::repo_path() +
                                       "planning/simulation/models/bossa_nova_robot.stl");
+  assets_["Scrubber"] =
+      build_asset(Environment::repo_path() + "planning/simulation/models/scrubber.stl");
   assets_["Store"] =
       build_asset(Environment::repo_path() + "planning/simulation/models/store.stl");
 
@@ -150,8 +89,6 @@ SimViewer::SimViewer() {
   // ray_caster_.add_mesh(assets_["One Shelf-X"].mesh);
   // ray_caster_.add_mesh(assets_["Store"].mesh);
   ray_caster_.add_volume(assets_["Store"].get_bvh());
-
-  // draw_children(*assets_["Store"].get_bvh(), 0, bgnd_geo_);
 
   jcc::Success() << "Built Bounding Volume Hierarchies" << std::endl;
 }
@@ -280,9 +217,22 @@ void SimViewer::draw_robot(const planning::drifter::State &state) {
 
   const auto meets = interactable_geo_.all_intersections(bbox);
   if (!meets.empty()) {
-    add_bbox(tmp_geo_, bbox, jcc::Vec4(1.0, 1.0, 1.0, 1.0));
+    geometry::put_bounding_box(tmp_geo_, bbox, jcc::Vec4(1.0, 1.0, 1.0, 1.0));
   }
+
   robot_geo_.tri_meshes[0].world_from_mesh = world_from_robot;
+
+  const SE3 robot_from_camera = jcc::exp_z(M_PI * 0.5);
+
+  const SE3 world_from_camera = world_from_robot * robot_from_camera;
+
+  // robot_geo_.polygons.clear();
+  // viewer::Polygon pgon;
+  // pgon.points.push_back(world_from_camera * jcc::Vec3(0.0, 0.0, 0.1));
+  // pgon.points.push_back(world_from_camera * jcc::Vec3(9.0, +1.75, 0.1));
+  // pgon.points.push_back(world_from_camera * jcc::Vec3(9.0, -1.75, 0.1));
+  // pgon.color = jcc::Vec4(0.2, 1.0, 0.2, 0.3);
+  // robot_geo_.polygons.push_back(pgon);
 }
 
 void SimViewer::draw_element(int id, const Element &element) {
@@ -308,7 +258,7 @@ void SimViewer::draw_element(int id, const Element &element) {
 
   if (element.element_type != ElementType::Object) {
     const jcc::Vec4 color = get_color(element);
-    add_bbox(geo_, bbox, color);
+    geometry::put_bounding_box(geo_, bbox, color);
   }
   if (element.model != "") {
     const auto asset = assets_.at(element.model);
@@ -328,6 +278,8 @@ void SimViewer::draw_element(int id, const Element &element) {
 }
 
 void SimViewer::draw() {
+  const bool prev_had_robots = editor_state_.any_robot_placed;
+
   tmp_geo_.clear();
   bool view_state_change = false;
   view_state_change |= update_editor_state();
@@ -383,6 +335,7 @@ void SimViewer::draw() {
 
       jcc::Warning() << "Opening " << path + editor_state_.filename << std::endl;
       cmd_queue_.load(path + editor_state_.filename, out(editor_state_));
+      view_state_change |= true;
     }
 
     editor_commands_.pop();
@@ -393,7 +346,6 @@ void SimViewer::draw() {
   //
 
   const auto maybe_command = create_task_popup(editor_state_, out(task_popup_state_));
-  const bool prev_had_robots = editor_state_.any_robot_placed;
   if (maybe_command) {
     cmd_queue_.commit(*maybe_command, out(editor_state_));
     view_state_change |= true;
@@ -407,98 +359,111 @@ void SimViewer::draw() {
     const jcc::Vec4 color(0.8, 0.8, 0.8, 1.0);
     const double outline_width = 1.0;
 
+    std::cout << "Loading robot: " << editor_state_.robot.model << std::endl;
     const auto &asset = assets_.at(editor_state_.robot.model);
     robot_geo_.tri_meshes.push_back({asset.mesh, editor_state_.robot.world_from_robot,
                                      color, filled, outline_width, outline});
   } else {
     if (!editor_state_.any_robot_placed) {
       // view_state_change = true;
-      robot_geo_.clear();
+      robot_geo_.clear();anikulam
+
       plan_geo_.clear();
     }
   }
 
   const auto t_now = jcc::now();
 
+  if (editor_state_.any_robot_placed) {
+    show_menu(out(integrator_.config()));
+  }
+
   if (editor_state_.any_robot_placed &&
       (t_now - jcc::to_duration(editor_state_.config.sim_speed)) > last_step_time_) {
     integrator_.clear_avoiders();
+
+    bool any_go_zones = false;
     for (const auto &el : editor_state_.elements) {
       const auto &element = el.second;
+      const jcc::Vec3 element_center = element.world_from_element.translation() +
+                                       (element.properties.at("size") * 0.5);
       if (element.element_type == ElementType::NoGoZone) {
         const double element_radius = element.properties.at("size").norm();
-        const jcc::Vec3 element_center = element.world_from_element.translation() +
-                                         (element.properties.at("size") * 0.5);
         integrator_.add_avoider(element_center, element_radius);
       }
+      if ((ElementType::GoZone == element.element_type) && !any_go_zones) {
+        any_go_zones = true;
+        integrator_.set_target(element_center);
+      }
     }
+
+    if (!any_go_zones) {
+      integrator_.set_target(jcc::Vec3(0.0, 0.0, 0.0));
+    }
+
     if (editor_state_.robot.model == "Bossa Nova") {
       integrator_.set_max_speed(0.05);
-      integrator_.set_target(jcc::Vec3(0.0, 4.5, 0.0));
+      // integrator_.set_target(jcc::Vec3(0.0, 4.5, 0.0));
+    } else if (editor_state_.robot.model == "Scrubber") {
+      integrator_.set_max_speed(2.0);
     } else {
-      integrator_.set_max_speed(1.5);
+      integrator_.set_max_speed(15.5);
     }
 
     last_step_time_ = t_now;
     plan_geo_.clear();
     const auto plan = integrator_.step();
 
-    for (std::size_t k = 1u; k < plan.size(); ++k) {
-      const auto xp = plan[k - 1];
-      const auto xn = plan[k];
-      plan_geo_.lines.push_back({xn.state.x_world, xp.state.x_world});
+    if (integrator_.config().debug.show_trajectory) {
+      for (std::size_t k = 1u; k < plan.size(); ++k) {
+        const auto xp = plan[k - 1];
+        const auto xn = plan[k];
+        plan_geo_.lines.push_back({xn.state.x_world, xp.state.x_world});
+      }
     }
 
     const auto &desires = integrator_.desires();
-    const auto compute_cost = planning::drifter::make_drifter_cost(desires);
+    const auto compute_cost =
+        planning::drifter::make_drifter_cost(integrator_.config(), desires);
+
+    const int test_state = integrator_.config().debug.visualize_last_state
+                               ? planning::drifter::HORIZON - 1
+                               : 0;
 
     const auto x0 = plan[0].state;
     const auto utest = plan[0].control;
     auto xtest = x0;
     const double spacing = 0.25;
 
-    viewer::ColoredPoints colored_points;
-    /*
-        for (double x = -5.5; x < 5.5; x += spacing) {
-          for (double y = -5.5; y < 5.5; y += spacing) {
-            const jcc::Vec3 offset(x, y, 0.0);
-            xtest.x_world = offset;
-            const double cost = compute_cost(xtest,
-                                             planning::drifter::Controls::to_vector(utest),
-                                             planning::drifter::HORIZON - 1);
+    if (integrator_.config().debug.show_cost) {
+      viewer::ColoredPoints colored_points;
+      const jcc::Vec3 center = (x0.x_world.array() / spacing).floor() * spacing;
+      for (double x = -5.5; x < 5.5; x += spacing) {
+        for (double y = -5.5; y < 5.5; y += spacing) {
+          const jcc::Vec3 offset(x, y, 0.0);
+          xtest.x_world = center + offset;
+          const double cost = compute_cost(
+              xtest, planning::drifter::Controls::to_vector(utest), test_state);
 
-            const jcc::Vec3 viz_pt = xtest.x_world + jcc::Vec3::UnitZ() * 0.1 * cost;
-
-            const Vec4 color = jcc::augment(viewer::colors::viridis(cost / 8.0), 0.9);
-            colored_points.points.push_back(viz_pt);
-            colored_points.colors.push_back(color);
-            colored_points.sizes.push_back(3.0);
-          }
+          const jcc::Vec3 viz_pt = xtest.x_world + jcc::Vec3::UnitZ() * 0.1 * cost;
+          const Vec4 color = jcc::augment(viewer::colors::viridis(cost / 8.0), 0.9);
+          colored_points.points.push_back(viz_pt);
+          colored_points.colors.push_back(color);
+          colored_points.sizes.push_back(3.0);
         }
-    */
-    const SE3 world_from_robot(x0.R_world_from_body, x0.x_world);
+      }
 
-    const auto dists = ray_caster_.cast_rays(world_from_robot);
+      if (integrator_.config().debug.enable_look_target) {
+        const jcc::Vec3 look_target = integrator_.desires().look_target;
+        plan_geo_.lines.push_back({look_target, look_target + jcc::Vec3::UnitZ(),
+                                   jcc::Vec4(0.5, 0.9, 0.4, 1.0)});
+        plan_geo_.raw_points.push_back({look_target, jcc::Vec4(1.0, 1.0, 0.0, 0.6)});
+        plan_geo_.raw_points.push_back(
+            {look_target + jcc::Vec3::UnitZ(), jcc::Vec4(0.2, 1.0, 0.0, 0.6)});
+      }
 
-    const auto &cfg = ray_caster_.config();
-    viewer::ColoredPoints lidar_points;
-
-    for (std::size_t k = 0; k < dists.size(); ++k) {
-      lidar_points.points.push_back(world_from_robot * cfg.rays[k](dists[k]));
-      const Vec4 color = jcc::augment(viewer::colors::viridis(dists[k] / 5.0), 1.0);
-      // const Vec4 color(1.0, 1.0, 0.0, 1.0);
-      lidar_points.colors.push_back(color);
-      lidar_points.sizes.push_back(0.8);
+      plan_geo_.colored_points.push_back(colored_points);
     }
-
-    lidar_geo_.colored_points.push_back(lidar_points);
-
-    const auto visitor = make_visit(plan_geo_);
-    const auto bvh = assets_["Store"].get_bvh();
-
-    const geometry::Ray test_ray{jcc::Vec3::UnitZ() * 0.2,
-                                 geometry::Unit3(0.0, 1.0, 0.0).vec()};
-    bvh->intersect(world_from_robot * test_ray, visitor);
   }
 
   //
