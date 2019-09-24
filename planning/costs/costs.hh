@@ -20,4 +20,8 @@ inline double quad_hinge(double x, double k) {
   return square(std::max(x - k, 0.0));
 }
 
+inline double huber_hinge(double x, double hinge_k, double huber_k) {
+  return huber(std::max(x - hinge_k, 0.0), huber_k);
+}
+
 }  // namespace planning
