@@ -17,7 +17,7 @@ void prepare_to_render() {
   // Flag soup
   //
 
-  glShadeModel(GL_SMOOTH);
+  // glShadeModel(GL_SMOOTH);
 
   // Check depth when rendering
   glEnable(GL_DEPTH_TEST);
@@ -27,9 +27,9 @@ void prepare_to_render() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glClearColor(0.1, 0.1, 0.1, 1.0f);
 
-  glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+  // glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
   glEnable(GL_LINE_SMOOTH);
-  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  // glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
   glEnable(GL_MULTISAMPLE);
 }
