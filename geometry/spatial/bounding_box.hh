@@ -146,6 +146,16 @@ class BoundingBox {
     return (pc.cwiseAbs() - b).cwiseMax(Vec3::Zero()).norm();
   }
 
+  double sd_box(const Eigen::Vector3d &point) const {
+    static_assert(DIM == 3, "Dimension must be 3 for now, sorry");
+
+    using Vec3 = Eigen::Vector3d;
+    const Vec3 pp = point - center();
+    const Vec3 d = pp.cwiseAbs() - (upper() - center());
+
+    return d.maxCoeff();
+  }
+
   const Vec &lower() const {
     return lower_;
   }
