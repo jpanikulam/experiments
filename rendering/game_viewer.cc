@@ -7,6 +7,8 @@
 
 #include <thread>
 
+#include "third_party/imgui/imgui.h"
+
 // TODO
 #include <iostream>
 namespace jcc {
@@ -53,7 +55,7 @@ GameViewer::GameViewer() {
 }
 
 void GameViewer::init(const viewer::GlSize &gl_size) {
-  imgui_mgr_.init(get_window());
+  imgui_mgr_.init(get_window(), {true});
 
   resize(gl_size);
 
@@ -146,11 +148,10 @@ void GameViewer::draw_scene() {
 
     ship_vao.bind();
     glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (void *)0);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (void *)0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    // glLineWidth(3.0);
-    // glDrawArrays(GL_LINES, 0, vertices.size());
+    glLineWidth(3.0);
+    glDrawArrays(GL_LINES, 0, vertices.size());
 
     // glDrawArrays(GL_TRIANGLES, 0, vertices.size());
     ship_vao.destroy();
@@ -187,8 +188,15 @@ void GameViewer::render() {
       gv_state_.view.camera.camera_from_world().matrix(), viewport_dims);
   // TODO: Generate perspective projection -- we cannot query the GPU for this!
 
-  // imgui_mgr_.new_frame();
-  // imgui_mgr_.render();
+  imgui_mgr_.new_frame();
+  if (ImGui::Begin("Sand")) {
+    if (ImGui::Button("Sand Button")) {
+      std::cout << "Sand" << std::endl;
+    }
+  }
+  ImGui::End();
+
+  imgui_mgr_.render();
 
   draw_scene();
 

@@ -56,6 +56,8 @@ class Shader {
 
   std::map<std::string, UniformDescription> uniform_from_name_;
   std::map<std::string, AttributeDescription> attribute_from_name_;
+
+  bool debug_mode_ = true;
 };
 
 }  // namespace jcc

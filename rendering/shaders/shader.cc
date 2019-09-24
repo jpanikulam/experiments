@@ -125,71 +125,199 @@ Shader::Shader(const int program_id) : program_id_(program_id) {
 void Shader::use() const {
   glUseProgram(program_id_);
 }
-
 void Shader::set(const std::string& name, const MatNf<2, 3>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT2x3), "Mismatched argument type");
   glUniformMatrix2x3fv(desc.location, 1, false, arg.data());
 }
 void Shader::set(const std::string& name, const MatNf<2, 4>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT2x4), "Mismatched argument type");
   glUniformMatrix2x4fv(desc.location, 1, false, arg.data());
 }
 void Shader::set(const std::string& name, const MatNf<3, 2>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT3x2), "Mismatched argument type");
   glUniformMatrix3x2fv(desc.location, 1, false, arg.data());
 }
 void Shader::set(const std::string& name, const MatNf<3, 4>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT3x4), "Mismatched argument type");
   glUniformMatrix3x4fv(desc.location, 1, false, arg.data());
 }
 void Shader::set(const std::string& name, const MatNf<4, 2>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT4x2), "Mismatched argument type");
   glUniformMatrix4x2fv(desc.location, 1, false, arg.data());
 }
 void Shader::set(const std::string& name, const MatNf<3, 3>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT3), "Mismatched argument type");
   glUniformMatrix3fv(desc.location, 1, false, arg.data());
 }
 void Shader::set(const std::string& name, const VecNf<2>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC2), "Mismatched argument type");
   glUniform2fv(desc.location, 1, arg.data());
 }
 void Shader::set(const std::string& name, const VecNf<3>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC3), "Mismatched argument type");
   glUniform3fv(desc.location, 1, arg.data());
 }
 void Shader::set(const std::string& name, const VecNf<4>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC4), "Mismatched argument type");
   glUniform4fv(desc.location, 1, arg.data());
 }
 void Shader::set(const std::string& name, const float& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT), "Mismatched argument type");
   glUniform1f(desc.location, arg);
 }
 void Shader::set(const std::string& name, const MatNf<4, 4>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT4), "Mismatched argument type");
   glUniformMatrix4fv(desc.location, 1, false, arg.data());
 }
 void Shader::set(const std::string& name, const MatNf<4, 3>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT4x3), "Mismatched argument type");
   glUniformMatrix4x3fv(desc.location, 1, false, arg.data());
 }
 void Shader::set(const std::string& name, const MatNf<2, 2>& arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_MAT2), "Mismatched argument type");
   glUniformMatrix2fv(desc.location, 1, false, arg.data());
 }
-
 }  // namespace jcc

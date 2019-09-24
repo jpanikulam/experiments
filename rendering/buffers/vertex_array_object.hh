@@ -36,5 +36,7 @@ class VertexArrayObject {
   uint32_t vao_ = -1;
 
   std::vector<uint32_t> allocated_buffers_;
+
+  bool debug_mode_ = true;
 };
 }  // namespace jcc

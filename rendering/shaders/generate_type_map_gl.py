@@ -68,14 +68,27 @@ def make_uniform(type_enum, xdt):
     n_elements, type_name, cc_type, function = xdt
     txt = "void Shader::set(const std::string& name, const {}& arg) const ".format(cc_type) + "{"
 
+    txt += """
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {{
+    if (0u == uniform_from_name_.count(name)) {{
+        jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+        return;
+    }}
+  }} else {{
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }}
+""".format()
     txt += "\n  const auto& desc = uniform_from_name_.at(name);"
-
     txt += '\n  JASSERT_EQ(desc.type, static_cast<int>({type_enum}), "Mismatched argument type");'.format(
         type_enum=type_enum
     )
 
     if n_elements > 1:
-        txt += "\n  {fnc}(desc.location, 1, arg.data());".format(fnc=function)
+        if 'MatNf' in cc_type:
+            txt += "\n  {fnc}(desc.location, 1, false, arg.data());".format(fnc=function)
+        else:
+            txt += "\n  {fnc}(desc.location, 1, arg.data());".format(fnc=function)
     else:
         txt += "\n  {fnc}(desc.location, arg);".format(fnc=function)
 
@@ -90,6 +103,18 @@ def line(txt, depth=0):
 def make_attribute(type_enum, xdt):
     n_elements, type_name, cc_type, function = xdt
     txt = "void VertexArrayObject::set(const std::string& name, const std::vector<{}>& arg) ".format(cc_type) + "{"
+
+    txt += """
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {{
+    if (0u == attribute_from_name_.count(name)) {{
+        jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+        return;
+    }}
+  }} else {{
+    JASSERT_EQ(attribute_from_name_.count(name), 1u, err_str.c_str());
+  }}
+""".format()
     txt += "\n  const auto& desc = attribute_from_name_.at(name);"
     txt += '\n  JASSERT_EQ(desc.type, static_cast<int>({type_enum}), "Mismatched argument type");'.format(
         type_enum=type_enum
@@ -124,6 +149,7 @@ def uniforms():
     for type_enum, data in mapping.items():
         if len(data) > 2:
             print make_uniform(type_enum, data)
+
 
 def attributes():
     for type_enum, data in mapping.items():
