@@ -1,10 +1,8 @@
 add_library(imgui
 	examples/imgui_impl_glfw.cpp
-	examples/imgui_impl_opengl2.cpp
 
-    examples/example_glfw_opengl2/main.cpp
-    examples/imgui_impl_glfw.cpp
     examples/imgui_impl_opengl2.cpp
+    examples/imgui_impl_opengl3.cpp
 
     imgui.cpp
     imgui_draw.cpp
