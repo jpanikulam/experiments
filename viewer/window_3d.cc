@@ -149,9 +149,11 @@ void Window3D::on_mouse_move(const WindowPoint &mouse_pos) {
     return;
   }
 
-  const bool shift = held_keys().count(GLFW_KEY_LEFT_SHIFT) == 1
-                         ? held_keys().at(GLFW_KEY_LEFT_SHIFT)
-                         : false;
+  // TODO(jpanikulam): Fix this
+  // const bool shift = held_keys().count(GLFW_KEY_LEFT_SHIFT) == 1
+  //                        ? held_keys().at(GLFW_KEY_LEFT_SHIFT)
+  //                        : false;
+  const bool shift = false;
 
   const bool left = left_mouse_held() && !shift;
   const bool right = right_mouse_held() || (shift && left_mouse_held());
