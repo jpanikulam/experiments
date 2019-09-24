@@ -5,6 +5,7 @@
 #include "logging/assert.hh"
 
 #include "numerics/project_psd.hh"
+#include "util/clamp.hh"
 
 #include <iostream>
 #include <limits>
@@ -34,15 +35,32 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::solve(
   Solution current_soln;
   shoot(traj0, {}, -1.0, &current_soln);
 
-  constexpr int MAX_ITERS = 15;
+  Damping damping;
+
   int iter = 0;
-  for (; iter < MAX_ITERS; ++iter) {
+  for (; iter < cfg_.max_iterations; ++iter) {
     if (visitor) {
       visitor(current_soln, iter, false);
     }
 
-    const auto lqr_soln = ricatti(current_soln);
-    current_soln = line_search(current_soln, lqr_soln);
+    const auto lqr_soln = ricatti(current_soln, damping);
+    const auto line_search_result = line_search(current_soln, lqr_soln);
+    if (line_search_result.best_alpha < 0.1) {
+      // damping.mu_state *= 2.0;
+      // damping.mu_ctrl *= 2.0;
+      // jcc::Warning() << "Increasing damping: " << std::endl;
+    } else {
+      // damping.mu_state *= 0.75;
+      // damping.mu_ctrl *= 0.75;
+      current_soln = line_search_result.soln;
+      // jcc::Warning() << "Decreasing damping: " << std::endl;
+    }
+
+    // jcc::Warning() << "  cost:     " << line_search_result.best_cost << std::endl;
+    damping.mu_state = jcc::clamp(damping.mu_state, cfg_.min_mu_state, 1e5);
+    damping.mu_ctrl = jcc::clamp(damping.mu_ctrl, cfg_.min_mu_ctrl, 1e5);
+    // jcc::Warning() << "  mu_state: " << damping.mu_state << std::endl;
+    // jcc::Warning() << "  mu_ctrl:  " << damping.mu_ctrl << std::endl;
   }
   if (visitor) {
     visitor(current_soln, iter + 1, true);
@@ -97,7 +115,7 @@ double XlqrProblem<_Prob>::shoot(const typename XlqrProblem<_Prob>::Solution& so
 }
 
 template <typename _Prob>
-typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::line_search(
+typename XlqrProblem<_Prob>::LineSearchResult XlqrProblem<_Prob>::line_search(
     const typename XlqrProblem<_Prob>::Solution& soln,
     const typename XlqrProblem<_Prob>::LqrSolution& lqr_soln) const {
   double best_cost = std::numeric_limits<double>::max();
@@ -112,15 +130,20 @@ typename XlqrProblem<_Prob>::Solution XlqrProblem<_Prob>::line_search(
 
   JASSERT_GT(best_alpha, 0.0, "Line search must find a positive alpha");
 
-  Solution out_soln;
-  shoot(soln, lqr_soln, best_alpha, &out_soln);
-  out_soln.cost = best_cost;
-  return out_soln;
+  LineSearchResult result;
+  result.best_alpha = best_alpha;
+  result.best_cost = best_cost;
+
+  // Solution out_soln;
+  shoot(soln, lqr_soln, best_alpha, &result.soln);
+  result.soln.cost = best_cost;
+  return result;
 }
 
 template <typename _Prob>
 typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
-    const typename XlqrProblem<_Prob>::Solution& soln) const {
+    const typename XlqrProblem<_Prob>::Solution& soln,
+    const typename XlqrProblem<_Prob>::Damping& damping) const {
   LqrSolution lqr_soln;
   lqr_soln.resize(soln.u.size());
 
@@ -142,19 +165,20 @@ typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
     const StateVec Qx = diffs.g_x + diffs.A.transpose() * Vx;
     const ControlVec Qu = diffs.g_u + diffs.B.transpose() * Vx;
 
-    const StateHess Qxx = diffs.Q + diffs.A.transpose() * Vxx * diffs.A;
+    const StateHess lev_value_damping = damping.mu_state * StateHess::Identity();
+    const ControlHess lev_control_damping = damping.mu_ctrl * ControlHess::Identity();
 
-    constexpr double MU_0 = 1e-1;
-    const StateHess levenberg_damping = MU_0 * StateHess::Identity();
+    // Should there not be value damping here?
+    const StateHess Qxx = diffs.Q + diffs.A.transpose() * Vxx * diffs.A;
+    const StateHess Qxx_damped = numerics::project_psd(Qxx, cfg_.qxx_min_eigenvalue);
 
     const ControlHess Quu =
-        diffs.R + diffs.B.transpose() * (Vxx + levenberg_damping) * diffs.B;
+        diffs.R + diffs.B.transpose() * (Vxx + lev_value_damping) * diffs.B;
     const StateControlHessBlock Qux =
-        diffs.N + diffs.B.transpose() * (Vxx + levenberg_damping) * diffs.A;
+        diffs.N + diffs.B.transpose() * (Vxx + lev_value_damping) * diffs.A;
 
-    const ControlHess Quu_damped1 = numerics::project_psd(Quu, 0.1);
-    // const ControlHess Quu_damped = numerics::deproject_psd(Quu_damped1, 10.0);
-    const ControlHess Quu_damped = Quu_damped1;
+    const ControlHess Quu_damped =
+        numerics::project_psd(Quu, cfg_.quu_min_eigenvalue) + lev_control_damping;
 
     // Safe LLT computation
     const Eigen::LDLT<ControlHess> Quu_llt(Quu_damped);
@@ -171,9 +195,9 @@ typename XlqrProblem<_Prob>::LqrSolution XlqrProblem<_Prob>::ricatti(
     Vx = Qx + (lqr_soln[k].K.transpose() * Quu_damped * lqr_soln[k].k) +
          (lqr_soln[k].K.transpose() * Qu) + (Qux.transpose() * lqr_soln[k].k);
 
-    const StateHess Vxx_tmp = Qxx + (lqr_soln[k].K.transpose() * Quu * lqr_soln[k].K) +
-                              (lqr_soln[k].K.transpose() * Qux) +
-                              (Qux.transpose() * lqr_soln[k].K);
+    const StateHess Vxx_tmp =
+        Qxx_damped + (lqr_soln[k].K.transpose() * Quu_damped * lqr_soln[k].K) +
+        (lqr_soln[k].K.transpose() * Qux) + (Qux.transpose() * lqr_soln[k].K);
     Vxx = ((Vxx_tmp + Vxx_tmp.transpose()) * 0.5).eval();
 
     // Ugh: Should have have just done this the whole time

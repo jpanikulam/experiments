@@ -6,6 +6,14 @@
 
 namespace planning {
 
+struct XlqrConfig {
+  int max_iterations = 15;
+  double min_mu_state = 0.1;
+  double min_mu_ctrl = 0.1;
+  double qxx_min_eigenvalue = 0.2;
+  double quu_min_eigenvalue = 0.2;
+};
+
 template <typename _Prob>
 class XlqrProblem {
   using Prob = _Prob;
@@ -14,9 +22,16 @@ class XlqrProblem {
   using State = typename Prob::State;
   using Derivatives = typename Prob::Derivatives;
 
+  struct Damping {
+    double mu_state = 10.0;
+    double mu_ctrl = 10.0;
+  };
+
  public:
-  XlqrProblem(const Prob& prob, const typename Prob::CostDiffs& cost_diffs)
-      : prob_(prob), cost_diffs_(cost_diffs) {
+  XlqrProblem(const Prob& prob,
+              const typename Prob::CostDiffs& cost_diffs,
+              const XlqrConfig& cfg = {})
+      : prob_(prob), cost_diffs_(cost_diffs), cfg_(cfg) {
   }
 
   struct Solution {
@@ -47,12 +62,19 @@ class XlqrProblem {
                double alpha,
                Solution* out_soln = nullptr) const;
 
-  Solution line_search(const Solution& soln, const LqrSolution& lqr_soln) const;
+  struct LineSearchResult {
+    Solution soln;
+    double best_alpha = -1.0;
+    double best_cost = -1.0;
+  };
 
-  LqrSolution ricatti(const Solution& soln) const;
+  LineSearchResult line_search(const Solution& soln, const LqrSolution& lqr_soln) const;
+
+  LqrSolution ricatti(const Solution& soln, const Damping& damping = {}) const;
 
   Prob prob_;
   typename Prob::CostDiffs cost_diffs_;
+  XlqrConfig cfg_;
 };
 
 }  // namespace planning
