@@ -5,6 +5,9 @@
 
 #include "logging/assert.hh"
 
+// TODO
+#include <future>
+
 namespace jcc {
 namespace simulation {
 
@@ -30,11 +33,18 @@ class SimulationIntegrator {
     desires_.target = target;
   }
 
+  // non-const because I'm a weeb
+  planning::drifter::PlannerConfiguration& config() {
+    return cfg_;
+  }
+
   void toggle_pause() {
     paused_ = !paused_;
   }
 
   void reset(const Robot& robot) {
+    plan_future_ = {};
+    last_plan_ = {};
     states_.clear();
     scrub_ = 0;
 
@@ -60,8 +70,8 @@ class SimulationIntegrator {
     step_ = step;
   }
 
-  void set_max_speed(double vmax) {
-    desires_.vmax = vmax;
+  void set_max_speed(double max_vel) {
+    desires_.max_vel = max_vel;
   }
 
   void scrub_to(const int scrub_time) {
@@ -80,12 +90,40 @@ class SimulationIntegrator {
     return desires_;
   }
 
+  void set_look_target(const jcc::Vec3& target) {
+    desires_.have_look_target = true;
+    desires_.look_target = target;
+  }
+
+  void clear_look_target(const jcc::Vec3& target) {
+    desires_.have_look_target = false;
+  }
+
   std::vector<planning::drifter::StateControl> step() {
     const auto x0 = states_[scrub_];
 
-    const auto rst = planning::drifter::plan(x0.state, desires_);
+    const auto planfnc = [this, x0]() {
+      return planning::drifter::plan(x0.state, desires_, cfg_);
+    };
 
-    const auto& x1 = rst[traj_step_size_].state;
+    last_plan_ = planfnc();
+
+    // if (!plan_future_.valid()) {
+    //   plan_future_ = std::async(std::launch::async, planfnc);
+    //   last_plan_ = planning::drifter::plan(x0.state, desires_, cfg_);
+    //   return last_plan_;
+    // }
+
+    // if (plan_future_.wait_for(jcc::to_duration(0.1)) == std::future_status::ready) {
+    //   last_plan_ = plan_future_.get();
+    //   plan_future_ = std::async(std::launch::async, planfnc);
+    // } else {
+    //   return last_plan_;
+    // }
+
+    // const auto rst = planning::drifter::plan(x0.state, desires_, cfg_);
+
+    const auto& x1 = last_plan_[traj_step_size_].state;
     // Only do this when unpaused!
 
     if (!paused_) {
@@ -95,7 +133,8 @@ class SimulationIntegrator {
       states_.push_back({x1});
       scrub_ += 1;
     }
-    return rst;
+    return last_plan_;
+    ;
   }
 
   planning::drifter::State get() const {
@@ -111,9 +150,14 @@ class SimulationIntegrator {
 
   bool paused_ = false;
 
+  std::future<std::vector<planning::drifter::StateControl>> plan_future_;
+  std::vector<planning::drifter::StateControl> last_plan_;
+
   std::vector<SimulationState> states_;
 
   planning::drifter::BehaviorPrimitives desires_;
+
+  planning::drifter::PlannerConfiguration cfg_;
 };
 
 }  // namespace simulation
