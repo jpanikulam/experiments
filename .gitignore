@@ -94,3 +94,6 @@ tmp/
 *.sublime-workspace
 
 
+models/
+sims/
+*.vox
