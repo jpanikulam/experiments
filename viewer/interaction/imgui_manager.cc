@@ -4,12 +4,14 @@
 
 #include "third_party/imgui/examples/imgui_impl_glfw.h"
 #include "third_party/imgui/examples/imgui_impl_opengl2.h"
+#include "third_party/imgui/examples/imgui_impl_opengl3.h"
 
 // %deps(imgui)
 
 namespace viewer {
 
-void ImGuiManager::init(GLFWwindow* window) {
+void ImGuiManager::init(GLFWwindow* window, const ImguiManagerConfig& cfg) {
+  cfg_ = cfg;
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   // TODO(jpanikulam): Handle multiple windows
@@ -24,7 +26,11 @@ void ImGuiManager::init(GLFWwindow* window) {
   // Setup Platform/Renderer bindings
   constexpr bool INSTALL_CALLBACKS = true;
   ImGui_ImplGlfw_InitForOpenGL(window, INSTALL_CALLBACKS);
-  ImGui_ImplOpenGL2_Init();
+  if (cfg_.opengl3) {
+    ImGui_ImplOpenGL3_Init();
+  } else {
+    ImGui_ImplOpenGL2_Init();
+  }
 }
 
 bool ImGuiManager::want_capture() const {
@@ -34,18 +40,30 @@ bool ImGuiManager::want_capture() const {
 
 void ImGuiManager::new_frame() {
   // Start the Dear ImGui frame
-  ImGui_ImplOpenGL2_NewFrame();
+  if (cfg_.opengl3) {
+    ImGui_ImplOpenGL3_NewFrame();
+  } else {
+    ImGui_ImplOpenGL2_NewFrame();
+  }
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 }
 
 void ImGuiManager::render() {
   ImGui::Render();
-  ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+  if (cfg_.opengl3) {
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  } else {
+    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+  }
 }
 
 ImGuiManager::~ImGuiManager() {
-  ImGui_ImplOpenGL2_Shutdown();
+  if (cfg_.opengl3) {
+    ImGui_ImplOpenGL3_Shutdown();
+  } else {
+    ImGui_ImplOpenGL2_Shutdown();
+  }
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
 }

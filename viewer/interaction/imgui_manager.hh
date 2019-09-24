@@ -15,13 +15,21 @@ namespace viewer {
 // Note: You can use `want_capture()` to check if ImGui is
 // trying to capture the keyboard or mouse
 //
+
+struct ImguiManagerConfig {
+  bool opengl3 = false;
+};
+
 class ImGuiManager {
  public:
-  void init(GLFWwindow* window);
+  void init(GLFWwindow* window, const ImguiManagerConfig& cfg = {});
   void new_frame();
   void render();
   bool want_capture() const;
   ~ImGuiManager();
+
+ private:
+  ImguiManagerConfig cfg_;
 };
 
 }  // namespace viewer
