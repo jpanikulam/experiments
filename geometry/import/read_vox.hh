@@ -18,11 +18,12 @@ struct Voxel {
 struct VoxelList {
   jcc::Vec3i size;
   std::vector<Voxel> voxels;
+  std::array<uint32_t, 256> palette;
 };
 
 // Read a .vox file
 jcc::Optional<VoxelList> read_vox(const std::string& file_path);
 
-jcc::Vec4 color_from_default_id(const uint8_t id);
+jcc::Vec4 color_from_id(const VoxelList& voxel_list, const uint8_t id);
 
 }  // namespace geometry
