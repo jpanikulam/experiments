@@ -17,6 +17,7 @@
 #include <vector>
 
 // TODO
+#include "rendering/imgui_elements/game_debug_configuration.hh"
 #include "rendering/assets/load_voxel_asset.hh"
 #include "rendering/shaders/load_shader.hh"
 
@@ -66,6 +67,8 @@ class GameViewer : public viewer::SimpleWindow {
   VoxelAsset test_asset_;
 
   viewer::GeometryBuffer demo_buffer_;
+
+  GameDebugConfiguration ui_cfg_;
 };
 
 struct GameViewerConfig {

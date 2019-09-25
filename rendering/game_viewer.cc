@@ -1,13 +1,14 @@
 #include "rendering/game_viewer.hh"
 
+#include "rendering/imgui_elements/game_ui_elements.hh"
+
+#include "geometry/types/angle.hh"
 #include "viewer/rendering/pre_render.hh"
 #include "viewer/window_manager.hh"
 
-#include "geometry/types/angle.hh"
+#include "third_party/imgui/imgui.h"
 
 #include <thread>
-
-#include "third_party/imgui/imgui.h"
 
 // TODO
 #include <iostream>
@@ -83,12 +84,8 @@ void GameViewer::on_mouse_move(const viewer::WindowPoint &mouse_pos) {
   if (imgui_mgr_.want_capture()) {
     return;
   }
-
-  const bool shift = held_keys().count(GLFW_KEY_LEFT_SHIFT) == 1
-                         ? held_keys().at(GLFW_KEY_LEFT_SHIFT)
-                         : false;
-  const bool left = left_mouse_held() && !shift;
-  const bool right = right_mouse_held() || (shift && left_mouse_held());
+  const bool left = left_mouse_held();
+  const bool right = right_mouse_held();
 
   gv_state_.view.camera.apply_mouse(mouse_pos, gv_state_.interaction.mouse_pos_last_click,
                                     left, right);
@@ -122,15 +119,6 @@ void GameViewer::draw_scene() {
         gv_state_.view.camera.camera_from_world().matrix().cast<float>();
     test_shader_.set("camera_from_world", camera_from_world);
 
-    const auto vertices = test_asset_.vertices();
-    const auto normals = test_asset_.normals();
-
-    std::vector<jcc::Vec3f> colors;
-    colors.reserve(vertices.size());
-    for (std::size_t k = 0; k < vertices.size(); ++k) {
-      colors.push_back(jcc::Vec3f(0.7f, 0.6f, 0.7f));
-    }
-
     auto ship_vao = test_shader_.generate_vao();
     ship_vao.bind();
 
@@ -142,18 +130,37 @@ void GameViewer::draw_scene() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * (3 * 4), indices.data(),
                  GL_STATIC_DRAW);
 
-    ship_vao.set("vertex_color", colors);
-    ship_vao.set("vertex_world", vertices);
-    ship_vao.set("vertex_normal", normals);
+    ship_vao.set("vertex_color", test_asset_.colors());
+    ship_vao.set("vertex_world", test_asset_.vertices());
+    ship_vao.set("vertex_normal", test_asset_.normals());
 
     ship_vao.bind();
+
+    //    if (ui_cfg_.debug.wireframe) {
+    //      glLineWidth(1.0);
+    //      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //    } else {
+    //      glPolygonMode(GL_FRONT, GL_FILL);
+    //    }
+    const auto mode = ui_cfg_.debug.wireframe ? GL_LINE : GL_FILL;
+    std::cout << "Mode: " << mode << std::endl;
+
+    switch (ui_cfg_.debug.polygon_mode) {
+      case 0:
+        std::cout << "0" << std::endl;
+        glPolygonMode(GL_BACK, mode);
+        break;
+      case 1:
+        std::cout << "1" << std::endl;
+        glPolygonMode(GL_FRONT, mode);
+        break;
+      case 2:
+        std::cout << "2" << std::endl;
+        glPolygonMode(GL_FRONT_AND_BACK, mode);
+        break;
+    }
     glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (void *)0);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    glLineWidth(3.0);
-    glDrawArrays(GL_LINES, 0, vertices.size());
-
-    // glDrawArrays(GL_TRIANGLES, 0, vertices.size());
     ship_vao.destroy();
 
     auto light_vao = test_shader_.generate_vao();
@@ -189,13 +196,7 @@ void GameViewer::render() {
   // TODO: Generate perspective projection -- we cannot query the GPU for this!
 
   imgui_mgr_.new_frame();
-  if (ImGui::Begin("Sand")) {
-    if (ImGui::Button("Sand Button")) {
-      std::cout << "Sand" << std::endl;
-    }
-  }
-  ImGui::End();
-
+  show_menu(out(ui_cfg_));
   imgui_mgr_.render();
 
   draw_scene();
