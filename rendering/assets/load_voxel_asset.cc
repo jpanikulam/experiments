@@ -27,6 +27,7 @@ struct TriangleFaceMesh {
   std::vector<Vec3ui32> faces;
   std::vector<jcc::Vec3f> vertices;
   std::vector<jcc::Vec3f> normals;
+  std::vector<jcc::Vec3f> colors;
 };
 
 class SparseUniformByteGrid {
@@ -50,11 +51,6 @@ class SparseUniformByteGrid {
       sparse_grid_[table_entry_id] = k;
       bbox.expand(jcc::Vec3(voxel.x, voxel.y, voxel.z));
     }
-
-    std::cout << voxel_list.size.transpose() << std::endl;
-    std::cout << "Estimated" << std::endl;
-    std::cout << bbox.lower().transpose() << std::endl;
-    std::cout << bbox.upper().transpose() << std::endl;
 
     //
     // Build the adjacency table
@@ -113,9 +109,8 @@ class SparseUniformByteGrid {
         // -Z Face
         {Vec3ui32(7, 6, 5), Vec3ui32(5, 4, 7)}};
 
-    std::vector<Vec3ui32> faces;
-    std::vector<jcc::Vec3f> vertices;
-    std::vector<jcc::Vec3f> normals;
+    TriangleFaceMesh mesh;
+
     constexpr double VX_SIZE = 0.1;
 
     for (const auto& vxl : voxel_list_.voxels) {
@@ -128,8 +123,8 @@ class SparseUniformByteGrid {
         // Only apply the face if there is no neighbor in this direction
         if (neighbor_id == -1) {
           for (const auto& face : cube_faces[face_ind]) {
-            faces.push_back(
-                jcc::Vec3ui32(vertices.size(), vertices.size() + 1, vertices.size() + 2));
+            std::size_t n_verts = mesh.vertices.size();
+            mesh.faces.push_back(jcc::Vec3ui32(n_verts, n_verts + 1, n_verts + 2));
 
             const jcc::Vec3f ab = cube_vertices[face[2]] - cube_vertices[face[0]];
             const jcc::Vec3f ca = cube_vertices[face[1]] - cube_vertices[face[0]];
@@ -138,14 +133,20 @@ class SparseUniformByteGrid {
             for (int vx_ind = 0; vx_ind < 3; ++vx_ind) {
               const jcc::Vec3f vertex = cube_vertices[face[vx_ind]];
               const jcc::Vec3f vertex_offset = VX_SIZE * ((0.5f * vertex) + offset);
-              vertices.push_back(vertex_offset);
-              normals.push_back(normal);
+              mesh.vertices.push_back(vertex_offset);
+              mesh.normals.push_back(-normal);
+
+              const jcc::Vec4 color_alpha =
+                  geometry::color_from_id(voxel_list_, vxl.color_ind);
+
+              const jcc::Vec3f color = color_alpha.head<3>().cast<float>();
+              mesh.colors.push_back(color);
             }
           }
         }
       }
     }
-    return TriangleFaceMesh{faces, vertices, normals};
+    return mesh;
   }
 
  private:
@@ -169,8 +170,10 @@ VoxelAsset::VoxelAsset(const geometry::VoxelList& voxel_list) : voxel_list_(voxe
   vertices_ = msh.vertices;
   normals_ = msh.normals;
   faces_ = msh.faces;
+  colors_ = msh.colors;
   JASSERT_EQ(normals_.size(), vertices_.size(),
              "Different number of normals and vertices");
+  JASSERT_EQ(colors_.size(), vertices_.size(), "Different number of colors and vertices");
 }
 
 VoxelAsset load_voxel_asset(const std::string& path) {

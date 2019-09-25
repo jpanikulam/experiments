@@ -26,11 +26,16 @@ class VoxelAsset {
     return normals_;
   };
 
+  const std::vector<jcc::Vec3f>& colors() const {
+    return colors_;
+  };
+
  private:
   geometry::VoxelList voxel_list_;
 
   std::vector<jcc::Vec3f> vertices_;
   std::vector<jcc::Vec3f> normals_;
+  std::vector<jcc::Vec3f> colors_;
   std::vector<Vec3ui32> faces_;
 };
 
