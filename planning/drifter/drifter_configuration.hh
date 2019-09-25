@@ -37,7 +37,7 @@ struct Obstacles {
   double avoid_weight = 3.0;
 };
 struct Control {
-  double acceleration_weight = 0.1;
+  double acceleration_weight = 0.0;
   double phidot_weight = 1.0;
   double phi_dot_max = 1.5;
   double phi_dot_max_bound_weight = 75.0;

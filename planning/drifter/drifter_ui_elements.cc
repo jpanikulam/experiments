@@ -14,7 +14,7 @@ void show_menu(Out<PlannerConfiguration> menu) {  ImGui::Begin("PlannerConfigura
     ImGui::Checkbox("Show Cost", &menu->debug.show_cost);
     ImGui::Checkbox("Enable Look Target", &menu->debug.enable_look_target);
     ImGui::Checkbox("Show Trajectory", &menu->debug.show_trajectory);
-    ImGui::Checkbox("Flip the Convenience Flag", &menu->debug.convenience_flag);
+    ImGui::Checkbox("Set Convenient Flag", &menu->debug.convenience_flag);
   }
 
   if (ImGui::CollapsingHeader("Optimization")) {
@@ -88,26 +88,26 @@ ImGui::SameLine();
     float max_accel_tmp = static_cast<float>((menu->bounds.max_accel));
     ImGui::SliderFloat("Maximum Acceleration (m/s^2)", &max_accel_tmp, 0.0, 1.0);
     menu->bounds.max_accel = static_cast<double>(max_accel_tmp);
-if (ImGui::Button("Reset##Steering Angle Weight")) {
+if (ImGui::Button("Reset##double")) {
   menu->bounds.phi_weight = 0.1;
 }
 ImGui::SameLine();
     float phi_weight_tmp = static_cast<float>((menu->bounds.phi_weight));
-    ImGui::SliderFloat("Steering Angle Weight", &phi_weight_tmp, 0.0, 25.0);
+    ImGui::SliderFloat("double", &phi_weight_tmp, 0.0, 25.0);
     menu->bounds.phi_weight = static_cast<double>(phi_weight_tmp);
-if (ImGui::Button("Reset##Maximum Value of Phi")) {
+if (ImGui::Button("Reset##double")) {
   menu->bounds.phi_max = 3.0;
 }
 ImGui::SameLine();
     float phi_max_tmp = static_cast<float>((menu->bounds.phi_max));
-    ImGui::SliderFloat("Maximum Value of Phi", &phi_max_tmp, 0.0, 5.0);
+    ImGui::SliderFloat("double", &phi_max_tmp, 0.0, 5.0);
     menu->bounds.phi_max = static_cast<double>(phi_max_tmp);
-if (ImGui::Button("Reset##Weight for Enforcing Maximum Value of Phi")) {
+if (ImGui::Button("Reset##double")) {
   menu->bounds.phi_max_bound_weight = 75.0;
 }
 ImGui::SameLine();
     float phi_max_bound_weight_tmp = static_cast<float>((menu->bounds.phi_max_bound_weight));
-    ImGui::SliderFloat("Weight for Enforcing Maximum Value of Phi", &phi_max_bound_weight_tmp, 0.0, 250.0);
+    ImGui::SliderFloat("double", &phi_max_bound_weight_tmp, 0.0, 250.0);
     menu->bounds.phi_max_bound_weight = static_cast<double>(phi_max_bound_weight_tmp);
   }
 
@@ -171,7 +171,7 @@ ImGui::SameLine();
       menu->control = Control{};
     }
 if (ImGui::Button("Reset##Acceleration Weight")) {
-  menu->control.acceleration_weight = 0.1;
+  menu->control.acceleration_weight = 0.0;
 }
 ImGui::SameLine();
     float acceleration_weight_tmp = static_cast<float>((menu->control.acceleration_weight));

@@ -366,7 +366,7 @@ void SimViewer::draw() {
   } else {
     if (!editor_state_.any_robot_placed) {
       // view_state_change = true;
-      robot_geo_.clear();anikulam
+      robot_geo_.clear();
 
       plan_geo_.clear();
     }
