@@ -12,6 +12,12 @@ VertexArrayObject::VertexArrayObject(
   glGenVertexArrays(1, &vao_);
 }
 
+VertexArrayObject::~VertexArrayObject() {
+  if (vao_ != 0u) {
+    destroy();
+  }
+}
+
 void VertexArrayObject::bind() const {
   glBindVertexArray(vao_);
 }
@@ -20,7 +26,7 @@ void VertexArrayObject::destroy() {
   glDeleteBuffers(allocated_buffers_.size(), allocated_buffers_.data());
   glDeleteVertexArrays(1, &vao_);
   allocated_buffers_.clear();
-  vao_ = -1;
+  vao_ = 0u;
 }
 void VertexArrayObject::set(const std::string& name,
                             const std::vector<MatNf<2, 3>>& arg) {

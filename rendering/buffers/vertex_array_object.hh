@@ -13,6 +13,7 @@ namespace jcc {
 class VertexArrayObject {
  public:
   VertexArrayObject(const std::map<std::string, AttributeDescription>&);
+  ~VertexArrayObject();
 
   void bind() const;
   void destroy();
@@ -33,7 +34,7 @@ class VertexArrayObject {
 
  private:
   std::map<std::string, AttributeDescription> attribute_from_name_;
-  uint32_t vao_ = -1;
+  uint32_t vao_ = 0;
 
   std::vector<uint32_t> allocated_buffers_;
 
