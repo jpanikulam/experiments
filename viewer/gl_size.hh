@@ -3,8 +3,7 @@
 namespace viewer {
 
 struct GlSize {
-  GlSize() {
-  }
+  GlSize() = default;
   GlSize(int w, int h) {
     width  = w;
     height = h;
