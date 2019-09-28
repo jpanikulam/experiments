@@ -84,3 +84,4 @@ target_compile_definitions(environment PRIVATE REPO_PATH="${BASEPATH}")
 
 add_definitions(-DEIGEN_MAX_ALIGN_BYTES=0)
 add_definitions(-DEIGEN_MAX_STATIC_ALIGN_BYTES=0)
+add_definitions(-DBACKWARD_HAS_BFD=1)
