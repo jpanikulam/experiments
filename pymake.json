@@ -10,7 +10,8 @@
         "yaml-cpp/yaml.h": "yaml-cpp",
         "CL/cl.hpp": "opencl",
         "CL/cl2.hpp": "opencl",
-        "CL/cl.h": "opencl"
+        "CL/cl.h": "opencl",
+        "third_party/backward/backward.hpp": "backward"
     },
     "library_mappings": {
         "assimp": "${ASSIMP_LIBRARIES}",
@@ -23,6 +24,7 @@
         "yaml-cpp": "yaml-cpp",
         "serialport": "serialport",
         "crossguid": "crossguid",
-        "paho-mqttpp3": "paho-mqttpp3"
+        "paho-mqttpp3": "paho-mqttpp3",
+        "backward": "backward"
     }
 }
