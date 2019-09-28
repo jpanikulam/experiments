@@ -57,6 +57,10 @@ std::string gl_type_name(const GLenum type) {
       return "GLfloat[8]";
     case GL_FLOAT_MAT4x3:
       return "GLfloat[12]";
+    case GL_SAMPLER_2D:
+      return "Sampler2D";
+    case GL_SAMPLER_3D:
+      return "Sampler3D";
     default:
       return "Unknown";
   }
@@ -79,10 +83,10 @@ Shader::Shader(const int program_id) : program_id_(program_id) {
                "Name was not equal to gl specified length");
     const GLint location = glGetAttribLocation(program_id_, str_name.c_str());
 
-    jcc::Debug() << "Found attribute: " << str_name << ":" << std::endl;
-    jcc::Debug() << "\tType:" << gl_type_name(type) << std::endl;
-    jcc::Debug() << "\tSize: " << size << std::endl;
-    jcc::Debug() << "\tLocation: " << location << std::endl;
+    jcc::Info() << "Found attribute: " << str_name << ":" << std::endl;
+    jcc::Info() << "\tType: " << gl_type_name(type) << std::endl;
+    jcc::Info() << "\tSize: " << size << std::endl;
+    jcc::Info() << "\tLocation: " << location << std::endl;
 
     AttributeDescription desc;
     desc.location = location;
@@ -109,10 +113,16 @@ Shader::Shader(const int program_id) : program_id_(program_id) {
 
     const GLint location = glGetUniformLocation(program_id, str_name.c_str());
 
-    jcc::Debug() << "Found Uniform: " << str_name << ":" << std::endl;
-    jcc::Debug() << "\tType:" << gl_type_name(type) << std::endl;
-    jcc::Debug() << "\tSize: " << size << std::endl;
-    jcc::Debug() << "\tLocation: " << location << std::endl;
+    jcc::Info() << "Found Uniform: " << str_name << ":" << std::endl;
+    jcc::Info() << "\tType:" << gl_type_name(type) << std::endl;
+    jcc::Info() << "\tSize: " << size << std::endl;
+    jcc::Info() << "\tLocation: " << location << std::endl;
+
+    if (type == GL_SAMPLER_2D) {
+      const int n_textures = tex_unit_from_texture_.size();
+      tex_unit_from_texture_[str_name] = n_textures;
+      jcc::Info() << "\tAssigning to Texture Unit " << n_textures << std::endl;
+    }
 
     UniformDescription desc;
     desc.location = glGetUniformLocation(program_id, str_name.c_str());
@@ -125,11 +135,42 @@ Shader::Shader(const int program_id) : program_id_(program_id) {
 void Shader::use() const {
   glUseProgram(program_id_);
 }
+
+void Shader::set(const std::string& name, const Texture& texture) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
+  const GLenum active_textures[] = {
+      GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3, GL_TEXTURE4,
+      GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7, GL_TEXTURE8
+      //
+  };
+
+  const int texture_unit = tex_unit_from_texture_.at(name);
+  glActiveTexture(active_textures[texture_unit]);
+  texture.bind();
+
+  const auto& desc = uniform_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_SAMPLER_2D), "Mismatched argument type");
+  glUniform1i(desc.location, texture_unit);
+}
+
+//
+//
+//
+
 void Shader::set(const std::string& name, const MatNf<2, 3>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -144,7 +185,7 @@ void Shader::set(const std::string& name, const MatNf<2, 4>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -159,7 +200,7 @@ void Shader::set(const std::string& name, const MatNf<3, 2>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -174,7 +215,7 @@ void Shader::set(const std::string& name, const MatNf<3, 4>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -189,7 +230,7 @@ void Shader::set(const std::string& name, const MatNf<4, 2>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -204,7 +245,7 @@ void Shader::set(const std::string& name, const MatNf<3, 3>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -219,7 +260,7 @@ void Shader::set(const std::string& name, const VecNf<2>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -230,11 +271,12 @@ void Shader::set(const std::string& name, const VecNf<2>& arg) const {
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC2), "Mismatched argument type");
   glUniform2fv(desc.location, 1, arg.data());
 }
+
 void Shader::set(const std::string& name, const VecNf<3>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -243,13 +285,17 @@ void Shader::set(const std::string& name, const VecNf<3>& arg) const {
 
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC3), "Mismatched argument type");
-  glUniform3fv(desc.location, 1, arg.data());
+
+  glProgramUniform3fv(program_id_, desc.location, 1, arg.data());
+  GLenum err;
+  err = glGetError();
+  JASSERT_EQ(err, GL_NO_ERROR, "There was  an opengl error");
 }
 void Shader::set(const std::string& name, const VecNf<4>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -260,11 +306,11 @@ void Shader::set(const std::string& name, const VecNf<4>& arg) const {
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC4), "Mismatched argument type");
   glUniform4fv(desc.location, 1, arg.data());
 }
-void Shader::set(const std::string& name, const float& arg) const {
+void Shader::set_float(const std::string& name, const float arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -275,11 +321,28 @@ void Shader::set(const std::string& name, const float& arg) const {
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT), "Mismatched argument type");
   glUniform1f(desc.location, arg);
 }
+
+void Shader::set_uint(const std::string& name, const std::size_t arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
+  const auto& desc = uniform_from_name_.at(name);
+  // TODO: Make this typesafe
+  glUniform1i(desc.location, arg);
+}
+
 void Shader::set(const std::string& name, const MatNf<4, 4>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -294,7 +357,7 @@ void Shader::set(const std::string& name, const MatNf<4, 3>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {
@@ -309,7 +372,7 @@ void Shader::set(const std::string& name, const MatNf<2, 2>& arg) const {
   const std::string err_str = name + " was not available";
   if (debug_mode_) {
     if (0u == uniform_from_name_.count(name)) {
-      jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
       return;
     }
   } else {

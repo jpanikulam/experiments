@@ -2,8 +2,9 @@
 
 #include "eigen.hh"
 
-#include "rendering/shaders/attribute_description.hh"
+#include "rendering/buffers/texture.hh"
 #include "rendering/buffers/vertex_array_object.hh"
+#include "rendering/shaders/attribute_description.hh"
 
 #include <cstddef>
 #include <map>
@@ -23,7 +24,7 @@ class Shader {
 
   explicit Shader(const int program_id);
 
-  int program_id() const {
+  int get_id() const {
     return program_id_;
   }
 
@@ -32,7 +33,12 @@ class Shader {
 
   void use() const;
 
+  //
+  void set(const std::string& name, const Texture& texture) const;
+
+  //
   // These functions are auto-generated
+  //
   void set(const std::string& name, const MatNf<2, 3>& arg) const;
   void set(const std::string& name, const MatNf<2, 4>& arg) const;
   void set(const std::string& name, const MatNf<3, 2>& arg) const;
@@ -42,7 +48,8 @@ class Shader {
   void set(const std::string& name, const VecNf<2>& arg) const;
   void set(const std::string& name, const VecNf<3>& arg) const;
   void set(const std::string& name, const VecNf<4>& arg) const;
-  void set(const std::string& name, const float& arg) const;
+  void set_float(const std::string& name, const float arg) const;
+  void set_uint(const std::string& name, const std::size_t arg) const;
   void set(const std::string& name, const MatNf<4, 4>& arg) const;
   void set(const std::string& name, const MatNf<4, 3>& arg) const;
   void set(const std::string& name, const MatNf<2, 2>& arg) const;
@@ -56,6 +63,7 @@ class Shader {
 
   std::map<std::string, UniformDescription> uniform_from_name_;
   std::map<std::string, AttributeDescription> attribute_from_name_;
+  std::map<std::string, int> tex_unit_from_texture_;
 
   bool debug_mode_ = true;
 };
