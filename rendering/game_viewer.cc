@@ -1,8 +1,13 @@
 #include "rendering/game_viewer.hh"
 
+#include "rendering/buffers/element_buffer.hh"
+#include "rendering/buffers/framebuffer.hh"
+#include "rendering/buffers/texture.hh"
+#include "rendering/buffers/texture_manager.hh"
 #include "rendering/imgui_elements/game_ui_elements.hh"
 
 #include "geometry/types/angle.hh"
+#include "logging/assert.hh"
 #include "viewer/rendering/pre_render.hh"
 #include "viewer/window_manager.hh"
 
@@ -11,6 +16,9 @@
 #include <thread>
 
 // TODO
+#include "third_party/backward/backward.hpp"
+// %deps(bfd, dl)
+backward::SignalHandling sh;
 #include <iostream>
 namespace jcc {
 
@@ -50,6 +58,26 @@ MatNf<4, 4> create_perspective_from_camera(const viewer::GlSize &gl_size) {
   return create_perspective_from_camera(fov, aspect_ratio, NEAR_CLIP, FAR_CLIP);
 }
 
+MatNf<4, 4> create_ortho_from_camera(const viewer::GlSize &gl_size) {
+  constexpr double NEAR_CLIP = 0.001;
+  constexpr double FAR_CLIP = 10.0;
+
+  const double f = FAR_CLIP;
+  const double n = NEAR_CLIP;
+
+  const double b = 0.0;
+  const double l = 0.0;
+  const double r = gl_size.width * 0.001;
+  const double t = gl_size.height * 0.001;
+
+  MatNf<4, 4> ortho;
+  ortho.row(0) << 2 / (r - l), 0.0, 0.0, 0.0;
+  ortho.row(1) << 0.0, 2 / (t - b), 0.0, 0.0;
+  ortho.row(2) << 0.0, 0.0, -2.0 / (f - n), 0.0;
+  ortho.row(3) << -(r + l) / (r - l), -(t + b) / (t - b), -(f + n) / (f - n), 1.0;
+  return ortho;
+}
+
 GameViewer::GameViewer() {
   gv_state_.view.camera.set_anchor_from_world(
       SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)), Eigen::Vector3d::Zero()));
@@ -63,6 +91,13 @@ void GameViewer::init(const viewer::GlSize &gl_size) {
   test_shader_ =
       load_shaders("/home/jacob/repos/experiments/rendering/shaders/phong.vert",
                    "/home/jacob/repos/experiments/rendering/shaders/phong.frag");
+
+  std::cout << "===\n" << std::endl;
+
+  shadow_shader_ =
+      load_shaders("/home/jacob/repos/experiments/rendering/shaders/shadow.vert",
+                   "/home/jacob/repos/experiments/rendering/shaders/shadow.frag");
+
   test_asset_ =
       load_voxel_asset("/home/jacob/repos/experiments/rendering/assets/spaceship1.vox");
 }
@@ -107,82 +142,168 @@ void GameViewer::resize(const viewer::GlSize &gl_size) {
   SimpleWindow::resize(gl_size);
 }
 
+void GameViewer::draw_elements() {
+  // test_shader_.use();
+
+  const MatNf<4, 4> perspective_from_camera = create_perspective_from_camera(gl_size());
+  test_shader_.set("perspective_from_camera", perspective_from_camera);
+
+  const MatNf<4, 4> camera_from_world =
+      gv_state_.view.camera.camera_from_world().matrix().cast<float>();
+  test_shader_.set("camera_from_world", camera_from_world);
+
+  // const jcc::Vec3f light_pos_world(1.0, 1.0, 1.0);
+  // test_shader_.set("light_pos_world", light_pos_world);
+
+  auto ship_vao = test_shader_.generate_vao();
+  ship_vao.bind();
+  const auto indices = test_asset_.faces();
+
+  const ElementBuffer element_buffer(indices);
+
+  ship_vao.set("vertex_color", test_asset_.colors());
+  ship_vao.set("vertex_world", test_asset_.vertices());
+  ship_vao.set("vertex_normal", test_asset_.normals());
+
+  const auto mode = ui_cfg_.debug.wireframe ? GL_LINE : GL_FILL;
+  glPolygonMode(GL_FRONT_AND_BACK, mode);
+  element_buffer.draw_elements();
+
+  auto light_vao = test_shader_.generate_vao();
+  light_vao.bind();
+  const std::vector<jcc::Vec3f> light_colors = {jcc::Vec3f(1.0, 1.0, 1.0),  //
+                                                jcc::Vec3f(1.0, 1.0, 1.0),  //
+                                                jcc::Vec3f(1.0, 1.0, 1.0)};
+  const std::vector<jcc::Vec3f> light_vertices = {jcc::Vec3f(10.0, 1.0, 1.0),  //
+                                                  jcc::Vec3f(9.0, 1.0, 0.0),   //
+                                                  jcc::Vec3f(9.0, 0.0, 1.0)};
+  const std::vector<jcc::Vec3f> light_normals = {
+      jcc::Vec3f(1.0, 1.0, 1.0),  //
+      jcc::Vec3f(1.0, 1.0, 1.0),  //
+      jcc::Vec3f(1.0, 1.0, 1.0)   //
+  };
+
+  light_vao.set("vertex_color", light_colors);
+  light_vao.set("vertex_world", light_vertices);
+  light_vao.set("vertex_normal", light_normals);
+  glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
 void GameViewer::draw_scene() {
-  const geometry::shapes::Plane ground{jcc::Vec3::UnitZ(), 0.0};
+  //
+  // Create shadow buffer
+  //
+
+  // glEnable(GL_TEXTURE_2D);
+
+  TextureManager manager;
+
+  // TODO
+  Framebuffer fbo;
+
+  auto &depth_texture = manager.create_texture("depth");
+  // Texture depth_texture;
+  depth_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, {4096, 4096}, 0,
+                             GL_DEPTH_COMPONENT, GL_FLOAT);
+  fbo.attach_depth_texture(depth_texture);
+
+  auto &normals_texture = manager.create_texture("normals");
+  // Texture normals_texture;
+  normals_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA16F, {4096, 4096}, 0, GL_RGBA, GL_FLOAT);
+  fbo.attach_color_texture(normals_texture);
+
+  // const auto &normals_texture = manager.create_texture("color");
+  // normals_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA, {4096, 4096}, 0, GL_RGBA,
+  // GL_FLOAT); fbo.attach_color_texture(normals_texture);
+
+  fbo.draw_buffers();
+
+  fbo.bind();
+
+  glViewport(0, 0, 4096, 4096);
+  // glDrawBuffer(GL_NONE);
+  // glReadBuffer(GL_NONE);
+
+  JASSERT_EQ(glCheckFramebufferStatus(GL_FRAMEBUFFER),
+             static_cast<std::size_t>(GL_FRAMEBUFFER_COMPLETE), "Incomplete Framebuffer");
+
+  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+  // const MatNf<4, 4> perspective_from_light =
+  // create_perspective_from_camera({4096, 4096});
+
+  // 1.73205       0       0       0
+  //       0 1.73205       0       0
+  //       0       0      -1  -0.002
+  //       0       0      -1       0
+
+  // const MatNf<4, 4> perspective_from_light = create_ortho_from_camera({4096, 4096});
+  const MatNf<4, 4> perspective_from_light = create_perspective_from_camera(gl_size());
+
+  const jcc::Vec6 log_light_from_world =
+      (jcc::Vec6() << ui_cfg_.debug.d * 5.9518, ui_cfg_.debug.d * -2.35115,
+       ui_cfg_.debug.d * -4.51881, -0.419103, 1.38883, 2.21413)
+          .finished();
+  const SE3 light_from_world =
+      SE3(SO3::exp(jcc::Vec3::UnitZ() * ui_cfg_.debug.theta), jcc::Vec3::Zero()) *
+      SE3::exp(log_light_from_world);
+  const MatNf<4, 4> light_from_world_mat = light_from_world.matrix().cast<float>();
 
   {
-    test_shader_.use();
-    const MatNf<4, 4> perspective_from_camera = create_perspective_from_camera(gl_size());
-    test_shader_.set("perspective_from_camera", perspective_from_camera);
+    shadow_shader_.use();
 
-    const MatNf<4, 4> camera_from_world =
-        gv_state_.view.camera.camera_from_world().matrix().cast<float>();
-    test_shader_.set("camera_from_world", camera_from_world);
+    shadow_shader_.set("light_from_world", light_from_world_mat);
+    shadow_shader_.set("perspective_from_light", perspective_from_light);
 
-    auto ship_vao = test_shader_.generate_vao();
+    auto ship_vao = shadow_shader_.generate_vao();
     ship_vao.bind();
-
     const auto indices = test_asset_.faces();
+    const ElementBuffer element_buffer(indices);
 
-    GLuint element_buffer;
-    glGenBuffers(1, &element_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * (3 * 4), indices.data(),
-                 GL_STATIC_DRAW);
-
-    ship_vao.set("vertex_color", test_asset_.colors());
     ship_vao.set("vertex_world", test_asset_.vertices());
     ship_vao.set("vertex_normal", test_asset_.normals());
 
-    ship_vao.bind();
+    // Check depth when rendering
+    glEnable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.0, 0.0, 0.0, 1.0f);
 
-    //    if (ui_cfg_.debug.wireframe) {
-    //      glLineWidth(1.0);
-    //      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    //    } else {
-    //      glPolygonMode(GL_FRONT, GL_FILL);
-    //    }
-    const auto mode = ui_cfg_.debug.wireframe ? GL_LINE : GL_FILL;
-    std::cout << "Mode: " << mode << std::endl;
-
-    switch (ui_cfg_.debug.polygon_mode) {
-      case 0:
-        std::cout << "0" << std::endl;
-        glPolygonMode(GL_BACK, mode);
-        break;
-      case 1:
-        std::cout << "1" << std::endl;
-        glPolygonMode(GL_FRONT, mode);
-        break;
-      case 2:
-        std::cout << "2" << std::endl;
-        glPolygonMode(GL_FRONT_AND_BACK, mode);
-        break;
-    }
+    element_buffer.draw_elements();
     glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, (void *)0);
-
-    ship_vao.destroy();
-
-    auto light_vao = test_shader_.generate_vao();
-    light_vao.bind();
-    const std::vector<jcc::Vec3f> light_colors = {jcc::Vec3f(1.0, 1.0, 1.0),  //
-                                                  jcc::Vec3f(1.0, 1.0, 1.0),  //
-                                                  jcc::Vec3f(1.0, 1.0, 1.0)};
-    const std::vector<jcc::Vec3f> light_vertices = {jcc::Vec3f(10.0, 1.0, 1.0),  //
-                                                    jcc::Vec3f(9.0, 1.0, 0.0),   //
-                                                    jcc::Vec3f(9.0, 0.0, 1.0)};
-    const std::vector<jcc::Vec3f> light_normals = {
-        jcc::Vec3f(1.0, 1.0, 1.0),  //
-        jcc::Vec3f(1.0, 1.0, 1.0),  //
-        jcc::Vec3f(1.0, 1.0, 1.0)   //
-    };
-
-    light_vao.set("vertex_color", light_colors);
-    light_vao.set("vertex_world", light_vertices);
-    light_vao.set("vertex_normal", light_normals);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    light_vao.destroy();
   }
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  viewer::prepare_to_render();
+
+  // depth_texture.bind();
+  glActiveTexture(GL_TEXTURE0);
+  normals_texture.bind();
+
+  resize(gl_size());
+
+  test_shader_.use();
+
+  const jcc::Vec3f light_pos_world = light_from_world.inverse().translation().cast<float>();
+
+  test_shader_.set("light_pos_world", light_pos_world);
+  // test_shader_.set_uint("shadow_texture", 0);
+  test_shader_.set("shadow_texture", normals_texture);
+  // test_shader_.set("shadow_texture", depth_texture);
+  test_shader_.set("light_from_world", light_from_world_mat);
+  test_shader_.set("perspective_from_light", perspective_from_light);
+
+
+  draw_elements();
+  GLenum err;
+  err = glGetError();
+  JASSERT_EQ(err, GL_NO_ERROR, "There was  an opengl error");
+
+  imgui_mgr_.new_frame();
+  manager.show_ui();
+  show_menu(out(ui_cfg_));
+  imgui_mgr_.render();
 }
 
 void GameViewer::render() {
@@ -194,10 +315,6 @@ void GameViewer::render() {
       create_perspective_from_camera(win_size).cast<double>(),
       gv_state_.view.camera.camera_from_world().matrix(), viewport_dims);
   // TODO: Generate perspective projection -- we cannot query the GPU for this!
-
-  imgui_mgr_.new_frame();
-  show_menu(out(ui_cfg_));
-  imgui_mgr_.render();
 
   draw_scene();
 

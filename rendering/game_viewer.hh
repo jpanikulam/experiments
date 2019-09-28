@@ -17,8 +17,8 @@
 #include <vector>
 
 // TODO
-#include "rendering/imgui_elements/game_debug_configuration.hh"
 #include "rendering/assets/load_voxel_asset.hh"
+#include "rendering/imgui_elements/game_debug_configuration.hh"
 #include "rendering/shaders/load_shader.hh"
 
 namespace jcc {
@@ -60,11 +60,15 @@ class GameViewer : public viewer::SimpleWindow {
   void go() const;
 
  private:
+  void draw_elements();
+
   GameViewerState gv_state_;
   viewer::ImGuiManager imgui_mgr_;
 
   Shader test_shader_;
   VoxelAsset test_asset_;
+
+  Shader shadow_shader_;
 
   viewer::GeometryBuffer demo_buffer_;
 
