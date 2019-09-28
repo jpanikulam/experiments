@@ -114,15 +114,15 @@ class Error {
   };
 };
 
-class Debug {
+class Info {
  public:
   template <typename T>
-  Debug& operator<<(T t) {
+  Info& operator<<(T t) {
     std::cout << Format::blue() << t << Format::reset();
     return *this;
   }
 
-  Debug& operator<<(std::ostream& (*f)(std::ostream& o)) {
+  Info& operator<<(std::ostream& (*f)(std::ostream& o)) {
     std::cout << f;
     return *this;
   };
