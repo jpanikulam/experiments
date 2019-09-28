@@ -14,8 +14,8 @@ def create_ui_element(submenu, entity):
     }
 
     if 'range' in entity:
-        kwargs['min'] = entity['range'][0],
-        kwargs['max'] = entity['range'][1],
+        kwargs['min'] = entity['range'][0]
+        kwargs['max'] = entity['range'][1]
 
     if "possible_values" in entity:
         kwargs["count"] = len(entity['possible_values'])
@@ -185,7 +185,9 @@ class SubMenuGenerator(object):
             'range': (False, True)
         }
 
-    def add_scalar(self, name, edit_name, value_range, default):
+    def add_scalar(self, name, edit_name, value_range, default=None):
+        if default is None:
+            default = value_range[0]
         self.submenu[name] = {
             'name': name,
             'edit_name': edit_name,
