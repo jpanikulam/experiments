@@ -13,8 +13,7 @@ Eigen::VectorXd sigmoid_blend(const Eigen::VectorXd &x,
   const Eigen::VectorXd x_exp = (scale * x).array().exp();
   const Eigen::VectorXd t = x_exp.array() / (x_exp.array() + 1.0);
 
-  const Eigen::VectorXd convex_blend =
-      ((1.0 - t.array()) * y0) + (t.array() * y1);
+  const Eigen::VectorXd convex_blend = ((1.0 - t.array()) * y0) + (t.array() * y1);
 
   return convex_blend;
 }
@@ -26,8 +25,8 @@ struct BrachistochroneParameters {
   double dx = 0.001;
 };
 
-Eigen::VectorXd add_boundary_conditions(
-    const Eigen::VectorXd &y, const BrachistochroneParameters &params) {
+Eigen::VectorXd add_boundary_conditions(const Eigen::VectorXd &y,
+                                        const BrachistochroneParameters &params) {
   Eigen::VectorXd y_augmented(y.rows() + 2);
   y_augmented(0) = params.y0;
   y_augmented.segment(1, y.rows()) = y;
@@ -70,8 +69,7 @@ double cost_function(const Eigen::VectorXd &y,
                      Eigen::MatrixXd *const hessian) {
   const BrachistochroneParameters params = {};
 
-  const auto true_cost = [params](const Eigen::VectorXd &x,
-                                  bool debug_output = false) {
+  const auto true_cost = [params](const Eigen::VectorXd &x, bool debug_output = false) {
     const Eigen::VectorXd heights = add_boundary_conditions(x, params);
 
     Eigen::VectorXd arclength(x.rows() + 1);
@@ -118,8 +116,7 @@ double cost_function(const Eigen::VectorXd &y,
 void solve() {
   const auto view = viewer::get_window3d("Curve Visualization");
   view->set_target_from_world(
-      SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)),
-          Eigen::Vector3d::Zero()));
+      SE3(SO3::exp(Eigen::Vector3d(-3.1415 * 0.5, 0.0, 0.0)), Eigen::Vector3d::Zero()));
 
   numerics::OptimizationProblem problem;
   problem.objective = cost_function;
