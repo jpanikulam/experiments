@@ -146,14 +146,14 @@ void GameViewer::draw_elements() {
   // test_shader_.use();
 
   const MatNf<4, 4> perspective_from_camera = create_perspective_from_camera(gl_size());
-  test_shader_.set("perspective_from_camera", perspective_from_camera);
+  test_shader_.set("u_perspective_from_camera", perspective_from_camera);
 
   const MatNf<4, 4> camera_from_world =
       gv_state_.view.camera.camera_from_world().matrix().cast<float>();
-  test_shader_.set("camera_from_world", camera_from_world);
+  test_shader_.set("u_camera_from_world", camera_from_world);
 
   // const jcc::Vec3f light_pos_world(1.0, 1.0, 1.0);
-  // test_shader_.set("light_pos_world", light_pos_world);
+  // test_shader_.set("u_light_pos_world", light_pos_world);
 
   auto ship_vao = test_shader_.generate_vao();
   ship_vao.bind();
@@ -209,33 +209,30 @@ void GameViewer::draw_scene() {
 
   auto &normals_texture = manager.create_texture("normals");
   // Texture normals_texture;
-  normals_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA16F, {4096, 4096}, 0, GL_RGBA, GL_FLOAT);
+  normals_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA16F, {4096, 4096}, 0, GL_RGBA,
+                               GL_FLOAT);
   fbo.attach_color_texture(normals_texture);
 
-  // const auto &normals_texture = manager.create_texture("color");
-  // normals_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA, {4096, 4096}, 0, GL_RGBA,
-  // GL_FLOAT); fbo.attach_color_texture(normals_texture);
+  auto &pos_texture = manager.create_texture("position");
+  pos_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA16F, {4096, 4096}, 0, GL_RGBA,
+                           GL_FLOAT);
+  fbo.attach_color_texture(pos_texture);
+
+  auto &color_texture = manager.create_texture("color");
+  color_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA8, {4096, 4096}, 0, GL_RGBA,
+                             GL_FLOAT);
+  fbo.attach_color_texture(color_texture);
 
   fbo.draw_buffers();
 
   fbo.bind();
 
   glViewport(0, 0, 4096, 4096);
-  // glDrawBuffer(GL_NONE);
-  // glReadBuffer(GL_NONE);
 
   JASSERT_EQ(glCheckFramebufferStatus(GL_FRAMEBUFFER),
              static_cast<std::size_t>(GL_FRAMEBUFFER_COMPLETE), "Incomplete Framebuffer");
 
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-  // const MatNf<4, 4> perspective_from_light =
-  // create_perspective_from_camera({4096, 4096});
-
-  // 1.73205       0       0       0
-  //       0 1.73205       0       0
-  //       0       0      -1  -0.002
-  //       0       0      -1       0
 
   // const MatNf<4, 4> perspective_from_light = create_ortho_from_camera({4096, 4096});
   const MatNf<4, 4> perspective_from_light = create_perspective_from_camera(gl_size());
@@ -252,21 +249,27 @@ void GameViewer::draw_scene() {
   {
     shadow_shader_.use();
 
-    shadow_shader_.set("light_from_world", light_from_world_mat);
-    shadow_shader_.set("perspective_from_light", perspective_from_light);
+    shadow_shader_.set("u_light_from_world", light_from_world_mat);
+    shadow_shader_.set("u_perspective_from_light", perspective_from_light);
 
     auto ship_vao = shadow_shader_.generate_vao();
     ship_vao.bind();
     const auto indices = test_asset_.faces();
     const ElementBuffer element_buffer(indices);
 
+    ship_vao.set("vertex_color", test_asset_.colors());
     ship_vao.set("vertex_world", test_asset_.vertices());
     ship_vao.set("vertex_normal", test_asset_.normals());
 
+    // Cull front faces as a weird way of hiding depth errors
+    // glCullFace(GL_FRONT);
+
+    // glBlendFunc(GL_ONE, GL_ONE);
+    // glEnable(GL_BLEND);
+    glDisable(GL_BLEND);
+
     // Check depth when rendering
     glEnable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.0, 0.0, 0.0, 1.0f);
 
@@ -275,26 +278,38 @@ void GameViewer::draw_scene() {
   }
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  viewer::prepare_to_render();
 
-  // depth_texture.bind();
-  glActiveTexture(GL_TEXTURE0);
-  normals_texture.bind();
+  // I do not fully grasp what SRGB is doing here, I expected it to have no effect on the
+  // visual
+
+  if (ui_cfg_.shading.srgb) {
+    glEnable(GL_FRAMEBUFFER_SRGB);
+  } else {
+    glDisable(GL_FRAMEBUFFER_SRGB);
+  }
+
+  viewer::prepare_to_render();
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
 
   resize(gl_size());
 
   test_shader_.use();
 
-  const jcc::Vec3f light_pos_world = light_from_world.inverse().translation().cast<float>();
+  const jcc::Vec3f light_pos_world =
+      light_from_world.inverse().translation().cast<float>();
 
-  test_shader_.set("light_pos_world", light_pos_world);
-  // test_shader_.set_uint("shadow_texture", 0);
-  test_shader_.set("shadow_texture", normals_texture);
-  // test_shader_.set("shadow_texture", depth_texture);
-  test_shader_.set("light_from_world", light_from_world_mat);
-  test_shader_.set("perspective_from_light", perspective_from_light);
+  test_shader_.set("u_light_pos_world", light_pos_world);
+  test_shader_.set("u_shadow_normals_dist", normals_texture);
+  test_shader_.set("u_shadow_pos", pos_texture);
+  test_shader_.set("u_shadow_colors", color_texture);
+  test_shader_.set("u_light_from_world", light_from_world_mat);
+  test_shader_.set("u_perspective_from_light", perspective_from_light);
 
-
+  test_shader_.set_bool("u_dbg_misc", ui_cfg_.shading.misc_debug);
+  test_shader_.set_bool("u_dbg_shadows", ui_cfg_.shading.enable_shadows);
+  test_shader_.set_bool("u_dbg_use_rsm", ui_cfg_.shading.use_rsm);
+  test_shader_.set_bool("u_dbg_show_light_probes", ui_cfg_.shading.show_light_probes);
   draw_elements();
   GLenum err;
   err = glGetError();
