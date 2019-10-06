@@ -28,6 +28,10 @@ void show_tooltip(void* tex_id, double draw_w, double draw_h, float region_sz) {
   // const jcc::Vec2 region_min_unclipped = mouse_from_image - (region_size * 0.5);
   // const jcc::Vec2 region_max_unclipped = mouse_from_image + (region_size * 0.5);
   const jcc::Vec2 region_min_unclipped = mouse_from_image;
+
+
+  const jcc::Vec2 clipped_region_size = eigen_clip(region_size, jcc::Vec2(mouse_from_image))
+
   const jcc::Vec2 region_max_unclipped = mouse_from_image + region_size;
 
   const jcc::Vec2 origin = jcc::Vec2::Zero();
@@ -61,7 +65,9 @@ TextureManager::TextureManager() {
 }
 
 void TextureManager::show_ui() const {
-  ImGui::Begin("Textures");
+  ImGui::Begin("Textures", nullptr, ImGuiWindowFlags_NoMove);
+  ImGui::SetWindowPos(ImVec2(0.0, 0.0));
+  ImGui::SetWindowSize(ImVec2(250, 500));
 
   for (const auto& tex_pair : textures_) {
     const auto& name = tex_pair.first;
@@ -78,8 +84,12 @@ void TextureManager::show_ui() const {
     if (width != 0 && height != 0) {
       const auto tex_id = (void*)(intptr_t)tex.get_id();
 
-      const double draw_w = 0.2 * width;
-      const double draw_h = 0.2 * height;
+      // const double draw_w = 0.05 * width;
+      // const double draw_h = 0.05 * height;
+
+      const double draw_w = 250.0;
+      const double draw_h = 250.0;
+
       ImGui::Image(tex_id, ImVec2(draw_w, draw_h));
 
       if (ImGui::IsItemHovered()) {

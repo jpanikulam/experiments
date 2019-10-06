@@ -28,6 +28,7 @@ void VertexArrayObject::destroy() {
   allocated_buffers_.clear();
   vao_ = 0u;
 }
+
 void VertexArrayObject::set(const std::string& name,
                             const std::vector<MatNf<2, 3>>& arg) {
   const std::string err_str = name + " was not available";
