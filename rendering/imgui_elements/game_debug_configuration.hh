@@ -2,14 +2,19 @@
 #include <cstddef>
 namespace jcc {
 struct Debug {
-  bool use_normals = false;
-  bool use_rsm = false;
   bool wireframe = false;
-  double theta = 1.2;
-  double d = 1.2;
-  int polygon_mode = 1;
+  double theta = 3.14;
+  double d = 0.438;
+};
+struct Shading {
+  bool enable_shadows = true;
+  bool misc_debug = false;
+  bool srgb = false;
+  bool use_rsm = true;
+  bool show_light_probes = false;
 };
 struct GameDebugConfiguration {
   Debug debug;
+  Shading shading;
 };
 } // namespace jcc
