@@ -35,9 +35,11 @@ MinimizationResult<dim_in, dim_out> gauss_newton_minimize(
   MinimizationResult<dim_in, dim_out> result;
   InVec x = initialization;
 
+  Information jtj;
+  InVec jti;
   for (int k = 0; k < opt_cfg.max_iterations; ++k) {
-    Information jtj = Information::Zero();
-    InVec jti = InVec::Zero();
+    jtj.setZero();
+    jti.setZero();
 
     result.terminal_error.setZero();
     ErrorJacobian jac;
