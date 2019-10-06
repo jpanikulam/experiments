@@ -36,9 +36,13 @@ class Shader {
   //
   void set(const std::string& name, const Texture& texture) const;
 
+  void set_float(const std::string& name, const float arg) const;
+  void set_uint(const std::string& name, const std::size_t arg) const;
+  void set_bool(const std::string& name, const bool arg) const;
   //
   // These functions are auto-generated
   //
+
   void set(const std::string& name, const MatNf<2, 3>& arg) const;
   void set(const std::string& name, const MatNf<2, 4>& arg) const;
   void set(const std::string& name, const MatNf<3, 2>& arg) const;
@@ -48,8 +52,6 @@ class Shader {
   void set(const std::string& name, const VecNf<2>& arg) const;
   void set(const std::string& name, const VecNf<3>& arg) const;
   void set(const std::string& name, const VecNf<4>& arg) const;
-  void set_float(const std::string& name, const float arg) const;
-  void set_uint(const std::string& name, const std::size_t arg) const;
   void set(const std::string& name, const MatNf<4, 4>& arg) const;
   void set(const std::string& name, const MatNf<4, 3>& arg) const;
   void set(const std::string& name, const MatNf<2, 2>& arg) const;

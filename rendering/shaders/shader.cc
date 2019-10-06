@@ -1,70 +1,19 @@
 #include <GL/glew.h>
 
 #include "logging/assert.hh"
+#include "rendering/gl_interface/string_from_gl_type.hh"
 #include "rendering/shaders/shader.hh"
 
 namespace jcc {
 
-std::string gl_type_name(const GLenum type) {
-  switch (type) {
-    case GL_FLOAT:
-      return "GLfloat[1]";
-    case GL_FLOAT_VEC2:
-      return "GLfloat[2]";
-    case GL_FLOAT_VEC3:
-      return "GLfloat[3]";
-    case GL_FLOAT_VEC4:
-      return "GLfloat[4]";
-    case GL_INT:
-      return "GLint[1]";
-    case GL_INT_VEC2:
-      return "GLint[2]";
-    case GL_INT_VEC3:
-      return "GLint[3]";
-    case GL_INT_VEC4:
-      return "GLint[4]";
-    case GL_UNSIGNED_INT:
-      return "GLuint[1]";
-    case GL_UNSIGNED_INT_VEC2:
-      return "GLuint[2]";
-    case GL_UNSIGNED_INT_VEC3:
-      return "GLuint[3]";
-    case GL_UNSIGNED_INT_VEC4:
-      return "GLuint[4]";
-    case GL_BOOL:
-      return "GLboolean[1]";
-    case GL_BOOL_VEC2:
-      return "GLboolean[2]";
-    case GL_BOOL_VEC3:
-      return "GLboolean[3]";
-    case GL_BOOL_VEC4:
-      return "GLboolean[4]";
-    case GL_FLOAT_MAT2:
-      return "GLfloat[4]";
-    case GL_FLOAT_MAT2x3:
-      return "GLfloat[6]";
-    case GL_FLOAT_MAT2x4:
-      return "GLfloat[8]";
-    case GL_FLOAT_MAT3:
-      return "GLfloat[9]";
-    case GL_FLOAT_MAT3x2:
-      return "GLfloat[6]";
-    case GL_FLOAT_MAT3x4:
-      return "GLfloat[12]";
-    case GL_FLOAT_MAT4:
-      return "GLfloat[16]";
-    case GL_FLOAT_MAT4x2:
-      return "GLfloat[8]";
-    case GL_FLOAT_MAT4x3:
-      return "GLfloat[12]";
-    case GL_SAMPLER_2D:
-      return "Sampler2D";
-    case GL_SAMPLER_3D:
-      return "Sampler3D";
-    default:
-      return "Unknown";
-  }
-}
+// class UniformBuffer {
+//   UniformBuffer() {
+//     //
+//   }
+//   //
+//   //
+//   //
+// };
 
 Shader::Shader(const int program_id) : program_id_(program_id) {
   GLint attrib_count = -1;
@@ -84,7 +33,7 @@ Shader::Shader(const int program_id) : program_id_(program_id) {
     const GLint location = glGetAttribLocation(program_id_, str_name.c_str());
 
     jcc::Info() << "Found attribute: " << str_name << ":" << std::endl;
-    jcc::Info() << "\tType: " << gl_type_name(type) << std::endl;
+    jcc::Info() << "\tType: " << string_from_gl_type(type) << std::endl;
     jcc::Info() << "\tSize: " << size << std::endl;
     jcc::Info() << "\tLocation: " << location << std::endl;
 
@@ -114,7 +63,7 @@ Shader::Shader(const int program_id) : program_id_(program_id) {
     const GLint location = glGetUniformLocation(program_id, str_name.c_str());
 
     jcc::Info() << "Found Uniform: " << str_name << ":" << std::endl;
-    jcc::Info() << "\tType:" << gl_type_name(type) << std::endl;
+    jcc::Info() << "\tType:" << string_from_gl_type(type) << std::endl;
     jcc::Info() << "\tSize: " << size << std::endl;
     jcc::Info() << "\tLocation: " << location << std::endl;
 
@@ -160,6 +109,54 @@ void Shader::set(const std::string& name, const Texture& texture) const {
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_SAMPLER_2D), "Mismatched argument type");
   glUniform1i(desc.location, texture_unit);
+}
+
+void Shader::set_float(const std::string& name, const float arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
+  const auto& desc = uniform_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT), "Mismatched argument type");
+  glUniform1f(desc.location, arg);
+}
+
+void Shader::set_uint(const std::string& name, const std::size_t arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
+  const auto& desc = uniform_from_name_.at(name);
+  // TODO: Make this typesafe
+  glUniform1i(desc.location, arg);
+}
+
+void Shader::set_bool(const std::string& name, const bool arg) const {
+  const std::string err_str = name + " was not available";
+  if (debug_mode_) {
+    if (0u == uniform_from_name_.count(name)) {
+      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
+      return;
+    }
+  } else {
+    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
+  }
+
+  const auto& desc = uniform_from_name_.at(name);
+  JASSERT_EQ(desc.type, static_cast<int>(GL_BOOL), "Mismatched argument type");
+  glUniform1i(desc.location, arg);
 }
 
 //
@@ -305,37 +302,6 @@ void Shader::set(const std::string& name, const VecNf<4>& arg) const {
   const auto& desc = uniform_from_name_.at(name);
   JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT_VEC4), "Mismatched argument type");
   glUniform4fv(desc.location, 1, arg.data());
-}
-void Shader::set_float(const std::string& name, const float arg) const {
-  const std::string err_str = name + " was not available";
-  if (debug_mode_) {
-    if (0u == uniform_from_name_.count(name)) {
-      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
-      return;
-    }
-  } else {
-    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
-  }
-
-  const auto& desc = uniform_from_name_.at(name);
-  JASSERT_EQ(desc.type, static_cast<int>(GL_FLOAT), "Mismatched argument type");
-  glUniform1f(desc.location, arg);
-}
-
-void Shader::set_uint(const std::string& name, const std::size_t arg) const {
-  const std::string err_str = name + " was not available";
-  if (debug_mode_) {
-    if (0u == uniform_from_name_.count(name)) {
-      // jcc::Warning() << "Not using " << name << " in shader" << std::endl;
-      return;
-    }
-  } else {
-    JASSERT_EQ(uniform_from_name_.count(name), 1u, err_str.c_str());
-  }
-
-  const auto& desc = uniform_from_name_.at(name);
-  // TODO: Make this typesafe
-  glUniform1i(desc.location, arg);
 }
 
 void Shader::set(const std::string& name, const MatNf<4, 4>& arg) const {
