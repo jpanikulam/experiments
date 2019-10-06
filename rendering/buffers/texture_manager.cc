@@ -22,59 +22,35 @@ void show_tooltip(void* tex_id, double draw_w, double draw_h, float region_sz) {
       image_bl_from_screen - jcc::Vec2(0.0, draw_w);
   const jcc::Vec2 mouse_from_image = mouse_from_screen - image_origin_from_screen;
 
-  const jcc::Vec2 region_size(32, 32);
+  const jcc::Vec2 region_size(region_sz, region_sz);
   const jcc::Vec2 image_size(draw_w, draw_h);
 
-  const jcc::Vec2 region_min_unclipped = mouse_from_image - (region_size * 0.5);
-  const jcc::Vec2 region_max_unclipped = mouse_from_image + (region_size * 0.5);
+  // const jcc::Vec2 region_min_unclipped = mouse_from_image - (region_size * 0.5);
+  // const jcc::Vec2 region_max_unclipped = mouse_from_image + (region_size * 0.5);
+  const jcc::Vec2 region_min_unclipped = mouse_from_image;
+  const jcc::Vec2 region_max_unclipped = mouse_from_image + region_size;
 
-  const jcc::Vec2 region_min =
-      eigen_clip(region_min_unclipped, jcc::Vec2::Zero(), image_size);
-  const jcc::Vec2 region_max =
-      eigen_clip(region_max_unclipped, jcc::Vec2::Zero(), image_size);
+  const jcc::Vec2 origin = jcc::Vec2::Zero();
+  const jcc::Vec2 region_min = eigen_clip(region_min_unclipped, origin, image_size);
+  const jcc::Vec2 region_max = eigen_clip(region_max_unclipped, origin, image_size);
 
-  const jcc::Vec2 uv0 = region_min.array() / image_size.array;
-  const jcc::Vec2 uv1 = region_max.array() / image_size.array;
+  const jcc::Vec2 uv0 = region_min.array() / image_size.array();
+  const jcc::Vec2 uv1 = region_max.array() / image_size.array();
 
   // TODO: Implement a picker
   ImGui::BeginTooltip();
 
-  ImGui::Text("MfromI %.2f, %.2f", mouse_from_image.x(), mouse_from_image.y());
-
-  /*  float region_x = io.MousePos.x - cursor_pos.x - (region_sz * 0.5f);
-    if (region_x < 0.0f) {
-      region_x = 0.0f;
-    } else if (region_x > draw_w - region_sz) {
-      region_x = draw_w - region_sz;
-    }
-
-    float region_y = io.MousePos.y - cursor_pos.y - (region_sz * 0.5f);
-
-    int branch_num = 0;
-    if (region_y < 0.0f) {
-      region_y = 0.0f;
-      branch_num = 1;
-    } else if (region_y > draw_h - region_sz) {
-      // region_y -= draw_h + region_sz;
-      region_y += draw_h - region_sz;
-      branch_num = 2;
-    }
-  */
-  ImGui::Text("Branch: %d", branch_num);
-  ImGui::Text("Mouse: (%.2f, %.2f)", io.MousePos.x, io.MousePos.y);
-  ImGui::Text("Pos: (%.2f, %.2f)", cursor_pos.x, cursor_pos.y);
-
   float zoom = 4.0f;
-  ImGui::Text("Min: (%.2f, %.2f)", region_x, region_y);
+  ImGui::Text("Min: (%.2f, %.2f)", region_min.x(), region_min.y());
   ImGui::SameLine();
-  ImGui::Text("Max: (%.2f, %.2f)", region_x + region_sz, region_y + region_sz);
-  const ImVec2 uv0 = ImVec2((region_x) / draw_w, (region_y) / draw_h);
-  const ImVec2 uv1 =
-      ImVec2((region_x + region_sz) / draw_w, (region_y + region_sz) / draw_h);
+  ImGui::Text("Max: (%.2f, %.2f)", region_max.x(), region_max.y());
+  const ImVec2 im_uv0 = ImVec2(uv0.x(), uv0.y());
+  const ImVec2 im_uv1 = ImVec2(uv1.x(), uv1.y());
+
   ImGui::Image(tex_id,
                ImVec2(region_sz * zoom, region_sz * zoom),
-               uv0,
-               uv1,
+               im_uv0,
+               im_uv1,
                ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
                ImVec4(1.0f, 1.0f, 1.0f, 0.5f));
   ImGui::EndTooltip();
@@ -107,7 +83,7 @@ void TextureManager::show_ui() const {
       ImGui::Image(tex_id, ImVec2(draw_w, draw_h));
 
       if (ImGui::IsItemHovered()) {
-        show_tooltip(tex_id, draw_w, draw_h, 32.0f);
+        show_tooltip(tex_id, draw_w, draw_h, 64.0f);
       }
     }
   }
