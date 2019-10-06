@@ -1,4 +1,8 @@
-This is a short guideline for writing code that runs on robots. At the very end are some notes on style.
+This is a short guideline for writing code that runs on robots. Common parlance is to call such a thing a styleguide.
+
+It begins with some notes on project planning and execution. Robots are large projects. As of 2019, they must involve both far-field science and rigorous engineering to succeed.
+
+At the very end are some notes on actual text style.
 
 A few notes:
 * I use "user" to mean "user of your library", not "end user of the robot". Of course, the perfect robot has no end-user ;)
@@ -16,8 +20,8 @@ Collaboration has existed since the dawn of humanity. It's older than language. 
 
 If you found the above "cool", great. Most reasonable people do. But it's just a rehash of Waterfall with more bombastic tone.
 
-* Include time for calibration. If you have *any* sensor, assume you'll need to calibrate it
-* If you're using OpenCV, allocate time for dealing with failed calibrations
+* Include time for calibration. If you have *any* sensor, assume you'll need to calibrate it, and do engineering to create and manage those calibrations
+    * If you're using OpenCV, allocate time for dealing with failed calibrations
 * If you have multiple sensors, this is going to be hard and you need to think hard about it
 
 # Human Processes
@@ -30,26 +34,27 @@ Here, a "process" is some procedure that a _human being_ executes, reading from 
     * Conclusion 2: Often, they won't realize it, and that knowledge won't propagate throughout the organization
     * Conclusion 3: You cannot trust intervention rates as a signal about the real performance of your system
 
-
-# Deep Learning
-* A good DL model looks like the code you would have hand-written, making the heuristics optimizable
-* The miracle of inverse-optimal-control is that you don't need to have a differentiable optimizer to learn a cost function
-* Unit test learning code. Do not make exceptions.
-* Structure model-building code carefully. Treat training as a form of compilation.
-* Data is *one form* of source code, but you also have *actual source code*, and you have to make it good
-* Make sure that you have a one-click way to regenerate any model that you've run on the robot
-    * Don't wait until you need this capability to get it
-
 ## Measuring success
 * It should be clear to everyone by now, measure and track PR curves, don't rely on accuracy
 * If it's not clear: Imagine classifying whether a reddit comment has an original joke: You can get 99.999% accuracy if you return False for everything.
 
 ## Project Planning Pathologies
-* Easy trap 1: "End-to-end learn everything, this problem is hard to model"
+* Easy trap 1: "Black-box end-to-end learn everything, this problem is hard to model"
+    * Kitchen-sink machine learning: "Throw every feature you can think of, and then the kitchen sink, into the network" would be awesome if it worked
+    * Most projects will never gather the gobs of data required to make 2019 state-of-the-art black-box end-to-end DL work for their problem before running out of money. Disclaimer: there's five qualifiers on that statement.
 * Easy trap 2: "Engineer everything, this problem is well understood"
-    * If you are operating real sensors with real actuators in the real world, there is a 0% chance you have accurately modelled the world
+    * If you are operating real sensors with real actuators in the real world, there is a 0% chance you have correctly modelled the world
     * *Sometimes* you can model it adequately
-    * Any large robotics system has a config filled with heuristic values. Why not optimiize those via some actual optimization strategy. Acknowledge that you're currently doing gradient descent, but less structured, every time you tune a value
+    * Any large robotics system has a config filled with heuristic values. Why not optimize those via some actual optimization strategy. Remember that you're currently doing stochastic gradient descent, but less structured, every time you tune a value
+
+* Failing to consider **decision space curvature**
+    * Decision importance and decision difficulty are orthogonal concepts
+    * When agonzing about a decision, consider: If the *second best* decision is not very different, then the decision doesn't matter
+
+* Decision Theatre
+    - Producing pages and pages of documents that will not be read in their entirety by decision makers
+    - Getting consensus when it is not required
+    - Failing to get consensus when it **is** required
 
 # Tips for Problem Solving
 * Write down the truest possible description of the problem. Chances are you have a POMDP.
@@ -76,6 +81,14 @@ Here, a "process" is some procedure that a _human being_ executes, reading from 
 
 * If you're project is about to use Euler angles in a critical place because it's hard to get liegroups right, seriously, email me and I'll help you.
 
+# Deep Learning
+* A good DL model looks like the code you would have hand-written, making the heuristics optimizable
+* The miracle of inverse-optimal-control is that you don't need to have a differentiable optimizer to learn a cost function
+* Unit test learning code. Do not make exceptions.
+* Structure model-building code carefully. Treat training as a form of compilation.
+* Data is *one form* of source code, but you also have *actual source code*, and you have to make it good
+* Make sure that you have a one-click way to regenerate any model that you've run on the robot
+    * Don't wait until you need this capability to get it
 
 # Debugging
 * Visualize everything in 3D.
@@ -100,23 +113,27 @@ Here, a "process" is some procedure that a _human being_ executes, reading from 
 * State machines for generating behavior in unstructured environments are very unscalable
 
 # Flaws with OpenCV
-* [col, row] ordering is inconsistent
+* [col, row] ordering is inconsistent -- Largely because the Matrix type and the image type are the same (When was the last time you needed to perform GEMM on two uint8 images?)
     * .at<>(row, col)
     * Point2f(col, row)
-* Calibration does not appear to use robust cost functions
-* Matrices are not typesafe, and require somewhat challenging reasoning re: memory
+* Calibration does not appear to use robust cost functions, and is prone to surprising errors for even expert users
+* Matrices are not typesafe. It is true that templates bloat binaries, but this is often something I'm willing to accept
+* Matrices are strictly shared_ptrs, you can't make them const when passed to an image
+    - This can be a huge footgun when many OpenCV functions will modify inputs in place
 * Matrices and images are the same type. Guys, use the type system! It's here to *prevent* this kind of thing!
 
 
 # OpenGL
-Do not resort to trial-and-error to make views work. These are structured things that have been understood for centuries -* label the matrices and think carefully about what they mean.
+Do not resort to trial-and-error to make 3D views work. These are structured things that have been understood for centuries - label the matrices and think carefully about what they mean.
 
 OpenGL nominal matrix formats are usually described as follows:
 
 * pt_image_frame = proj_from_view * view_from_world * world_from_model * pt_model_frame
 
-* OpenGL MultMatrix calls *right* multiply the view_from_world matrix by the supplied matrix
+* Don't confuse the OpenGL *memory layout* with the OpenGL *matrix multiplication convention*. OpenGL stores matrices in column-major order. This has no effect on what matrix multiplication means. It most definitely does not reinvent the conventions of matrix multiplication, as some tutorials suggest.
 
+* OpenGL MultMatrix calls *right* multiply the view_from_world matrix by the supplied matrix
+    * This means glMultMatrix(`world_1_from_world_2`) --> `view_from_world_2 = view_from_world_1 * world_1_from_world_2`
 
 # Style
 * Enforce it automatically where possible. Use clang-format (for C++) and flake8 as a test in your CI pipeline
