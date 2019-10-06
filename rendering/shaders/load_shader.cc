@@ -35,7 +35,7 @@ GLuint load_any_shader(const std::string& path, const GLint shader_type) {
     glGetShaderInfoLog(shader_id, LOG_SIZE, nullptr, log);
 
     const std::string build_error(log);
-    const std::string error_msg = "\n" + build_error;
+    const std::string error_msg = "\n" + path + "\n" + build_error;
 
     JASSERT_EQ(success, 0, error_msg.c_str());
   }
@@ -44,9 +44,9 @@ GLuint load_any_shader(const std::string& path, const GLint shader_type) {
 
 }  // namespace
 
-Shader load_shaders(const std::string& vertex_path, const std::string& fragment_path) {
+Shader load_shaders(const std::string& vertex_path, const std::string& shader_path) {
   const GLuint vertex_id = load_any_shader(vertex_path, GL_VERTEX_SHADER);
-  const GLuint fragment_id = load_any_shader(fragment_path, GL_FRAGMENT_SHADER);
+  const GLuint fragment_id = load_any_shader(shader_path, GL_FRAGMENT_SHADER);
 
   const GLuint program_id = glCreateProgram();
   glAttachShader(program_id, vertex_id);
@@ -61,7 +61,7 @@ Shader load_shaders(const std::string& vertex_path, const std::string& fragment_
     glGetProgramInfoLog(program_id, LOG_SIZE, nullptr, log);
 
     const std::string build_error(log);
-    const std::string error_msg = "\n" + build_error;
+    const std::string error_msg = "\n" + shader_path + "\n" + build_error;
 
     JASSERT_EQ(link_status, GL_TRUE, error_msg.c_str());
   }
