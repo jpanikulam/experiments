@@ -80,7 +80,7 @@ def create_ui_element(submenu, entity):
 def generate_submenu(name, submenu):
     # ImGuiTreeNodeFlags_DefaultOpen
     txt = """
-  if (ImGui::CollapsingHeader("{menu_name}")) {{
+  if (ImGui::CollapsingHeader("{menu_name}", ImGuiTreeNodeFlags_DefaultOpen)) {{
     if (ImGui::Button("Reset {menu_name}")) {{
       menu->{menu_name_lwr} = {menu_name}{{}};
     }}
@@ -93,9 +93,9 @@ def generate_submenu(name, submenu):
     return txt.format(menu_name=name, txt=values, menu_name_lwr=name.lower())
 
 
-def generate_menu(struct_name, full_menu):
+def generate_menu(readable_name, struct_name, full_menu):
     txt = "void show_menu(Out<{struct_name}> menu) {{".format(struct_name=struct_name)
-    txt += line('ImGui::Begin("{struct_name}")', 1).format(struct_name=struct_name)
+    txt += line('ImGui::Begin("{readable_name}")', 1).format(readable_name=readable_name)
     txt += '  if (ImGui::Button("Reset All")) {\n'
     txt += '    *menu = {struct_name}{{}};'.format(struct_name=struct_name)
     txt += '  }'
@@ -216,9 +216,14 @@ class SubMenuGenerator(object):
 
 
 class MenuGenerator(object):
-    def __init__(self, name):
+    def __init__(self, name, readable_name=None):
         self.full_menu = OrderedDict()
         self.name = name
+
+        if readable_name is None:
+            self.readable_name = name
+        else:
+            self.readable_name = readable_name
 
     def add_submenu(self, type_name, edit_name=None):
         if (edit_name is None):
@@ -241,5 +246,5 @@ class MenuGenerator(object):
             '"planning/simulation/sim_viewer_palette.hh"',
             '"third_party/imgui/imgui.h"'
         ]
-        menu_txt = generate_menu(self.name, generable_menu)
+        menu_txt = generate_menu(self.readable_name, self.name, generable_menu)
         form_src(ui_loc, namespace, src_deps, menu_txt)
