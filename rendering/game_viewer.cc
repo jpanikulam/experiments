@@ -196,29 +196,29 @@ void GameViewer::draw_scene() {
 
   // glEnable(GL_TEXTURE_2D);
 
-  TextureManager manager;
+  // TextureManager manager;
 
   // TODO
   Framebuffer fbo;
 
-  auto &depth_texture = manager.create_texture("depth");
+  auto &depth_texture = tex_mgr_.create_texture("depth");
   // Texture depth_texture;
   depth_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, {4096, 4096}, 0,
                              GL_DEPTH_COMPONENT, GL_FLOAT);
   fbo.attach_depth_texture(depth_texture);
 
-  auto &normals_texture = manager.create_texture("normals");
+  auto &normals_texture = tex_mgr_.create_texture("normals");
   // Texture normals_texture;
   normals_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA16F, {4096, 4096}, 0, GL_RGBA,
                                GL_FLOAT);
   fbo.attach_color_texture(normals_texture);
 
-  auto &pos_texture = manager.create_texture("position");
+  auto &pos_texture = tex_mgr_.create_texture("position");
   pos_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA16F, {4096, 4096}, 0, GL_RGBA,
                            GL_FLOAT);
   fbo.attach_color_texture(pos_texture);
 
-  auto &color_texture = manager.create_texture("color");
+  auto &color_texture = tex_mgr_.create_texture("color");
   color_texture.tex_image_2d(GL_TEXTURE_2D, 0, GL_RGBA8, {4096, 4096}, 0, GL_RGBA,
                              GL_FLOAT);
   fbo.attach_color_texture(color_texture);
@@ -316,9 +316,10 @@ void GameViewer::draw_scene() {
   JASSERT_EQ(err, GL_NO_ERROR, "There was  an opengl error");
 
   imgui_mgr_.new_frame();
-  manager.show_ui();
+  tex_mgr_.show_ui();
   show_menu(out(ui_cfg_));
   imgui_mgr_.render();
+  tex_mgr_.clear();
 }
 
 void GameViewer::render() {

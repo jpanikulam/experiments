@@ -4,7 +4,7 @@
 
 #include <map>
 
-//TODO
+// TODO
 #include <iostream>
 
 namespace jcc {
@@ -19,18 +19,21 @@ class TextureManager {
  public:
   TextureManager();
 
-  Texture& create_texture(const std::string& name) {
-    return textures_[name];
-  }
+  Texture& create_texture(const std::string& name);
 
   Texture& texture(const std::string& name) {
     return textures_.at(name);
   }
 
-  void show_ui() const;
+  void show_ui();
+
+  void clear();
 
  private:
   std::map<std::string, Texture> textures_;
+
+  // TODO always clear this
+  std::map<std::string, double> texture_zoom_;
 };
 
 }  // namespace jcc

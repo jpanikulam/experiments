@@ -18,6 +18,7 @@
 
 // TODO
 #include "rendering/assets/load_voxel_asset.hh"
+#include "rendering/buffers/texture_manager.hh"
 #include "rendering/imgui_elements/game_debug_configuration.hh"
 #include "rendering/shaders/load_shader.hh"
 
@@ -73,6 +74,7 @@ class GameViewer : public viewer::SimpleWindow {
   viewer::GeometryBuffer demo_buffer_;
 
   GameDebugConfiguration ui_cfg_;
+  TextureManager tex_mgr_;
 };
 
 struct GameViewerConfig {

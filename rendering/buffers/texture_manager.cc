@@ -1,16 +1,16 @@
 #include "rendering/buffers/texture_manager.hh"
 
-#include "third_party/imgui/imgui.h"
+#include "eigen.hh"
+#include "logging/assert.hh"
 #include "util/clamp.hh"
 #include "util/eigen_clip.hh"
 
-// TODO
-#include "eigen.hh"
-
+#include "third_party/imgui/imgui.h"
 namespace jcc {
 
 namespace {
-void show_tooltip(void* tex_id, double draw_w, double draw_h, float region_sz) {
+double show_tooltip(
+    void* tex_id, double draw_w, double draw_h, float region_sz, double zoom) {
   const ImGuiIO& io = ImGui::GetIO();
   const ImVec2 cursor_pos = ImGui::GetCursorScreenPos();
 
@@ -25,12 +25,7 @@ void show_tooltip(void* tex_id, double draw_w, double draw_h, float region_sz) {
   const jcc::Vec2 region_size(region_sz, region_sz);
   const jcc::Vec2 image_size(draw_w, draw_h);
 
-  // const jcc::Vec2 region_min_unclipped = mouse_from_image - (region_size * 0.5);
-  // const jcc::Vec2 region_max_unclipped = mouse_from_image + (region_size * 0.5);
   const jcc::Vec2 region_min_unclipped = mouse_from_image;
-
-
-  const jcc::Vec2 clipped_region_size = eigen_clip(region_size, jcc::Vec2(mouse_from_image))
 
   const jcc::Vec2 region_max_unclipped = mouse_from_image + region_size;
 
@@ -44,10 +39,11 @@ void show_tooltip(void* tex_id, double draw_w, double draw_h, float region_sz) {
   // TODO: Implement a picker
   ImGui::BeginTooltip();
 
-  float zoom = 4.0f;
   ImGui::Text("Min: (%.2f, %.2f)", region_min.x(), region_min.y());
   ImGui::SameLine();
   ImGui::Text("Max: (%.2f, %.2f)", region_max.x(), region_max.y());
+  ImGui::Text("Zoom: %.2f", zoom);
+
   const ImVec2 im_uv0 = ImVec2(uv0.x(), uv0.y());
   const ImVec2 im_uv1 = ImVec2(uv1.x(), uv1.y());
 
@@ -58,13 +54,29 @@ void show_tooltip(void* tex_id, double draw_w, double draw_h, float region_sz) {
                ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
                ImVec4(1.0f, 1.0f, 1.0f, 0.5f));
   ImGui::EndTooltip();
+  return io.MouseWheel;
 }
 }  // namespace
 
 TextureManager::TextureManager() {
 }
 
-void TextureManager::show_ui() const {
+Texture& TextureManager::create_texture(const std::string& name) {
+  JASSERT_LT(
+      textures_.size(), 25u, "More than 25 textures allocated, probably a memory leak");
+  return textures_[name];
+}
+
+void TextureManager::clear() {
+  textures_.clear();
+  // texture_zoom_.clear();
+}
+
+void TextureManager::show_ui() {
+  if (textures_.empty()) {
+    return;
+  }
+
   ImGui::Begin("Textures", nullptr, ImGuiWindowFlags_NoMove);
   ImGui::SetWindowPos(ImVec2(0.0, 0.0));
   ImGui::SetWindowSize(ImVec2(250, 500));
@@ -77,6 +89,8 @@ void TextureManager::show_ui() const {
       continue;
     }
 
+    // texture_zoom_
+
     ImGui::Text("%s", name.c_str());
 
     const int width = tex.size().width;
@@ -84,16 +98,21 @@ void TextureManager::show_ui() const {
     if (width != 0 && height != 0) {
       const auto tex_id = (void*)(intptr_t)tex.get_id();
 
-      // const double draw_w = 0.05 * width;
-      // const double draw_h = 0.05 * height;
-
       const double draw_w = 250.0;
       const double draw_h = 250.0;
 
       ImGui::Image(tex_id, ImVec2(draw_w, draw_h));
 
       if (ImGui::IsItemHovered()) {
-        show_tooltip(tex_id, draw_w, draw_h, 64.0f);
+        if (0 == texture_zoom_.count(name)) {
+          texture_zoom_[name] = 3.0;
+        }
+
+        const double zoom_change =
+            show_tooltip(tex_id, draw_w, draw_h, 64.0f, texture_zoom_[name]);
+
+        texture_zoom_[name] *= std::exp(zoom_change * 0.1);
+        texture_zoom_[name] = jcc::clamp(texture_zoom_[name], 1.0, 10.0);
       }
     }
   }
