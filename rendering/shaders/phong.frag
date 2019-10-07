@@ -13,7 +13,7 @@ uniform MaterialProperties u_materials[N_MATERIALS];
 
 flat in int f_material_id;
 
-in vec4 v_color;
+in vec3 v_color;
 in vec3 v_light_pos;
 in vec3 v_normal_world;
 in vec3 v_world_pos;
@@ -128,7 +128,7 @@ void main() {
     // Shared Precomputation
     //
 
-    const vec3 surface_color_diffuse = v_color.xyz;
+    const vec3 surface_color_diffuse = v_color;
     const vec3 normal_world = normalize(v_normal_world);
     const vec3 view_dir_camera = normalize(v_vertex_camera);
 
