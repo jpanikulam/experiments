@@ -15,11 +15,11 @@ class JetOptimizer {
 
   JetOptimizer();
 
-  void measure_imu(const AccelMeasurement& meas, const TimePoint& t);
+  void measure_imu(const AccelMeasurement& meas, const jcc::TimePoint& t);
 
-  void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t);
+  void measure_fiducial(const FiducialMeasurement& meas, const jcc::TimePoint& t);
 
-  void measure_gyro(const GyroMeasurement& meas, const TimePoint& t);
+  void measure_gyro(const GyroMeasurement& meas, const jcc::TimePoint& t);
 
   JetPoseOptimizer::Solution solve(const std::vector<StateObservation>& x,
                                    const Parameters& p,

@@ -78,10 +78,10 @@ class FilterManager {
  public:
   FilterManager();
 
-  void update(const TimePoint& current_time);
+  void update(const jcc::TimePoint& current_time);
 
   // Jet state
-  JetFilter::JetFilterState state(const TimePoint& current_time) const;
+  JetFilter::JetFilterState state(const jcc::TimePoint& current_time) const;
 
   // State machine state
   FilterStage stage() const {
@@ -98,7 +98,7 @@ class FilterManager {
 
   geometry::TransformNetwork transform_network_;
 
-  TimeDuration max_fiducial_latency_;
+  jcc::TimeDuration max_fiducial_latency_;
 
   JetFilter jf_primary_;
   JetFilter jf_laggard_;

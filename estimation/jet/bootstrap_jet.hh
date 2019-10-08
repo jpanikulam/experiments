@@ -14,7 +14,7 @@ struct BootstrapResult {
 
 BootstrapResult bootstrap_jet(const geometry::Unit3& g_imu_frame,
                               const geometry::TransformNetwork& tfn,
-                              const TimePoint& t0);
+                              const jcc::TimePoint& t0);
 
 }  // namespace jet_filter
 }  // namespace estimation

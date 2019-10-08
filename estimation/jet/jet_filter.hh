@@ -15,7 +15,7 @@ class JetFilter {
 
  public:
   using JetFilterState = FilterState<State>;
-  static JetFilterState reasonable_initial_state(const TimePoint& t);
+  static JetFilterState reasonable_initial_state(const jcc::TimePoint& t);
   static Parameters reasonable_parameters();
 
   JetFilter(const JetFilterState& xp, const Parameters& parameters);
@@ -31,17 +31,17 @@ class JetFilter {
     return initialized_;
   }
 
-  void measure_imu(const AccelMeasurement& meas, const TimePoint& t, bool imu2 = false);
-  void measure_gyro(const GyroMeasurement& meas, const TimePoint& t, bool imu2 = false);
+  void measure_imu(const AccelMeasurement& meas, const jcc::TimePoint& t, bool imu2 = false);
+  void measure_gyro(const GyroMeasurement& meas, const jcc::TimePoint& t, bool imu2 = false);
 
-  void measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t);
+  void measure_fiducial(const FiducialMeasurement& meas, const jcc::TimePoint& t);
 
   State free_run();
-  JetFilterState run_until(const TimePoint& t);
+  JetFilterState run_until(const jcc::TimePoint& t);
   jcc::Optional<State> next_measurement();
 
-  JetFilterState view(const TimePoint& t) const;
-  JetFilterState predict(const TimePoint& t) const;
+  JetFilterState view(const jcc::TimePoint& t) const;
+  JetFilterState predict(const jcc::TimePoint& t) const;
 
   const Parameters& parameters() const {
     return parameters_;

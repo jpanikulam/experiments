@@ -83,7 +83,7 @@ void run_filter() {
 
   JetOptimizer jet_opt;
 
-  FilterState<State> xp0 = JetFilter::reasonable_initial_state(TimePoint::min());
+  FilterState<State> xp0 = JetFilter::reasonable_initial_state(jcc::TimePoint::min());
   xp0.x.R_world_from_body = SO3::exp(jcc::Vec3::UnitX() * M_PI * 0.5);
 
   xp0.time_of_validity = {};
@@ -112,13 +112,13 @@ void run_filter() {
   std::vector<JetOptimizer::StateObservation> ground_truth;
   std::vector<JetOptimizer::StateObservation> est_states;
 
-  TimePoint start_time = xp0.time_of_validity;
+  jcc::TimePoint start_time = xp0.time_of_validity;
   constexpr double dt_sec = 0.1;
-  constexpr auto dt = to_duration(dt_sec);
+  constexpr auto dt =jcc::to_duration(dt_sec);
 
   constexpr int NUM_SIM_STEPS = 100;
 
-  TimePoint current_time = start_time;
+  jcc::TimePoint current_time = start_time;
 
   constexpr bool ACCEL_OBS = true;
   constexpr bool GYRO_OBS = false;
@@ -179,8 +179,8 @@ void run_filter() {
     // Gyro Observation
     //
     if (GYRO_OBS) {
-      constexpr auto dt2 = to_duration(0.01);
-      true_x = rk4_integrate(true_x, true_params, to_seconds(dt2));
+      constexpr auto dt2 =jcc::to_duration(0.01);
+      true_x = rk4_integrate(true_x, true_params,jcc::to_seconds(dt2));
       current_time += dt2;
       ground_truth.push_back({true_x, current_time});
 
@@ -213,8 +213,8 @@ void run_filter() {
     //
 
     if (FIDUCIAL_OBS && ((k % 1) == 0)) {
-      constexpr auto dt2 = to_duration(0.05);
-      true_x = rk4_integrate(true_x, true_params, to_seconds(dt2));
+      constexpr auto dt2 =jcc::to_duration(0.05);
+      true_x = rk4_integrate(true_x, true_params,jcc::to_seconds(dt2));
       current_time += dt2;
 
       ground_truth.push_back({true_x, current_time});
@@ -246,7 +246,7 @@ void run_filter() {
       // obs_geo->flush();
       // view->spin_until_step();
     }
-    true_x = rk4_integrate(true_x, true_params, to_seconds(dt));
+    true_x = rk4_integrate(true_x, true_params,jcc::to_seconds(dt));
     current_time += dt;
   }
 

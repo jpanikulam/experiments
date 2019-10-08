@@ -19,7 +19,7 @@ struct EstimationConfig {
 
 struct GravityEstimationResult {
   geometry::UnitVector3 direction;
-  TimePoint time;
+  jcc::TimePoint time;
   // TODO: (Instead of asserting)
   // std::vector<std::string> warning
   // bool success;

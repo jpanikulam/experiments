@@ -29,8 +29,8 @@ jcc::Vec3 compute_biggest_difference(const std::vector<jcc::Vec3>& vecs) {
 }
 
 struct Bracket {
-  TimePoint start;
-  TimePoint end;
+  jcc::TimePoint start;
+  jcc::TimePoint end;
 };
 
 geometry::UnitVector3 estimate_from_bracket(
@@ -103,8 +103,8 @@ GravityEstimationResult estimate_gravity_direction(
   const auto first = measurements.fiducial_meas.front().timestamp;
 
   bool in_bracket = false;
-  TimePoint bracket_start = first;
-  TimePoint bracket_end = first;
+  jcc::TimePoint bracket_start = first;
+  jcc::TimePoint bracket_end = first;
 
   return {geometry::Unit3(
               imu_measurements.accel_meas.at(100).measurement.observed_acceleration),
@@ -124,7 +124,7 @@ GravityEstimationResult estimate_gravity_direction(
     const SE3 camera_1_from_camera_0 =
         fiducial_from_camera_1.inverse() * fiducial_from_camera_0;
 
-    const double dt = to_seconds(t1 - t0);
+    const double dt =jcc::to_seconds(t1 - t0);
 
     const jcc::Vec3 dx_dt_unsmoothed = camera_1_from_camera_0.translation() / dt;
 

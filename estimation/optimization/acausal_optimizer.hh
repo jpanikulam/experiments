@@ -23,7 +23,7 @@ struct ProblemType {
 
   struct StateObservation {
     State x;
-    TimePoint time_of_validity;
+    jcc::TimePoint time_of_validity;
   };
 };
 
@@ -63,7 +63,7 @@ class AcausalOptimizer {
   struct Measurement {
     int type = -1;
     std::any observation;
-    TimePoint time_of_validity;
+    jcc::TimePoint time_of_validity;
   };
 
   // struct DebugInfo {
@@ -98,7 +98,7 @@ class AcausalOptimizer {
 
   template <typename Observation>
   void add_measurement(const Observation& obs,
-                       const TimePoint& time_of_validity,
+                       const jcc::TimePoint& time_of_validity,
                        int block_type) {
     const std::any z = obs;
     heap_.push({block_type, z, time_of_validity});
@@ -129,7 +129,7 @@ class AcausalOptimizer {
                                       const Parameters& p,
                                       const double dt) const;
 
-  StateForTime get_state_for_time(const Solution& soln, const TimePoint& t) const;
+  StateForTime get_state_for_time(const Solution& soln, const jcc::TimePoint& t) const;
 
   MeasurementDifferentials add_observation_residual(const State& x,
                                                     const Measurement& z,

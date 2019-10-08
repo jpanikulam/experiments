@@ -33,8 +33,8 @@ class BlockSparseMatrix {
   SpMat to_eigen_sparse() const;
 
   jcc::Optional<VecXd> solve_lst_sq(const std::vector<VecXd>& residuals,
-                                   const BlockSparseMatrix& R_inv,
-                                   const double lambda = 0.0) const;
+                                    const BlockSparseMatrix& R_inv,
+                                    const double lambda = 0.0) const;
 
   int block_rows() const {
     return rows_.size();
@@ -43,6 +43,31 @@ class BlockSparseMatrix {
     return n_cols_.size();
   }
 
+  // Here's a little mock for what an LDLT will feel like.
+  /*
+  void ldlt() {
+    D;
+    L;
+
+    for (int j = 0; j < i; ++j) {
+      DDii = 0;
+      for (int k = 0; k < j; ++k) {
+        DDii += L[j, k] * D[k] * L[j, k].transpose();
+      }
+      D[j] = A[j, j] - DDii;
+
+      for (int i = 0; i < n; ++i) {
+        DD = 0;
+
+        d_llt = llt(D[j]);
+        for (int k = 0; k < j; ++k) {
+          DD += L(i, k) * D[k] * L[j, k].transpose();
+        }
+        L[i, j] = d_llt.solve((A[i, j] - DD).transpose()).transpose();
+      }
+    }
+  }
+  */
  private:
   struct Block {
     Eigen::MatrixXd block;

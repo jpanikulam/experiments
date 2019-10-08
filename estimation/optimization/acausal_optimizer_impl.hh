@@ -32,8 +32,8 @@ typename AcausalOptimizer<Prob>::DynamicsDifferentials AcausalOptimizer<
 
 template <typename Prob>
 typename AcausalOptimizer<Prob>::StateForTime AcausalOptimizer<Prob>::get_state_for_time(
-    const Solution& soln, const TimePoint& t) const {
-  const auto cmp = [](const TimePoint target, const StateObservation& b) {
+    const Solution& soln, const jcc::TimePoint& t) const {
+  const auto cmp = [](const jcc::TimePoint target, const StateObservation& b) {
     return target < b.time_of_validity;
   };
   const auto upper_bound = std::upper_bound(soln.x.begin(), soln.x.end(), t, cmp);
@@ -42,7 +42,7 @@ typename AcausalOptimizer<Prob>::StateForTime AcausalOptimizer<Prob>::get_state_
 
   const auto state_obs = *state_iter;
 
-  const double dt = to_seconds(t - state_obs.time_of_validity);
+  const double dt =jcc::to_seconds(t - state_obs.time_of_validity);
   JASSERT_GE(dt, 0.0, "Time must flow forward");
 
   return {x_ind, state_obs.x, dt};
@@ -52,7 +52,7 @@ template <typename Prob>
 LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
   const auto measurements = heap_.to_sorted_vector();
 
-  const double total_dt = to_seconds(measurements.back().time_of_validity -
+  const double total_dt =jcc::to_seconds(measurements.back().time_of_validity -
                                      measurements.front().time_of_validity);
   const int n_params = 1;
   // const int n_states = static_cast<int>(std::ceil(total_dt / MAX_DT));
@@ -108,7 +108,7 @@ LinearSystem AcausalOptimizer<Prob>::populate(const Solution& soln) const {
     const State& x_t = state_obs.x;
     const State& x_t1 = next_state_obs.x;
     const double dt =
-        to_seconds(next_state_obs.time_of_validity - state_obs.time_of_validity);
+       jcc::to_seconds(next_state_obs.time_of_validity - state_obs.time_of_validity);
 
     // JASSERT_GT(dt, 0.0, "Time must be strictly positive");
     // Arbitrary constant that is surprising enough to indicate a bug

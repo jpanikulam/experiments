@@ -14,7 +14,7 @@ struct FilterState {
   MatNd<State::DIM, State::DIM> P;
 
   // When this state was the estimate for the true state
-  TimePoint time_of_validity = TimePoint::min();
+  jcc::TimePoint time_of_validity = jcc::TimePoint::min();
 };
 
 template <typename State>

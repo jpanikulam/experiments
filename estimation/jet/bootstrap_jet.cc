@@ -30,7 +30,7 @@ Parameters construct_jet_parameters(const geometry::TransformNetwork& tfn) {
 //
 BootstrapResult bootstrap_jet(const geometry::Unit3& g_imu_frame,
                               const geometry::TransformNetwork& tfn,
-                              const TimePoint& t0) {
+                              const jcc::TimePoint& t0) {
   BootstrapResult result;
   const geometry::Unit3 g_vehicle_frame =
       tfn.transform_a_from_b("vehicle", "imu_78", g_imu_frame);

@@ -171,7 +171,7 @@ void run() {
   constexpr double sphere_size_m = 0.05;
 
   while (!im_view->should_close()) {
-    const TimePoint current_time = jcc::now();
+    const jcc::TimePoint current_time = jcc::now();
     cap.set(cv::CAP_PROP_AUTOFOCUS, 0);
     cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.25);
     cap.set(cv::CAP_PROP_EXPOSURE, WEBCAM_EXPOSURE);

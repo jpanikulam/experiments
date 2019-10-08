@@ -85,7 +85,7 @@ void warn_sensor_rates(
                      << " Hz" << std::endl;
     }
 
-    TimePoint prev_time = TimePoint::min();
+    jcc::TimePoint prev_time = jcc::TimePoint::min();
     int num_repeated = 0;
     for (const auto& measurement : cal_measurements.fiducial_meas) {
       if (measurement.timestamp <= prev_time) {

@@ -94,7 +94,7 @@ void FilterManager::run() {
 
     if (fiducial_meas.timestamp < jf_primary_.state().time_of_validity) {
       std::cout << "Last fiducial measurement age 1: "
-                << to_seconds(jf_primary_.state().time_of_validity -
+                <<jcc::to_seconds(jf_primary_.state().time_of_validity -
                               fiducial_meas.timestamp)
                 << std::endl;
 
@@ -114,7 +114,7 @@ void FilterManager::run() {
   jf_laggard_.run_until(jf_primary_.state().time_of_validity - max_fiducial_latency_);
 }
 
-void FilterManager::update(const TimePoint& current_time) {
+void FilterManager::update(const jcc::TimePoint& current_time) {
   switch (stage_) {
     case FilterStage::UNINITIALIZED: {
       JASSERT(false, "Filter state must never be UNINITIALIZED");
@@ -137,7 +137,7 @@ void FilterManager::update(const TimePoint& current_time) {
   }
 }
 
-JetFilter::JetFilterState FilterManager::state(const TimePoint& current_time) const {
+JetFilter::JetFilterState FilterManager::state(const jcc::TimePoint& current_time) const {
   JASSERT(stage_ == FilterStage::RUNNING, "Filter must be in RUNNING at this stage");
   const auto state = jf_primary_.view(current_time);
   return state;

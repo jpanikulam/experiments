@@ -53,15 +53,15 @@ JetOptimizer::JetOptimizer() {
   pose_opt_.set_dynamics_cov(state_cov);
 }
 
-void JetOptimizer::measure_imu(const AccelMeasurement& meas, const TimePoint& t) {
+void JetOptimizer::measure_imu(const AccelMeasurement& meas, const jcc::TimePoint& t) {
   pose_opt_.add_measurement(meas, t, imu_id_);
 }
 
-void JetOptimizer::measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t) {
+void JetOptimizer::measure_fiducial(const FiducialMeasurement& meas, const jcc::TimePoint& t) {
   pose_opt_.add_measurement(meas, t, fiducial_id_);
 }
 
-void JetOptimizer::measure_gyro(const GyroMeasurement& meas, const TimePoint& t) {
+void JetOptimizer::measure_gyro(const GyroMeasurement& meas, const jcc::TimePoint& t) {
   pose_opt_.add_measurement(meas, t, gyro_id_);
 }
 

@@ -18,7 +18,7 @@ class Ekf {
   struct Measurement {
     int type = -1;
     std::any observation;
-    TimePoint time_of_validity;
+    jcc::TimePoint time_of_validity;
   };
 
   using AnyObservationModel = std::function<FilterStateUpdate<State>(
@@ -34,7 +34,7 @@ class Ekf {
   Ekf(const Dynamics& dynamics, const MatNd<State::DIM, State::DIM>& cov);
 
   FilterState<State> update_state(const FilterState<State>& xp,
-                                  const TimeDuration& dt) const;
+                                  const jcc::TimeDuration& dt) const;
 
   template <typename MeasurementType>
   using ErrorModel =
@@ -53,14 +53,14 @@ class Ekf {
 
   template <typename MeasurementType>
   void measure(const MeasurementType& observation,
-               const TimePoint& time_of_validity,
+               const jcc::TimePoint& time_of_validity,
                int measurement_id) {
     const std::any z = observation;
     measurements_.push({measurement_id, z, time_of_validity});
   }
 
   FilterState<State> dynamics_until(const FilterState<State>& x0,
-                                    const TimePoint& t) const;
+                                    const jcc::TimePoint& t) const;
 
   FilterState<State> soft_service_all_measurements(
       const FilterState<State>& x_hat0) const;

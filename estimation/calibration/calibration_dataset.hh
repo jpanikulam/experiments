@@ -13,7 +13,7 @@ namespace estimation {
 template <typename MeasurementType>
 struct TimedMeasurement {
   MeasurementType measurement;
-  TimePoint timestamp;
+  jcc::TimePoint timestamp;
 };
 
 struct ImuCalibrationMeasurements {
@@ -23,35 +23,35 @@ struct ImuCalibrationMeasurements {
 
   int imu_id;
 
-  TimePoint first() const {
+  jcc::TimePoint first() const {
     return first_;
   }
 
-  TimePoint last() const {
+  jcc::TimePoint last() const {
     return last_;
   }
 
-  void set_first(const TimePoint& first) {
+  void set_first(const jcc::TimePoint& first) {
     first_ = first;
   }
-  void set_last(const TimePoint& last) {
+  void set_last(const jcc::TimePoint& last) {
     last_ = last;
   }
 
  private:
-  TimePoint first_;
-  TimePoint last_;
+  jcc::TimePoint first_;
+  jcc::TimePoint last_;
 };
 
 struct CalibrationMeasurements {
   std::map<int, ImuCalibrationMeasurements> imu_cal;
   std::vector<TimedMeasurement<jet_filter::FiducialMeasurement>> fiducial_meas;
 
-  TimePoint first() const {
+  jcc::TimePoint first() const {
     return fiducial_meas.front().timestamp;
   }
 
-  TimePoint last() const {
+  jcc::TimePoint last() const {
     return fiducial_meas.back().timestamp;
   }
 };

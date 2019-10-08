@@ -28,9 +28,9 @@ int Ekf<State>::add_model_pr(const Ekf<State>::AnyObservationModel& model) {
 
 template <typename State>
 FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
-                                            const TimeDuration& dt) const {
+                                            const jcc::TimeDuration& dt) const {
   const auto dynamics_fixed_dt = [this, dt](const State& x) -> State {
-    return dynamics_(x, to_seconds(dt));
+    return dynamics_(x,jcc::to_seconds(dt));
   };
 
   const State x_new = dynamics_fixed_dt(xp.x);
@@ -38,22 +38,22 @@ FilterState<State> Ekf<State>::update_state(const FilterState<State>& xp,
   const MatNd<State::DIM, State::DIM> A =
       numerics::group_jacobian<State, State>(xp.x, dynamics_fixed_dt);
   const MatNd<State::DIM, State::DIM> P_new =
-      (A * xp.P * A.transpose()) + (A * (Q_ * to_seconds(dt)) * A.transpose());
+      (A * xp.P * A.transpose()) + (A * (Q_ *jcc::to_seconds(dt)) * A.transpose());
 
   return {x_new, P_new, xp.time_of_validity + dt};
 }
 
 template <typename State>
 FilterState<State> Ekf<State>::dynamics_until(const FilterState<State>& x0,
-                                              const TimePoint& t) const {
-  constexpr TimeDuration MAX_DT = to_duration(0.01);
+                                              const jcc::TimePoint& t) const {
+  constexpr jcc::TimeDuration MAX_DT =jcc::to_duration(0.01);
 
   JASSERT_LE(x0.time_of_validity, t, "Current time must be less than target time");
 
   FilterState<State> x = x0;
-  TimePoint time_simulated = x0.time_of_validity;
+  jcc::TimePoint time_simulated = x0.time_of_validity;
   while (time_simulated < t) {
-    const TimeDuration dt = std::min(MAX_DT, t - time_simulated);
+    const jcc::TimeDuration dt = std::min(MAX_DT, t - time_simulated);
     x = update_state(x, dt);
     time_simulated += dt;
   }
@@ -103,15 +103,15 @@ jcc::Optional<FilterState<State>> Ekf<State>::service_next_measurement(
     const Measurement meas = measurements_.top();
 
     const auto dt = meas.time_of_validity - x_hat0.time_of_validity;
-    // const double dt_sec = to_seconds(dt);
+    // const double dt_sec =jcc::to_seconds(dt);
 
-    JASSERT_GE(dt, to_duration(0.0), "Time moved backwards");
-    JASSERT_LE(dt, to_duration(0.5),
+    JASSERT_GE(dt,jcc::to_duration(0.0), "Time moved backwards");
+    JASSERT_LE(dt,jcc::to_duration(0.5),
                "A very long time has passed between measurements, "
                "the filter has almost certainly already diverged");
 
     const auto x_hat_t =
-        (dt > to_duration(0.0)) ? dynamics_until(x_hat0, meas.time_of_validity) : x_hat0;
+        (dt >jcc::to_duration(0.0)) ? dynamics_until(x_hat0, meas.time_of_validity) : x_hat0;
     JASSERT_EQ(x_hat_t.time_of_validity, meas.time_of_validity,
                "Must simulate up to time of measurement");
 

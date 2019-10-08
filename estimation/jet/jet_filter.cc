@@ -52,7 +52,7 @@ MatNd<State::DIM, State::DIM> make_cov() {
 
 }  // namespace
 
-FilterState<State> JetFilter::reasonable_initial_state(const TimePoint& t) {
+FilterState<State> JetFilter::reasonable_initial_state(const jcc::TimePoint& t) {
   FilterState<State> xp0;
   xp0.time_of_validity = t;
   MatNd<State::DIM, State::DIM> state_cov;
@@ -140,7 +140,7 @@ JetFilter::JetFilter(const Parameters& parameters) : parameters_(parameters) {
   initialized_ = false;
 }
 
-void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t, bool imu2) {
+void JetFilter::measure_imu(const AccelMeasurement& meas, const jcc::TimePoint& t, bool imu2) {
   JASSERT_FALSE(imu2, "imu2 temporarily unsupported");
   if (imu2) {
     ekf_.measure(meas, t, imu_2_id_);
@@ -149,7 +149,7 @@ void JetFilter::measure_imu(const AccelMeasurement& meas, const TimePoint& t, bo
   }
 }
 
-void JetFilter::measure_gyro(const GyroMeasurement& meas, const TimePoint& t, bool imu2) {
+void JetFilter::measure_gyro(const GyroMeasurement& meas, const jcc::TimePoint& t, bool imu2) {
   JASSERT_FALSE(imu2, "imu2 temporarily unsupported");
   if (imu2) {
     ekf_.measure(meas, t, gyro_2_id_);
@@ -158,7 +158,7 @@ void JetFilter::measure_gyro(const GyroMeasurement& meas, const TimePoint& t, bo
   }
 }
 
-void JetFilter::measure_fiducial(const FiducialMeasurement& meas, const TimePoint& t) {
+void JetFilter::measure_fiducial(const FiducialMeasurement& meas, const jcc::TimePoint& t) {
   ekf_.measure(meas, t, fiducial_id_);
 }
 
@@ -168,9 +168,9 @@ State JetFilter::free_run() {
   return xp_.x;
 }
 
-FilterState<State> JetFilter::run_until(const TimePoint& t) {
+FilterState<State> JetFilter::run_until(const jcc::TimePoint& t) {
   JASSERT(initialized_, "Filter must be initialized");
-  JASSERT(to_seconds(t - xp_.time_of_validity) < 10.0,
+  JASSERT(jcc::to_seconds(t - xp_.time_of_validity) < 10.0,
           "You're simulating for more than 10 seconds, something is probably wrong.");
   while (t > xp_.time_of_validity) {
     const auto result = ekf_.service_next_measurement(xp_);
@@ -193,14 +193,14 @@ jcc::Optional<State> JetFilter::next_measurement() {
   }
 }
 
-FilterState<State> JetFilter::view(const TimePoint& t) const {
+FilterState<State> JetFilter::view(const jcc::TimePoint& t) const {
   JASSERT(initialized_, "Filter must be initialized");
   // TODO: Make this soft_service_until(xp_, t)
   const auto xp_t = ekf_.soft_service_all_measurements(xp_);
   return ekf_.dynamics_until(xp_t, t);
 }
 
-FilterState<State> JetFilter::predict(const TimePoint& t) const {
+FilterState<State> JetFilter::predict(const jcc::TimePoint& t) const {
   JASSERT(initialized_, "Filter must be initialized");
   // TODO: Make this soft_service_until(xp_, t)
   return ekf_.dynamics_until(xp_, t);

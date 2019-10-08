@@ -26,7 +26,7 @@ void visualize_mag_data(const ImuModel& imu_model,
 
   int k = 0;
   for (const auto& mag : measurements.mag_meas) {
-    const auto t = to_seconds(mag.timestamp - first);
+    const auto t =jcc::to_seconds(mag.timestamp - first);
     const jcc::Vec3 mag_utesla = mag.measurement.observed_bfield;
     const jcc::Vec3 accel = measurements.accel_meas[k].measurement.observed_acceleration;
 
@@ -65,7 +65,7 @@ void visualize_gyro_data(const ImuModel& imu_model,
   viewer::LinePlotBuilder builder("Gyro Measurements (rad/s)");
   viewer::PlotRange range;
   range.x_min = 0.0;
-  range.x_max = to_seconds(measurements.last() - first);
+  range.x_max =jcc::to_seconds(measurements.last() - first);
 
   range.y_min = -2.0;
   range.y_max = 2.0;
@@ -80,7 +80,7 @@ void visualize_gyro_data(const ImuModel& imu_model,
     const jcc::Vec3 observed_w = gyro_meas.measurement.observed_w;
     geo->add_point({observed_w, jcc::Vec4(1.0, 0.1, 0.1, 1.0)});
 
-    const double t = to_seconds(gyro_meas.timestamp - first);
+    const double t =jcc::to_seconds(gyro_meas.timestamp - first);
 
     gyro_x << jcc::Vec2(t, observed_w.x());
     gyro_y << jcc::Vec2(t, observed_w.y());
@@ -105,7 +105,7 @@ void visualize_fwd_difference_angular(
   viewer::LinePlotBuilder builder("Camera Estimated: w (rad/s)");
   viewer::PlotRange range;
   range.x_min = 0.0;
-  range.x_max = to_seconds(measurements.last() - first);
+  range.x_max =jcc::to_seconds(measurements.last() - first);
   range.y_min = -2.0;
   range.y_max = 2.0;
   builder.set_range(range);
@@ -130,13 +130,13 @@ void visualize_fwd_difference_angular(
     const SE3 camera_1_from_camera_0 =
         fiducial_from_camera_1.inverse() * fiducial_from_camera_0;
 
-    const double dt = to_seconds(t1 - t0);
+    const double dt =jcc::to_seconds(t1 - t0);
     const jcc::Vec3 dR_dt_unsmoothed = camera_1_from_camera_0.so3().log() / dt;
     const jcc::Vec3 dR_dt =
         i == 1u ? dR_dt_unsmoothed : (0.25 * dR_dt_unsmoothed) + (0.75 * prev_vel);
     prev_vel = dR_dt;
 
-    const double t = to_seconds(t0 - first);
+    const double t =jcc::to_seconds(t0 - first);
 
     constexpr double MAX_DT_SEC = 0.2;
     // dt_plt << jcc::Vec2(t, dt);
@@ -167,7 +167,7 @@ void visualize_imu_data_with_intrinsics(
   viewer::LinePlotBuilder builder("Accelerometer Measurements (m/s^2)");
   viewer::PlotRange range;
   range.x_min = 0.0;
-  range.x_max = to_seconds(measurements.last() - first);
+  range.x_max =jcc::to_seconds(measurements.last() - first);
   range.y_min = -1.5;
   range.y_max = 1.5;
 
@@ -185,7 +185,7 @@ void visualize_imu_data_with_intrinsics(
     const jcc::Vec3 corrected = imu_model.correct_measured_accel(observed_acceleration);
     geo->add_point({corrected, jcc::Vec4(0.1, 1.0, 0.1, 1.0)});
 
-    const double t = to_seconds(accel_meas.timestamp - first);
+    const double t =jcc::to_seconds(accel_meas.timestamp - first);
 
     imu_x << jcc::Vec2(t, corrected.x());
     imu_y << jcc::Vec2(t, corrected.y());
@@ -218,7 +218,7 @@ void visualize_fwd_difference(const CalibrationMeasurements& measurements,
   viewer::LinePlotBuilder builder("Camera Estimated Velocity: m/s");
   viewer::PlotRange range;
   range.x_min = 0.0;
-  range.x_max = to_seconds(measurements.last() - first);
+  range.x_max =jcc::to_seconds(measurements.last() - first);
   builder.set_range(range);
 
   auto& vel_x = builder.make_subplot("vel_x", jcc::Vec4(1.0, 0.0, 0.0, 0.7), 0.4, true);
@@ -240,13 +240,13 @@ void visualize_fwd_difference(const CalibrationMeasurements& measurements,
     const SE3 camera_1_from_camera_0 =
         fiducial_from_camera_1.inverse() * fiducial_from_camera_0;
 
-    const double dt = to_seconds(t1 - t0);
+    const double dt =jcc::to_seconds(t1 - t0);
     const jcc::Vec3 dx_dt_unsmoothed = camera_1_from_camera_0.translation() / dt;
     const jcc::Vec3 dx_dt =
         i == 1u ? dx_dt_unsmoothed : (0.75 * prev_vel) + (0.25 * dx_dt_unsmoothed);
     prev_vel = dx_dt;
 
-    const double t = to_seconds(t0 - first);
+    const double t =jcc::to_seconds(t0 - first);
 
     constexpr double MAX_DT_SEC = 0.2;
     dt_plt << jcc::Vec2(t, dt);
@@ -273,7 +273,7 @@ void visualize_fwd_acceleration(const CalibrationMeasurements& measurements,
   viewer::LinePlotBuilder builder("Camera Estimated Acceleration (m/s^2)");
   viewer::PlotRange range;
   range.x_min = 0.0;
-  range.x_max = to_seconds(measurements.last() - first);
+  range.x_max =jcc::to_seconds(measurements.last() - first);
   range.y_min = -1.5;
   range.y_max = 1.5;
   builder.set_range(range);
@@ -305,7 +305,7 @@ void visualize_fwd_acceleration(const CalibrationMeasurements& measurements,
     {
       const SE3 camera_cur_from_camera_prev =
           fiducial_from_camera_cur.inverse() * fiducial_from_camera_prev;
-      const double dt = to_seconds(t_cur - t_prev);
+      const double dt =jcc::to_seconds(t_cur - t_prev);
       dx_dt_1 = -camera_cur_from_camera_prev.translation() / dt;
     }
 
@@ -313,14 +313,14 @@ void visualize_fwd_acceleration(const CalibrationMeasurements& measurements,
     {
       const SE3 camera_next_from_camera_cur =
           fiducial_from_camera_next.inverse() * fiducial_from_camera_cur;
-      const double dt = to_seconds(t_next - t_cur);
+      const double dt =jcc::to_seconds(t_next - t_cur);
       dx_dt_2 = -camera_next_from_camera_cur.translation() / dt;
     }
 
     const auto t1 = average(t_prev, t_cur);
     const auto t2 = average(t_cur, t_next);
-    const double accel_dt = to_seconds(t2 - t1);
-    const double t = to_seconds(t_cur - first);
+    const double accel_dt =jcc::to_seconds(t2 - t1);
+    const double t =jcc::to_seconds(t_cur - first);
 
     const jcc::Vec3 d2x_dt2 = (dx_dt_2 - dx_dt_1) / accel_dt;
 
