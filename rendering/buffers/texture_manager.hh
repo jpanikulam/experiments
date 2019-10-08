@@ -27,7 +27,8 @@ class TextureManager {
 
   void show_ui();
 
-  void clear();
+  // Keep important note: This does not clear the zoom levels! Oh no!
+  void clear_textures();
 
  private:
   std::map<std::string, Texture> textures_;

@@ -9,7 +9,7 @@
 namespace jcc {
 
 namespace {
-double show_tooltip(
+void show_tooltip(
     void* tex_id, double draw_w, double draw_h, float region_sz, double zoom) {
   const ImGuiIO& io = ImGui::GetIO();
   const ImVec2 cursor_pos = ImGui::GetCursorScreenPos();
@@ -54,7 +54,6 @@ double show_tooltip(
                ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
                ImVec4(1.0f, 1.0f, 1.0f, 0.5f));
   ImGui::EndTooltip();
-  return io.MouseWheel;
 }
 }  // namespace
 
@@ -67,9 +66,8 @@ Texture& TextureManager::create_texture(const std::string& name) {
   return textures_[name];
 }
 
-void TextureManager::clear() {
+void TextureManager::clear_textures() {
   textures_.clear();
-  // texture_zoom_.clear();
 }
 
 void TextureManager::show_ui() {
@@ -108,8 +106,10 @@ void TextureManager::show_ui() {
           texture_zoom_[name] = 3.0;
         }
 
-        const double zoom_change =
-            show_tooltip(tex_id, draw_w, draw_h, 64.0f, texture_zoom_[name]);
+        show_tooltip(tex_id, draw_w, draw_h, 64.0f, texture_zoom_[name]);
+
+        const ImGuiIO& io = ImGui::GetIO();
+        const double zoom_change = io.MouseWheel;
 
         texture_zoom_[name] *= std::exp(zoom_change * 0.1);
         texture_zoom_[name] = jcc::clamp(texture_zoom_[name], 1.0, 10.0);

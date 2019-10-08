@@ -40,11 +40,11 @@ MatNf<4, 4> create_perspective_from_camera(const geometry::Angle &fovy,
   const double f = 1.0 / std::tan(fovy.rads() / 2.0);
 
   MatNf<4, 4> perspective_from_camera;
-  perspective_from_camera.row(0) << (f / aspect), 0, 0, 0;
-  perspective_from_camera.row(1) << 0, f, 0, 0;
-  perspective_from_camera.row(2) << 0, 0, (z_far + z_near) / (z_near - z_far),
-      (2 * z_far * z_near) / (z_near - z_far);
-  perspective_from_camera.row(3) << 0, 0, -1, 0.0;
+  perspective_from_camera.row(0) << (f / aspect), 0.0, 0.0, 0.0;
+  perspective_from_camera.row(1) << 0.0, f, 0.0, 0.0;
+  perspective_from_camera.row(2) << 0.0, 0.0, (z_far + z_near) / (z_near - z_far),
+      (2.0 * z_far * z_near) / (z_near - z_far);
+  perspective_from_camera.row(3) << 0.0, 0.0, -1.0, 0.0;
 
   return perspective_from_camera;
 }
@@ -311,15 +311,12 @@ void GameViewer::draw_scene() {
   test_shader_.set_bool("u_dbg_use_rsm", ui_cfg_.shading.use_rsm);
   test_shader_.set_bool("u_dbg_show_light_probes", ui_cfg_.shading.show_light_probes);
   draw_elements();
-  GLenum err;
-  err = glGetError();
-  JASSERT_EQ(err, GL_NO_ERROR, "There was  an opengl error");
 
   imgui_mgr_.new_frame();
   tex_mgr_.show_ui();
   show_menu(out(ui_cfg_));
   imgui_mgr_.render();
-  tex_mgr_.clear();
+  tex_mgr_.clear_textures();
 }
 
 void GameViewer::render() {
