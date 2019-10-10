@@ -317,8 +317,8 @@ void visualize_fwd_acceleration(const CalibrationMeasurements& measurements,
       dx_dt_2 = -camera_next_from_camera_cur.translation() / dt;
     }
 
-    const auto t1 = average(t_prev, t_cur);
-    const auto t2 = average(t_cur, t_next);
+    const auto t1 = jcc::average(t_prev, t_cur);
+    const auto t2 = jcc::average(t_cur, t_next);
     const double accel_dt =jcc::to_seconds(t2 - t1);
     const double t =jcc::to_seconds(t_cur - first);
 

@@ -134,7 +134,7 @@ GravityEstimationResult estimate_gravity_direction(
 
     std::cout << "dx_dt: " << dx_dt.norm() << std::endl;
 
-    const auto t = average(t0, t1);
+    const auto t = jcc::average(t0, t1);
 
     const bool accel_available = static_cast<bool>(accel_interp(t));
     const bool dt_small_enough = dt < cfg.max_fiducial_dt_sec;
