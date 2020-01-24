@@ -133,8 +133,8 @@ void SimpleGeometry::add_colored_points(const Points &points,
 
   const double inv_max = 1.0 / max;
   for (std::size_t k = 0; k < intensities.size(); ++k) {
-    const Vec4 color =
-        jcc::augment(colors::viridis(intensities[k] * inv_max), intensities[k] * inv_max);
+    const Vec4 color = jcc::augment(colors::viridis(intensities[k] * inv_max),
+                                    0.7 + (0.3 * intensities[k] * inv_max));
     colored_points.colors.push_back(color);
   }
 

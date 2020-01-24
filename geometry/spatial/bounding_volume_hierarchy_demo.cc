@@ -1,5 +1,4 @@
 #include "viewer/colors/viridis.hh"
-#include "viewer/primitives/box.hh"
 #include "viewer/primitives/simple_geometry.hh"
 #include "viewer/window_3d.hh"
 

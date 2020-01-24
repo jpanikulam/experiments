@@ -81,6 +81,23 @@ Here, a "process" is some procedure that a _human being_ executes, reading from 
 
 * If you're project is about to use Euler angles in a critical place because it's hard to get liegroups right, seriously, email me and I'll help you.
 
+# Optimization
+* In an industrial setting, one usually...
+    - Has tight control over the form of cost functions they must optimize
+    - is willing to compromise on exact specification to satisfy an optimizer
+    - TODO(jpanikulam): More
+
+# Logging
+* 99% of the interaction betwen engineers and data you generate will be offline
+    - Via training pipelines for deep learning
+    - Via offline validation of behavior
+    - This sounds obvious, but consider:
+        + Does your log playback system support rewind?
+        + Does your log playback system support deterministic testing?
+        + Does your log format permit reconstructing the state of the system?
+        + Ex: The Ouster LIDAR format does not log the lidar mode (1024x20 or 2048x10), meaning you *cannot* automatically parse a bagged Ouster unless you know the format. That's silly. Just send the extra 2 bits to identify the mode!!!
+    
+
 # Deep Learning
 * A good DL model looks like the code you would have hand-written, making the heuristics optimizable
 * The miracle of inverse-optimal-control is that you don't need to have a differentiable optimizer to learn a cost function

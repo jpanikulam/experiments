@@ -1,6 +1,7 @@
 import os
 import re
 
+from generate_cmake.log import Log
 from generate_cmake.parse import between
 
 valid_extensions = ['cc', 'hh', '.py']
@@ -43,7 +44,8 @@ def resolve_include(file_path, include_path, available_include_paths=[]):
         if os.path.exists(potential_path):
             return potential_path
     else:
-        raise ValueError("Unknown include: {} in {}".format(include_path, file_path))
+        # raise ValueError("Unknown include: {} in {}".format(include_path, file_path))
+        Log.warn("Unknown include: {} in {}".format(include_path, file_path))
 
 
 def parse_ignore(path):

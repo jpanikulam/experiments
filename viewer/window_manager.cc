@@ -76,6 +76,8 @@ void WindowManager::register_window(const GlSize &size,
     simple_window->close();
     return;
   }
+
+  // TODO: All of this must be done in the render thread
   maybe_create_global_state();
   // const std::lock_guard<std::mutex> lk(global_state_mutex);
 

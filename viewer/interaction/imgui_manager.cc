@@ -6,6 +6,9 @@
 #include "third_party/imgui/examples/imgui_impl_opengl2.h"
 #include "third_party/imgui/examples/imgui_impl_opengl3.h"
 
+//TODO
+#include <iostream>
+
 // %deps(imgui)
 
 namespace viewer {
@@ -15,6 +18,9 @@ void ImGuiManager::init(GLFWwindow* window, const ImguiManagerConfig& cfg) {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   // TODO(jpanikulam): Handle multiple windows
+
+  std::cout << "Version: " << cfg.opengl3 << std::endl;
+
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
   (void)io;

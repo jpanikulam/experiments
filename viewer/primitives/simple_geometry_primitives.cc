@@ -69,8 +69,7 @@ void draw_polygon(const Polygon &polygon) {
   glLineWidth(polygon.width);
   // Draw the height of the poly
   /*
-  glBegin(GL_QUADS);
-  glColor(polygon.color);
+  glBegin(GL_QUADS); glColor(polygon.color);
   for (int k = 0; k < n_points; ++k) {
     const auto &start = polygon.points[k];
     const auto &end = polygon.points[(k + 1) % n_points];
@@ -178,7 +177,7 @@ void draw_circle(const Vec3 &center,
   incremental_rot.col(1) << s, c, 0.0;
   incremental_rot.col(2) << 0.0, 0.0, 1.0;
 
-  Vec3 pt_circle_frm(radius, radius, 0.0);
+  Vec3 pt_circle_frm(radius, 0.0, 0.0);
   glColor(color);
   glBegin(GL_LINE_LOOP);
   for (double t = 0.0; t < (2.0 * M_PI); t += CIRCLE_RES) {

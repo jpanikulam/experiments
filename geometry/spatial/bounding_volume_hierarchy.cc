@@ -20,7 +20,7 @@ Partition compute_partition(std::vector<BoundingVolumeHierarchy::AABB> &boxes,
                             size_t begin,
                             size_t end,
                             int dim) {
-  constexpr bool SMART_PARTITION = false;
+  constexpr bool SMART_PARTITION = true;
 
   if (!SMART_PARTITION) {
     const auto begin_it = boxes.begin();
@@ -166,7 +166,9 @@ double BoundingVolumeHierarchy::traverse_leaf(const TreeElement::Leaf &leaf,
   for (int k = leaf.start; k < leaf.end; ++k) {
     const auto &aabb = aabb_[k];
     const Intersection intersection = aabb.bbox.intersect(ray);
+    std::cout << "Checking" << std::endl;
     if (intersection.intersected) {
+      std::cout << "Got intersection" << std::endl;
       // Note: min(a, b) can be done branchlessly on modern processors, so prefer this
       min_distance = std::min(min_distance, intersection.distance);
       *closest = k;

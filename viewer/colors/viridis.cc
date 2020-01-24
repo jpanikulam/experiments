@@ -151,5 +151,5 @@ Vec3 viridis(double t) {
   const Vec3 blend = ((b - a) * blend_coeff) + a;
   return blend;
 }
-}
-}
+}  // namespace colors
+}  // namespace viewer

@@ -68,6 +68,7 @@ class BlockSparseMatrix {
     }
   }
   */
+
  private:
   struct Block {
     Eigen::MatrixXd block;

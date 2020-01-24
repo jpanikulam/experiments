@@ -75,6 +75,20 @@ endif()
 set(CMAKE_CXX_COMPILER "g++-7")
 set(CMAKE_CXX_FLAGS "--std=c++17 -g -O1 -fno-omit-frame-pointer -Wall -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
 
+
+find_package(rosbag REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  nav_msgs
+  roscpp
+  sensor_msgs
+  rosbag
+  std_msgs
+)
+
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
+
 add_subdirectory(cmake_tools)
 add_subdirectory(third_party)
 add_subdirectory(tmp)

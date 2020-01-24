@@ -90,11 +90,15 @@ class BoundingBox {
       min_t_far = std::min(min_t_far, t_far);
     }
 
+
+    std::cout << "rdir " << ray.direction.transpose() << std::endl;
     Intersection intersection;
     if (contains(ray.origin)) {
       intersection.intersected = true;
       intersection.distance = min_t_far;
     } else {
+      std::cout << "b2" << std::endl;
+      std::cout << ((max_t_near < min_t_far) && max_t_near >= 0.0) << std::endl;
       intersection.intersected = (max_t_near < min_t_far) && max_t_near >= 0.0;
       intersection.distance = max_t_near;
     }
